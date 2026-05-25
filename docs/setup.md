@@ -7,7 +7,7 @@ Roastnode is a Rails 8.1 app generated in the repository root.
 - Ruby 3.3.7 through rbenv or another Ruby version manager
 - Bundler
 - Docker Desktop with Docker Compose
-- PostgreSQL 18.4 is the default Compose image
+- PostgreSQL 17.5 is the default Compose image because it is already present locally
 - PostgreSQL client tools are useful but not required if you use Compose
 
 ## Local Ports
