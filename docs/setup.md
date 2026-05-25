@@ -20,6 +20,16 @@ Roastnode avoids the common defaults because another local project already uses 
 
 Change these with environment variables from `.env` or your shell.
 
+## LAN Access
+
+Start Rails on all interfaces when testing from another host on the network:
+
+```bash
+bin/rails server -p 3001 -b 0.0.0.0
+```
+
+Development host authorization allows `miniknubbel.internal`.
+
 ## First Setup
 
 ```bash
