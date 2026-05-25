@@ -1,6 +1,7 @@
 /.bundle/
 /.env
 /.env.*
+!/.env.example
 /.superpowers/
 /log/
 /node_modules/

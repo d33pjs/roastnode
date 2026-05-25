@@ -1,0 +1,85 @@
+# Roastnode Setup
+
+Roastnode is a Rails 8.1 app generated in the repository root.
+
+## Requirements
+
+- Ruby 3.3.7 through rbenv or another Ruby version manager
+- Bundler
+- Docker Desktop with Docker Compose
+- PostgreSQL 18.4 is the default Compose image
+- PostgreSQL client tools are useful but not required if you use Compose
+
+## Local Ports
+
+Roastnode avoids the common defaults because another local project already uses PostgreSQL on host port `5432`.
+
+- Rails web: `3001`
+- Roastnode PostgreSQL host port: `5433`
+- PostgreSQL container port: `5432`
+
+Change these with environment variables from `.env` or your shell.
+
+## First Setup
+
+```bash
+cp .env.example .env
+rbenv local 3.3.7
+bundle install
+docker compose up -d postgres
+bin/rails db:prepare
+bin/dev
+```
+
+Open `http://localhost:3001`.
+
+## Native Rails Commands
+
+```bash
+bin/rails test
+bin/rails routes
+bin/rails console
+```
+
+## Docker Compose Database
+
+Start only the database:
+
+```bash
+docker compose up -d postgres
+```
+
+Stop it without deleting data:
+
+```bash
+docker compose stop postgres
+```
+
+Delete the local database volume:
+
+```bash
+docker compose down -v
+```
+
+## Troubleshooting
+
+If Rails cannot connect to PostgreSQL, confirm the Compose database is healthy:
+
+```bash
+docker compose ps postgres
+```
+
+If port `5433` is already taken, set another host port:
+
+```bash
+POSTGRES_PORT=55433 docker compose up -d postgres
+POSTGRES_PORT=55433 bin/rails db:prepare
+```
+
+If `rails` resolves to an older global executable, use the app binstub:
+
+```bash
+bin/rails --version
+```
+
+If Bundler warns that your home directory is not writable inside a sandboxed tool, it can still complete by using a temporary home directory. On a normal shell, Bundler should use your regular user gem paths.
