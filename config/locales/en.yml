@@ -28,4 +28,9 @@
 #       enabled: "ON"
 
 en:
-  hello: "Hello world"
+  home:
+    index:
+      eyebrow: "Private coffee infrastructure"
+      intro: "Roastnode is the shared household workspace for beans, brews, equipment, inventory, photos, and the coffee data you should not have to ask for twice."
+      sign_in: "Sign in"
+      title: "Roastnode"
