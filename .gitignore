@@ -1,0 +1,9 @@
+/.bundle/
+/.env
+/.env.*
+/.superpowers/
+/log/
+/node_modules/
+/storage/
+/tmp/
+
