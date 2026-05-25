@@ -8,4 +8,3 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("home.index.title")
   end
 end
-
