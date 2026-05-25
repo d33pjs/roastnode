@@ -1,24 +1,33 @@
-# README
+# Roastnode
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+Roastnode is a Rails-first, self-hostable coffee tracking app for private household workspaces.
 
-Things you may want to cover:
+The first slice is a Rails 8.1 foundation with PostgreSQL, Hotwire, Tailwind CSS, Rails-native authentication, and setup defaults that run beside other local projects.
 
-* Ruby version
+## Quick Start
 
-* System dependencies
+```bash
+cp .env.example .env
+bundle install
+docker compose up -d postgres
+bin/rails db:prepare
+bin/dev
+```
 
-* Configuration
+Open `http://localhost:3001`.
 
-* Database creation
+## Local Defaults
 
-* Database initialization
+- Rails web port: `3001`
+- Roastnode PostgreSQL host port: `5433`
+- PostgreSQL container port: `5432`
+- Compose image: `postgres:17.5`
 
-* How to run the test suite
+The non-default host ports are intentional so Roastnode can run beside another project already using PostgreSQL on `5432`.
 
-* Services (job queues, cache servers, search engines, etc.)
+## Documentation
 
-* Deployment instructions
+- Setup: `docs/setup.md`
+- Agent guidance: `AGENTS.md`
+- Design specs and implementation plans: `docs/superpowers/`
 
-* ...

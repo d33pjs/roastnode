@@ -23,4 +23,4 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Web server: prefer host port `3001`.
 - PostgreSQL: prefer host port `5433` because another local project already owns `5432`.
 - Docker Compose should run alongside other local projects without taking common host ports unnecessarily.
-
+- The current Compose image is `postgres:17.5`, chosen because it is already available locally and avoids blocking setup on a Docker image pull.
