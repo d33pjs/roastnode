@@ -1,10 +1,12 @@
-<main class="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
-  <section class="max-w-2xl">
-    <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
-    <h1 class="mt-4 text-4xl font-bold text-stone-950 sm:text-5xl"><%= t(".title") %></h1>
-    <p class="mt-5 text-lg leading-8 text-stone-700"><%= t(".intro") %></p>
-    <div class="mt-8 flex flex-wrap gap-3">
-      <%= link_to t(".sign_in"), new_session_path, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
+    <div class="max-w-2xl">
+      <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
+      <h1 class="mt-4 text-4xl font-bold text-stone-950 sm:text-5xl"><%= t(".title") %></h1>
+      <p class="mt-5 text-lg leading-8 text-stone-700"><%= t(".intro") %></p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <%= link_to t(".sign_in"), new_session_path, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+      </div>
     </div>
   </section>
 </main>

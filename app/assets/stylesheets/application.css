@@ -8,3 +8,11 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #fafaf9;
+  color: #1c1917;
+}
