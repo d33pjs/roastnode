@@ -2,8 +2,8 @@
   <section class="mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-6 py-16">
     <div class="max-w-2xl">
       <%= render "shared/brand_wordmark",
-        container_class: "relative mb-6 block h-16 w-64 overflow-hidden sm:h-20 sm:w-80",
-        image_class: "absolute left-1/2 top-1/2 w-80 max-w-none -translate-x-1/2 -translate-y-1/2 sm:w-96" %>
+        container_class: "mb-6 block h-16 w-full max-w-sm sm:h-20",
+        image_class: "h-full w-full object-contain object-left" %>
       <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
       <h1 class="mt-4 text-4xl font-bold text-stone-950 sm:text-5xl"><%= t(".title") %></h1>
       <p class="mt-5 text-lg leading-8 text-stone-700"><%= t(".intro") %></p>

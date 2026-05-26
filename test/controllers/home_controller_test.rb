@@ -6,7 +6,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
-    assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_web"
+    assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_transparent"
     assert_select "h1", I18n.t("home.index.title")
     assert_select "a[href=?]", new_session_path, text: I18n.t("home.index.sign_in")
   end
@@ -19,7 +19,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
-    assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_web"
+    assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_transparent"
+    assert_select "[data-testid=workspace-mobile-menu].sm\\:hidden"
+    assert_select "[data-testid=workspace-desktop-menu].hidden.sm\\:flex"
     assert_select "p", text: I18n.t("workspaces.show.signed_in_as", email: user.email_address)
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("workspaces.show.profile")
     assert_select "a[href=?]", new_session_path, count: 0
@@ -53,6 +55,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
+    assert_select "[data-testid=dashboard-primary-actions]"
+    assert_select "[data-testid=dashboard-secondary-actions].hidden.sm\\:flex"
+    assert_select "[data-testid=dashboard-mobile-more-actions].sm\\:hidden"
     assert_select "a[href=?]", new_brew_path, text: I18n.t("workspaces.show.actions.log_brew")
     assert_select "a[href=?]", new_bean_path, text: I18n.t("workspaces.show.actions.add_bean")
     assert_select "a[href=?]", new_equipment_path, text: I18n.t("workspaces.show.actions.add_equipment")

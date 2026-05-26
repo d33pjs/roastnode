@@ -1,6 +1,6 @@
-<% container_class = local_assigns.fetch(:container_class, "relative block h-16 w-64 overflow-hidden") %>
-<% image_class = local_assigns.fetch(:image_class, "absolute left-1/2 top-1/2 w-80 max-w-none -translate-x-1/2 -translate-y-1/2") %>
+<% container_class = local_assigns.fetch(:container_class, "block h-16 w-64") %>
+<% image_class = local_assigns.fetch(:image_class, "h-full w-full object-contain object-left") %>
 
 <div class="<%= container_class %>">
-  <%= image_tag "brand/logo_wordmark_web.png", alt: "Roastnode", data: { testid: "brand-wordmark" }, class: image_class %>
+  <%= image_tag "brand/logo_wordmark_transparent.png", alt: "Roastnode", data: { testid: "brand-wordmark" }, class: image_class %>
 </div>

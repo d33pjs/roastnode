@@ -60,8 +60,8 @@ module BrewsHelper
   def brew_card_chart_x(seconds, total_seconds)
     return if seconds.blank? || total_seconds.blank? || total_seconds.to_f <= 0
 
-    start_x = 62
-    end_x = 626
+    start_x = 48
+    end_x = 690
     x_position = start_x + (seconds.to_f / total_seconds.to_f * (end_x - start_x))
 
     x_position.clamp(start_x, end_x).round

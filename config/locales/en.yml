@@ -454,6 +454,7 @@ en:
       import: "Import Beanconqueror"
       invites: "Invites"
       members: "Members"
+      more_actions: "More tools"
       no_activity: "No activity yet."
       no_open_beans: "No open beans yet."
       open_beans: "Open beans"
@@ -468,4 +469,5 @@ en:
         open_beans: "Open beans"
       switcher: "Switch workspace"
       unknown_roaster: "Unknown roaster"
+      workspace_menu: "Workspace menu"
       view_all: "View all"

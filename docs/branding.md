@@ -5,8 +5,9 @@ Roastnode keeps application brand art under `app/assets/images/brand/`.
 ## Included Now
 
 - `logo_font_white_bg.png` and `logo_only_white_bg.png` are the large source exports supplied by the project owner.
-- `logo_wordmark_web.png` is the smaller app-ready wordmark used by `shared/_brand_wordmark`.
-- `logo_mark_icon.png` is the smaller app-ready mark used for browser icons, PWA manifest icons, and the brew hero-card badge.
+- `logo_wordmark_web.png` is the earlier smaller wordmark export with an opaque light background.
+- `logo_mark_icon.png` is the smaller app-ready mark used for browser icons and PWA manifest icons.
+- `logo_wordmark_transparent.png` and `logo_mark_transparent.png` are true-alpha cropped app assets generated from the white-background exports. Use these in visible UI, including the shared wordmark partial and brew hero-card mark.
 - `logo_font_transparent_bg.png` and `logo_only_transparent_bg.png` are currently RGB PNGs with a visible checkerboard baked into the pixels. Do not use them on app UI unless they are replaced with true alpha-transparent exports.
 
 ## Usage Notes
