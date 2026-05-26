@@ -5,6 +5,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
+    assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
+    assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_web"
     assert_select "h1", I18n.t("home.index.title")
     assert_select "a[href=?]", new_session_path, text: I18n.t("home.index.sign_in")
   end
@@ -16,6 +18,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
+    assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
+    assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_web"
     assert_select "p", text: I18n.t("workspaces.show.signed_in_as", email: user.email_address)
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("workspaces.show.profile")
     assert_select "a[href=?]", new_session_path, count: 0

@@ -1,4 +1,10 @@
 <div class="mx-auto md:w-2/3 w-full">
+  <%= link_to root_path, class: "mb-6 inline-block" do %>
+    <%= render "shared/brand_wordmark",
+      container_class: "relative block h-14 w-64 overflow-hidden",
+      image_class: "absolute left-1/2 top-1/2 w-80 max-w-none -translate-x-1/2 -translate-y-1/2" %>
+  <% end %>
+
   <% if alert = flash[:alert] %>
     <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
   <% end %>

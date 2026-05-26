@@ -2,8 +2,13 @@
 <% compact = local_assigns.fetch(:compact, false) %>
 <% chart_id = local_assigns.fetch(:chart_id, "brew-shot-fill-#{brew.id}") %>
 
-<article data-testid="brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
-  <div class="bg-stone-950 p-5">
+<article data-testid="brew-hero-card" class="relative overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
+  <%= render "shared/brand_mark",
+    testid: "brew-card-brand-mark",
+    container_class: "pointer-events-none absolute right-3 top-3 z-20 hidden h-14 w-14 overflow-hidden rounded-md bg-stone-50/95 ring-1 ring-white/15 sm:block",
+    image_class: "absolute left-1/2 top-1/2 w-24 max-w-none -translate-x-1/2 -translate-y-1/2" %>
+
+  <div class="bg-stone-950 p-5 sm:pr-20">
     <div class="flex flex-wrap items-center gap-2">
       <span data-testid="brew-timestamp" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= brew_card_timestamp(brew) %></span>
       <span data-testid="brew-workspace" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= current_workspace.name %></span>
