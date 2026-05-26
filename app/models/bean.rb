@@ -1,5 +1,6 @@
 class Bean < ApplicationRecord
   belongs_to :workspace
+  belongs_to :data_import, optional: true
 
   has_many :brews, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception
@@ -15,6 +16,7 @@ class Bean < ApplicationRecord
   validates :remaining_grams, numericality: { greater_than_or_equal_to: 0 }
   validates :purchase_price_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :rating, numericality: { only_integer: true, in: 0..5 }, allow_nil: true
+  validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 
   def open?
     archived_at.blank? && remaining_grams.positive?

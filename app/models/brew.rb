@@ -23,6 +23,7 @@ class Brew < ApplicationRecord
 
   belongs_to :workspace
   belongs_to :user
+  belongs_to :data_import, optional: true
   belongs_to :bean
   belongs_to :grinder, class_name: "Equipment", optional: true
   belongs_to :machine, class_name: "Equipment", optional: true
@@ -42,6 +43,7 @@ class Brew < ApplicationRecord
   validates :total_time_seconds, :preinfusion_seconds, :first_drip_seconds,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :rating, numericality: { only_integer: true, in: 0..5 }, allow_nil: true
+  validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
   validate :bean_belongs_to_workspace
   validate :equipment_belongs_to_workspace
   validate :equipment_matches_expected_kind

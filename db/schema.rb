@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_110100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
     t.datetime "archived_at"
     t.decimal "bag_size_grams", precision: 10, scale: 2, null: false
     t.datetime "created_at", null: false
+    t.bigint "data_import_id"
+    t.string "import_source"
+    t.string "import_source_id"
     t.string "name", null: false
     t.text "notes"
     t.date "opened_on"
@@ -56,6 +59,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
     t.string "purchase_url"
     t.date "purchased_on"
     t.integer "rating"
+    t.jsonb "raw_import_data", default: {}, null: false
     t.decimal "remaining_grams", precision: 10, scale: 2, null: false
     t.date "roast_date"
     t.string "roast_level"
@@ -63,7 +67,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
     t.text "tasting_notes"
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
+    t.index ["data_import_id"], name: "index_beans_on_data_import_id"
     t.index ["workspace_id", "archived_at"], name: "index_beans_on_workspace_id_and_archived_at"
+    t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_beans_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id"], name: "index_beans_on_workspace_id"
   end
 
@@ -87,17 +93,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
     t.decimal "brew_temperature_celsius", precision: 5, scale: 2
     t.boolean "channeling"
     t.datetime "created_at", null: false
+    t.bigint "data_import_id"
     t.decimal "dose_grams", precision: 8, scale: 2
     t.integer "first_drip_seconds"
     t.string "grind_setting"
     t.bigint "grinder_id"
     t.decimal "ground_weight_grams", precision: 8, scale: 2
+    t.string "import_source"
+    t.string "import_source_id"
     t.bigint "machine_id"
     t.string "method", default: "espresso", null: false
     t.text "notes"
     t.datetime "occurred_at", null: false
     t.integer "preinfusion_seconds"
     t.integer "rating"
+    t.jsonb "raw_import_data", default: {}, null: false
     t.string "retention_marker", default: "unknown", null: false
     t.string "taste_balance", default: "unknown", null: false
     t.integer "total_time_seconds"
@@ -105,21 +115,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
     t.bigint "user_id", null: false
     t.bigint "workspace_id", null: false
     t.index ["bean_id"], name: "index_brews_on_bean_id"
+    t.index ["data_import_id"], name: "index_brews_on_data_import_id"
     t.index ["grinder_id"], name: "index_brews_on_grinder_id"
     t.index ["machine_id"], name: "index_brews_on_machine_id"
     t.index ["user_id"], name: "index_brews_on_user_id"
+    t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_brews_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
     t.index ["workspace_id"], name: "index_brews_on_workspace_id"
   end
 
+  create_table "data_imports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "raw_payload", default: {}, null: false
+    t.string "source", null: false
+    t.string "status", default: "pending", null: false
+    t.jsonb "summary", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.jsonb "warnings", default: [], null: false
+    t.bigint "workspace_id", null: false
+    t.index ["user_id"], name: "index_data_imports_on_user_id"
+    t.index ["workspace_id", "source", "created_at"], name: "index_data_imports_on_workspace_id_and_source_and_created_at"
+    t.index ["workspace_id"], name: "index_data_imports_on_workspace_id"
+  end
+
   create_table "equipment", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "data_import_id"
+    t.string "import_source"
+    t.string "import_source_id"
     t.string "kind", null: false
     t.string "model"
     t.string "name", null: false
     t.text "notes"
+    t.jsonb "raw_import_data", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
+    t.index ["data_import_id"], name: "index_equipment_on_data_import_id"
+    t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_equipment_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "kind"], name: "index_equipment_on_workspace_id_and_kind"
     t.index ["workspace_id"], name: "index_equipment_on_workspace_id"
   end
@@ -182,11 +215,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
     t.boolean "active", default: true, null: false
     t.string "brew_method", default: "espresso", null: false
     t.datetime "created_at", null: false
+    t.bigint "data_import_id"
+    t.string "import_source"
+    t.string "import_source_id"
     t.string "name", null: false
     t.text "notes"
+    t.jsonb "raw_import_data", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
+    t.index ["data_import_id"], name: "index_preparation_tools_on_data_import_id"
     t.index ["workspace_id", "brew_method", "active"], name: "idx_on_workspace_id_brew_method_active_63d2fd7955"
+    t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_preparation_tools_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id"], name: "index_preparation_tools_on_workspace_id"
   end
 
@@ -239,14 +278,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "beans", "data_imports"
   add_foreign_key "beans", "workspaces"
   add_foreign_key "brew_preparation_tools", "brews"
   add_foreign_key "brew_preparation_tools", "preparation_tools"
   add_foreign_key "brews", "beans"
+  add_foreign_key "brews", "data_imports"
   add_foreign_key "brews", "equipment", column: "grinder_id"
   add_foreign_key "brews", "equipment", column: "machine_id"
   add_foreign_key "brews", "users"
   add_foreign_key "brews", "workspaces"
+  add_foreign_key "data_imports", "users"
+  add_foreign_key "data_imports", "workspaces"
+  add_foreign_key "equipment", "data_imports"
   add_foreign_key "equipment", "workspaces"
   add_foreign_key "equipment_event_items", "equipment"
   add_foreign_key "equipment_event_items", "equipment_events"
@@ -258,6 +302,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_100101) do
   add_foreign_key "inventory_adjustments", "workspaces"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "workspaces"
+  add_foreign_key "preparation_tools", "data_imports"
   add_foreign_key "preparation_tools", "workspaces"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "workspaces", column: "active_workspace_id"

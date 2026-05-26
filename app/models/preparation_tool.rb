@@ -1,5 +1,6 @@
 class PreparationTool < ApplicationRecord
   belongs_to :workspace
+  belongs_to :data_import, optional: true
 
   has_many :brew_preparation_tools, dependent: :nullify
   has_many :brews, through: :brew_preparation_tools
@@ -12,6 +13,7 @@ class PreparationTool < ApplicationRecord
 
   validates :name, presence: true
   validates :brew_method, presence: true
+  validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 
   private
     def set_defaults
