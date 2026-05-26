@@ -28,4 +28,14 @@ class UserTest < ActiveSupport::TestCase
     user.default_landing_screen = "side_quest"
     assert_not_predicate user, :valid?
   end
+
+  test "default brew focus field is constrained to supported fields" do
+    user = users(:one)
+
+    user.default_brew_focus_field = "dose_grams"
+    assert_predicate user, :valid?
+
+    user.default_brew_focus_field = "rating"
+    assert_not_predicate user, :valid?
+  end
 end

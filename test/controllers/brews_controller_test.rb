@@ -37,6 +37,17 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
   end
 
+  test "new autofocuses the user's preferred brew field" do
+    users(:one).update!(default_brew_focus_field: "dose_grams")
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "input[name=?][autofocus]", "brew[dose_grams]"
+    assert_select "input[name=?][autofocus]", "brew[bean_weight_grams]", count: 0
+  end
+
   test "new falls back to first open bean when last bean is closed" do
     beans(:open_household).update!(archived_at: Time.current, remaining_grams: 0)
     sign_in_as(users(:one))

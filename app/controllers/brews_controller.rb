@@ -8,6 +8,7 @@ class BrewsController < ApplicationController
   def edit
     load_form_options(selected_bean: @brew.bean)
     @selected_preparation_tools = @brew.preparation_tools.to_a
+    @autofocus_field = nil
   end
 
   def new
@@ -19,10 +20,12 @@ class BrewsController < ApplicationController
     end
 
     @brew = current_workspace.brews.new(default_attributes)
+    @autofocus_field = Current.user.default_brew_focus_field
   end
 
   def create
     load_form_options
+    @autofocus_field = Current.user.default_brew_focus_field
     attributes = brew_params
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)

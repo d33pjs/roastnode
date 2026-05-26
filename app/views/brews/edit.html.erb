@@ -3,7 +3,7 @@
     <%= link_to t(".back"), brew_path(@brew), class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
     <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
 
-    <%= render "form", brew: @brew, submit_label: t(".update") %>
+    <%= render "form", brew: @brew, submit_label: t(".update"), autofocus_field: @autofocus_field %>
 
     <%= render "shared/photo_grid",
       record: @brew,

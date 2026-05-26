@@ -1,6 +1,18 @@
 class User < ApplicationRecord
   UNKNOWN_DISPLAY_LABEL = "unknown username"
   DEFAULT_LANDING_SCREENS = %w[dashboard log_espresso].freeze
+  DEFAULT_BREW_FOCUS_FIELDS = %w[
+    bean_weight_grams
+    ground_weight_grams
+    dose_grams
+    beverage_grams
+    grind_setting
+    brew_temperature_celsius
+    total_time_seconds
+    preinfusion_seconds
+    first_drip_seconds
+    notes
+  ].freeze
 
   has_secure_password
   has_many :sessions, dependent: :destroy
@@ -22,6 +34,7 @@ class User < ApplicationRecord
 
   validates :display_name, length: { maximum: 80 }
   validates :default_landing_screen, inclusion: { in: DEFAULT_LANDING_SCREENS }
+  validates :default_brew_focus_field, inclusion: { in: DEFAULT_BREW_FOCUS_FIELDS }
 
   def default_landing_log_espresso?
     default_landing_screen == "log_espresso"

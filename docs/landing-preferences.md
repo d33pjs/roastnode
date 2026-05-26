@@ -22,5 +22,4 @@ Use `dashboard_path` when a link specifically says "Back to dashboard" or must a
 
 - More landing screens.
 - Per-workspace landing preferences.
-- Focus management on the brew form.
 - Unsaved draft recovery for fast mobile brew entry.

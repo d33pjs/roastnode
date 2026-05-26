@@ -374,6 +374,18 @@ en:
   profiles:
     edit:
       back: "Back to dashboard"
+      brew_focus_fields:
+        bean_weight_grams: "Bean in"
+        beverage_grams: "Beverage"
+        brew_temperature_celsius: "Temperature"
+        dose_grams: "Dose"
+        first_drip_seconds: "First drip"
+        grind_setting: "Grind setting"
+        ground_weight_grams: "Ground out"
+        notes: "Notes"
+        preinfusion_seconds: "Preinfusion"
+        total_time_seconds: "Total time"
+      default_brew_focus_field: "Espresso form focus"
       default_landing_screen: "Default landing screen"
       landing_screens:
         dashboard: "Dashboard"

@@ -7,6 +7,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/superpowers/specs/2026-05-25-foundation-design.md` describes the first implementation slice.
 - `docs/workspace-core.md` describes workspaces, roles, invites, and the workspace-scoping rule for future product data.
 - `docs/landing-preferences.md` describes preferred start screens and the stable dashboard route.
+- `docs/brew-form-preferences.md` describes per-user espresso form focus behavior.
 - `docs/coffee-core.md` describes beans, equipment, required-bean espresso logging, inventory deduction, and deferred recipe scope.
 - `docs/bean-analytics.md` describes the bean detail drill-down analytics slice.
 - `docs/bean-danger-zone.md` describes destructive bean deletion and dependent brew/inventory cleanup.
