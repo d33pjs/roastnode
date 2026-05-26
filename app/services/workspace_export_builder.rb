@@ -14,6 +14,7 @@ class WorkspaceExportBuilder
       generated_at: timestamp(generated_at),
       workspace: workspace_payload,
       memberships: memberships_payload,
+      data_imports: data_imports_payload,
       beans: beans_payload,
       equipment: equipment_payload,
       preparation_tools: preparation_tools_payload,
@@ -76,7 +77,27 @@ class WorkspaceExportBuilder
           notes: bean.notes,
           created_at: timestamp(bean.created_at),
           updated_at: timestamp(bean.updated_at),
+          data_import_id: bean.data_import_id,
+          import_source: bean.import_source,
+          import_source_id: bean.import_source_id,
+          raw_import_data: bean.raw_import_data,
           photos: photo_metadata(bean)
+        }
+      end
+    end
+
+    def data_imports_payload
+      workspace.data_imports.includes(:user).order(:id).map do |data_import|
+        {
+          id: data_import.id,
+          user_id: data_import.user_id,
+          user_email_address: data_import.user.email_address,
+          source: data_import.source,
+          status: data_import.status,
+          summary: data_import.summary,
+          warnings: data_import.warnings,
+          created_at: timestamp(data_import.created_at),
+          updated_at: timestamp(data_import.updated_at)
         }
       end
     end
@@ -91,6 +112,10 @@ class WorkspaceExportBuilder
           notes: item.notes,
           created_at: timestamp(item.created_at),
           updated_at: timestamp(item.updated_at),
+          data_import_id: item.data_import_id,
+          import_source: item.import_source,
+          import_source_id: item.import_source_id,
+          raw_import_data: item.raw_import_data,
           photos: photo_metadata(item)
         }
       end
@@ -105,7 +130,11 @@ class WorkspaceExportBuilder
           active: tool.active,
           notes: tool.notes,
           created_at: timestamp(tool.created_at),
-          updated_at: timestamp(tool.updated_at)
+          updated_at: timestamp(tool.updated_at),
+          data_import_id: tool.data_import_id,
+          import_source: tool.import_source,
+          import_source_id: tool.import_source_id,
+          raw_import_data: tool.raw_import_data
         }
       end
     end
@@ -137,6 +166,10 @@ class WorkspaceExportBuilder
           retention_marker: brew.retention_marker,
           created_at: timestamp(brew.created_at),
           updated_at: timestamp(brew.updated_at),
+          data_import_id: brew.data_import_id,
+          import_source: brew.import_source,
+          import_source_id: brew.import_source_id,
+          raw_import_data: brew.raw_import_data,
           photos: photo_metadata(brew)
         }
       end

@@ -49,6 +49,31 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_equal equipment(:household_grinder).id, event_link[:equipment_id]
   end
 
+  test "includes import batches and per-record import metadata" do
+    import = DataImport.create!(
+      workspace: workspaces(:household),
+      user: users(:one),
+      source: "beanconqueror",
+      status: "completed",
+      summary: { "beans" => { "created" => 1 } }
+    )
+    beans(:open_household).update!(
+      data_import: import,
+      import_source: "beanconqueror",
+      import_source_id: "bean-source-id",
+      raw_import_data: { "name" => "Source Bean" }
+    )
+
+    payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at: Time.current).call
+
+    assert_equal import.id, payload[:data_imports].first[:id]
+    bean_payload = payload[:beans].find { |bean| bean[:id] == beans(:open_household).id }
+    assert_equal import.id, bean_payload[:data_import_id]
+    assert_equal "beanconqueror", bean_payload[:import_source]
+    assert_equal "bean-source-id", bean_payload[:import_source_id]
+    assert_equal({ "name" => "Source Bean" }, bean_payload[:raw_import_data])
+  end
+
   private
     def attach_photo(record)
       File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
