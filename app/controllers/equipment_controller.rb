@@ -3,7 +3,9 @@ class EquipmentController < ApplicationController
   before_action :set_equipment, only: %i[show edit update archive reopen destroy]
 
   def index
-    @equipment = current_workspace.equipment.order(Arel.sql("archived_at ASC NULLS FIRST"), :kind, :name)
+    @equipment = current_workspace.equipment
+      .includes(:primary_photo_record, photos_attachments: :blob)
+      .order(Arel.sql("archived_at ASC NULLS FIRST"), :kind, :name)
   end
 
   def show

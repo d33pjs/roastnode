@@ -12,8 +12,8 @@
       <% end %>
     </header>
 
-    <div class="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
-      <table class="min-w-full divide-y divide-stone-200">
+    <div class="overflow-x-auto rounded-lg border border-stone-200 bg-white shadow-sm">
+      <table class="min-w-[38rem] divide-y divide-stone-200 sm:min-w-full">
         <thead class="bg-stone-100">
           <tr>
             <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".name") %></th>
@@ -23,8 +23,18 @@
         </thead>
         <tbody class="divide-y divide-stone-100">
           <% @equipment.each do |item| %>
+            <% photo = item.primary_photo_attachment %>
             <tr>
-              <td class="px-4 py-3 text-sm font-medium text-stone-950"><%= link_to item.name, equipment_path(item), class: "hover:text-stone-600" %></td>
+              <td class="px-4 py-3 text-sm font-medium text-stone-950">
+                <%= link_to equipment_path(item), class: "flex items-center gap-3 hover:text-stone-600" do %>
+                  <% if photo.present? %>
+                    <%= image_tag media_attachment_path(photo), alt: "", data: { testid: "equipment-list-photo" }, class: "h-12 w-12 shrink-0 rounded-md object-cover ring-1 ring-stone-200" %>
+                  <% else %>
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-stone-100 text-sm font-black text-stone-500 ring-1 ring-stone-200"><%= item.name.first&.upcase || "?" %></span>
+                  <% end %>
+                  <span><%= item.name %></span>
+                <% end %>
+              </td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= item.kind.humanize %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= item.model.presence || t(".unknown") %></td>
             </tr>

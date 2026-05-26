@@ -13,20 +13,18 @@
     </header>
 
     <div class="overflow-x-auto rounded-lg border border-stone-200 bg-white shadow-sm">
-      <table class="min-w-[46rem] divide-y divide-stone-200 sm:min-w-full">
+      <table class="min-w-[40rem] divide-y divide-stone-200 sm:min-w-full">
         <thead class="bg-stone-100">
           <tr>
             <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".bean") %></th>
             <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".roaster") %></th>
             <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".remaining") %></th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".channeling") %></th>
             <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".status") %></th>
           </tr>
         </thead>
         <tbody class="divide-y divide-stone-100">
           <% @beans.each do |bean| %>
             <% photo = bean.primary_photo_attachment %>
-            <% channeling = @bean_channeling_statistics.fetch(bean.id) %>
             <tr>
               <td class="px-4 py-3 text-sm font-medium text-stone-950">
                 <%= link_to bean_path(bean), class: "flex items-center gap-3 hover:underline" do %>
@@ -39,11 +37,7 @@
                 <% end %>
               </td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= bean.roaster_name.presence || t(".unknown") %></td>
-              <td class="px-4 py-3 text-sm text-stone-700"><%= number_with_precision(bean.remaining_grams, precision: 1, strip_insignificant_zeros: true) %> g</td>
-              <td data-testid="bean-list-channeling-<%= bean.id %>" class="px-4 py-3 text-sm text-stone-700">
-                <span class="block font-bold text-stone-950"><%= statistics_percent(channeling[:percent]) %></span>
-                <span class="block text-xs font-semibold text-stone-500"><%= t(".channeling_count", count: channeling[:count], total: channeling[:total]) %></span>
-              </td>
+              <td data-testid="bean-list-remaining-<%= bean.id %>" class="px-4 py-3 text-sm text-stone-700"><%= t(".remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= bean.open? ? t(".open") : t(".closed") %></td>
             </tr>
           <% end %>

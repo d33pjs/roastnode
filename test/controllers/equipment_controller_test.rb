@@ -8,9 +8,22 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("equipment.index.title")
-    assert_select "td", text: equipment(:household_grinder).name
-    assert_select "a[href=?]", equipment_path(equipment(:household_grinder)), text: equipment(:household_grinder).name
+    assert_select "a[href=?]", equipment_path(equipment(:household_grinder)), text: /#{equipment(:household_grinder).name}/
     assert_select "td", text: equipment(:other_workspace_grinder).name, count: 0
+  end
+
+  test "index renders primary equipment photo" do
+    sign_in_as(users(:one))
+    grinder = equipment(:household_grinder)
+    first = attach_photo(grinder)
+    primary = attach_photo(grinder)
+    grinder.set_primary_photo!(primary)
+
+    get equipment_index_path
+
+    assert_response :success
+    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(primary)
+    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(first), count: 0
   end
 
   test "member can create equipment" do

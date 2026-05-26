@@ -123,12 +123,11 @@ en:
     index:
       back: "Back to dashboard"
       bean: "Bean"
-      channeling: "Channeling"
-      channeling_count: "%{count} of %{total}"
       closed: "Closed"
       new: "Add bean"
       open: "Open"
       remaining: "Remaining"
+      remaining_of: "%{remaining} of %{total}"
       roaster: "Roaster"
       status: "Status"
       title: "Beans"

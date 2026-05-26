@@ -17,7 +17,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - Extraction chart with beverage curve, preinfusion marker, first-drip marker when present, total time, and a separate temperature line with a vertical right-edge temperature label.
 - Chart labels use small callouts when they would otherwise collide with plot or guide lines.
 - The beverage y-axis label rounds above the actual beverage yield, for example `45.2 g` displays against a `50 g` axis marker.
-- Grinder, machine, and brew preparation tool snapshots in one compact row.
+- Grinder, machine, and brew preparation tool snapshots in one compact row, with tiny primary equipment photos when available.
 - Edit/delete actions remain available to workspace writers.
 - Brew detail pages show the full log below the hero card, including channeling, notes, inventory weights, and timing fields that do not belong in the hero.
 - Existing private photos remain below the full log.
@@ -36,6 +36,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
 - Use `brew_card_photo_attachment`, which prefers the bean's primary package photo and falls back through the normal primary-photo helper.
+- Keep grinder and machine primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.
 - Keep the card dense; avoid adding explanatory headings inside the chart.
 - Keep the mobile chart compact: the x-axis intentionally maps total time into a shorter central span while preserving proportional timing for preinfusion, first drip, and total time.
 - Preserve private media rendering through `media_attachment_path`.

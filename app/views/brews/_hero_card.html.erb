@@ -2,6 +2,8 @@
 <% compact = local_assigns.fetch(:compact, false) %>
 <% chart_id = local_assigns.fetch(:chart_id, "brew-shot-fill-#{brew.id}") %>
 <% brew_photo = brew_card_photo_attachment(brew) %>
+<% grinder_photo = brew.grinder&.primary_photo_attachment %>
+<% machine_photo = brew.machine&.primary_photo_attachment %>
 
 <article data-testid="brew-hero-card" class="relative overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
   <div class="bg-stone-950 p-5">
@@ -122,8 +124,18 @@
 
   <div class="bg-stone-900 px-5 py-3">
     <div class="flex flex-wrap items-center gap-2">
-      <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100"><%= t("brews.show.grinder") %>: <%= brew.grinder&.name || t("brews.show.unknown") %></span>
-      <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100"><%= t("brews.show.machine") %>: <%= brew.machine&.name || t("brews.show.unknown") %></span>
+      <span class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100">
+        <% if grinder_photo.present? %>
+          <%= image_tag media_attachment_path(grinder_photo), alt: "", data: { testid: "brew-grinder-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+        <% end %>
+        <span class="truncate"><%= t("brews.show.grinder") %>: <%= brew.grinder&.name || t("brews.show.unknown") %></span>
+      </span>
+      <span class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100">
+        <% if machine_photo.present? %>
+          <%= image_tag media_attachment_path(machine_photo), alt: "", data: { testid: "brew-machine-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+        <% end %>
+        <span class="truncate"><%= t("brews.show.machine") %>: <%= brew.machine&.name || t("brews.show.unknown") %></span>
+      </span>
       <% brew_card_tool_names(brew).each do |tool_name| %>
         <span data-testid="brew-tool" class="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200"><%= tool_name %></span>
       <% end %>
