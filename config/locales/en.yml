@@ -65,6 +65,25 @@ en:
       status: "Status"
       unknown_origin: "Unknown origin"
       unknown_roaster: "Unknown roaster"
+  equipment:
+    create:
+      created: "Equipment added."
+    index:
+      back: "Back to dashboard"
+      kind: "Kind"
+      model: "Model"
+      name: "Name"
+      new: "Add equipment"
+      title: "Equipment"
+      unknown: "Unknown"
+    new:
+      back: "Back to equipment"
+      create: "Add equipment"
+      kind: "Kind"
+      model: "Model"
+      name: "Name"
+      notes: "Notes"
+      title: "Add equipment"
   home:
     index:
       eyebrow: "Private coffee infrastructure"

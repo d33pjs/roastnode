@@ -13,6 +13,7 @@ Rails.application.routes.draw do
     patch :revoke, on: :member
   end
   resources :beans, only: %i[index new create show]
+  resources :equipment, only: %i[index new create]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

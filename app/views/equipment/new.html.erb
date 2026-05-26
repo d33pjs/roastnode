@@ -1,0 +1,38 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto max-w-3xl px-6 py-10">
+    <%= link_to t(".back"), equipment_index_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+    <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+
+    <%= form_with model: @equipment, url: equipment_index_path, class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+      <% if @equipment.errors.any? %>
+        <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <%= @equipment.errors.full_messages.to_sentence %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= form.label :name, t(".name"), class: "block text-sm font-medium text-stone-700" %>
+        <%= form.text_field :name, autofocus: true, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <%= form.label :kind, t(".kind"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.select :kind, Equipment.kinds.keys.map { |kind| [ kind.humanize, kind ] }, {}, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <div>
+          <%= form.label :model, t(".model"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.text_field :model, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :notes, t(".notes"), class: "block text-sm font-medium text-stone-700" %>
+        <%= form.text_area :notes, rows: 4, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+      </div>
+
+      <%= form.submit t(".create"), class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+    <% end %>
+  </section>
+</main>
