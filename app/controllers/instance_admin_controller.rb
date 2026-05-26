@@ -9,5 +9,6 @@ class InstanceAdminController < ApplicationController
       brews: Brew.count,
       equipment: Equipment.count
     }
+    @health_checks = InstanceHealthSnapshot.new.checks
   end
 end

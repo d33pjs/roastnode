@@ -361,6 +361,13 @@ en:
       demo_data_note: "Optional seed data stays explicit and guarded for production."
       disabled: "Disabled"
       eyebrow: "Private instance"
+      health: "Instance health"
+      health_labels:
+        database: "Database"
+        queue: "Queue"
+        rails: "Rails"
+        storage: "Storage"
+        storage_usage: "Storage usage"
       instance_mode: "Instance mode"
       intro: "A small owner-only control surface for private hosting, safety checks, and future maintenance tools."
       metric_labels:
@@ -374,6 +381,9 @@ en:
       private_mode_note: "Household data remains behind authentication and workspace membership."
       public_registration: "Public registration"
       public_registration_note: "New members still join through explicit household invites."
+      ok: "OK"
+      rails_detail: "Rails %{version} / %{environment}"
+      storage_usage_detail: "%{blobs} blobs / %{size}"
       title: "Instance admin"
   preparation_tools:
     create:

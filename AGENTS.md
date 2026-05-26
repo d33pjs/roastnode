@@ -9,7 +9,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Prefer Rails-native, boring security patterns over custom cleverness.
 - Store measurements in canonical metric units: grams, seconds, Celsius.
 - Treat `Workspace` as the ownership boundary for domain data. Beans, equipment, brews, inventory, photos, and statistics should belong to a workspace unless a future ADR explicitly says otherwise.
-- Treat `User#instance_admin` as an application-level hosting/admin flag, separate from workspace roles. Instance-wide routes must use `authorize_instance_admin!` and must not leak passwords, sessions, invite tokens, or signed media URLs.
+- Treat `User#instance_admin` as an application-level hosting/admin flag, separate from workspace roles. Instance-wide routes must use `authorize_instance_admin!` and must not leak passwords, sessions, invite tokens, signed media URLs, or infrastructure secrets. Keep `InstanceHealthSnapshot` checks read-only and safe for normal page loads.
 - Keep documentation in `docs/` current as decisions land.
 
 ## Working Rules
