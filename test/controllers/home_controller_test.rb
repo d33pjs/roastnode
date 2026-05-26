@@ -28,6 +28,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", workspace_invites_path, text: I18n.t("workspaces.show.invites")
     assert_select "a[href=?]", workspace_export_path, text: I18n.t("workspaces.show.export")
+    assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("workspaces.show.import")
   end
 
   test "workspace member does not see export link" do

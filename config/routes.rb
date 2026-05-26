@@ -19,6 +19,7 @@ Rails.application.routes.draw do
   resources :brews, only: %i[new create show edit update destroy]
   resources :media_attachments, only: :show
   resource :workspace_export, only: :show
+  resources :beanconqueror_imports, only: %i[new create show]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

@@ -30,6 +30,23 @@
 en:
   authorization:
     denied: "You do not have permission to do that."
+  beanconqueror_imports:
+    create:
+      created: "Beanconqueror import processed."
+      missing_file: "Choose a Beanconqueror JSON export first."
+    new:
+      back: "Back to dashboard"
+      create: "Import"
+      file: "Beanconqueror JSON export"
+      title: "Import Beanconqueror"
+    show:
+      back: "Back to dashboard"
+      created: "Created"
+      record_type: "Record type"
+      skipped: "Skipped"
+      status: "Status: %{status}"
+      title: "Beanconqueror import report"
+      warnings: "Warnings"
   beans:
     create:
       created: "Bean added."
@@ -288,6 +305,7 @@ en:
         equipment_event: "%{event} for %{equipment}"
       eyebrow: "Household workspace"
       export: "Export JSON"
+      import: "Import Beanconqueror"
       invites: "Invites"
       members: "Members"
       no_activity: "No activity yet."
