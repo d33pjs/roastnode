@@ -1,0 +1,27 @@
+wdt:
+  workspace: household
+  name: WDT
+  brew_method: espresso
+  active: true
+  notes: Needle distribution.
+
+puck_screen:
+  workspace: household
+  name: Puck screen
+  brew_method: espresso
+  active: true
+  notes:
+
+archived_tool:
+  workspace: household
+  name: Old paper filter
+  brew_method: espresso
+  active: false
+  notes:
+
+other_workspace_tool:
+  workspace: other_household
+  name: Other WDT
+  brew_method: espresso
+  active: true
+  notes:

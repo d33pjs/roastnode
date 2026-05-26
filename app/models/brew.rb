@@ -28,6 +28,8 @@ class Brew < ApplicationRecord
   belongs_to :machine, class_name: "Equipment", optional: true
 
   has_one :inventory_adjustment, dependent: :restrict_with_exception
+  has_many :brew_preparation_tools, dependent: :destroy
+  has_many :preparation_tools, through: :brew_preparation_tools
 
   before_validation :set_defaults
   before_validation :set_retention_marker
@@ -42,6 +44,18 @@ class Brew < ApplicationRecord
   validate :bean_belongs_to_workspace
   validate :equipment_belongs_to_workspace
   validate :equipment_matches_expected_kind
+
+  def snapshot_preparation_tools!(tools)
+    brew_preparation_tools.destroy_all
+    tools.each_with_index do |tool, index|
+      brew_preparation_tools.create!(
+        preparation_tool: tool,
+        tool_name: tool.name,
+        brew_method: tool.brew_method,
+        position: index
+      )
+    end
+  end
 
   private
     def set_defaults

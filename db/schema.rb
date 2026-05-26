@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_100100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_090000) do
     t.bigint "workspace_id", null: false
     t.index ["workspace_id", "archived_at"], name: "index_beans_on_workspace_id_and_archived_at"
     t.index ["workspace_id"], name: "index_beans_on_workspace_id"
+  end
+
+  create_table "brew_preparation_tools", force: :cascade do |t|
+    t.bigint "brew_id", null: false
+    t.string "brew_method", default: "espresso", null: false
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "preparation_tool_id"
+    t.string "tool_name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["brew_id", "position"], name: "index_brew_preparation_tools_on_brew_id_and_position"
+    t.index ["brew_id"], name: "index_brew_preparation_tools_on_brew_id"
+    t.index ["preparation_tool_id"], name: "index_brew_preparation_tools_on_preparation_tool_id"
   end
 
   create_table "brews", force: :cascade do |t|
@@ -137,6 +150,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_090000) do
     t.index ["workspace_id"], name: "index_memberships_on_workspace_id"
   end
 
+  create_table "preparation_tools", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "brew_method", default: "espresso", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.text "notes"
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id", "brew_method", "active"], name: "idx_on_workspace_id_brew_method_active_63d2fd7955"
+    t.index ["workspace_id"], name: "index_preparation_tools_on_workspace_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -185,6 +210,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_090000) do
   end
 
   add_foreign_key "beans", "workspaces"
+  add_foreign_key "brew_preparation_tools", "brews"
+  add_foreign_key "brew_preparation_tools", "preparation_tools"
   add_foreign_key "brews", "beans"
   add_foreign_key "brews", "equipment", column: "grinder_id"
   add_foreign_key "brews", "equipment", column: "machine_id"
@@ -201,6 +228,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_090000) do
   add_foreign_key "inventory_adjustments", "workspaces"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "workspaces"
+  add_foreign_key "preparation_tools", "workspaces"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "workspaces", column: "active_workspace_id"
   add_foreign_key "workspace_invites", "users", column: "accepted_by_id"

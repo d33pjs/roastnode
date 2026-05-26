@@ -1,0 +1,6 @@
+morning_espresso_wdt:
+  brew: morning_espresso
+  preparation_tool: wdt
+  tool_name: WDT
+  brew_method: espresso
+  position: 0
