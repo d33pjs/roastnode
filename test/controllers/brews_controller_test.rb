@@ -48,6 +48,30 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][autofocus]", "brew[bean_weight_grams]", count: 0
   end
 
+  test "new wires browser draft recovery to the current user and workspace" do
+    user = users(:one)
+    workspace = workspaces(:household)
+    sign_in_as(user)
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "form[data-controller~=?][data-brew-draft-storage-key-value=?]",
+      "brew-draft",
+      "roastnode:brew:new:#{workspace.id}:#{user.id}"
+    assert_select "[data-brew-draft-target=?].hidden", "notice"
+    assert_select "button[type=button][data-action=?]", "brew-draft#discard", text: I18n.t("brews.form.discard_draft")
+  end
+
+  test "edit does not wire browser draft recovery" do
+    sign_in_as(users(:one))
+
+    get edit_brew_path(brews(:morning_espresso))
+
+    assert_response :success
+    assert_select "form[data-controller~=?]", "brew-draft", count: 0
+  end
+
   test "new falls back to first open bean when last bean is closed" do
     beans(:open_household).update!(archived_at: Time.current, remaining_grams: 0)
     sign_in_as(users(:one))

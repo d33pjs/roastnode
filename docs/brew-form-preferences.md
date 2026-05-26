@@ -28,4 +28,3 @@ Do not add rating, channeling, photos, or taste balance to this list without a r
 
 - Hiding optional fields per user.
 - Per-method focus preferences once non-espresso templates exist.
-- Unsaved draft recovery for fast mobile brew entry.

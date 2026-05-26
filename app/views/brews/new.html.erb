@@ -3,6 +3,6 @@
     <%= link_to t(".back"), dashboard_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
     <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
 
-    <%= render "form", brew: @brew, submit_label: t(".create"), autofocus_field: @autofocus_field %>
+    <%= render "form", brew: @brew, submit_label: t(".create"), autofocus_field: @autofocus_field, draft_storage_key: @draft_storage_key %>
   </section>
 </main>
