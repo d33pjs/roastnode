@@ -35,6 +35,30 @@ en:
       eyebrow: "Private coffee infrastructure"
       intro: "Roastnode is the shared household workspace for beans, brews, equipment, inventory, photos, and the coffee data you should not have to ask for twice."
       sign_in: "Sign in"
+      title: "Roastnode"
+  workspace_onboardings:
+    create:
+      created: "Workspace created."
+    new:
+      eyebrow: "Workspace setup"
+      intro: "Create the private household workspace where beans, brews, equipment, inventory, and stats will live."
+      name_label: "Household name"
+      name_placeholder: "Jens Household"
+      submit: "Create workspace"
+      title: "Create your household workspace"
+  workspaces:
+    show:
+      cards:
+        beans:
+          body: "Shared bean inventory lands here next."
+          title: "Beans"
+        brews:
+          body: "Fast espresso logging will become the primary action."
+          title: "Brews"
+        equipment:
+          body: "Grinders, machines, and maintenance events will be workspace-scoped."
+          title: "Equipment"
+      eyebrow: "Household workspace"
+      role: "Role: %{role}"
       sign_out: "Sign out"
       signed_in_as: "Signed in as %{email}"
-      title: "Roastnode"

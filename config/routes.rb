@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
 
   root "home#index"
+  resource :workspace_onboarding, only: %i[new create]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

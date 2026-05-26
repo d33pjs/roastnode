@@ -1,0 +1,25 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto flex min-h-screen max-w-3xl flex-col justify-center px-6 py-16">
+    <div>
+      <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
+      <h1 class="mt-4 text-4xl font-bold text-stone-950"><%= t(".title") %></h1>
+      <p class="mt-5 text-lg leading-8 text-stone-700"><%= t(".intro") %></p>
+
+      <%= form_with model: @workspace, url: workspace_onboarding_path, class: "mt-8 max-w-xl space-y-5" do |form| %>
+        <% if @workspace.errors.any? %>
+          <div class="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <%= @workspace.errors.full_messages.to_sentence %>
+          </div>
+        <% end %>
+
+        <div>
+          <%= form.label :name, t(".name_label"), class: "block text-sm font-medium text-stone-800" %>
+          <%= form.text_field :name, required: true, autofocus: true, placeholder: t(".name_placeholder"), class: "mt-2 block w-full rounded-md border border-stone-300 bg-white px-3 py-3 text-base text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <%= form.submit t(".submit"), class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+      <% end %>
+    </div>
+  </section>
+</main>
+

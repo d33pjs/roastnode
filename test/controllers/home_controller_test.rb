@@ -16,7 +16,17 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "p", text: I18n.t("home.index.signed_in_as", email: user.email_address)
+    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", email: user.email_address)
     assert_select "a[href=?]", new_session_path, count: 0
+  end
+
+  test "shows onboarding for signed-in user without workspace" do
+    user = User.create!(email_address: "workspace-needed@example.com", password: "password")
+    sign_in_as(user)
+
+    get root_path
+
+    assert_response :success
+    assert_select "h1", I18n.t("workspace_onboardings.new.title")
   end
 end
