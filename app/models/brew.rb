@@ -58,6 +58,28 @@ class Brew < ApplicationRecord
     end
   end
 
+  def update_with_inventory_correction!(attributes, preparation_tools:)
+    transaction do
+      old_bean = bean
+      old_weight = bean_weight_grams
+
+      update!(attributes)
+
+      correct_inventory!(old_bean:, old_weight:, new_bean: bean, new_weight: bean_weight_grams)
+      sync_inventory_adjustment!
+      snapshot_preparation_tools!(preparation_tools)
+    end
+  end
+
+  def destroy_with_inventory_reversal!
+    transaction do
+      restore_inventory!(bean, bean_weight_grams)
+      inventory_adjustment&.destroy!
+      association(:inventory_adjustment).reset
+      destroy!
+    end
+  end
+
   private
     def set_defaults
       self.method ||= "espresso"
@@ -79,18 +101,38 @@ class Brew < ApplicationRecord
     end
 
     def record_inventory_consumption
-      bean.with_lock do
-        bean.update!(remaining_grams: [ bean.remaining_grams - bean_weight_grams, 0 ].max)
-        create_inventory_adjustment!(
-          workspace:,
-          bean:,
-          user:,
-          delta_grams: -bean_weight_grams,
-          reason: "brew",
-          note: "Brew consumption.",
-          occurred_at:
-        )
+      deduct_inventory!(bean, bean_weight_grams)
+      sync_inventory_adjustment!
+    end
+
+    def correct_inventory!(old_bean:, old_weight:, new_bean:, new_weight:)
+      restore_inventory!(old_bean, old_weight)
+      deduct_inventory!(new_bean, new_weight)
+    end
+
+    def restore_inventory!(target_bean, amount)
+      target_bean.with_lock do
+        target_bean.update!(remaining_grams: target_bean.remaining_grams + amount)
       end
+    end
+
+    def deduct_inventory!(target_bean, amount)
+      target_bean.with_lock do
+        target_bean.update!(remaining_grams: [ target_bean.remaining_grams - amount, 0 ].max)
+      end
+    end
+
+    def sync_inventory_adjustment!
+      adjustment = inventory_adjustment || build_inventory_adjustment(workspace:, user:, reason: "brew", note: "Brew consumption.")
+      adjustment.update!(
+        workspace:,
+        bean:,
+        user:,
+        delta_grams: -bean_weight_grams,
+        reason: "brew",
+        note: "Brew consumption.",
+        occurred_at:
+      )
     end
 
     def bean_belongs_to_workspace

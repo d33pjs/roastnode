@@ -61,4 +61,59 @@ class BrewTest < ActiveSupport::TestCase
     assert_not brew.valid?
     assert_includes brew.errors[:bean], "must belong to the workspace"
   end
+
+  test "updating brew weight adjusts inventory by delta" do
+    brew = brews(:morning_espresso)
+    bean = beans(:open_household)
+
+    brew.update_with_inventory_correction!(
+      { bean_weight_grams: 20, beverage_grams: 42 },
+      preparation_tools: brew.preparation_tools
+    )
+
+    assert_equal 148.to_d, bean.reload.remaining_grams
+    assert_equal(-20.to_d, brew.inventory_adjustment.reload.delta_grams)
+    assert_equal bean, brew.inventory_adjustment.bean
+  end
+
+  test "changing brew bean returns inventory to old bean and deducts new bean" do
+    brew = brews(:morning_espresso)
+    old_bean = beans(:open_household)
+    new_bean = beans(:second_open_household)
+
+    brew.update_with_inventory_correction!(
+      { bean: new_bean, bean_weight_grams: 21 },
+      preparation_tools: brew.preparation_tools
+    )
+
+    assert_equal 168.to_d, old_bean.reload.remaining_grams
+    assert_equal 199.to_d, new_bean.reload.remaining_grams
+    assert_equal new_bean, brew.reload.bean
+    assert_equal new_bean, brew.inventory_adjustment.reload.bean
+    assert_equal(-21.to_d, brew.inventory_adjustment.delta_grams)
+  end
+
+  test "updating brew replaces preparation tool snapshots" do
+    brew = brews(:morning_espresso)
+
+    brew.update_with_inventory_correction!(
+      { beverage_grams: 43 },
+      preparation_tools: [ preparation_tools(:puck_screen) ]
+    )
+
+    assert_equal [ "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+  end
+
+  test "destroying brew reverses inventory and removes adjustment" do
+    brew = brews(:morning_espresso)
+    bean = beans(:open_household)
+
+    assert_difference -> { Brew.count }, -1 do
+      assert_difference -> { InventoryAdjustment.count }, -1 do
+        brew.destroy_with_inventory_reversal!
+      end
+    end
+
+    assert_equal 168.to_d, bean.reload.remaining_grams
+  end
 end
