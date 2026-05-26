@@ -182,6 +182,9 @@ class BeanconquerorImport
         process: presence(first_bean_information(raw)["processing"]),
         roast_date: date(raw["roastingDate"]),
         roast_level: roast(raw),
+        roast_type: roast_type(raw),
+        roast_degree: roast_degree(raw),
+        blend_type: blend_type(raw),
         tasting_notes: presence(raw["aromatics"]),
         bag_size_grams: bag_size,
         remaining_grams: finished ? 0 : bag_size,
@@ -191,6 +194,15 @@ class BeanconquerorImport
         purchased_on: date(raw["buyDate"]),
         purchase_price_cents: cents(raw["cost"]),
         rating: rating(raw["rating"]),
+        decaffeinated: truthy?(raw["decaffeinated"]) || truthy?(raw["decaf"]),
+        country: presence(first_bean_information(raw)["country"]),
+        region: presence(first_bean_information(raw)["region"]),
+        farm: presence(first_bean_information(raw)["farm"]),
+        farmer: presence(first_bean_information(raw)["farmer"]),
+        elevation: presence(first_bean_information(raw)["elevation"]),
+        variety: presence(first_bean_information(raw)["variety"]),
+        harvested: presence(first_bean_information(raw)["harvested"]) || presence(first_bean_information(raw)["crop_date"]),
+        blend_percentage: presence(first_bean_information(raw)["percentage"]),
         notes: presence(raw["note"]),
         data_import:,
         import_source: SOURCE,
@@ -277,6 +289,28 @@ class BeanconquerorImport
       return if value.blank? || value == "UNKNOWN"
 
       value.to_s.humanize
+    end
+
+    def roast_type(raw)
+      normalize_option(raw["roast_type"] || raw["roastType"], Bean::ROAST_TYPES)
+    end
+
+    def roast_degree(raw)
+      value = positive_decimal(raw["roast_degree"] || raw["roastDegree"] || raw["degreeOfRoast"])
+      value if value && value <= 5
+    end
+
+    def blend_type(raw)
+      normalize_option(raw["blend_type"] || raw["blendType"], Bean::BLEND_TYPES)
+    end
+
+    def normalize_option(value, allowed)
+      normalized = value.to_s.downcase.tr(" -", "_")
+      allowed.include?(normalized) ? normalized : "unknown"
+    end
+
+    def truthy?(value)
+      value == true || value.to_s.downcase.in?(%w[true 1 yes])
     end
 
     def date(value)

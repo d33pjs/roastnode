@@ -6,16 +6,28 @@ open_household:
   process: washed
   roast_date: 2026-05-01
   roast_level: medium
+  roast_type: espresso
+  roast_degree: 3.0
   tasting_notes: Chocolate, cherry
   bag_size_grams: 250.0
   remaining_grams: 150.0
   opened_on: 2026-05-10
   archived_at:
+  blend_type: blend
+  decaffeinated: false
   purchase_source: Local roaster
   purchase_url:
   purchased_on: 2026-05-02
   purchase_price_cents: 1290
   rating: 4
+  country: Colombia
+  region: Huila
+  farm: La Esperanza
+  farmer: Ana Gomez
+  elevation: 1700 masl
+  variety: Caturra
+  harvested: "2025"
+  blend_percentage: "70%"
   notes: Daily espresso.
 
 second_open_household:

@@ -23,7 +23,17 @@ Important mappings:
 
 - `BEANS.name` -> bean name
 - `BEANS.roaster` -> roaster name
+- `BEANS.roastingDate` -> roast date
+- `BEANS.buyDate` -> buy date
 - `BEANS.weight` -> bag size
+- `BEANS.cost` -> cost
+- `BEANS.url` -> website
+- `BEANS.aromatics` -> flavor profile
+- `BEANS.roast_type` / `roastType` -> roast type
+- `BEANS.roast_degree` / `roastDegree` / `degreeOfRoast` -> degree of roast
+- `BEANS.blend_type` / `blendType` -> blend type
+- `BEANS.decaffeinated` / `decaf` -> decaf flag
+- first `BEANS.bean_information` country, region, farm, farmer, elevation, variety, processing, harvested/crop date, and percentage -> variety information
 - `BREWS.bean_weight_in`, falling back to `grind_weight` -> bean weight
 - `BREWS.grind_weight` -> ground weight and dose
 - `BREWS.brew_beverage_quantity`, falling back to `brew_quantity` -> beverage yield

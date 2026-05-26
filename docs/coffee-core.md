@@ -66,6 +66,10 @@ Fresh fields:
 ## Inventory Rules
 
 - `Bean#remaining_grams` defaults to `bag_size_grams` when a bean is created.
+- Beans can be edited after creation, including remaining grams and additive package photos.
+- Beans can be closed, reopened, or duplicated as a new open bag. Duplicates copy descriptive metadata and photos, set `opened_on` to the current date, clear `archived_at`, and reset remaining grams to the bag size.
+- Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, website, notes, and variety information.
+- If multiple open beans have the same roaster/name, the espresso logging selector appends the opened date to those duplicate labels only.
 - Creating a brew subtracts `bean_weight_grams` from the selected bean.
 - Creating a brew also records an `InventoryAdjustment` with reason `brew`.
 - Brew editing/deletion adjusts or reverses the brew inventory movement in one transaction.

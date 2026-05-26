@@ -13,12 +13,22 @@
       "rating": 4,
       "url": "https://example.test/beans/bc-espresso",
       "roast": "MEDIUM",
+      "roast_type": "ESPRESSO",
+      "roast_degree": 3.5,
+      "blend_type": "SINGLE_ORIGIN",
+      "decaffeinated": true,
       "finished": false,
       "bean_information": [
         {
           "country": "Colombia",
           "region": "Huila",
-          "processing": "washed"
+          "farm": "La Esperanza",
+          "farmer": "Ana Gomez",
+          "elevation": "1,700 masl",
+          "variety": "Caturra",
+          "processing": "washed",
+          "harvested": "2025",
+          "percentage": "100%"
         }
       ],
       "config": {

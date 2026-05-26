@@ -11,6 +11,7 @@ Workspace Export is the first Roastnode data portability feature.
 - Membership roles with user email/display name.
 - Import batch metadata.
 - Beans, equipment, preparation tools, brews, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
+- Rich bean metadata, including roast type, degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
 - Photo metadata for photo-enabled records.
 
 ## Privacy And Authorization

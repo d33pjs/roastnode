@@ -16,6 +16,13 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal workspaces(:household).id, payload.fetch("workspace").fetch("id")
     assert_includes payload.fetch("beans").map { |bean| bean.fetch("id") }, beans(:open_household).id
     assert_not_includes payload.fetch("beans").map { |bean| bean.fetch("id") }, beans(:other_workspace_open).id
+
+    exported_bean = payload.fetch("beans").find { |bean| bean.fetch("id") == beans(:open_household).id }
+    assert_equal beans(:open_household).roast_type, exported_bean.fetch("roast_type")
+    assert_equal beans(:open_household).blend_type, exported_bean.fetch("blend_type")
+    assert_equal beans(:open_household).decaffeinated, exported_bean.fetch("decaffeinated")
+    assert_equal beans(:open_household).country, exported_bean.fetch("country")
+    assert_equal beans(:open_household).blend_percentage, exported_bean.fetch("blend_percentage")
   end
 
   test "member cannot export workspace" do

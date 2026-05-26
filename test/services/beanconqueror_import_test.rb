@@ -28,6 +28,18 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
     assert_equal "BC Roaster", bean.roaster_name
     assert_equal "Colombia, Huila", bean.origin
     assert_equal "washed", bean.process
+    assert_equal "espresso", bean.roast_type
+    assert_equal 3.5.to_d, bean.roast_degree
+    assert_equal "single_origin", bean.blend_type
+    assert_predicate bean, :decaffeinated?
+    assert_equal "Colombia", bean.country
+    assert_equal "Huila", bean.region
+    assert_equal "La Esperanza", bean.farm
+    assert_equal "Ana Gomez", bean.farmer
+    assert_equal "1,700 masl", bean.elevation
+    assert_equal "Caturra", bean.variety
+    assert_equal "2025", bean.harvested
+    assert_equal "100%", bean.blend_percentage
     assert_equal 1290, bean.purchase_price_cents
     assert_equal 231.5.to_d, bean.remaining_grams
     assert_equal "Imported bean note.", bean.notes
