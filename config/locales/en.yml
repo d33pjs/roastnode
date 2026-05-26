@@ -33,6 +33,12 @@ en:
       european_seconds: "%d.%m.%Y %H:%M:%S"
   authorization:
     denied: "You do not have permission to do that."
+  media_attachments:
+    destroy:
+      destroyed: "Photo removed."
+  shared:
+    photo_grid:
+      delete: "Remove"
   beanconqueror_imports:
     create:
       created: "Beanconqueror import processed."
@@ -59,6 +65,7 @@ en:
       duplicated: "Bean bag duplicated."
     edit:
       back: "Back to bean"
+      photos: "Current photos"
       title: "Edit bean"
       update: "Save bean"
     form:
@@ -156,6 +163,7 @@ en:
       destroyed: "Brew deleted and inventory restored."
     edit:
       back: "Back to brew"
+      photos: "Current photos"
       title: "Edit espresso"
       update: "Save correction"
     form:

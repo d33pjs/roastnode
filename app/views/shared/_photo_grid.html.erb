@@ -3,7 +3,15 @@
     <h2 class="<%= title_class %>"><%= title %></h2>
     <div class="mt-3 grid gap-3 sm:grid-cols-3">
       <% record.photos.attachments.each do |photo| %>
-        <%= image_tag media_attachment_path(photo), alt: "", class: "h-40 w-full rounded-md border border-stone-200 object-cover" %>
+        <figure class="relative overflow-hidden rounded-md border border-stone-200 bg-stone-100">
+          <%= image_tag media_attachment_path(photo), alt: "", class: "h-40 w-full object-cover" %>
+          <% if current_workspace_policy.write? %>
+            <%= button_to t(".delete"),
+              media_attachment_path(photo),
+              method: :delete,
+              class: "absolute right-2 top-2 rounded-md bg-white/95 px-3 py-1.5 text-xs font-bold text-red-700 shadow-sm ring-1 ring-red-100 hover:bg-red-50" %>
+          <% end %>
+        </figure>
       <% end %>
     </div>
   </section>

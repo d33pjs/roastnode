@@ -8,6 +8,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Workspace-scoped equipment for grinders and machines.
 - Workspace-scoped preparation tools for brew checklists.
 - Basic private photos for beans, brews, equipment, and equipment events.
+- Workspace writer photo removal through the private media controller.
 - Espresso brew logging with a required bean.
 - Automatic inventory deduction when a brew is saved.
 - Brew correction flows for edit/delete with inventory adjustment.
@@ -19,7 +20,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 ## Explicitly Deferred
 
 - Recipes, recipe snapshots, and target definitions.
-- Advanced media handling, including deletion, primary-photo selection, thumbnails, and object storage.
+- Advanced media handling, including primary-photo selection, thumbnails, media archive export, and object storage.
 - Advanced maintenance analytics.
 - Beanconqueror media import and full round-trip compatibility.
 - Interactive ECharts analytics and exportable brew card images.
@@ -82,4 +83,5 @@ Fresh fields:
 - Do not add recipe fields to brew forms until the dedicated recipes slice exists.
 - Preparation tools are checklist records, not equipment records.
 - Render photos through `media_attachment_path`, never raw Active Storage blob URLs.
+- Remove photos through `MediaAttachmentsController#destroy` so workspace and write permissions stay centralized.
 - Beanconqueror import is a practical JSON subset, not full feature parity.

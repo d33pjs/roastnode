@@ -44,7 +44,7 @@ It deliberately hides automatic brew inventory adjustments because the brew itse
 
 ## Deferred
 
-- Photo deletion, primary-photo selection, and thumbnail variants.
+- Primary-photo selection and thumbnail variants.
 - Maintenance reminders.
 - Advanced usage analytics and charts.
 - Import/export mapping for equipment events.

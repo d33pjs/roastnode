@@ -7,6 +7,7 @@ Brew Corrections lets workspace writers fix or delete a logged brew without leav
 - Edit screen for espresso brews.
 - Update flow for brew fields, equipment, bean, and preparation tools.
 - Delete flow for brews.
+- Current brew photo removal from the correction screen.
 - Inventory correction when the bean or bean weight changes.
 - Inventory reversal when a brew is deleted.
 - Existing brew inventory adjustment is updated with the corrected bean, delta, and occurred-at timestamp.
@@ -33,5 +34,4 @@ Deleting a brew:
 
 - Full audit history for corrections.
 - Soft-delete and undo.
-- Photo deletion from the edit form.
 - Recipe snapshot correction.

@@ -12,6 +12,7 @@ Brew Corrections lets a workspace writer fix or remove a mistakenly logged brew 
 - Inventory delta handling when `bean_id` or `bean_weight_grams` changes.
 - Inventory adjustment record update when brew consumption changes.
 - Delete flow that reverses the brew's inventory deduction and removes the brew.
+- Brew photo removal from the correction screen through the shared private media controller.
 - Owner, admin, and member write access; viewer read-only.
 
 ## Explicitly Deferred
@@ -20,7 +21,6 @@ Brew Corrections lets a workspace writer fix or remove a mistakenly logged brew 
 - Soft-deleting brews.
 - Undo after delete.
 - Recipe snapshot correction.
-- Photo deletion from the brew correction form.
 
 ## Inventory Rules
 

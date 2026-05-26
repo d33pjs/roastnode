@@ -4,7 +4,7 @@
 
 **Goal:** Add private workspace photo uploads and previews for beans, brews, equipment, and equipment events.
 
-**Architecture:** Use Rails Active Storage for blobs/attachments, but render images through a small authenticated controller that checks parent workspace ownership before streaming. Keep the first slice simple: multiple photos, no primary selector, no deletion UI.
+**Architecture:** Use Rails Active Storage for blobs/attachments, but render images through a small authenticated controller that checks parent workspace ownership before streaming. Keep the first slice simple: multiple photos and no primary selector. A later media-management slice added write-scoped individual photo removal through the same controller.
 
 **Tech Stack:** Rails 8.1, Active Storage, PostgreSQL, ERB views, Tailwind utility classes, Minitest.
 
@@ -48,3 +48,10 @@
 - [x] Run `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`.
 - [x] Confirm `http://miniknubbel.internal:3001` returns 200.
 - [ ] Commit docs with `git commit -m "Document private media"`.
+
+### Later Slice: Photo Removal
+
+- [x] Add `MediaAttachmentsController#destroy` with active-workspace and write-policy checks.
+- [x] Add remove controls to shared photo galleries.
+- [x] Show current photo management on bean and brew edit screens.
+- [x] Keep removal as attachment detachment so duplicated bean bags can continue reusing the same blob.

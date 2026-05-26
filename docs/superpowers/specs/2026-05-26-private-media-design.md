@@ -11,11 +11,11 @@ Private Media adds the first Active Storage-backed photo support for Roastnode. 
 - Upload fields on create forms for beans, brews, equipment, and equipment events.
 - Photo previews on detail pages.
 - Scoped media delivery through an authenticated controller.
+- Individual photo removal for workspace writers.
 
 ## Explicitly Deferred
 
 - Primary photo selection UI.
-- Deleting individual photos.
 - Direct-upload progress UI.
 - Image variants and thumbnail generation.
 - S3-compatible storage setup.
@@ -42,3 +42,4 @@ Tests must cover:
 - rendering scoped media URLs on detail pages
 - active workspace access to an attachment
 - cross-workspace access returning not found
+- write-scoped removal of same-workspace attachments

@@ -23,7 +23,7 @@ Rails.application.routes.draw do
   resources :preparation_tools, only: %i[index new create]
   resources :brews, only: %i[new create show edit update destroy]
   get "statistics" => "statistics#index", as: :statistics
-  resources :media_attachments, only: :show
+  resources :media_attachments, only: %i[show destroy]
   resource :workspace_export, only: :show
   resources :beanconqueror_imports, only: %i[new create show]
 
