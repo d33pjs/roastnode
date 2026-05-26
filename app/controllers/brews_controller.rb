@@ -55,14 +55,11 @@ class BrewsController < ApplicationController
         grinder: default_equipment(last_brew.grinder),
         machine: default_equipment(last_brew.machine),
         bean_weight_grams: last_brew.bean_weight_grams,
-        ground_weight_grams: last_brew.ground_weight_grams,
         dose_grams: last_brew.dose_grams,
         beverage_grams: last_brew.beverage_grams,
         grind_setting: last_brew.grind_setting,
         brew_temperature_celsius: last_brew.brew_temperature_celsius,
-        total_time_seconds: last_brew.total_time_seconds,
-        preinfusion_seconds: last_brew.preinfusion_seconds,
-        first_drip_seconds: last_brew.first_drip_seconds
+        preinfusion_seconds: last_brew.preinfusion_seconds
       )
     end
 

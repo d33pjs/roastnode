@@ -41,17 +41,17 @@ Copied fields:
 - grinder
 - machine
 - bean weight
-- ground weight
 - dose
 - beverage yield
 - grind setting
 - brew temperature
-- total time
 - pre-infusion time
-- first drip time
 
 Fresh fields:
 
+- ground-out weight
+- total time
+- first drip time
 - rating
 - notes
 - channeling
