@@ -49,7 +49,7 @@
         </div>
       </div>
 
-      <div class="grid gap-5 sm:grid-cols-4">
+      <div class="grid gap-5 sm:grid-cols-5">
         <div>
           <%= form.label :grind_setting, t(".grind_setting"), class: "block text-sm font-medium text-stone-700" %>
           <%= form.text_field :grind_setting, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
@@ -63,6 +63,11 @@
         <div>
           <%= form.label :total_time_seconds, t(".total_time"), class: "block text-sm font-medium text-stone-700" %>
           <%= form.number_field :total_time_seconds, inputmode: "numeric", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <div>
+          <%= form.label :preinfusion_seconds, t(".preinfusion"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.number_field :preinfusion_seconds, inputmode: "numeric", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
         </div>
 
         <div>

@@ -7,13 +7,13 @@ class BrewsController < ApplicationController
 
   def new
     load_form_options
-    default_bean = default_brew_bean
+    default_attributes = default_brew_attributes
 
-    unless default_bean
+    unless default_attributes[:bean]
       return redirect_to new_bean_path, alert: t(".needs_bean")
     end
 
-    @brew = current_workspace.brews.new(bean: default_bean, occurred_at: Time.current)
+    @brew = current_workspace.brews.new(default_attributes)
   end
 
   def create
@@ -39,11 +39,45 @@ class BrewsController < ApplicationController
       @machines = current_workspace.equipment.machine.order(:name)
     end
 
-    def default_brew_bean
-      last_brew = Current.user.brews.where(workspace: current_workspace).includes(:bean).order(occurred_at: :desc, created_at: :desc).first
+    def default_brew_attributes
+      last_brew = last_brew_for_defaults
+      bean = default_brew_bean(last_brew)
+      return { bean: nil } unless bean
+
+      attributes = {
+        bean:,
+        occurred_at: Time.current
+      }
+
+      return attributes unless last_brew
+
+      attributes.merge(
+        grinder: default_equipment(last_brew.grinder),
+        machine: default_equipment(last_brew.machine),
+        bean_weight_grams: last_brew.bean_weight_grams,
+        ground_weight_grams: last_brew.ground_weight_grams,
+        dose_grams: last_brew.dose_grams,
+        beverage_grams: last_brew.beverage_grams,
+        grind_setting: last_brew.grind_setting,
+        brew_temperature_celsius: last_brew.brew_temperature_celsius,
+        total_time_seconds: last_brew.total_time_seconds,
+        preinfusion_seconds: last_brew.preinfusion_seconds,
+        first_drip_seconds: last_brew.first_drip_seconds
+      )
+    end
+
+    def last_brew_for_defaults
+      Current.user.brews.where(workspace: current_workspace).includes(:bean, :grinder, :machine).order(occurred_at: :desc, created_at: :desc).first
+    end
+
+    def default_brew_bean(last_brew)
       return last_brew.bean if last_brew&.bean&.open?
 
       @beans.first
+    end
+
+    def default_equipment(equipment)
+      equipment if equipment&.workspace_id == current_workspace.id
     end
 
     def brew_params
