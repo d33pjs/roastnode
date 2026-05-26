@@ -94,7 +94,7 @@
                 <% end %>
               <% elsif activity.is_a?(EquipmentEvent) %>
                 <%= link_to equipment_event_path(activity), class: "block p-4 hover:bg-stone-50" do %>
-                  <p class="font-semibold text-stone-950"><%= t(".activity.equipment_event", event: activity.event_type.humanize, equipment: activity.equipment.map(&:name).to_sentence) %></p>
+                  <p class="font-semibold text-stone-950"><%= t(".activity.equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>
                   <p class="mt-1 text-sm text-stone-600"><%= l(activity.occurred_at, format: :short) %></p>
                 <% end %>
               <% else %>

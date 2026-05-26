@@ -2,6 +2,8 @@ grinder_cleaning:
   workspace: household
   user: one
   event_type: grinder_cleaning
+  event_types:
+    - grinder_cleaning
   occurred_at: <%= 3.hours.ago %>
   notes: Cleaned the burr chamber.
 
@@ -9,6 +11,8 @@ machine_backflush:
   workspace: household
   user: one
   event_type: machine_backflush
+  event_types:
+    - machine_backflush
   occurred_at: <%= 4.hours.ago %>
   notes: Water backflush.
 
@@ -16,5 +20,7 @@ other_workspace_event:
   workspace: other_household
   user: two
   event_type: other
+  event_types:
+    - other
   occurred_at: <%= 1.hour.ago %>
   notes: Other workspace event.

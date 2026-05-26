@@ -5,7 +5,7 @@ class EquipmentEventTest < ActiveSupport::TestCase
     event = EquipmentEvent.new(
       workspace: workspaces(:household),
       user: users(:one),
-      event_type: "grinder_cleaning",
+      event_types: [ "grinder_cleaning" ],
       occurred_at: Time.current,
       equipment: [ equipment(:household_grinder) ]
     )
@@ -13,11 +13,25 @@ class EquipmentEventTest < ActiveSupport::TestCase
     assert event.valid?
   end
 
+  test "can record multiple event types in one maintenance session" do
+    event = EquipmentEvent.new(
+      workspace: workspaces(:household),
+      user: users(:one),
+      event_types: [ "grinder_cleaning", "machine_backflush" ],
+      occurred_at: Time.current,
+      equipment: [ equipment(:household_grinder), equipment(:household_machine) ]
+    )
+
+    assert event.valid?
+    assert_equal [ "grinder_cleaning", "machine_backflush" ], event.event_types
+    assert_equal "Grinder cleaning and Machine backflush", event.event_type_summary
+  end
+
   test "requires affected equipment" do
     event = EquipmentEvent.new(
       workspace: workspaces(:household),
       user: users(:one),
-      event_type: "other",
+      event_types: [ "other" ],
       occurred_at: Time.current
     )
 
@@ -29,7 +43,7 @@ class EquipmentEventTest < ActiveSupport::TestCase
     event = EquipmentEvent.new(
       workspace: workspaces(:household),
       user: users(:one),
-      event_type: "grinder_cleaning",
+      event_types: [ "grinder_cleaning" ],
       occurred_at: Time.current,
       equipment: [ equipment(:other_workspace_grinder) ]
     )

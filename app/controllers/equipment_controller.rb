@@ -49,6 +49,6 @@ class EquipmentController < ApplicationController
         %w[machine_descaling machine_backflush]
       end
 
-      @equipment.equipment_events.where(event_type: event_types).recent.first
+      @equipment.equipment_events.recent.find { |event| (event.event_type_names & event_types).any? }
     end
 end

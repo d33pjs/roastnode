@@ -42,7 +42,7 @@
           <% if @recent_events.any? %>
             <% @recent_events.each do |event| %>
               <%= link_to equipment_event_path(event), class: "block p-4 hover:bg-stone-50" do %>
-                <p class="font-semibold text-stone-950"><%= event.event_type.humanize %></p>
+                <p class="font-semibold text-stone-950"><%= event.event_type_summary %></p>
                 <p class="mt-1 text-sm text-stone-600"><%= l(event.occurred_at, format: :short) %></p>
               <% end %>
             <% end %>

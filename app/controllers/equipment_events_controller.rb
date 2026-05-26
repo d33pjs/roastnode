@@ -7,14 +7,15 @@ class EquipmentEventsController < ApplicationController
 
   def new
     load_form_options
-    @equipment_event = current_workspace.equipment_events.new(event_type: "grinder_cleaning", occurred_at: Time.current)
+    @equipment_event = current_workspace.equipment_events.new(event_types: [ "grinder_cleaning" ], occurred_at: Time.current)
   end
 
   def create
     load_form_options
     attributes = equipment_event_params
     equipment_ids = Array(attributes.delete(:equipment_ids)).reject(&:blank?)
-    @equipment_event = current_workspace.equipment_events.new(attributes)
+    event_types = Array(attributes.delete(:event_types)).reject(&:blank?)
+    @equipment_event = current_workspace.equipment_events.new(attributes.merge(event_types:, event_type: event_types.first))
     @equipment_event.user = Current.user
     @equipment_event.equipment = Equipment.where(id: equipment_ids)
 
@@ -35,6 +36,6 @@ class EquipmentEventsController < ApplicationController
     end
 
     def equipment_event_params
-      params.expect(equipment_event: [ :event_type, :occurred_at, :notes, { equipment_ids: [] } ])
+      params.expect(equipment_event: [ :occurred_at, :notes, { event_types: [], equipment_ids: [] } ])
     end
 end

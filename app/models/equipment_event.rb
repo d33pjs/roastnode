@@ -14,17 +14,46 @@ class EquipmentEvent < ApplicationRecord
   has_many :equipment_event_items, dependent: :destroy
   has_many :equipment, through: :equipment_event_items
 
+  before_validation :normalize_event_types
   before_validation :set_occurred_at
 
   validates :event_type, presence: true
+  validate :event_types_present
+  validate :event_types_supported
   validate :affected_equipment_present
   validate :affected_equipment_belongs_to_workspace
 
   scope :recent, -> { order(occurred_at: :desc, created_at: :desc) }
 
+  def event_type_names
+    event_types.presence || [ event_type ].compact
+  end
+
+  def event_type_summary
+    event_type_names.map(&:humanize).to_sentence
+  end
+
   private
+    def normalize_event_types
+      selected_types = Array(event_types).reject(&:blank?).uniq
+      selected_types = [ event_type ] if selected_types.empty? && event_type.present?
+
+      self.event_types = selected_types
+      self.event_type = selected_types.first if selected_types.any?
+    end
+
     def set_occurred_at
       self.occurred_at ||= Time.current
+    end
+
+    def event_types_present
+      errors.add(:event_types, "must include at least one type") if event_type_names.empty?
+    end
+
+    def event_types_supported
+      event_type_names.each do |selected_type|
+        errors.add(:event_types, "#{selected_type} is not supported") unless self.class.event_types.key?(selected_type)
+      end
     end
 
     def affected_equipment_present

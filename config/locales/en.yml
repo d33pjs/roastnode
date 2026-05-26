@@ -144,7 +144,7 @@ en:
       back: "Back to dashboard"
       create: "Save event"
       equipment: "Affected equipment"
-      event_type: "Event type"
+      event_types: "Event types"
       notes: "Notes"
       occurred_at: "Occurred at"
       title: "Log equipment event"

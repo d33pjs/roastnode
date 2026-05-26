@@ -8,6 +8,8 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("equipment_events.new.title")
+    assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "grinder_cleaning"
+    assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "machine_backflush"
     assert_select "label", text: equipment(:household_grinder).name
     assert_select "label", text: equipment(:other_workspace_grinder).name, count: 0
   end
@@ -21,7 +23,7 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
       assert_difference -> { EquipmentEventItem.count }, 1 do
         post equipment_events_path, params: {
           equipment_event: {
-            event_type: "grinder_cleaning",
+            event_types: [ "grinder_cleaning" ],
             occurred_at: "2026-05-26 08:30",
             notes: "Quick brush out.",
             equipment_ids: [ equipment(:household_grinder).id ]
@@ -36,6 +38,31 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes event.equipment, equipment(:household_grinder)
   end
 
+  test "member can create equipment event with multiple event types" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    assert_difference -> { workspaces(:household).equipment_events.count }, 1 do
+      assert_difference -> { EquipmentEventItem.count }, 2 do
+        post equipment_events_path, params: {
+          equipment_event: {
+            event_types: [ "grinder_cleaning", "machine_backflush" ],
+            occurred_at: "2026-05-26 08:30",
+            notes: "Cleaned both.",
+            equipment_ids: [ equipment(:household_grinder).id, equipment(:household_machine).id ]
+          }
+        }
+      end
+    end
+
+    event = workspaces(:household).equipment_events.order(:created_at).last
+    assert_redirected_to equipment_event_path(event)
+    assert_equal [ "grinder_cleaning", "machine_backflush" ], event.event_types
+    assert_equal "grinder_cleaning", event.event_type
+    assert_equal [ equipment(:household_grinder).id, equipment(:household_machine).id ].sort, event.equipment.ids.sort
+  end
+
   test "viewer cannot create equipment event" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
@@ -45,7 +72,7 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference -> { workspaces(:household).equipment_events.count } do
       post equipment_events_path, params: {
         equipment_event: {
-          event_type: "other",
+          event_types: [ "other" ],
           equipment_ids: [ equipment(:household_grinder).id ]
         }
       }
@@ -60,7 +87,7 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference -> { workspaces(:household).equipment_events.count } do
       post equipment_events_path, params: {
         equipment_event: {
-          event_type: "grinder_cleaning",
+          event_types: [ "grinder_cleaning" ],
           equipment_ids: [ equipment(:other_workspace_grinder).id ]
         }
       }
