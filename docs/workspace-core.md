@@ -9,6 +9,7 @@ Workspace Core is the first real Roastnode product slice after Rails foundation 
 - `User#active_workspace` stores the current workspace for dashboard and scoped actions.
 - `User#default_landing_screen` stores whether `/` should open the dashboard or the espresso form.
 - `WorkspaceInvite` stores token links for adding signed-in users to a workspace.
+- Workspace settings currently include the household/workspace name and default currency.
 
 ## Roles
 
@@ -27,11 +28,16 @@ Owners and admins can open the workspace dashboard and use **Invites** to create
 
 Invite acceptance currently requires an already signed-in user. Public signup-from-invite is intentionally deferred so the first workspace flow stays private and Rails-native.
 
+## Settings
+
+Owners and admins can edit the active workspace through `/workspace/edit`. The settings route is singleton and scoped through `current_workspace`; do not add a workspace ID to that flow unless multi-workspace admin requirements change.
+
 ## Implementation Notes
 
 - New domain tables should include `workspace_id` unless they are intentionally global.
 - Query domain records through `current_workspace` in controllers to avoid cross-workspace leaks.
 - `root_path` is the user's preferred landing screen. Use `dashboard_path` for explicit "Back to dashboard" links.
 - Add authorization and isolation tests for every workspace-scoped controller.
+- Workspace settings should continue to use `authorize_workspace_admin!`.
 - Exports should use `current_workspace` as their scope and avoid accepting workspace IDs from params.
 - Keep copy and docs clear that v1 is private; public profiles, federation, and roaster-facing workflows are future work.

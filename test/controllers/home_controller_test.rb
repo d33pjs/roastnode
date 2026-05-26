@@ -24,6 +24,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=workspace-desktop-menu].hidden.sm\\:flex"
     assert_select "p", text: I18n.t("workspaces.show.signed_in_as", email: user.email_address)
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("workspaces.show.profile")
+    assert_select "a[href=?]", edit_workspace_path, text: I18n.t("workspaces.show.settings")
     assert_select "a[href=?]", new_session_path, count: 0
   end
 
@@ -51,6 +52,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", workspace_export_path, count: 0
     assert_select "a[href=?]", workspace_export_beans_path, count: 0
     assert_select "a[href=?]", workspace_export_brews_path, count: 0
+    assert_select "a[href=?]", edit_workspace_path, count: 0
   end
 
   test "workspace dashboard shows coffee actions and recent activity" do

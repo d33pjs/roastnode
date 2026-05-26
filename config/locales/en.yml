@@ -474,6 +474,12 @@ en:
       unavailable_eyebrow: "Invite unavailable"
       unavailable_title: "This invite is not available"
   workspaces:
+    edit:
+      back: "Back to dashboard"
+      default_currency: "Default currency"
+      name: "Household name"
+      save: "Save workspace"
+      title: "Workspace settings"
     switch:
       switched: "Switched to %{name}."
     show:
@@ -508,6 +514,7 @@ en:
       profile: "Profile"
       recent_activity: "Recent activity"
       role: "Role: %{role}"
+      settings: "Settings"
       sign_out: "Sign out"
       signed_in_as: "Signed in as %{email}"
       status:
@@ -518,3 +525,5 @@ en:
       unknown_roaster: "Unknown roaster"
       workspace_menu: "Workspace menu"
       view_all: "View all"
+    update:
+      updated: "Workspace updated."

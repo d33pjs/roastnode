@@ -17,6 +17,8 @@ class Workspace < ApplicationRecord
   has_many :equipment_events, dependent: :destroy
   has_many :preparation_tools, dependent: :destroy
 
+  normalizes :default_currency, with: ->(currency) { currency.strip.upcase }
+
   validates :name, presence: true
   validates :default_currency, presence: true
 end
