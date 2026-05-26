@@ -14,6 +14,6 @@ Use `User#display_label` for casual product UI:
 
 ## Email Placement
 
-The Profile page shows the signed-in user's email as a read-only account detail. Workspace member lists, invite management, exports, and instance-admin-only future user management may still use email addresses where account identity is the point of the screen.
+The Profile page shows the signed-in user's email as a read-only account detail. Workspace member lists, invite management, exports, and the instance-admin account list may still use email addresses where account identity is the point of the screen.
 
 When adding a new surface, ask whether it is a coffee/product surface or an account/admin surface. Coffee/product surfaces should prefer display labels.

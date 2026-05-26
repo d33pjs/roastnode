@@ -4,7 +4,7 @@ Roastnode now has a minimal instance-level admin surface at `/instance_admin`.
 
 ## Scope
 
-The page is intentionally small. It shows private-install status, read-only health checks, and aggregate counts for users, workspaces, beans, brews, and equipment. It also reminds admins that optional demo data is loaded explicitly with:
+The page is intentionally small. It shows private-install status, read-only health checks, aggregate counts, and a read-only account list for private hosting. It also reminds admins that optional demo data is loaded explicitly with:
 
 ```sh
 bin/rails roastnode:demo:load
@@ -33,10 +33,21 @@ Controllers that expose instance-wide data should use `authorize_instance_admin!
 
 These checks are read-only. Keep them safe to run during normal page loads. Do not add checks that enqueue jobs, write files, mutate records, call external services, or expose infrastructure secrets.
 
+## Account List
+
+`InstanceUserSnapshot` builds the account rows rendered on the page:
+
+- profile display label
+- account email address
+- workspace membership count
+- instance-admin versus normal-user badge
+
+This is visibility only, not user management. Do not add role changes, password resets, deletion, impersonation, or invite actions to the account list without a dedicated design, authorization tests, audit trail decisions, and careful copy.
+
 ## Navigation
 
 The dashboard shows an "Instance admin" link only when `Current.user.instance_admin?` is true. Normal workspace users should not see the link and should be redirected away from `/instance_admin` with the standard authorization alert.
 
 ## Future Ideas
 
-Good next additions would be background job status, backup/export status, and carefully audited user management. Any destructive instance-wide action needs a dedicated design and tests before implementation.
+Good next additions would be background job status, backup/export status, and carefully audited user management. Any destructive or account-mutating instance-wide action needs a dedicated design and tests before implementation.

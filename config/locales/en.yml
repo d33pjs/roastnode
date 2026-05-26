@@ -360,6 +360,8 @@ en:
       demo_data: "Demo data"
       demo_data_note: "Optional seed data stays explicit and guarded for production."
       disabled: "Disabled"
+      display_name: "Display name"
+      email_address: "Email"
       eyebrow: "Private instance"
       health: "Instance health"
       health_labels:
@@ -368,6 +370,8 @@ en:
         rails: "Rails"
         storage: "Storage"
         storage_usage: "Storage usage"
+      account_role: "Account role"
+      instance_admin_badge: "Instance admin"
       instance_mode: "Instance mode"
       intro: "A small owner-only control surface for private hosting, safety checks, and future maintenance tools."
       metric_labels:
@@ -385,6 +389,12 @@ en:
       rails_detail: "Rails %{version} / %{environment}"
       storage_usage_detail: "%{blobs} blobs / %{size}"
       title: "Instance admin"
+      user_badge: "User"
+      users: "Users"
+      workspace_count:
+        one: "1 workspace"
+        other: "%{count} workspaces"
+      workspace_memberships: "Workspaces"
   preparation_tools:
     create:
       created: "Preparation tool added."

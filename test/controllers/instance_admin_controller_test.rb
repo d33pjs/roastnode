@@ -57,4 +57,31 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=instance-admin-health-rails]", text: /#{I18n.t("instance_admin.index.health_labels.rails")}/
     assert_select "[data-testid=instance-admin-health-rails]", text: /#{Rails.version}/
   end
+
+  test "shows read-only account rows to instance admins" do
+    admin = users(:one)
+    admin.update!(display_name: "Jens", instance_admin: true)
+    member = users(:two)
+    member.update!(display_name: nil)
+    sign_in_as(admin)
+
+    get "/instance_admin"
+
+    assert_response :success
+    assert_select "h2", I18n.t("instance_admin.index.users")
+    assert_select "[data-testid=instance-admin-user-#{admin.id}]" do
+      assert_select "p", text: admin.display_label
+      assert_select "p", text: admin.email_address
+      assert_select "span", text: I18n.t("instance_admin.index.instance_admin_badge")
+      assert_select "span", text: I18n.t("instance_admin.index.workspace_count", count: admin.memberships.count)
+    end
+    assert_select "[data-testid=instance-admin-user-#{member.id}]" do
+      assert_select "p", text: member.display_label
+      assert_select "p", text: member.email_address
+      assert_select "span", text: I18n.t("instance_admin.index.user_badge")
+      assert_select "span", text: I18n.t("instance_admin.index.workspace_count", count: member.memberships.count)
+    end
+    assert_select "[data-testid=instance-admin-users] a", count: 0
+    assert_select "[data-testid=instance-admin-users] form", count: 0
+  end
 end

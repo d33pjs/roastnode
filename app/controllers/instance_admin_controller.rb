@@ -10,5 +10,6 @@ class InstanceAdminController < ApplicationController
       equipment: Equipment.count
     }
     @health_checks = InstanceHealthSnapshot.new.checks
+    @user_rows = InstanceUserSnapshot.new.rows
   end
 end
