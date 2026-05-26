@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_224500) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_27_003000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -242,10 +242,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_224500) do
     t.string "import_source_id"
     t.string "name", null: false
     t.text "notes"
+    t.integer "position", default: 0, null: false
+    t.bigint "primary_photo_attachment_id"
     t.jsonb "raw_import_data", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["data_import_id"], name: "index_preparation_tools_on_data_import_id"
+    t.index ["primary_photo_attachment_id"], name: "index_preparation_tools_on_primary_photo_attachment_id"
+    t.index ["workspace_id", "active", "position"], name: "idx_preparation_tools_workspace_active_position"
     t.index ["workspace_id", "brew_method", "active"], name: "idx_on_workspace_id_brew_method_active_63d2fd7955"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_preparation_tools_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id"], name: "index_preparation_tools_on_workspace_id"

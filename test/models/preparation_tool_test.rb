@@ -14,4 +14,22 @@ class PreparationToolTest < ActiveSupport::TestCase
     assert_not tool.valid?
     assert_includes tool.errors[:name], "can't be blank"
   end
+
+  test "ordered sorts by position then name" do
+    preparation_tools(:wdt).update!(position: 20)
+    preparation_tools(:puck_screen).update!(position: 10)
+
+    assert_equal [ preparation_tools(:puck_screen), preparation_tools(:wdt), preparation_tools(:archived_tool) ],
+      workspaces(:household).preparation_tools.ordered.to_a
+  end
+
+  test "archive and reopen toggle active state" do
+    tool = preparation_tools(:wdt)
+
+    tool.archive!
+    assert_not tool.active?
+
+    tool.reopen!
+    assert tool.active?
+  end
 end

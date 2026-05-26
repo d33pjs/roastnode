@@ -3,6 +3,7 @@ wdt:
   name: WDT
   brew_method: espresso
   active: true
+  position: 10
   notes: Needle distribution.
 
 puck_screen:
@@ -10,6 +11,7 @@ puck_screen:
   name: Puck screen
   brew_method: espresso
   active: true
+  position: 20
   notes:
 
 archived_tool:
@@ -17,6 +19,7 @@ archived_tool:
   name: Old paper filter
   brew_method: espresso
   active: false
+  position: 30
   notes:
 
 other_workspace_tool:
@@ -24,4 +27,5 @@ other_workspace_tool:
   name: Other WDT
   brew_method: espresso
   active: true
+  position: 10
   notes:

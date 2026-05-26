@@ -95,7 +95,7 @@ module BrewsHelper
     tool = brew_preparation_tool.preparation_tool
     return preparation_tools_path unless tool
 
-    preparation_tools_path(anchor: dom_id(tool))
+    preparation_tool_path(tool)
   end
 
   def brew_card_photo_attachment(brew)

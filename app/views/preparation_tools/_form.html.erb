@@ -1,0 +1,34 @@
+<%= form_with model: preparation_tool, class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+  <% if preparation_tool.errors.any? %>
+    <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <%= preparation_tool.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :name, t("preparation_tools.form.name"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.text_field :name, autofocus: true, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.label :brew_method, t("preparation_tools.form.method"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.select :brew_method, [ [ "Espresso", "espresso" ] ], {}, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.label :position, t("preparation_tools.form.position"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.number_field :position, min: 0, step: 1, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.label :notes, t("preparation_tools.form.notes"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.text_area :notes, rows: 4, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.label :photos, t("preparation_tools.form.photos"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm text-stone-700 file:mr-4 file:rounded-md file:border-0 file:bg-stone-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-stone-800" %>
+  </div>
+
+  <%= form.submit submit_label, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+<% end %>

@@ -6,8 +6,11 @@ Preparation Tools are reusable workspace checklist items for brew preparation. T
 
 - Workspace-scoped preparation tools.
 - Espresso method support.
-- Tool index and creation screens.
-- Optional preparation tool photos on creation.
+- Tool index, detail, creation, and edit screens.
+- Optional preparation tool photos on create and edit.
+- Primary photo selection, private viewing/download, cropping, and removal through the shared media flow.
+- Archive and reopen lifecycle.
+- Manual sort position for checklist ordering.
 - Brew form checklist for active espresso tools.
 - Per-brew snapshots of selected tool names.
 - Last-brew defaults for active tools from the current user's previous brew.
@@ -32,7 +35,6 @@ The snapshot keeps old brew history readable if a tool is renamed later.
 ## Deferred
 
 - Recipe-defined preparation tool defaults.
-- Inactive/archive UI.
-- Tool ordering controls.
-- Editing existing preparation tools and adding photos after creation.
+- Drag-and-drop ordering.
 - Preparation tool analytics.
+- Destructive delete/danger-zone workflow.

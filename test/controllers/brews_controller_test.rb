@@ -267,7 +267,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-detail-channeling]", "Yes"
     assert_select "[data-testid=brew-detail-grinder] a[href=?]", equipment_path(brew.grinder), text: brew.grinder.name
     assert_select "[data-testid=brew-detail-machine] a[href=?]", equipment_path(brew.machine), text: brew.machine.name
-    assert_select "a[data-testid=brew-detail-tool][href=?]", preparation_tools_path(anchor: "preparation_tool_#{preparation_tools(:wdt).id}"), text: "WDT"
+    assert_select "a[data-testid=brew-detail-tool][href=?]", preparation_tool_path(preparation_tools(:wdt)), text: "WDT"
     assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
   end
 

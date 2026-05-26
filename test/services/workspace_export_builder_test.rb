@@ -3,7 +3,8 @@ require "test_helper"
 class WorkspaceExportBuilderTest < ActiveSupport::TestCase
   test "builds active workspace payload without other workspace data" do
     generated_at = Time.zone.parse("2026-05-26 10:15:00")
-    photo = attach_photo(beans(:open_household))
+    bean_photo = attach_photo(beans(:open_household))
+    tool_photo = attach_photo(preparation_tools(:wdt))
 
     payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at:).call
 
@@ -25,9 +26,13 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_not_includes equipment_ids, equipment(:other_workspace_grinder).id
 
     bean_payload = payload[:beans].find { |bean| bean[:id] == beans(:open_household).id }
-    assert_equal photo.id, bean_payload[:photos].first[:attachment_id]
+    assert_equal bean_photo.id, bean_payload[:photos].first[:attachment_id]
     assert_equal "photo.jpg", bean_payload[:photos].first[:filename]
     assert_not bean_payload[:photos].first.key?(:url)
+
+    tool_payload = payload[:preparation_tools].find { |tool| tool[:id] == preparation_tools(:wdt).id }
+    assert_equal preparation_tools(:wdt).position, tool_payload[:position]
+    assert_equal tool_photo.id, tool_payload[:photos].first[:attachment_id]
   end
 
   test "includes relationships needed to reconstruct workspace data" do

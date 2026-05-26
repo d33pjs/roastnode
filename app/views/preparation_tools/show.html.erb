@@ -1,0 +1,67 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto max-w-5xl px-6 py-10">
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <%= render "shared/back_link", label: t(".back"), path: preparation_tools_path %>
+        <p data-testid="preparation-tool-status" class="mt-4 text-sm font-semibold uppercase text-stone-600"><%= @preparation_tool.active? ? t(".active") : t(".inactive") %></p>
+        <h1 class="mt-2 text-3xl font-bold text-stone-950"><%= @preparation_tool.name %></h1>
+        <p class="mt-2 text-stone-700"><%= @preparation_tool.brew_method.humanize %></p>
+      </div>
+
+      <% if current_workspace_policy.write? %>
+        <div class="flex flex-wrap gap-2">
+          <%= link_to t(".edit"), edit_preparation_tool_path(@preparation_tool), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <% if @preparation_tool.active? %>
+            <%= button_to t(".archive"), archive_preparation_tool_path(@preparation_tool), method: :patch, class: "rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>
+          <% else %>
+            <%= button_to t(".reopen"), reopen_preparation_tool_path(@preparation_tool), method: :patch, class: "rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
+          <% end %>
+        </div>
+      <% end %>
+    </header>
+
+    <section class="grid gap-4 sm:grid-cols-3">
+      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".used_in_brews") %></p>
+        <p data-testid="preparation-tool-brew-count" class="mt-2 text-3xl font-bold text-stone-950"><%= @preparation_tool.brews.count %></p>
+      </div>
+      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".position") %></p>
+        <p class="mt-2 text-3xl font-bold text-stone-950"><%= @preparation_tool.position %></p>
+      </div>
+      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".method") %></p>
+        <p class="mt-2 text-lg font-bold text-stone-950"><%= @preparation_tool.brew_method.humanize %></p>
+      </div>
+    </section>
+
+    <% if @preparation_tool.notes.present? %>
+      <section class="mt-8 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+        <h2 class="font-semibold text-stone-950"><%= t(".notes") %></h2>
+        <p class="mt-2 whitespace-pre-line text-stone-700"><%= @preparation_tool.notes %></p>
+      </section>
+    <% end %>
+
+    <%= render "shared/photo_grid",
+      record: @preparation_tool,
+      title: t(".photos"),
+      section_class: "mt-8 rounded-lg border border-stone-200 bg-white p-5 shadow-sm",
+      title_class: "font-semibold text-stone-950" %>
+
+    <section class="mt-8">
+      <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".recent_brews") %></h2>
+      <div class="divide-y divide-stone-100 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+        <% if @recent_brews.any? %>
+          <% @recent_brews.each do |brew| %>
+            <%= link_to brew_path(brew), class: "block p-4 hover:bg-stone-50" do %>
+              <p class="font-semibold text-stone-950"><%= t(".brew", bean: brew.bean.name) %></p>
+              <p class="mt-1 text-sm text-stone-600"><%= l(brew.occurred_at, format: :short) %></p>
+            <% end %>
+          <% end %>
+        <% else %>
+          <p class="p-4 text-sm text-stone-600"><%= t(".no_brews") %></p>
+        <% end %>
+      </div>
+    </section>
+  </section>
+</main>

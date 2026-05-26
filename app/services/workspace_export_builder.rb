@@ -140,13 +140,15 @@ class WorkspaceExportBuilder
           name: tool.name,
           brew_method: tool.brew_method,
           active: tool.active,
+          position: tool.position,
           notes: tool.notes,
           created_at: timestamp(tool.created_at),
           updated_at: timestamp(tool.updated_at),
           data_import_id: tool.data_import_id,
           import_source: tool.import_source,
           import_source_id: tool.import_source_id,
-          raw_import_data: tool.raw_import_data
+          raw_import_data: tool.raw_import_data,
+          photos: photo_metadata(tool)
         }
       end
     end

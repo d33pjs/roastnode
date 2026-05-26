@@ -26,7 +26,10 @@ Rails.application.routes.draw do
     patch :reopen, on: :member
   end
   resources :equipment_events, only: %i[new create show]
-  resources :preparation_tools, only: %i[index new create]
+  resources :preparation_tools, only: %i[index new create show edit update] do
+    patch :archive, on: :member
+    patch :reopen, on: :member
+  end
   resources :brews, only: %i[new create show edit update destroy]
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do

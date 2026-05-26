@@ -453,8 +453,21 @@ en:
         other: "%{count} workspaces"
       workspace_memberships: "Workspaces"
   preparation_tools:
+    archive:
+      archived: "Preparation tool archived."
     create:
       created: "Preparation tool added."
+    edit:
+      back: "Back to preparation tool"
+      photos: "Current photos"
+      title: "Edit preparation tool"
+      update: "Save preparation tool"
+    form:
+      method: "Method"
+      name: "Name"
+      notes: "Notes"
+      photos: "Photos"
+      position: "Sort position"
     index:
       active: "Active"
       back: "Back to dashboard"
@@ -467,10 +480,26 @@ en:
     new:
       back: "Back to preparation tools"
       create: "Add preparation tool"
-      method: "Method"
-      name: "Name"
-      notes: "Notes"
       title: "Add preparation tool"
+    reopen:
+      reopened: "Preparation tool reopened."
+    show:
+      active: "Active"
+      archive: "Archive"
+      back: "Back to preparation tools"
+      brew: "Espresso with %{bean}"
+      edit: "Edit"
+      inactive: "Inactive"
+      method: "Method"
+      no_brews: "No brews yet."
+      notes: "Notes"
+      photos: "Photos"
+      position: "Sort position"
+      recent_brews: "Recent brews"
+      reopen: "Reopen"
+      used_in_brews: "Used in brews"
+    update:
+      updated: "Preparation tool updated."
   profiles:
     edit:
       avatar: "Avatar"

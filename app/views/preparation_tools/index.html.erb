@@ -24,7 +24,9 @@
         <tbody class="divide-y divide-stone-100">
           <% @preparation_tools.each do |tool| %>
             <tr id="<%= dom_id(tool) %>">
-              <td class="px-4 py-3 text-sm font-medium text-stone-950"><%= tool.name %></td>
+              <td class="px-4 py-3 text-sm font-medium text-stone-950">
+                <%= link_to tool.name, preparation_tool_path(tool), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+              </td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= tool.brew_method.humanize %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= tool.active? ? t(".active") : t(".inactive") %></td>
             </tr>

@@ -8,19 +8,21 @@ Preparation Tools completes the missing part of the last-brew default contract. 
 
 - Workspace-scoped preparation tools.
 - Tools are method-scoped, with `espresso` as the first method.
-- Owners, admins, and members can create tools.
-- Viewers can read tools but not create them.
+- Owners, admins, and members can create, edit, archive, and reopen tools.
+- Viewers can read tools but not manage them.
+- Tools have detail pages, manual position ordering, notes, and additive photo management.
+- Tool photos use the shared private media flow for primary selection, viewing, download, crop, and removal.
 - Espresso brew forms show active workspace tools as a checklist.
 - Brews snapshot selected tool names at save time.
 - New espresso brews preselect active tools from the current user's last brew.
+- Workspace JSON export includes preparation tool active status, position, and photo metadata.
 
 ## Explicitly Deferred
 
 - Recipe-defined default tools.
-- Tool ordering and per-user hidden fields.
-- Tool photos.
+- Drag-and-drop ordering and per-user hidden fields.
 - Analytics by preparation tool.
-- Import/export mapping.
+- Destructive delete/danger-zone workflow.
 
 ## Domain Model
 
@@ -32,7 +34,10 @@ Fields:
 - `name`
 - `brew_method`, default `espresso`
 - `active`, default `true`
+- `position`, default `0`
 - `notes`
+- `primary_photo_attachment_id`
+- `photos`, Active Storage attachments
 
 `BrewPreparationTool` belongs to a brew and optionally points back to a `PreparationTool`. It also stores `tool_name` and `brew_method` snapshots so brew history remains readable if a tool is renamed later.
 
@@ -50,8 +55,9 @@ The new espresso form copies preparation tools from the current user's most rece
 
 Tests must cover:
 
-- workspace-scoped tool listing and creation
+- workspace-scoped tool listing, details, creation, editing, archive, and reopen
 - viewer write denial
+- photo attachment management on edit
 - brew creation snapshotting selected tools
 - cross-workspace tool IDs not being linked
 - new brew form preselecting last brew tools

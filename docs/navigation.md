@@ -9,10 +9,11 @@ Roastnode detail pages should cross-link records wherever that helps a household
 - Brew detail fields below the hero card link beans, grinders, machines, and preparation tools.
 - Brew detail pages show read-only related photo groups for the bean, grinder, machine, and selected preparation tools when photos exist.
 - Equipment event detail pages link affected equipment names to equipment detail pages.
+- Preparation tools have detail pages and brew detail tool links should point to those pages when the current tool record still exists.
 - Back links use the shared `shared/back_link` partial so they render as tap-friendly buttons on mobile.
 
 ## Agent Notes
 
 - Use `dashboard_path` for explicit dashboard/back-to-dashboard links because `root_path` can honor a user landing preference and redirect somewhere else.
 - Keep links scoped through records already loaded from `current_workspace`; do not add global finders for convenience.
-- Preparation tools currently have an index and creation flow, not individual detail pages. Link snapshots with `preparation_tools_path(anchor: dom_id(tool))` until a real tool detail route exists.
+- Keep hero-card internals link-free. Use cross-links in the detail sections below the hero instead.
