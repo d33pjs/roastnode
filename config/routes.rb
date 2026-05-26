@@ -8,6 +8,10 @@ Rails.application.routes.draw do
     patch :switch, on: :member
   end
   resources :memberships, only: :index
+  resources :workspace_invites, only: %i[index create show], param: :token do
+    post :accept, on: :member
+    patch :revoke, on: :member
+  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

@@ -52,6 +52,40 @@ en:
       email: "Email"
       role: "Role"
       title: "Workspace members"
+  workspace_invites:
+    accept:
+      accepted: "Joined %{workspace}."
+      unavailable: "This invite is not available."
+    create:
+      created: "Invite created."
+    index:
+      actions: "Actions"
+      active: "Active"
+      anyone: "Anyone with link"
+      back: "Back to dashboard"
+      closed: "Closed"
+      create: "Create invite"
+      email: "Email"
+      email_label: "Email"
+      email_placeholder: "friend@example.com"
+      invite_url: "Invite URL"
+      new_invite: "New invite"
+      role: "Role"
+      role_label: "Role"
+      revoke: "Revoke"
+      status: "Status"
+      title: "Workspace invites"
+    revoke:
+      revoked: "Invite revoked."
+    show:
+      accept: "Accept invite"
+      body: "You will join with the %{role} role."
+      dashboard: "Go to dashboard"
+      eyebrow: "Workspace invite"
+      title: "Join %{workspace}"
+      unavailable_body: "Ask a workspace owner or admin for a fresh invite link."
+      unavailable_eyebrow: "Invite unavailable"
+      unavailable_title: "This invite is not available"
   workspaces:
     switch:
       switched: "Switched to %{name}."
@@ -67,6 +101,7 @@ en:
           body: "Grinders, machines, and maintenance events will be workspace-scoped."
           title: "Equipment"
       eyebrow: "Household workspace"
+      invites: "Invites"
       members: "Members"
       role: "Role: %{role}"
       sign_out: "Sign out"

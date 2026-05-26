@@ -1,0 +1,59 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto max-w-6xl px-6 py-10">
+    <div class="mb-8">
+      <%= link_to t(".back"), root_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+      <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+      <p class="mt-2 text-stone-700"><%= current_workspace.name %></p>
+    </div>
+
+    <section class="mb-8 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+      <h2 class="text-lg font-semibold text-stone-950"><%= t(".new_invite") %></h2>
+      <%= form_with model: @workspace_invite, url: workspace_invites_path, class: "mt-4 grid gap-4 md:grid-cols-[1fr_12rem_auto]" do |form| %>
+        <div>
+          <%= form.label :email_address, t(".email_label"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.email_field :email_address, placeholder: t(".email_placeholder"), class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <div>
+          <%= form.label :role, t(".role_label"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.select :role, WorkspaceInvite::INVITABLE_ROLES.map { |role| [ role.humanize, role ] }, {}, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <div class="flex items-end">
+          <%= form.submit t(".create"), class: "w-full rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800 md:w-auto" %>
+        </div>
+      <% end %>
+    </section>
+
+    <div class="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+      <table class="min-w-full divide-y divide-stone-200">
+        <thead class="bg-stone-100">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".email") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".role") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".status") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".invite_url") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".actions") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <% @workspace_invites.each do |invite| %>
+            <tr>
+              <td class="px-4 py-3 text-sm text-stone-900"><%= invite.email_address.presence || t(".anyone") %></td>
+              <td class="px-4 py-3 text-sm text-stone-700"><%= invite.role %></td>
+              <td class="px-4 py-3 text-sm text-stone-700"><%= invite.acceptable? ? t(".active") : t(".closed") %></td>
+              <td class="px-4 py-3">
+                <%= text_field_tag nil, workspace_invite_url(invite.token), readonly: true, class: "w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm text-stone-700" %>
+              </td>
+              <td class="px-4 py-3">
+                <% if invite.acceptable? %>
+                  <%= button_to t(".revoke"), revoke_workspace_invite_path(invite.token), method: :patch, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
