@@ -21,13 +21,13 @@
 
 ### Task 2: Statistics Page
 
-- [ ] Write controller tests for authenticated workspace access, dashboard link, and viewer read access.
-- [ ] Add `/statistics` route and controller.
-- [ ] Add dashboard link.
-- [ ] Add `app/views/statistics/index.html.erb`.
-- [ ] Add locale strings.
-- [ ] Run focused controller tests.
-- [ ] Commit with `git commit -m "Add statistics page"`.
+- [x] Write controller tests for authenticated workspace access, dashboard link, and viewer read access.
+- [x] Add `/statistics` route and controller.
+- [x] Add dashboard link.
+- [x] Add `app/views/statistics/index.html.erb`.
+- [x] Add locale strings.
+- [x] Run focused controller tests.
+- [x] Commit with `git commit -m "Add statistics page"`.
 
 ### Task 3: Docs And Verification
 

@@ -1,0 +1,12 @@
+<div class="space-y-2">
+  <% points.last(10).each do |point| %>
+    <% value = point[value_key] %>
+    <div class="grid grid-cols-[5.5rem_1fr_3rem] items-center gap-3 text-sm">
+      <span class="text-stone-600"><%= l(point[:date], format: :short) %></span>
+      <div class="h-2 overflow-hidden rounded-full bg-stone-100">
+        <div class="h-full rounded-full bg-stone-900" style="width: <%= statistics_bar_width(value, maximum) %>%"></div>
+      </div>
+      <span class="text-right font-medium text-stone-800"><%= suffix.present? ? number_with_precision(value, precision: 1, strip_insignificant_zeros: true) : value %><%= suffix %></span>
+    </div>
+  <% end %>
+</div>

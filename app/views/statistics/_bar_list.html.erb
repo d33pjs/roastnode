@@ -1,0 +1,17 @@
+<% if values.any? %>
+  <div class="space-y-3">
+    <% values.each do |label, count| %>
+      <div>
+        <div class="flex items-center justify-between gap-4 text-sm">
+          <span class="font-medium text-stone-800"><%= label.to_s.humanize %></span>
+          <span class="text-stone-600"><%= count %></span>
+        </div>
+        <div class="mt-1 h-2 overflow-hidden rounded-full bg-stone-100">
+          <div class="h-full rounded-full bg-stone-900" style="width: <%= statistics_bar_width(count, maximum) %>%"></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p class="text-sm text-stone-600"><%= empty_label %></p>
+<% end %>

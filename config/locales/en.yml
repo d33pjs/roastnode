@@ -246,6 +246,32 @@ en:
       name: "Name"
       notes: "Notes"
       title: "Add preparation tool"
+  statistics:
+    index:
+      average_brew_cost: "Average brew cost"
+      back: "Back to dashboard"
+      beans: "Beans"
+      brew_count:
+        one: "%{count} brew"
+        other: "%{count} brews"
+      brews_by_day: "Brews by day"
+      channeling_rate: "Channeling rate"
+      consumption_by_day: "Consumption by day"
+      equipment: "Equipment"
+      known_spend: "Known bean spend"
+      markers: "Retention markers"
+      most_used_grinder: "Most used grinder"
+      most_used_machine: "Most used machine"
+      no_data: "No data yet."
+      open_beans: "Open beans"
+      origins: "Origins"
+      processes: "Processes"
+      roasters: "Roasters"
+      taste_balance: "Taste balance"
+      title: "Statistics"
+      total_brews: "Total brews"
+      total_ground: "Beans ground"
+      unknown: "Unknown"
   workspace_onboardings:
     create:
       created: "Workspace created."
@@ -309,6 +335,7 @@ en:
         equipment: "Equipment"
         log_brew: "Log espresso"
         preparation_tools: "Preparation tools"
+        statistics: "Statistics"
       activity:
         adjustment: "%{amount} g inventory adjustment for %{bean}"
         brew: "Espresso with %{bean}"
