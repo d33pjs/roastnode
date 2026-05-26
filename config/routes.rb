@@ -26,6 +26,8 @@ Rails.application.routes.draw do
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy]
   resource :workspace_export, only: :show
+  get "workspace_export/beans.csv" => "workspace_exports#beans", as: :workspace_export_beans
+  get "workspace_export/brews.csv" => "workspace_exports#brews", as: :workspace_export_brews
   resources :beanconqueror_imports, only: %i[new create show]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

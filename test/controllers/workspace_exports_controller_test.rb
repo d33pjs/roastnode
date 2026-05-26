@@ -1,4 +1,5 @@
 require "test_helper"
+require "csv"
 
 class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
   test "owner downloads active workspace export as json attachment" do
@@ -32,6 +33,48 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
 
     get workspace_export_path
 
+    assert_redirected_to root_path
+  end
+
+  test "owner downloads beans csv export" do
+    sign_in_as(users(:one))
+
+    get workspace_export_beans_path
+
+    assert_response :success
+    assert_equal "text/csv", response.media_type
+    assert_match "attachment", response.headers["Content-Disposition"]
+    assert_match "jens-household-beans.csv", response.headers["Content-Disposition"]
+
+    rows = CSV.parse(response.body, headers: true)
+    assert_includes rows.map { |row| row.fetch("id").to_i }, beans(:open_household).id
+    assert_not_includes rows.map { |row| row.fetch("id").to_i }, beans(:other_workspace_open).id
+  end
+
+  test "owner downloads brews csv export" do
+    sign_in_as(users(:one))
+
+    get workspace_export_brews_path
+
+    assert_response :success
+    assert_equal "text/csv", response.media_type
+    assert_match "attachment", response.headers["Content-Disposition"]
+    assert_match "jens-household-brews.csv", response.headers["Content-Disposition"]
+
+    rows = CSV.parse(response.body, headers: true)
+    assert_includes rows.map { |row| row.fetch("id").to_i }, brews(:morning_espresso).id
+    assert_not_includes rows.map { |row| row.fetch("id").to_i }, brews(:other_workspace_brew).id
+  end
+
+  test "member cannot export workspace csv files" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    get workspace_export_beans_path
+    assert_redirected_to root_path
+
+    get workspace_export_brews_path
     assert_redirected_to root_path
   end
 end

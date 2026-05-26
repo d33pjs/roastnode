@@ -39,7 +39,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Photos are private workspace data attached through Active Storage. Render app photos through `media_attachment_path(attachment)` and remove them through `MediaAttachmentsController#destroy` so active-workspace and write-policy checks stay centralized; do not use raw Active Storage blob/proxy URLs in app views.
 - Typography uses self-hosted Elms Sans from `app/assets/fonts/elmssans/` under the SIL Open Font License 1.1. Do not add runtime Google Fonts references; keep the vendored `OFL.txt` with the font files.
 - Branding assets live in `app/assets/images/brand/`. Use the shared brand partials with `logo_wordmark_transparent.png` and `logo_mark_transparent.png` for visible UI; the `*_transparent_bg.png` source files currently contain baked checkerboards, so avoid them until they are replaced by true alpha-transparent exports.
-- Workspace export is owner-only and uses the active workspace. Keep export payloads structured, omit sessions/passwords/invite tokens, and do not include signed media URLs or raw photo bytes until a dedicated media archive design exists.
+- Workspace export is owner-only and uses the active workspace. Keep the JSON export structured for reconstruction, and keep beans/brews CSV exports flat for spreadsheet use. Omit sessions/passwords/invite tokens, and do not include signed media URLs or raw photo bytes until a dedicated media archive design exists.
 - Dashboard recent activity should include brews, equipment events, and manual inventory adjustments. Do not show automatic brew inventory adjustments as separate timeline entries.
 
 ## Local Development Intent

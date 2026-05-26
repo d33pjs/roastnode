@@ -35,6 +35,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", workspace_invites_path, text: I18n.t("workspaces.show.invites")
     assert_select "a[href=?]", workspace_export_path, text: I18n.t("workspaces.show.export")
+    assert_select "a[href=?]", workspace_export_beans_path, text: I18n.t("workspaces.show.export_beans")
+    assert_select "a[href=?]", workspace_export_brews_path, text: I18n.t("workspaces.show.export_brews")
     assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("workspaces.show.import")
   end
 
@@ -47,6 +49,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", workspace_export_path, count: 0
+    assert_select "a[href=?]", workspace_export_beans_path, count: 0
+    assert_select "a[href=?]", workspace_export_brews_path, count: 0
   end
 
   test "workspace dashboard shows coffee actions and recent activity" do

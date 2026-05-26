@@ -21,6 +21,8 @@
         <% end %>
         <% if current_workspace_policy.export? %>
           <%= link_to t(".export"), workspace_export_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <%= link_to t(".export_beans"), workspace_export_beans_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <%= link_to t(".export_brews"), workspace_export_brews_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <% end %>
         <% if current_workspace_policy.manage? %>
           <%= link_to t(".import"), new_beanconqueror_import_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
@@ -40,6 +42,8 @@
           <% end %>
           <% if current_workspace_policy.export? %>
             <%= link_to t(".export"), workspace_export_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+            <%= link_to t(".export_beans"), workspace_export_beans_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+            <%= link_to t(".export_brews"), workspace_export_brews_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <% end %>
           <% if current_workspace_policy.manage? %>
             <%= link_to t(".import"), new_beanconqueror_import_path, class: "col-span-2 rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>

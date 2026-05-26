@@ -493,6 +493,8 @@ en:
         equipment_event: "%{event} for %{equipment}"
       eyebrow: "Household workspace"
       export: "Export JSON"
+      export_beans: "Beans CSV"
+      export_brews: "Brews CSV"
       hero:
         best: "Latest best brew"
         latest: "Latest brew"
