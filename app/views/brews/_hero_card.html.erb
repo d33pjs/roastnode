@@ -1,0 +1,115 @@
+<% card_class = local_assigns.fetch(:card_class, "") %>
+<% compact = local_assigns.fetch(:compact, false) %>
+<% chart_id = local_assigns.fetch(:chart_id, "brew-shot-fill-#{brew.id}") %>
+
+<article data-testid="brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
+  <div class="bg-stone-950 p-5">
+    <div class="flex flex-wrap items-center gap-2">
+      <span data-testid="brew-timestamp" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= brew_card_timestamp(brew) %></span>
+      <span data-testid="brew-workspace" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= current_workspace.name %></span>
+      <span class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= t("brews.show.card_method") %></span>
+    </div>
+
+    <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.95fr_1.05fr] lg:items-end" unless compact %>">
+      <div>
+        <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
+        <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
+        <% if brew_card_bean_descriptor(brew.bean).present? %>
+          <p class="mt-2 text-sm text-stone-300"><%= brew_card_bean_descriptor(brew.bean) %></p>
+        <% end %>
+        <p data-testid="brew-byline" class="mt-2 text-xs text-stone-400"><%= t("brews.show.byline", user: brew.user.display_label) %></p>
+      </div>
+
+      <div data-testid="brew-metrics" class="grid grid-cols-4 gap-1 sm:gap-2">
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.dose") %></p>
+          <p data-testid="brew-dose" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_grams(brew.dose_grams) %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.ratio") %></p>
+          <div data-testid="brew-ratio" class="mt-1 overflow-hidden">
+            <p data-testid="brew-ratio-main" class="brew-metric-value overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_ratio_value(brew) %></p>
+            <% if brew_card_ratio_time(brew).present? %>
+              <p data-testid="brew-ratio-time" class="brew-metric-subvalue mt-0.5 overflow-hidden text-ellipsis font-semibold text-stone-300"><%= brew_card_ratio_time(brew) %></p>
+            <% end %>
+          </div>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.grind_setting") %></p>
+          <p data-testid="brew-grind" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.rating") %></p>
+          <div data-testid="brew-rating" aria-label="<%= brew_card_rating_label(brew.rating) %>" class="mt-1 flex gap-0.5 sm:gap-1">
+            <% 5.times do |index| %>
+              <% filled = brew.rating.present? && index < brew.rating %>
+              <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-stone-400" %>"></span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="brew-chart-grid bg-stone-50 px-4 py-3 text-stone-950">
+    <div class="flex justify-end">
+      <span data-testid="brew-balance" class="rounded-full bg-green-50 px-3 py-1 text-xs font-bold text-green-700"><%= t("brews.show.balance", balance: brew.taste_balance.humanize) %></span>
+    </div>
+
+    <% preinfusion_x = brew_card_chart_x(brew.preinfusion_seconds, brew.total_time_seconds) || 216 %>
+    <% first_drip_x = brew_card_chart_x(brew.first_drip_seconds, brew.total_time_seconds) %>
+    <% total_time_x = brew_card_chart_x(brew.total_time_seconds, brew.total_time_seconds) || 626 %>
+    <% first_drip_label_x = first_drip_x ? [ first_drip_x + 14, 514 ].min : nil %>
+    <% axis_max_grams = brew_card_axis_max_grams(brew.beverage_grams) || brew.beverage_grams %>
+    <svg class="mt-1 block h-44 w-full" viewBox="0 0 720 190" role="img" aria-label="<%= t("brews.show.yield") %>">
+      <defs>
+        <linearGradient id="<%= chart_id %>" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#0f172a" stop-opacity=".16" />
+          <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+
+      <line x1="62" y1="150" x2="662" y2="150" stroke="#1c1917" stroke-width="2" />
+      <line x1="62" y1="26" x2="62" y2="150" stroke="#1c1917" stroke-width="2" />
+
+      <path d="M62 150 C116 152, 176 152, 216 146 C244 142, 264 128, 292 105 C334 71, 396 54, 464 45 C516 37, 580 36, 626 47" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round" />
+      <path d="M62 150 C116 152, 176 152, 216 146 C244 142, 264 128, 292 105 C334 71, 396 54, 464 45 C516 37, 580 36, 626 47 L626 150 L62 150 Z" fill="url(#<%= chart_id %>)" />
+
+      <path d="M62 8 C170 7, 260 6, 368 6 C480 5, 568 7, 626 11" fill="none" stroke="#a16207" stroke-width="3" stroke-linecap="round" />
+
+      <line x1="<%= preinfusion_x %>" y1="24" x2="<%= preinfusion_x %>" y2="160" stroke="#78716c" stroke-width="2" stroke-dasharray="6 8" />
+      <% if first_drip_x.present? %>
+        <line x1="<%= first_drip_x %>" y1="24" x2="<%= first_drip_x %>" y2="160" stroke="#0f766e" stroke-width="2" stroke-dasharray="4 7" />
+      <% end %>
+      <line x1="<%= total_time_x %>" y1="24" x2="<%= total_time_x %>" y2="160" stroke="#78716c" stroke-width="2" stroke-dasharray="6 8" />
+      <line x1="62" y1="49" x2="48" y2="49" stroke="#78716c" stroke-width="2" />
+
+      <text x="24" y="155" font-size="12" fill="#57534e">0g</text>
+      <text data-testid="brew-axis-max" x="18" y="53" font-size="12" fill="#57534e"><%= brew_card_grams(axis_max_grams) %></text>
+      <text x="50" y="176" font-size="12" fill="#57534e">0s</text>
+      <text data-testid="brew-preinfusion-label" x="<%= [ preinfusion_x - 40, 72 ].max %>" y="176" font-size="12" fill="#57534e"><%= brew_card_seconds(brew.preinfusion_seconds) %> Preinfusion</text>
+      <% if first_drip_x.present? %>
+        <g data-testid="brew-first-drip-callout">
+          <rect x="<%= first_drip_label_x - 6 %>" y="101" width="116" height="18" rx="5" fill="#f0fdfa" fill-opacity=".95" />
+          <text data-testid="brew-first-drip-label" x="<%= first_drip_label_x %>" y="114" font-size="12" font-weight="800" fill="#0f766e"><%= t("brews.show.first_drip_label", seconds: brew_card_seconds(brew.first_drip_seconds)) %></text>
+        </g>
+      <% end %>
+      <text data-testid="brew-total-time-label" x="<%= total_time_x - 19 %>" y="176" font-size="12" fill="#57534e"><%= brew_card_seconds(brew.total_time_seconds) %></text>
+      <g data-testid="brew-temperature-callout">
+        <rect x="530" y="17" width="132" height="20" rx="5" fill="#fffbeb" fill-opacity=".95" />
+        <text data-testid="brew-temperature-label" x="538" y="31" font-size="13" font-weight="800" fill="#a16207"><%= t("brews.show.temperature_label", temperature: brew_card_temperature(brew.brew_temperature_celsius)) %></text>
+      </g>
+      <text x="474" y="69" font-size="13" font-weight="800" fill="#0f172a"><%= brew_card_grams(brew.beverage_grams) %></text>
+    </svg>
+  </div>
+
+  <div class="bg-stone-900 px-5 py-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100"><%= t("brews.show.grinder") %>: <%= brew.grinder&.name || t("brews.show.unknown") %></span>
+      <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100"><%= t("brews.show.machine") %>: <%= brew.machine&.name || t("brews.show.unknown") %></span>
+      <% brew_card_tool_names(brew).each do |tool_name| %>
+        <span data-testid="brew-tool" class="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200"><%= tool_name %></span>
+      <% end %>
+    </div>
+  </div>
+</article>

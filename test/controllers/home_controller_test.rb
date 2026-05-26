@@ -62,6 +62,41 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
   end
 
+  test "workspace dashboard shows latest and latest best hero cards" do
+    workspace = workspaces(:household)
+    user = users(:one)
+    latest = brews(:morning_espresso)
+    latest.update!(
+      occurred_at: Time.zone.local(2026, 5, 26, 12, 0, 0),
+      rating: 3,
+      notes: "Latest but not best."
+    )
+    best = workspace.brews.create!(
+      user:,
+      bean: beans(:second_open_household),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 25, 12, 0, 0),
+      bean_weight_grams: 18,
+      ground_weight_grams: 18,
+      dose_grams: 18,
+      beverage_grams: 45,
+      total_time_seconds: 31,
+      rating: 5
+    )
+    sign_in_as(user)
+
+    get root_path
+
+    assert_response :success
+    assert_select "h2", I18n.t("workspaces.show.hero.latest")
+    assert_select "h2", I18n.t("workspaces.show.hero.best")
+    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", brew_path(latest)
+    assert_select "[data-testid=dashboard-latest-best-brew-card] a[href=?]", brew_path(best)
+    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-timestamp]", "26.05.2026 12:00:00"
+    assert_select "[data-testid=dashboard-latest-best-brew-card] [data-testid=brew-rating][aria-label=?]", "Rating 5 of 5 beans"
+  end
+
   test "shows onboarding for signed-in user without workspace" do
     user = User.create!(email_address: "workspace-needed@example.com", password: "password")
     sign_in_as(user)

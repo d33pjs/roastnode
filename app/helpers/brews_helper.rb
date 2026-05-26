@@ -21,6 +21,12 @@ module BrewsHelper
     "#{number_with_precision(value, precision: 1, strip_insignificant_zeros: true)}°C"
   end
 
+  def brew_card_boolean(value)
+    return t("brews.show.unknown") if value.nil?
+
+    value ? t("brews.show.yes") : t("brews.show.no")
+  end
+
   def brew_card_ratio(brew)
     ratio = brew_card_ratio_value(brew)
     return ratio if ratio == t("brews.show.unknown") || brew.total_time_seconds.blank?

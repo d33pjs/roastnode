@@ -19,9 +19,15 @@ class HomeController < ApplicationController
       @brews_this_week = current_workspace.brews.where(occurred_at: Time.current.all_week).count
       @open_bean_count = current_workspace.beans.open.count
       @grams_remaining = current_workspace.beans.open.sum(:remaining_grams)
+      @latest_brew = dashboard_brews.order(occurred_at: :desc, created_at: :desc).first
+      @latest_best_brew = dashboard_brews.where.not(rating: nil).order(rating: :desc, occurred_at: :desc, created_at: :desc).first
       @recent_brews = current_workspace.brews.includes(:bean, :user).order(occurred_at: :desc, created_at: :desc).limit(5)
       @recent_adjustments = current_workspace.inventory_adjustments.manual.includes(:bean, :user).order(occurred_at: :desc, created_at: :desc).limit(5)
       @recent_equipment_events = current_workspace.equipment_events.includes(:equipment, :user).recent.limit(5)
       @recent_activity = (@recent_brews.to_a + @recent_adjustments.to_a + @recent_equipment_events.to_a).sort_by(&:occurred_at).reverse.first(8)
+    end
+
+    def dashboard_brews
+      current_workspace.brews.includes(:bean, :user, :grinder, :machine, :brew_preparation_tools)
     end
 end

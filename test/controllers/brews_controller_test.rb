@@ -112,7 +112,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       first_drip_seconds: 8,
       total_time_seconds: 31,
       rating: 4,
-      taste_balance: "neutral"
+      taste_balance: "neutral",
+      channeling: true,
+      notes: "Balanced morning shot."
     )
 
     get brew_path(brew)
@@ -142,7 +144,12 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-temperature-callout]"
     assert_select "[data-testid=brew-axis-max]", "50 g"
     assert_select "[data-testid=brew-tool]", "WDT"
-    assert_select "h2", text: I18n.t("brews.show.details"), count: 0
+    assert_select "[data-testid=brew-log-details]"
+    assert_select "[data-testid=brew-detail-bean-weight]", "18 g"
+    assert_select "[data-testid=brew-detail-ground-weight]", "18 g"
+    assert_select "[data-testid=brew-detail-beverage]", "45 g"
+    assert_select "[data-testid=brew-detail-channeling]", "Yes"
+    assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
   end
 
   test "show renders unknown username when display name is blank" do
