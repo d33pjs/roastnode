@@ -8,6 +8,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/workspace-core.md` describes workspaces, roles, invites, and the workspace-scoping rule for future product data.
 - `docs/coffee-core.md` describes beans, equipment, required-bean espresso logging, inventory deduction, and deferred recipe scope.
 - `docs/equipment-events.md` describes maintenance events, equipment detail pages, and timeline activity rules.
+- `docs/preparation-tools.md` describes method-scoped brew checklist tools and brew snapshots.
 - `docs/setup.md` describes local Rails and Docker Compose setup.
 - `AGENTS.md` contains repository-wide guidance for AI coding agents.
 

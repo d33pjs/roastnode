@@ -6,6 +6,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 - Workspace-scoped beans as private bag/lot records.
 - Workspace-scoped equipment for grinders and machines.
+- Workspace-scoped preparation tools for brew checklists.
 - Espresso brew logging with a required bean.
 - Automatic inventory deduction when a brew is saved.
 - Inventory adjustment history for brew consumption.
@@ -40,6 +41,7 @@ Copied fields:
 - bean, if still open
 - grinder
 - machine
+- active preparation tools from the previous brew
 - bean weight
 - dose
 - beverage yield
@@ -70,3 +72,4 @@ Fresh fields:
 - Use `current_workspace_policy.write?` for create actions.
 - Keep viewer access read-only.
 - Do not add recipe fields to brew forms until the dedicated recipes slice exists.
+- Preparation tools are checklist records, not equipment records.
