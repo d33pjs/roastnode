@@ -5,25 +5,19 @@
 
 <article data-testid="brew-hero-card" class="relative overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
   <div class="bg-stone-950 p-5">
-    <div data-testid="brew-card-header" class="flex flex-wrap items-center gap-2">
-      <span data-testid="brew-timestamp" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= brew_card_timestamp(brew) %></span>
-      <span data-testid="brew-workspace" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= current_workspace.name %></span>
-      <span class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= t("brews.show.card_method") %></span>
+    <div data-testid="brew-card-header" class="flex flex-nowrap items-center gap-1 overflow-hidden sm:gap-2">
+      <span data-testid="brew-timestamp" class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= brew_card_timestamp(brew) %></span>
+      <span data-testid="brew-workspace" class="min-w-0 max-w-[7.5rem] truncate whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:max-w-none sm:px-3 sm:py-1 sm:text-xs"><%= current_workspace.name %></span>
+      <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= t("brews.show.card_method") %></span>
       <%= render "shared/brand_mark",
         testid: "brew-card-brand-mark",
-        container_class: "ml-auto h-10 w-10 shrink-0 sm:h-12 sm:w-12",
+        container_class: "ml-auto h-7 w-7 shrink-0 sm:h-12 sm:w-12",
         image_class: "h-full w-full object-contain drop-shadow-sm" %>
     </div>
 
     <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.9fr_1.1fr] lg:items-end" unless compact %>">
-      <div class="flex items-start gap-3">
-        <% if brew_photo.present? %>
-          <div class="h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10 sm:h-16 sm:w-14">
-            <%= image_tag media_attachment_path(brew_photo), alt: brew.bean.name, data: { testid: "brew-bean-photo" }, class: "h-full w-full object-cover" %>
-          </div>
-        <% end %>
-
-        <div class="min-w-0">
+      <div class="flex items-start justify-between gap-3">
+        <div data-testid="brew-title-block" class="min-w-0">
           <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
           <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
           <% if brew_card_bean_descriptor(brew.bean).present? %>
@@ -31,6 +25,12 @@
           <% end %>
           <p data-testid="brew-byline" class="mt-2 text-xs text-stone-400"><%= t("brews.show.byline", user: brew.user.display_label) %></p>
         </div>
+
+        <% if brew_photo.present? %>
+          <div data-testid="brew-bean-photo-frame" class="h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10 sm:h-16 sm:w-14">
+            <%= image_tag media_attachment_path(brew_photo), alt: brew.bean.name, data: { testid: "brew-bean-photo" }, class: "h-full w-full object-cover" %>
+          </div>
+        <% end %>
       </div>
 
       <div data-testid="brew-metrics" class="grid grid-cols-3 gap-1 sm:grid-cols-6 sm:gap-2">
@@ -52,7 +52,7 @@
           <p data-testid="brew-grind" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
         </div>
         <div data-testid="brew-retention-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.retention") %></p>
+          <p data-testid="brew-retention-label" class="text-[0.62rem] font-bold uppercase leading-tight text-stone-300 sm:text-xs"><span class="sm:hidden">Ret.</span><span class="hidden sm:inline"><%= t("brews.show.retention") %></span></p>
           <p data-testid="brew-retention" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_retention_grams(brew) %></p>
         </div>
         <div data-testid="brew-rating-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
@@ -112,9 +112,9 @@
         </g>
       <% end %>
       <text data-testid="brew-total-time-label" x="<%= total_time_x - 19 %>" y="157" font-size="13" fill="#57534e"><%= brew_card_seconds(brew.total_time_seconds) %></text>
-      <g data-testid="brew-temperature-callout">
-        <rect x="354" y="18" width="138" height="21" rx="5" fill="#fffbeb" fill-opacity=".95" />
-        <text data-testid="brew-temperature-label" x="362" y="33" font-size="14" font-weight="800" fill="#a16207"><%= t("brews.show.temperature_label", temperature: brew_card_temperature(brew.brew_temperature_celsius)) %></text>
+      <g data-testid="brew-temperature-callout" transform="translate(536 132) rotate(-90)">
+        <rect x="0" y="-18" width="118" height="21" rx="5" fill="#fffbeb" fill-opacity=".95" />
+        <text data-testid="brew-temperature-label" x="7" y="-3" font-size="14" font-weight="800" fill="#a16207"><%= t("brews.show.temperature_label", temperature: brew_card_temperature(brew.brew_temperature_celsius)) %></text>
       </g>
       <text x="386" y="65" font-size="14" font-weight="800" fill="#0f172a"><%= brew_card_grams(brew.beverage_grams) %></text>
     </svg>

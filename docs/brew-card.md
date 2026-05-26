@@ -6,7 +6,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 
 - European timestamp with seconds: `dd.mm.yyyy HH:MM:ss`.
 - Active workspace/household name on the card.
-- Bean roaster, bean name, compact origin/process/roast-level descriptor, and the first bean photo when available.
+- Bean roaster, bean name, compact origin/process/roast-level descriptor, and the first bean photo when available. Keep the photo to the right of the name block so the text stays the first read.
 - Safe logged-by label from the user's profile username, falling back to `unknown username`.
 - Dose from the espresso form.
 - Brew ratio calculated from beverage yield and dose, including total time when present.
@@ -14,7 +14,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - Grinder retention calculated from bean-in minus ground-out weight.
 - Rating as five visual bean marks.
 - Taste balance as its own compact metric rectangle.
-- Extraction chart with beverage curve, preinfusion marker, first-drip marker when present, total time, and a separate temperature line.
+- Extraction chart with beverage curve, preinfusion marker, first-drip marker when present, total time, and a separate temperature line with a vertical right-edge temperature label.
 - Chart labels use small callouts when they would otherwise collide with plot or guide lines.
 - The beverage y-axis label rounds above the actual beverage yield, for example `45.2 g` displays against a `50 g` axis marker.
 - Grinder, machine, and brew preparation tool snapshots in one compact row.
@@ -32,7 +32,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 
 - Use `BrewPreparationTool#tool_name` for displayed tools, not current `PreparationTool#name`.
 - The card shows `dose_grams` as Dose. `bean_weight_grams` remains inventory input and is not the main card dose.
-- The metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid.
+- The metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and shortens the retention label to `Ret.`.
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
 - Keep the card dense; avoid adding explanatory headings inside the chart.

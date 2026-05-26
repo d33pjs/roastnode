@@ -143,7 +143,11 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=brew-hero-card]"
     assert_select "[data-testid=brew-card-header] img[data-testid=brew-card-brand-mark][alt=?]", ""
+    assert_select "[data-testid=brew-card-header].flex-nowrap"
+    assert_select "[data-testid=brew-timestamp].text-\\[0\\.58rem\\]"
+    assert_select "[data-testid=brew-workspace].truncate"
     assert_select "img[data-testid=brew-card-brand-mark][src*=?]", "logo_mark_transparent"
+    assert_select "[data-testid=brew-title-block] + [data-testid=brew-bean-photo-frame] img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
     assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
@@ -155,6 +159,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-ratio-main]", "1:2,47"
     assert_select "[data-testid=brew-ratio-time]", "in 31s"
     assert_select "[data-testid=brew-grind]", "12"
+    assert_select "[data-testid=brew-retention-label] .sm\\:hidden", "Ret."
+    assert_select "[data-testid=brew-retention-label] .hidden.sm\\:inline", "Retention"
     assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0.4 g"
     assert_select "[data-testid=brew-rating-card] [data-testid=brew-rating][aria-label=?]", "Rating 4 of 5 beans" do
       assert_select ".rating-bean--filled", 4
@@ -172,7 +178,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-first-drip-callout]"
     assert_select "[data-testid=brew-total-time-label]", "31s"
     assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
-    assert_select "[data-testid=brew-temperature-callout]"
+    assert_select "[data-testid=brew-temperature-callout][transform='translate(536 132) rotate(-90)']"
     assert_select "[data-testid=brew-axis-max]", "50 g"
     assert_select "[data-testid=brew-tool]", "WDT"
     assert_select "[data-testid=brew-log-details]"
