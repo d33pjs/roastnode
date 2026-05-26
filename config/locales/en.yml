@@ -28,6 +28,8 @@
 #       enabled: "ON"
 
 en:
+  authorization:
+    denied: "You do not have permission to do that."
   home:
     index:
       eyebrow: "Private coffee infrastructure"
