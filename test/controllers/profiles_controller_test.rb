@@ -15,6 +15,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?]", "user[public_banner]"
     assert_select "select[name=?]", "user[default_landing_screen]"
     assert_select "select[name=?]", "user[default_brew_focus_field]"
+    assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "notes"
+    assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "photos"
     assert_select "a[data-testid=back-link][href=?]", dashboard_path
   end
 
@@ -39,7 +41,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
       user: {
         display_name: "Jens",
         default_landing_screen: "log_espresso",
-        default_brew_focus_field: "dose_grams"
+        default_brew_focus_field: "dose_grams",
+        hidden_brew_field_names: %w[rating channeling photos]
       }
     }
 
@@ -47,6 +50,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Jens", user.reload.display_name
     assert_equal "log_espresso", user.default_landing_screen
     assert_equal "dose_grams", user.default_brew_focus_field
+    assert_equal %w[rating channeling photos], user.hidden_brew_field_names
   end
 
   test "signed-in user can update identity media" do

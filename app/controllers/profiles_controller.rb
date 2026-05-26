@@ -15,6 +15,13 @@ class ProfilesController < ApplicationController
 
   private
     def profile_params
-      params.require(:user).permit(:display_name, :default_landing_screen, :default_brew_focus_field, :avatar, :public_banner)
+      params.require(:user).permit(
+        :display_name,
+        :default_landing_screen,
+        :default_brew_focus_field,
+        :avatar,
+        :public_banner,
+        hidden_brew_field_names: []
+      )
     end
 end

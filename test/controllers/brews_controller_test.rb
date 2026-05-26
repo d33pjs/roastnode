@@ -62,6 +62,33 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][autofocus]", "brew[bean_weight_grams]", count: 0
   end
 
+  test "new hides the user's optional brew fields" do
+    users(:one).update!(hidden_brew_field_names: %w[rating channeling notes photos])
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "input[name=?]", "brew[rating]", count: 0
+    assert_select "input[name=?]", "brew[channeling]", count: 0
+    assert_select "textarea[name=?]", "brew[notes]", count: 0
+    assert_select "input[type=file][name=?]", "brew[photos][]", count: 0
+    assert_select "input[name=?]", "brew[bean_weight_grams]"
+  end
+
+  test "edit ignores hidden brew fields so corrections show the full log" do
+    users(:one).update!(hidden_brew_field_names: %w[rating channeling notes photos])
+    sign_in_as(users(:one))
+
+    get edit_brew_path(brews(:morning_espresso))
+
+    assert_response :success
+    assert_select "input[name=?]", "brew[rating]"
+    assert_select "input[name=?]", "brew[channeling]"
+    assert_select "textarea[name=?]", "brew[notes]"
+    assert_select "input[type=file][name=?]", "brew[photos][]"
+  end
+
   test "new wires browser draft recovery to the current user and workspace" do
     user = users(:one)
     workspace = workspaces(:household)

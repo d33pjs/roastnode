@@ -45,6 +45,8 @@ Archived or depleted beans are not valid brew choices in this slice.
 
 The espresso form pre-fills setup fields from the current user's most recent brew in the active workspace.
 
+Users can hide optional fields from the new espresso form through Profile. Brew edit/correction screens always show the full log.
+
 Copied fields:
 
 - bean, if still open
@@ -86,6 +88,7 @@ Fresh fields:
 - Use `current_workspace_policy.write?` for create actions.
 - Keep viewer access read-only.
 - Do not add recipe fields to brew forms until the dedicated recipes slice exists.
+- Do not allow hiding the bean selector or bean-in weight from the new espresso form, because they are required for inventory.
 - Preparation tools are checklist records, not equipment records.
 - Use `Bean#destroy_with_history!` for destructive bean deletion; plain `destroy!` is intentionally blocked by dependent brew and inventory guards.
 - Render photos through `media_attachment_path`, never raw Active Storage blob URLs.

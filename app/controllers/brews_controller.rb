@@ -10,6 +10,7 @@ class BrewsController < ApplicationController
     @selected_preparation_tools = @brew.preparation_tools.to_a
     @autofocus_field = nil
     @draft_storage_key = nil
+    @hidden_brew_fields = []
   end
 
   def new
@@ -23,12 +24,14 @@ class BrewsController < ApplicationController
     @brew = current_workspace.brews.new(default_attributes)
     @autofocus_field = Current.user.default_brew_focus_field
     @draft_storage_key = brew_draft_storage_key
+    @hidden_brew_fields = Current.user.hidden_brew_field_names
   end
 
   def create
     load_form_options
     @autofocus_field = Current.user.default_brew_focus_field
     @draft_storage_key = brew_draft_storage_key
+    @hidden_brew_fields = Current.user.hidden_brew_field_names
     attributes = brew_params
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
@@ -44,6 +47,7 @@ class BrewsController < ApplicationController
 
   def update
     load_form_options(selected_bean: @brew.bean)
+    @hidden_brew_fields = []
     attributes = brew_params
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)

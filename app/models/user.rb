@@ -13,6 +13,21 @@ class User < ApplicationRecord
     first_drip_seconds
     notes
   ].freeze
+  HIDEABLE_BREW_FIELDS = %w[
+    ground_weight_grams
+    dose_grams
+    beverage_grams
+    grind_setting
+    brew_temperature_celsius
+    total_time_seconds
+    preinfusion_seconds
+    first_drip_seconds
+    taste_balance
+    rating
+    channeling
+    notes
+    photos
+  ].freeze
 
   has_secure_password
   has_many :sessions, dependent: :destroy
@@ -37,6 +52,7 @@ class User < ApplicationRecord
   validates :display_name, length: { maximum: 80 }
   validates :default_landing_screen, inclusion: { in: DEFAULT_LANDING_SCREENS }
   validates :default_brew_focus_field, inclusion: { in: DEFAULT_BREW_FOCUS_FIELDS }
+  validate :hidden_brew_field_names_supported
 
   def default_landing_log_espresso?
     default_landing_screen == "log_espresso"
@@ -50,10 +66,26 @@ class User < ApplicationRecord
     display_name.presence || UNKNOWN_DISPLAY_LABEL
   end
 
+  def hidden_brew_field_names
+    Array(self[:hidden_brew_field_names])
+  end
+
+  def hidden_brew_field_names=(values)
+    self[:hidden_brew_field_names] = Array(values).compact_blank.uniq & HIDEABLE_BREW_FIELDS
+  end
+
   def ensure_active_workspace!
     return active_workspace if active_workspace.present? && memberships.exists?(workspace: active_workspace)
 
     update!(active_workspace: workspaces.first)
     active_workspace
   end
+
+  private
+    def hidden_brew_field_names_supported
+      unsupported_fields = hidden_brew_field_names - HIDEABLE_BREW_FIELDS
+      return if unsupported_fields.empty?
+
+      errors.add(:hidden_brew_field_names, "contains unsupported fields")
+    end
 end

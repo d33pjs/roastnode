@@ -38,4 +38,12 @@ class UserTest < ActiveSupport::TestCase
     user.default_brew_focus_field = "rating"
     assert_not_predicate user, :valid?
   end
+
+  test "hidden brew field names keep only supported fields" do
+    user = users(:one)
+
+    user.hidden_brew_field_names = [ "notes", "unsupported", "", "rating", "notes" ]
+
+    assert_equal %w[notes rating], user.hidden_brew_field_names
+  end
 end

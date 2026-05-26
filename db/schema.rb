@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_27_003000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_27_011000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -271,6 +271,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_003000) do
     t.string "default_landing_screen", default: "dashboard", null: false
     t.string "display_name"
     t.string "email_address", null: false
+    t.jsonb "hidden_brew_field_names", default: [], null: false
     t.boolean "instance_admin", default: false, null: false
     t.string "password_digest", null: false
     t.datetime "updated_at", null: false
