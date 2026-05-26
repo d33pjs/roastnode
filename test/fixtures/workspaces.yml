@@ -1,0 +1,10 @@
+household:
+  name: Jens Household
+  kind: household
+  default_currency: EUR
+
+other_household:
+  name: Other Household
+  kind: household
+  default_currency: EUR
+

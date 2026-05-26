@@ -1,0 +1,22 @@
+member_invite:
+  workspace: household
+  created_by: one
+  role: member
+  token: member-token
+  email_address:
+  expires_at: <%= 3.days.from_now %>
+  revoked_at:
+  accepted_at:
+  accepted_by:
+
+expired_invite:
+  workspace: household
+  created_by: one
+  role: viewer
+  token: expired-token
+  email_address:
+  expires_at: <%= 1.day.ago %>
+  revoked_at:
+  accepted_at:
+  accepted_by:
+

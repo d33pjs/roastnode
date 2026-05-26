@@ -1,0 +1,15 @@
+owner:
+  user: one
+  workspace: household
+  role: owner
+
+member:
+  user: two
+  workspace: household
+  role: member
+
+other_owner:
+  user: two
+  workspace: other_household
+  role: owner
+
