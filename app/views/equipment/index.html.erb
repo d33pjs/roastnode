@@ -24,7 +24,7 @@
         <tbody class="divide-y divide-stone-100">
           <% @equipment.each do |item| %>
             <tr>
-              <td class="px-4 py-3 text-sm font-medium text-stone-950"><%= item.name %></td>
+              <td class="px-4 py-3 text-sm font-medium text-stone-950"><%= link_to item.name, equipment_path(item), class: "hover:text-stone-600" %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= item.kind.humanize %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= item.model.presence || t(".unknown") %></td>
             </tr>

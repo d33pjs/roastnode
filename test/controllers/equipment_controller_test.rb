@@ -9,6 +9,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", I18n.t("equipment.index.title")
     assert_select "td", text: equipment(:household_grinder).name
+    assert_select "a[href=?]", equipment_path(equipment(:household_grinder)), text: equipment(:household_grinder).name
     assert_select "td", text: equipment(:other_workspace_grinder).name, count: 0
   end
 
@@ -42,5 +43,25 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_path
+  end
+
+  test "show lists active workspace equipment activity" do
+    sign_in_as(users(:one))
+
+    get equipment_path(equipment(:household_grinder))
+
+    assert_response :success
+    assert_select "h1", equipment(:household_grinder).name
+    assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
+    assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
+    assert_select "p", text: /18 g/
+  end
+
+  test "show is scoped to active workspace" do
+    sign_in_as(users(:one))
+
+    get equipment_path(equipment(:other_workspace_grinder))
+
+    assert_response :not_found
   end
 end

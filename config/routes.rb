@@ -13,7 +13,7 @@ Rails.application.routes.draw do
     patch :revoke, on: :member
   end
   resources :beans, only: %i[index new create show]
-  resources :equipment, only: %i[index new create]
+  resources :equipment, only: %i[index new create show]
   resources :equipment_events, only: %i[new create show]
   resources :brews, only: %i[new create show]
 

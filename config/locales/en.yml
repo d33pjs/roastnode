@@ -123,6 +123,20 @@ en:
       name: "Name"
       notes: "Notes"
       title: "Add equipment"
+    show:
+      back: "Back to equipment"
+      brew: "Espresso with %{bean}"
+      brews_since_service: "Brews since service"
+      grams_since_service: "Grams since service"
+      last_service: "Last service"
+      log_event: "Log event"
+      never: "Never"
+      no_brews: "No brews yet."
+      no_events: "No equipment events yet."
+      notes: "Notes"
+      recent_brews: "Recent brews"
+      recent_events: "Recent events"
+      unknown_model: "Unknown model"
   equipment_events:
     create:
       created: "Equipment event logged."
