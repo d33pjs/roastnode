@@ -160,6 +160,25 @@ en:
       intro: "Roastnode is the shared household workspace for beans, brews, equipment, inventory, photos, and the coffee data you should not have to ask for twice."
       sign_in: "Sign in"
       title: "Roastnode"
+  preparation_tools:
+    create:
+      created: "Preparation tool added."
+    index:
+      active: "Active"
+      back: "Back to dashboard"
+      inactive: "Inactive"
+      method: "Method"
+      name: "Name"
+      new: "Add preparation tool"
+      status: "Status"
+      title: "Preparation tools"
+    new:
+      back: "Back to preparation tools"
+      create: "Add preparation tool"
+      method: "Method"
+      name: "Name"
+      notes: "Notes"
+      title: "Add preparation tool"
   workspace_onboardings:
     create:
       created: "Workspace created."
@@ -218,9 +237,11 @@ en:
         add_bean: "Add bean"
         add_equipment: "Add equipment"
         add_equipment_event: "Add equipment event"
+        add_preparation_tool: "Add preparation tool"
         beans: "Beans"
         equipment: "Equipment"
         log_brew: "Log espresso"
+        preparation_tools: "Preparation tools"
       activity:
         adjustment: "%{amount} g inventory adjustment for %{bean}"
         brew: "Espresso with %{bean}"
