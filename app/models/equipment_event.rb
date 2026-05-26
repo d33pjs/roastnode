@@ -13,6 +13,7 @@ class EquipmentEvent < ApplicationRecord
 
   has_many :equipment_event_items, dependent: :destroy
   has_many :equipment, through: :equipment_event_items
+  has_many_attached :photos
 
   before_validation :normalize_event_types
   before_validation :set_occurred_at

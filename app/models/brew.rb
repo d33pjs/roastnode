@@ -30,6 +30,7 @@ class Brew < ApplicationRecord
   has_one :inventory_adjustment, dependent: :restrict_with_exception
   has_many :brew_preparation_tools, dependent: :destroy
   has_many :preparation_tools, through: :brew_preparation_tools
+  has_many_attached :photos
 
   before_validation :set_defaults
   before_validation :set_retention_marker

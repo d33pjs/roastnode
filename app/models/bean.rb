@@ -3,6 +3,7 @@ class Bean < ApplicationRecord
 
   has_many :brews, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception
+  has_many_attached :photos
 
   before_validation :set_default_remaining_grams
 
