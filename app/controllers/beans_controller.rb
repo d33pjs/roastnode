@@ -7,6 +7,7 @@ class BeansController < ApplicationController
   end
 
   def show
+    @bean_statistics = BeanStatistics.new(bean: @bean).call
   end
 
   def new

@@ -1,0 +1,101 @@
+class BeanStatistics
+  RECENT_BREW_LIMIT = 5
+  BEST_BREW_LIMIT = 3
+
+  def initialize(bean:)
+    @bean = bean
+  end
+
+  def call
+    {
+      totals:,
+      averages:,
+      rates:,
+      distributions:,
+      best_brews:,
+      recent_brews:
+    }
+  end
+
+  private
+    attr_reader :bean
+
+    def brews
+      @brews ||= bean.brews.includes(:grinder, :machine).order(occurred_at: :desc).to_a
+    end
+
+    def totals
+      {
+        brew_count: brews.size,
+        total_bean_weight_grams: brews.sum(&:bean_weight_grams),
+        remaining_percent: remaining_percent,
+        open_age_days: open_age_days
+      }
+    end
+
+    def averages
+      {
+        rating: rounded_average(brews.filter_map(&:rating), precision: 1),
+        beverage_grams: rounded_average(brews.filter_map(&:beverage_grams), precision: 1),
+        total_time_seconds: rounded_average(brews.filter_map(&:total_time_seconds), precision: 0)
+      }
+    end
+
+    def rates
+      {
+        channeling_percent: percentage(brews.count(&:channeling?), brews.size)
+      }
+    end
+
+    def distributions
+      {
+        taste_balance: count_by_present_value(:taste_balance),
+        retention_marker: count_by_present_value(:retention_marker)
+      }
+    end
+
+    def best_brews
+      brews
+        .select { |brew| brew.rating.present? }
+        .sort_by { |brew| [ -brew.rating, -brew.occurred_at.to_i ] }
+        .first(BEST_BREW_LIMIT)
+    end
+
+    def recent_brews
+      brews.first(RECENT_BREW_LIMIT)
+    end
+
+    def remaining_percent
+      return nil if bean.bag_size_grams.blank? || bean.bag_size_grams.to_d <= 0
+
+      percentage(bean.remaining_grams, bean.bag_size_grams)
+    end
+
+    def open_age_days
+      return nil if bean.opened_on.blank?
+
+      (Date.current - bean.opened_on).to_i
+    end
+
+    def rounded_average(values, precision:)
+      return nil if values.empty?
+
+      average = values.sum(&:to_d) / values.size
+      average.round(precision)
+    end
+
+    def percentage(part, whole)
+      return 0 if whole.blank? || whole.to_d.zero?
+
+      ((part.to_d / whole.to_d) * 100).round
+    end
+
+    def count_by_present_value(method_name)
+      brews
+        .map { |brew| brew.public_send(method_name) }
+        .compact_blank
+        .tally
+        .sort_by { |label, count| [ -count, label ] }
+        .to_h
+    end
+end

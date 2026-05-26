@@ -30,6 +30,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Recipes are deliberately deferred. Do not introduce recipe tables, recipe snapshots, or recipe-based defaults in Coffee Core work.
 - Beanconqueror import is currently a conservative JSON subset. Preserve raw import data, use source UUIDs for duplicate handling, map supported rich bean metadata, skip unsupported records with warnings, and do not import media bytes yet.
 - Workspace analytics live in `WorkspaceStatistics`; keep aggregation workspace-scoped and query-backed until data volume justifies summaries.
+- Bean detail analytics live in `BeanStatistics`; keep them scoped through the active workspace bean and query-backed until data volume justifies summaries.
 - Equipment events are first-class workspace records. Use them for grinder and machine maintenance history instead of burying maintenance in equipment notes. A single equipment event can have multiple `event_types`.
 - Photos are private workspace data attached through Active Storage. Render app photos through `media_attachment_path(attachment)` and remove them through `MediaAttachmentsController#destroy` so active-workspace and write-policy checks stay centralized; do not use raw Active Storage blob/proxy URLs in app views.
 - Typography uses self-hosted Elms Sans from `app/assets/fonts/elmssans/` under the SIL Open Font License 1.1. Do not add runtime Google Fonts references; keep the vendored `OFL.txt` with the font files.

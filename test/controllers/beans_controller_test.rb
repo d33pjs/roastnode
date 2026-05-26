@@ -155,6 +155,39 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "show renders bean analytics" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    brew = bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 25, 8, 15, 0),
+      bean_weight_grams: 19,
+      ground_weight_grams: 18.5,
+      dose_grams: 18.5,
+      beverage_grams: 45,
+      total_time_seconds: 31,
+      grind_setting: "10",
+      taste_balance: "bitter",
+      channeling: true,
+      rating: 5
+    )
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "h2", I18n.t("beans.show.analytics")
+    assert_select "[data-testid=bean-brew-count]", "2"
+    assert_select "[data-testid=bean-consumed]", "37 g"
+    assert_select "[data-testid=bean-best-brews] a[href=?]", brew_path(brew), text: /45 g/
+    assert_select "[data-testid=bean-recent-brews] a[href=?]", brew_path(brew), text: /10/
+    assert_select "h3", I18n.t("beans.show.taste_balance")
+    assert_select "h3", I18n.t("beans.show.retention_markers")
+    assert_select "body", text: /Other Workspace Bean/, count: 0
+  end
+
   test "show renders danger zone for writers" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
