@@ -1,5 +1,11 @@
 class WorkspaceInvite < ApplicationRecord
   INVITABLE_ROLES = %w[admin member viewer].freeze
+  ROLE_PRIORITY = {
+    "viewer" => 0,
+    "member" => 1,
+    "admin" => 2,
+    "owner" => 3
+  }.freeze
 
   enum :role, {
     admin: "admin",
@@ -29,7 +35,7 @@ class WorkspaceInvite < ApplicationRecord
 
     transaction do
       membership = user.memberships.find_or_initialize_by(workspace:)
-      membership.role = role
+      membership.role = role if membership.new_record? || role_priority(role) > role_priority(membership.role)
       membership.save!
 
       update!(accepted_by: user, accepted_at: Time.current)
@@ -49,5 +55,9 @@ class WorkspaceInvite < ApplicationRecord
 
     def set_expiration
       self.expires_at ||= 7.days.from_now
+    end
+
+    def role_priority(role)
+      ROLE_PRIORITY.fetch(role)
     end
 end

@@ -25,4 +25,14 @@ class WorkspaceInviteTest < ActiveSupport::TestCase
     assert_equal user, invite.reload.accepted_by
     assert_not invite.acceptable?
   end
+
+  test "accepting invite does not downgrade existing membership" do
+    invite = workspace_invites(:member_invite)
+    user = users(:one)
+
+    membership = invite.accept!(user)
+
+    assert_equal "owner", membership.reload.role
+    assert_equal user, invite.reload.accepted_by
+  end
 end
