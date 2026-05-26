@@ -18,4 +18,3 @@ class WorkspacePolicy
   private
     attr_reader :membership
 end
-

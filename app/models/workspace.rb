@@ -13,4 +13,3 @@ class Workspace < ApplicationRecord
   validates :name, presence: true
   validates :default_currency, presence: true
 end
-

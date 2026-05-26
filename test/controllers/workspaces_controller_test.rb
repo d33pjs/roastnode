@@ -21,4 +21,3 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_not_equal workspaces(:other_household), user.reload.active_workspace
   end
 end
-

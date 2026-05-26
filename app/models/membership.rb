@@ -20,4 +20,3 @@ class Membership < ApplicationRecord
     owner? || admin? || member?
   end
 end
-

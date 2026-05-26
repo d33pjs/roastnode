@@ -5,4 +5,3 @@ class AddWorkspaceFieldsToUsers < ActiveRecord::Migration[8.1]
     add_reference :users, :active_workspace, foreign_key: { to_table: :workspaces }
   end
 end
-

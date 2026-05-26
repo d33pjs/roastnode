@@ -24,4 +24,3 @@ class WorkspaceOnboardingsController < ApplicationController
       params.require(:workspace).permit(:name)
     end
 end
-

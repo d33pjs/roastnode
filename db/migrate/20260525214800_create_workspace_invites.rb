@@ -17,4 +17,3 @@ class CreateWorkspaceInvites < ActiveRecord::Migration[8.1]
     add_index :workspace_invites, :token, unique: true
   end
 end
-

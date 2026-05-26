@@ -11,4 +11,3 @@ class CreateMemberships < ActiveRecord::Migration[8.1]
     add_index :memberships, [ :user_id, :workspace_id ], unique: true
   end
 end
-

@@ -16,4 +16,3 @@ class WorkspacesController < ApplicationController
       @workspace = Workspace.find(params[:id])
     end
 end
-
