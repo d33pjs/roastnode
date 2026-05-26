@@ -30,6 +30,41 @@
 en:
   authorization:
     denied: "You do not have permission to do that."
+  beans:
+    create:
+      created: "Bean added."
+    index:
+      back: "Back to dashboard"
+      bean: "Bean"
+      closed: "Closed"
+      new: "Add bean"
+      open: "Open"
+      remaining: "Remaining"
+      roaster: "Roaster"
+      status: "Status"
+      title: "Beans"
+      unknown: "Unknown"
+    new:
+      back: "Back to beans"
+      bag_size: "Bag size (g)"
+      create: "Add bean"
+      name: "Coffee name"
+      notes: "Private notes"
+      opened_on: "Opened on"
+      origin: "Origin"
+      remaining: "Remaining (g)"
+      roaster: "Roaster"
+      title: "Add bean"
+    show:
+      back: "Back to beans"
+      bag_size: "Bag size"
+      closed: "Closed"
+      notes: "Notes"
+      open: "Open"
+      remaining: "Remaining"
+      status: "Status"
+      unknown_origin: "Unknown origin"
+      unknown_roaster: "Unknown roaster"
   home:
     index:
       eyebrow: "Private coffee infrastructure"

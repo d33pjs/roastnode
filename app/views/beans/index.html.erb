@@ -1,0 +1,38 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto max-w-6xl px-6 py-10">
+    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <%= link_to t(".back"), root_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+        <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+        <p class="mt-2 text-stone-700"><%= current_workspace.name %></p>
+      </div>
+
+      <% if current_workspace_policy.write? %>
+        <%= link_to t(".new"), new_bean_path, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+      <% end %>
+    </header>
+
+    <div class="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+      <table class="min-w-full divide-y divide-stone-200">
+        <thead class="bg-stone-100">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".bean") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".roaster") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".remaining") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".status") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <% @beans.each do |bean| %>
+            <tr>
+              <td class="px-4 py-3 text-sm font-medium text-stone-950"><%= link_to bean.name, bean_path(bean), class: "hover:underline" %></td>
+              <td class="px-4 py-3 text-sm text-stone-700"><%= bean.roaster_name.presence || t(".unknown") %></td>
+              <td class="px-4 py-3 text-sm text-stone-700"><%= number_with_precision(bean.remaining_grams, precision: 1, strip_insignificant_zeros: true) %> g</td>
+              <td class="px-4 py-3 text-sm text-stone-700"><%= bean.open? ? t(".open") : t(".closed") %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>

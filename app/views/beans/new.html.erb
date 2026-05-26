@@ -1,0 +1,55 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto max-w-3xl px-6 py-10">
+    <%= link_to t(".back"), beans_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+    <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+
+    <%= form_with model: @bean, class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+      <% if @bean.errors.any? %>
+        <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          <%= @bean.errors.full_messages.to_sentence %>
+        </div>
+      <% end %>
+
+      <div>
+        <%= form.label :name, t(".name"), class: "block text-sm font-medium text-stone-700" %>
+        <%= form.text_field :name, autofocus: true, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-2">
+        <div>
+          <%= form.label :roaster_name, t(".roaster"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.text_field :roaster_name, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <div>
+          <%= form.label :origin, t(".origin"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.text_field :origin, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+      </div>
+
+      <div class="grid gap-5 sm:grid-cols-3">
+        <div>
+          <%= form.label :bag_size_grams, t(".bag_size"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.number_field :bag_size_grams, step: 0.1, inputmode: "decimal", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <div>
+          <%= form.label :remaining_grams, t(".remaining"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.number_field :remaining_grams, step: 0.1, inputmode: "decimal", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+
+        <div>
+          <%= form.label :opened_on, t(".opened_on"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.date_field :opened_on, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :notes, t(".notes"), class: "block text-sm font-medium text-stone-700" %>
+        <%= form.text_area :notes, rows: 4, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+      </div>
+
+      <%= form.submit t(".create"), class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+    <% end %>
+  </section>
+</main>

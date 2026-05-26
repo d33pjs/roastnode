@@ -12,6 +12,7 @@ Rails.application.routes.draw do
     post :accept, on: :member
     patch :revoke, on: :member
   end
+  resources :beans, only: %i[index new create show]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

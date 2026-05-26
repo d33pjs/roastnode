@@ -30,4 +30,10 @@ class ApplicationController < ActionController::Base
 
       redirect_to root_path, alert: t("authorization.denied")
     end
+
+    def authorize_workspace_write!
+      return if current_workspace_policy.write?
+
+      redirect_to root_path, alert: t("authorization.denied")
+    end
 end
