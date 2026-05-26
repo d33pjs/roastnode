@@ -9,6 +9,10 @@ class Workspace < ApplicationRecord
   has_many :memberships, dependent: :destroy
   has_many :users, through: :memberships
   has_many :workspace_invites, dependent: :destroy
+  has_many :beans, dependent: :destroy
+  has_many :equipment, dependent: :destroy
+  has_many :brews, dependent: :destroy
+  has_many :inventory_adjustments, dependent: :destroy
 
   validates :name, presence: true
   validates :default_currency, presence: true

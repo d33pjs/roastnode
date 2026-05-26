@@ -7,6 +7,8 @@ class User < ApplicationRecord
     inverse_of: :created_by
   has_many :accepted_workspace_invites, class_name: "WorkspaceInvite", foreign_key: :accepted_by_id, dependent: :nullify,
     inverse_of: :accepted_by
+  has_many :brews, dependent: :restrict_with_exception
+  has_many :inventory_adjustments, dependent: :restrict_with_exception
 
   belongs_to :active_workspace, class_name: "Workspace", optional: true
 

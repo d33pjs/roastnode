@@ -1,0 +1,9 @@
+morning_espresso_consumption:
+  workspace: household
+  bean: open_household
+  user: one
+  brew: morning_espresso
+  delta_grams: -18.0
+  reason: brew
+  note: Brew consumption.
+  occurred_at: <%= 2.hours.ago %>

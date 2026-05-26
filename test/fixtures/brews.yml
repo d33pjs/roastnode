@@ -1,0 +1,45 @@
+morning_espresso:
+  workspace: household
+  user: one
+  bean: open_household
+  grinder: household_grinder
+  machine: household_machine
+  method: espresso
+  occurred_at: <%= 2.hours.ago %>
+  bean_weight_grams: 18.0
+  ground_weight_grams: 18.0
+  dose_grams: 18.0
+  beverage_grams: 40.0
+  grind_setting: "12"
+  brew_temperature_celsius: 93.0
+  total_time_seconds: 28
+  preinfusion_seconds: 5
+  first_drip_seconds: 8
+  channeling: false
+  taste_balance: neutral
+  rating: 4
+  notes: Balanced morning shot.
+  retention_marker: normal
+
+other_workspace_brew:
+  workspace: other_household
+  user: two
+  bean: other_workspace_open
+  grinder: other_workspace_grinder
+  machine:
+  method: espresso
+  occurred_at: <%= 1.hour.ago %>
+  bean_weight_grams: 18.0
+  ground_weight_grams: 18.0
+  dose_grams: 18.0
+  beverage_grams: 40.0
+  grind_setting:
+  brew_temperature_celsius:
+  total_time_seconds:
+  preinfusion_seconds:
+  first_drip_seconds:
+  channeling:
+  taste_balance: unknown
+  rating:
+  notes:
+  retention_marker: normal

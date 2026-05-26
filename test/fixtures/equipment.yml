@@ -1,0 +1,20 @@
+household_grinder:
+  workspace: household
+  name: Niche Zero
+  kind: grinder
+  model: Zero
+  notes: Main espresso grinder.
+
+household_machine:
+  workspace: household
+  name: Bianca
+  kind: machine
+  model: Lelit Bianca
+  notes: Main espresso machine.
+
+other_workspace_grinder:
+  workspace: other_household
+  name: Other Grinder
+  kind: grinder
+  model:
+  notes:
