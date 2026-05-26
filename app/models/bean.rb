@@ -55,6 +55,20 @@ class Bean < ApplicationRecord
     [ roaster_name, name ].compact_blank.join(" - ")
   end
 
+  def purchase_price
+    return if purchase_price_cents.blank?
+
+    purchase_price_cents.to_d / 100
+  end
+
+  def purchase_price=(value)
+    self.purchase_price_cents = if value.blank?
+      nil
+    else
+      (BigDecimal(value.to_s.tr(",", ".")) * 100).round
+    end
+  end
+
   def display_name_for_collection(beans)
     return display_name unless duplicate_display_name_in?(beans)
 

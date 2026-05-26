@@ -43,6 +43,106 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "input[type=file][name=?][multiple=multiple]", "bean[photos][]"
+    assert_select "input[name=?]", "bean[purchased_on]"
+    assert_select "input[name=?]", "bean[roast_date]"
+    assert_select "select[name=?]", "bean[roast_type]"
+    assert_select "input[name=?][step=?]", "bean[roast_degree]", "0.5"
+    assert_select "input[name=?]", "bean[purchase_price]"
+    assert_select "input[name=?]", "bean[decaffeinated]"
+    assert_select "input[name=?]", "bean[purchase_url]"
+    assert_select "textarea[name=?]", "bean[tasting_notes]"
+    assert_select "h2", I18n.t("beans.form.variety_information")
+    assert_select "input[name=?]", "bean[country]"
+    assert_select "input[name=?]", "bean[blend_percentage]"
+  end
+
+  test "writer can edit bean with rich metadata and additive photos" do
+    user = users(:one)
+    sign_in_as(user)
+    bean = beans(:open_household)
+    attach_photo(bean)
+
+    get edit_bean_path(bean)
+
+    assert_response :success
+    assert_select "form[action=?]", bean_path(bean)
+    assert_select "input[type=file][name=?][multiple=multiple]", "bean[photos][]"
+
+    assert_difference -> { bean.reload.photos.count }, 1 do
+      patch bean_path(bean), params: {
+        bean: {
+          name: "House Blend Updated",
+          roaster_name: "Good Coffee",
+          bag_size_grams: "250",
+          remaining_grams: "111.5",
+          purchased_on: "2026-05-03",
+          roast_date: "2026-05-10",
+          roast_type: "omni",
+          roast_degree: "3.5",
+          rating: "5",
+          blend_type: "blend",
+          purchase_price: "14.90",
+          tasting_notes: "Chocolate, almond",
+          decaffeinated: "1",
+          purchase_url: "https://example.com/house-blend",
+          notes: "Updated bag notes.",
+          country: "Colombia",
+          region: "Huila",
+          farm: "La Esperanza",
+          farmer: "Ana Gomez",
+          elevation: "1,700 masl",
+          variety: "Caturra",
+          process: "washed",
+          harvested: "2025",
+          blend_percentage: "70%",
+          photos: [ photo_upload ]
+        }
+      }
+    end
+
+    assert_redirected_to bean_path(bean)
+    bean.reload
+    assert_equal "House Blend Updated", bean.name
+    assert_equal 111.5.to_d, bean.remaining_grams
+    assert_equal Date.new(2026, 5, 3), bean.purchased_on
+    assert_equal "omni", bean.roast_type
+    assert_equal 3.5.to_d, bean.roast_degree
+    assert_equal "blend", bean.blend_type
+    assert_equal 1490, bean.purchase_price_cents
+    assert_predicate bean, :decaffeinated?
+    assert_equal "Colombia", bean.country
+  end
+
+  test "writer can close and reopen bean" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    patch close_bean_path(bean)
+    assert_redirected_to bean_path(bean)
+    assert_not_nil bean.reload.archived_at
+
+    bean.update!(remaining_grams: 0)
+    patch reopen_bean_path(bean)
+    assert_redirected_to bean_path(bean)
+    assert_nil bean.reload.archived_at
+    assert_equal bean.bag_size_grams, bean.remaining_grams
+  end
+
+  test "writer can duplicate bean with photos" do
+    sign_in_as(users(:one))
+    source = beans(:open_household)
+    attach_photo(source)
+
+    assert_difference -> { workspaces(:household).beans.count }, 1 do
+      post duplicate_bean_path(source)
+    end
+
+    duplicate = workspaces(:household).beans.order(:created_at).last
+    assert_redirected_to edit_bean_path(duplicate)
+    assert_equal source.name, duplicate.name
+    assert_equal Date.current, duplicate.opened_on
+    assert_equal duplicate.bag_size_grams, duplicate.remaining_grams
+    assert_equal 1, duplicate.photos.count
   end
 
   test "show renders private photos through scoped media route" do
@@ -65,6 +165,32 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       post beans_path, params: { bean: { name: "Nope", bag_size_grams: "250" } }
     end
 
+    assert_redirected_to root_path
+  end
+
+  test "viewer cannot edit close reopen or duplicate bean" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    bean = beans(:open_household)
+
+    get edit_bean_path(bean)
+    assert_redirected_to root_path
+
+    assert_no_changes -> { bean.reload.name } do
+      patch bean_path(bean), params: { bean: { name: "Nope", bag_size_grams: "250" } }
+    end
+    assert_redirected_to root_path
+
+    assert_no_changes -> { bean.reload.archived_at } do
+      patch close_bean_path(bean)
+    end
+    assert_redirected_to root_path
+
+    assert_no_difference -> { workspaces(:household).beans.count } do
+      post duplicate_bean_path(bean)
+    end
     assert_redirected_to root_path
   end
 
