@@ -16,6 +16,10 @@ class Membership < ApplicationRecord
     owner? || admin?
   end
 
+  def can_export_workspace?
+    owner?
+  end
+
   def can_write_workspace_data?
     owner? || admin? || member?
   end

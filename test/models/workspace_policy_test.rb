@@ -13,6 +13,18 @@ class WorkspacePolicyTest < ActiveSupport::TestCase
     assert WorkspacePolicy.new(admin).manage?
   end
 
+  test "only owner can export workspace" do
+    workspace = workspaces(:household)
+    admin = Membership.create!(workspace:, user: User.create!(
+      email_address: "export-admin@example.com",
+      password: "password"
+    ), role: :admin)
+
+    assert WorkspacePolicy.new(memberships(:owner)).export?
+    assert_not WorkspacePolicy.new(admin).export?
+    assert_not WorkspacePolicy.new(memberships(:member)).export?
+  end
+
   test "member can write normal workspace data but cannot manage" do
     policy = WorkspacePolicy.new(memberships(:member))
 
