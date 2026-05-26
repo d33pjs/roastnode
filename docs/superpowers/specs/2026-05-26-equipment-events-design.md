@@ -9,6 +9,7 @@ Equipment Events is the next Roastnode slice after Coffee Core. It lets a househ
 - Workspace-scoped equipment event records.
 - Events created by signed-in workspace users with write access.
 - One event can reference one or more equipment records from the same workspace.
+- One event can include multiple event types for a single maintenance session.
 - Dashboard quick action for adding an equipment event.
 - Dashboard recent activity includes brews, equipment events, and manual inventory adjustments.
 - Equipment detail pages show recent events and basic usage context.
@@ -29,7 +30,8 @@ Fields:
 
 - `workspace`
 - `user`
-- `event_type`
+- `event_types`
+- `event_type` compatibility summary, storing the first selected type
 - `occurred_at`
 - `notes`
 
@@ -42,7 +44,7 @@ Supported event types for this slice:
 - `burr_change`
 - `other`
 
-`EquipmentEventItem` joins events to affected equipment records. The join is required so later slices can support events that affect both a grinder and a machine without changing the public model.
+`EquipmentEventItem` joins events to affected equipment records. The join supports events that affect both a grinder and a machine without creating duplicate timeline entries.
 
 ## Authorization And Isolation
 
@@ -50,6 +52,7 @@ Supported event types for this slice:
 - Owners, admins, and members can create equipment events.
 - Viewers can read equipment and events but cannot create them.
 - Event creation rejects equipment IDs outside the active workspace.
+- Event creation requires at least one event type.
 
 ## Timeline Rules
 

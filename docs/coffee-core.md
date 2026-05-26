@@ -15,7 +15,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 - Recipes, recipe snapshots, and target definitions.
 - Photos and media handling.
-- Equipment events and maintenance analytics.
+- Advanced maintenance analytics.
 - Beanconqueror import and workspace export.
 - Advanced stats and screenshot-ready brew cards.
 
@@ -30,6 +30,32 @@ Default selection order:
 3. If no open bean exists, redirect to bean creation before logging a brew.
 
 Archived or depleted beans are not valid brew choices in this slice.
+
+## Last-Brew Defaults
+
+The espresso form pre-fills setup fields from the current user's most recent brew in the active workspace.
+
+Copied fields:
+
+- bean, if still open
+- grinder
+- machine
+- bean weight
+- ground weight
+- dose
+- beverage yield
+- grind setting
+- brew temperature
+- total time
+- pre-infusion time
+- first drip time
+
+Fresh fields:
+
+- rating
+- notes
+- channeling
+- taste balance
 
 ## Inventory Rules
 

@@ -23,7 +23,7 @@ Deferred:
 
 - Recipes and recipe snapshots.
 - Photos and Active Storage attachments.
-- Equipment events and maintenance analytics.
+- Advanced maintenance analytics.
 - Beanconqueror import and workspace export.
 - Advanced stats, charts, and screenshot-worthy brew cards.
 - Editing/deleting brews with inventory reversal.
@@ -31,6 +31,8 @@ Deferred:
 ## Product Decisions
 
 Espresso brew logging requires a bean. The form defaults to the current user's last brewed bean in the active workspace when that bean is still open and has remaining inventory. If that bean is unavailable, the form selects the first open bean ordered by opened date, then creation date. If no open beans exist, the user is sent to create a bean before logging a brew.
+
+The form also pre-fills setup fields from the current user's last brew: grinder, machine, bean weight, ground weight, dose, beverage yield, grind setting, brew temperature, total time, pre-infusion time, and first drip time. It does not copy subjective or outcome notes such as rating, notes, channeling, or taste balance.
 
 Recipes are intentionally excluded from this slice. Brews record actual outcomes directly. Targets and recipe-based defaults will be a later advanced feature.
 
@@ -141,7 +143,7 @@ The equipment index lists grinders and machines. Users with write permission can
 
 ### Brew Logging
 
-The dashboard has a primary "Log espresso" action. The new brew form selects the required default bean using last-bean-then-first-open behavior. If no open bean exists, the controller redirects to the new bean form with an alert.
+The dashboard has a primary "Log espresso" action. The new brew form selects the required default bean using last-bean-then-first-open behavior and copies setup values from the user's previous brew. If no open bean exists, the controller redirects to the new bean form with an alert.
 
 Saving a brew creates an inventory adjustment, subtracts from the bean's remaining grams, stores the retention marker, and redirects to the brew detail page.
 
