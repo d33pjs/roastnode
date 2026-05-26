@@ -9,6 +9,28 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "image/jpeg", response.media_type
+    assert_match "inline", response.headers["Content-Disposition"]
+  end
+
+  test "downloads active workspace attachment" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:open_household))
+
+    get download_media_attachment_path(attachment)
+
+    assert_response :success
+    assert_equal "image/jpeg", response.media_type
+    assert_match "attachment", response.headers["Content-Disposition"]
+    assert_match attachment.blob.filename.to_s, response.headers["Content-Disposition"]
+  end
+
+  test "does not download another workspace attachment" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:other_workspace_open))
+
+    get download_media_attachment_path(attachment)
+
+    assert_response :not_found
   end
 
   test "does not serve another workspace attachment" do
@@ -76,12 +98,16 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     get bean_path(beans(:open_household))
 
     assert_response :success
+    assert_select "a[href=?]", media_attachment_path(attachment), text: I18n.t("shared.photo_grid.view")
+    assert_select "a[href=?]", download_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.download")
     assert_select "form[action='#{media_attachment_path(attachment)}'] button", text: I18n.t("shared.photo_grid.delete")
 
     memberships(:owner).update!(role: "viewer")
     get bean_path(beans(:open_household))
 
     assert_response :success
+    assert_select "a[href=?]", media_attachment_path(attachment), text: I18n.t("shared.photo_grid.view")
+    assert_select "a[href=?]", download_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.download")
     assert_select "form[action='#{media_attachment_path(attachment)}']", count: 0
   ensure
     memberships(:owner)&.update!(role: "owner")

@@ -9,6 +9,13 @@ class MediaAttachmentsController < ApplicationController
       filename: @attachment.blob.filename.to_s
   end
 
+  def download
+    send_data @attachment.blob.download,
+      type: @attachment.blob.content_type,
+      disposition: "attachment",
+      filename: @attachment.blob.filename.to_s
+  end
+
   def destroy
     unless current_workspace_policy.write?
       redirect_to root_path, alert: t("authorization.denied")

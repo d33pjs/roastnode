@@ -29,7 +29,9 @@ Rails.application.routes.draw do
   resources :preparation_tools, only: %i[index new create]
   resources :brews, only: %i[new create show edit update destroy]
   get "statistics" => "statistics#index", as: :statistics
-  resources :media_attachments, only: %i[show destroy]
+  resources :media_attachments, only: %i[show destroy] do
+    get :download, on: :member
+  end
   resource :workspace_export, only: :show
   get "workspace_export/beans.csv" => "workspace_exports#beans", as: :workspace_export_beans
   get "workspace_export/brews.csv" => "workspace_exports#brews", as: :workspace_export_brews

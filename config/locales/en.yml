@@ -39,6 +39,8 @@ en:
   shared:
     photo_grid:
       delete: "Remove"
+      download: "Download"
+      view: "View"
   beanconqueror_imports:
     create:
       created: "Beanconqueror import processed."
