@@ -1,0 +1,29 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto max-w-5xl px-6 py-10">
+    <div class="mb-8">
+      <%= link_to t(".back"), root_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+      <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+      <p class="mt-2 text-stone-700"><%= current_workspace.name %></p>
+    </div>
+
+    <div class="overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+      <table class="min-w-full divide-y divide-stone-200">
+        <thead class="bg-stone-100">
+          <tr>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".email") %></th>
+            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".role") %></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-stone-100">
+          <% @memberships.each do |membership| %>
+            <tr>
+              <td class="px-4 py-3 text-sm text-stone-900"><%= membership.user.email_address %></td>
+              <td class="px-4 py-3 text-sm text-stone-700"><%= membership.role.humanize %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+

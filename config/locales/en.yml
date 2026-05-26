@@ -46,7 +46,15 @@ en:
       name_placeholder: "Jens Household"
       submit: "Create workspace"
       title: "Create your household workspace"
+  memberships:
+    index:
+      back: "Back to dashboard"
+      email: "Email"
+      role: "Role"
+      title: "Workspace members"
   workspaces:
+    switch:
+      switched: "Switched to %{name}."
     show:
       cards:
         beans:
@@ -59,6 +67,8 @@ en:
           body: "Grinders, machines, and maintenance events will be workspace-scoped."
           title: "Equipment"
       eyebrow: "Household workspace"
+      members: "Members"
       role: "Role: %{role}"
       sign_out: "Sign out"
       signed_in_as: "Signed in as %{email}"
+      switcher: "Switch workspace"

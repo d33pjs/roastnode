@@ -4,6 +4,10 @@ Rails.application.routes.draw do
 
   root "home#index"
   resource :workspace_onboarding, only: %i[new create]
+  resources :workspaces, only: [] do
+    patch :switch, on: :member
+  end
+  resources :memberships, only: :index
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
