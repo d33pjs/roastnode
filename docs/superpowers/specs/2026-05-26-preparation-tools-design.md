@@ -8,7 +8,7 @@ Preparation Tools completes the missing part of the last-brew default contract. 
 
 - Workspace-scoped preparation tools.
 - Tools are method-scoped, with `espresso` as the first method.
-- Owners, admins, and members can create, edit, archive, and reopen tools.
+- Owners, admins, and members can create, edit, archive, reopen, and delete tools.
 - Viewers can read tools but not manage them.
 - Tools have detail pages, manual position ordering, notes, and additive photo management.
 - Tool photos use the shared private media flow for primary selection, viewing, download, crop, and removal.
@@ -16,13 +16,13 @@ Preparation Tools completes the missing part of the last-brew default contract. 
 - Brews snapshot selected tool names at save time.
 - New espresso brews preselect active tools from the current user's last brew.
 - Workspace JSON export includes preparation tool active status, position, and photo metadata.
+- Preparation tool detail pages show query-backed usage analytics.
+- Destructive delete removes the live tool record while preserving `BrewPreparationTool` snapshots with their stored names.
 
 ## Explicitly Deferred
 
 - Recipe-defined default tools.
 - Drag-and-drop ordering and per-user hidden fields.
-- Analytics by preparation tool.
-- Destructive delete/danger-zone workflow.
 
 ## Domain Model
 
@@ -56,6 +56,7 @@ The new espresso form copies preparation tools from the current user's most rece
 Tests must cover:
 
 - workspace-scoped tool listing, details, creation, editing, archive, and reopen
+- deletion preserves brew snapshots and clears only the live preparation tool reference
 - viewer write denial
 - photo attachment management on edit
 - brew creation snapshotting selected tools

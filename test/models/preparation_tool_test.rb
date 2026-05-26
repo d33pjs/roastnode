@@ -32,4 +32,18 @@ class PreparationToolTest < ActiveSupport::TestCase
     tool.reopen!
     assert tool.active?
   end
+
+  test "destroy with history removes tool but keeps brew snapshots readable" do
+    tool = preparation_tools(:wdt)
+    snapshot = brew_preparation_tools(:morning_espresso_wdt)
+
+    assert_no_difference -> { Brew.count } do
+      assert_no_difference -> { BrewPreparationTool.count } do
+        tool.destroy_with_history!
+      end
+    end
+
+    assert_nil snapshot.reload.preparation_tool
+    assert_equal "WDT", snapshot.tool_name
+  end
 end

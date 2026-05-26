@@ -457,6 +457,8 @@ en:
       archived: "Preparation tool archived."
     create:
       created: "Preparation tool added."
+    destroy:
+      destroyed: "Preparation tool deleted."
     edit:
       back: "Back to preparation tool"
       photos: "Current photos"
@@ -495,6 +497,10 @@ en:
       brew: "Espresso with %{bean}"
       channeling_count: "%{count} of %{total} brews"
       channeling_rate: "Channeling"
+      danger_zone: "Danger zone"
+      danger_zone_body: "Delete this preparation tool. Brew history stays in place, and %{count} existing brew snapshots keep the old tool name."
+      delete: "Delete preparation tool"
+      delete_confirmation: "Delete this preparation tool? %{count} brew snapshots will keep the old tool name, but the live tool record and its photos will be removed."
       edit: "Edit"
       grind: "Grind"
       inactive: "Inactive"

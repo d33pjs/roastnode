@@ -34,6 +34,8 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
     assert_select "a[href=?]", edit_preparation_tool_path(preparation_tools(:wdt)), text: I18n.t("preparation_tools.show.edit")
     assert_select "form[action=?]", archive_preparation_tool_path(preparation_tools(:wdt))
+    assert_select "[data-testid=preparation-tool-danger-zone]"
+    assert_select "form[action=?]", preparation_tool_path(preparation_tools(:wdt))
   end
 
   test "show is scoped to active workspace" do
@@ -122,6 +124,24 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert tool.reload.active?
   end
 
+  test "destroy removes preparation tool without deleting brew snapshots" do
+    sign_in_as(users(:one))
+    tool = preparation_tools(:wdt)
+    snapshot = brew_preparation_tools(:morning_espresso_wdt)
+
+    assert_difference -> { workspaces(:household).preparation_tools.count }, -1 do
+      assert_no_difference -> { Brew.count } do
+        assert_no_difference -> { BrewPreparationTool.count } do
+          delete preparation_tool_path(tool)
+        end
+      end
+    end
+
+    assert_redirected_to preparation_tools_path
+    assert_nil snapshot.reload.preparation_tool
+    assert_equal "WDT", snapshot.tool_name
+  end
+
   test "viewer cannot manage preparation tool" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
@@ -136,6 +156,9 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
 
     patch archive_preparation_tool_path(tool)
+    assert_redirected_to root_path
+
+    delete preparation_tool_path(tool)
     assert_redirected_to root_path
     assert tool.reload.active?
   ensure

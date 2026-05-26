@@ -1,6 +1,6 @@
 class PreparationToolsController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create edit update archive reopen]
-  before_action :set_preparation_tool, only: %i[show edit update archive reopen]
+  before_action :authorize_workspace_write!, only: %i[new create edit update archive reopen destroy]
+  before_action :set_preparation_tool, only: %i[show edit update archive reopen destroy]
 
   def index
     @preparation_tools = current_workspace.preparation_tools.ordered
@@ -51,6 +51,11 @@ class PreparationToolsController < ApplicationController
   def reopen
     @preparation_tool.reopen!
     redirect_to @preparation_tool, notice: t(".reopened")
+  end
+
+  def destroy
+    @preparation_tool.destroy_with_history!
+    redirect_to preparation_tools_path, notice: t(".destroyed")
   end
 
   private

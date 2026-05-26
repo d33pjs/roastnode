@@ -28,6 +28,13 @@ class PreparationTool < ApplicationRecord
     update!(active: true)
   end
 
+  def destroy_with_history!
+    transaction do
+      brew_preparation_tools.update_all(preparation_tool_id: nil)
+      destroy!
+    end
+  end
+
   private
     def set_defaults
       self.brew_method ||= "espresso"

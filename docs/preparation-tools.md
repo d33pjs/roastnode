@@ -10,6 +10,7 @@ Preparation Tools are reusable workspace checklist items for brew preparation. T
 - Optional preparation tool photos on create and edit.
 - Primary photo selection, private viewing/download, cropping, and removal through the shared media flow.
 - Archive and reopen lifecycle.
+- Destructive danger-zone delete that keeps brew snapshots readable.
 - Manual sort position for checklist ordering.
 - Detail analytics for usage count, total coffee ground, average rating/yield/time, channeling rate, taste balance, retention markers, best brews, and recent brews.
 - Brew form checklist for active espresso tools.
@@ -33,8 +34,13 @@ Saving a brew creates `BrewPreparationTool` snapshot rows with:
 
 The snapshot keeps old brew history readable if a tool is renamed later.
 
+## Delete
+
+Preparation tool deletion lives in the detail-page danger zone. It removes the live tool record and its photos, but preserves brew history by keeping `BrewPreparationTool` snapshot rows and clearing their `preparation_tool_id`.
+
+Use `PreparationTool#destroy_with_history!` for destructive deletes so the snapshot-preservation rule stays centralized.
+
 ## Deferred
 
 - Recipe-defined preparation tool defaults.
 - Drag-and-drop ordering.
-- Destructive delete/danger-zone workflow.
