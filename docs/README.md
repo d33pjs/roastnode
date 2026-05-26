@@ -8,6 +8,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/workspace-core.md` describes workspaces, roles, invites, and the workspace-scoping rule for future product data.
 - `docs/workspace-settings.md` describes active-workspace settings for household name and currency.
 - `docs/landing-preferences.md` describes preferred start screens and the stable dashboard route.
+- `docs/account-privacy.md` describes where to use display labels instead of email addresses.
 - `docs/brew-form-preferences.md` describes per-user espresso form focus behavior.
 - `docs/brew-draft-recovery.md` describes browser-local unsaved espresso draft recovery.
 - `docs/coffee-core.md` describes beans, equipment, required-bean espresso logging, inventory deduction, and deferred recipe scope.

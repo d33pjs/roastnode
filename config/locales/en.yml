@@ -420,6 +420,7 @@ en:
         total_time_seconds: "Total time"
       default_brew_focus_field: "Espresso form focus"
       default_landing_screen: "Default landing screen"
+      email_address: "Account email"
       landing_screens:
         dashboard: "Dashboard"
         log_espresso: "Log espresso"
@@ -548,7 +549,7 @@ en:
       role: "Role: %{role}"
       settings: "Settings"
       sign_out: "Sign out"
-      signed_in_as: "Signed in as %{email}"
+      signed_in_as: "Signed in as %{user}"
       status:
         brews_this_week: "Brews this week"
         grams_remaining: "Grams remaining"

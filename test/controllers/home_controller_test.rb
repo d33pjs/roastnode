@@ -13,6 +13,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
   test "shows signed-in state after authentication" do
     user = users(:one)
+    user.update!(display_name: "Jens")
     sign_in_as(user)
 
     get root_path
@@ -22,10 +23,23 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_transparent"
     assert_select "[data-testid=workspace-mobile-menu].sm\\:hidden"
     assert_select "[data-testid=workspace-desktop-menu].hidden.sm\\:flex"
-    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", email: user.email_address)
+    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label)
+    assert_no_match user.email_address, response.body
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("workspaces.show.profile")
     assert_select "a[href=?]", edit_workspace_path, text: I18n.t("workspaces.show.settings")
     assert_select "a[href=?]", new_session_path, count: 0
+  end
+
+  test "dashboard falls back to unknown username without exposing email" do
+    user = users(:one)
+    user.update!(display_name: nil)
+    sign_in_as(user)
+
+    get root_path
+
+    assert_response :success
+    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label)
+    assert_no_match user.email_address, response.body
   end
 
   test "workspace owner sees invite management link" do

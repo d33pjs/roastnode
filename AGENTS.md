@@ -21,6 +21,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Use `current_workspace`, `current_membership`, and `current_workspace_policy` from `ApplicationController` instead of ad hoc workspace lookups in controllers.
 - Add tests for authorization and workspace isolation whenever adding workspace-scoped behavior.
 - Owners and admins can manage workspace settings and invite links. Workspace settings are singleton active-workspace routes and should not accept workspace IDs. Members can write normal workspace data. Viewers are read-only.
+- General product UI should use `User#display_label` instead of `email_address`. Keep email addresses on account/admin surfaces such as Profile, member lists, invites, and exports.
 - Do not build public account creation from invite links yet; current invite acceptance assumes the user is already signed in.
 - Espresso brew logging requires an open bean. Default to the current user's last active brewed bean, then the first open bean. Redirect to bean creation when no open bean exists. Copy only curated setup fields from the user's last brew: bean, grinder, machine, active preparation tools, grind setting, brew temperature, and pre-infusion seconds. Keep bean weight, ground-out weight, dose, beverage yield, total time, first drip, rating, notes, channeling, and taste fresh.
 - The new espresso form autofocuses `User#default_brew_focus_field`. Keep the supported focus list narrow and intentional; do not include rating, channeling, taste balance, or photos unless the product direction changes.

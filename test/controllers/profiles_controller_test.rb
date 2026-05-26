@@ -8,7 +8,9 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     get edit_profile_path
 
     assert_response :success
+    assert_select "[data-testid=profile-email]", user.email_address
     assert_select "input[name=?]", "user[display_name]"
+    assert_select "input[name=?]", "user[email_address]", count: 0
     assert_select "select[name=?]", "user[default_landing_screen]"
     assert_select "select[name=?]", "user[default_brew_focus_field]"
   end
