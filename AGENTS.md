@@ -27,6 +27,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Preparation tools are method-scoped checklist records, not equipment. Brews snapshot selected preparation tool names and preselect active tools from the user's last brew.
 - Recipes are deliberately deferred. Do not introduce recipe tables, recipe snapshots, or recipe-based defaults in Coffee Core work.
 - Beanconqueror import is currently a conservative JSON subset. Preserve raw import data, use source UUIDs for duplicate handling, skip unsupported records with warnings, and do not import media bytes yet.
+- Workspace analytics live in `WorkspaceStatistics`; keep aggregation workspace-scoped and query-backed until data volume justifies summaries.
 - Equipment events are first-class workspace records. Use them for grinder and machine maintenance history instead of burying maintenance in equipment notes. A single equipment event can have multiple `event_types`.
 - Photos are private workspace data attached through Active Storage. Render app photos through `media_attachment_path(attachment)` so `MediaAttachmentsController` can enforce active-workspace access; do not use raw Active Storage blob/proxy URLs in app views.
 - Workspace export is owner-only and uses the active workspace. Keep export payloads structured, omit sessions/passwords/invite tokens, and do not include signed media URLs or raw photo bytes until a dedicated media archive design exists.
