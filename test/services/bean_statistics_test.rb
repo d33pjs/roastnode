@@ -50,6 +50,7 @@ class BeanStatisticsTest < ActiveSupport::TestCase
       assert_equal 4, statistics[:averages][:rating]
       assert_equal 42.7.to_d, statistics[:averages][:beverage_grams]
       assert_equal 31, statistics[:averages][:total_time_seconds]
+      assert_equal 1, statistics[:rates][:channeling_count]
       assert_equal 33, statistics[:rates][:channeling_percent]
       assert_equal({ "neutral" => 1, "sour" => 1, "bitter" => 1 }, statistics[:distributions][:taste_balance])
       assert_equal({ "normal" => 1, "retention" => 1, "exchange" => 1 }, statistics[:distributions][:retention_marker])

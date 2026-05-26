@@ -3,13 +3,44 @@ require "test_helper"
 class BeansControllerTest < ActionDispatch::IntegrationTest
   test "index lists active workspace beans only" do
     sign_in_as(users(:one))
+    bean = beans(:open_household)
 
     get beans_path
 
     assert_response :success
     assert_select "h1", I18n.t("beans.index.title")
-    assert_select "td", text: beans(:open_household).name
+    assert_select "a[href=?]", bean_path(bean), text: /#{bean.name}/
     assert_select "td", text: beans(:other_workspace_open).name, count: 0
+  end
+
+  test "index renders primary bean photo and channeling summary" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    first = attach_photo(bean)
+    primary = attach_photo(bean)
+    bean.set_primary_photo!(primary)
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 25, 8, 15, 0),
+      bean_weight_grams: 18,
+      ground_weight_grams: 17.8,
+      dose_grams: 18,
+      beverage_grams: 42,
+      total_time_seconds: 30,
+      channeling: true,
+      rating: 3
+    )
+
+    get beans_path
+
+    assert_response :success
+    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(primary)
+    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(first), count: 0
+    assert_select "[data-testid=?]", "bean-list-channeling-#{bean.id}", text: /50%/
+    assert_select "[data-testid=?]", "bean-list-channeling-#{bean.id}", text: /1 of 2/
   end
 
   test "member can create bean" do
@@ -181,6 +212,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", I18n.t("beans.show.analytics")
     assert_select "[data-testid=bean-brew-count]", "2"
     assert_select "[data-testid=bean-consumed]", "37 g"
+    assert_select "[data-testid=bean-channeling-rate]", "50%"
+    assert_select "[data-testid=bean-channeling-count]", text: /1 of 2/
     assert_select "[data-testid=bean-best-brews] a[href=?]", brew_path(brew), text: /45 g/
     assert_select "[data-testid=bean-recent-brews] a[href=?]", brew_path(brew), text: /10/
     assert_select "h3", I18n.t("beans.show.taste_balance")

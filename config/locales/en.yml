@@ -123,6 +123,8 @@ en:
     index:
       back: "Back to dashboard"
       bean: "Bean"
+      channeling: "Channeling"
+      channeling_count: "%{count} of %{total}"
       closed: "Closed"
       new: "Add bean"
       open: "Open"
@@ -148,6 +150,9 @@ en:
       close: "Close bag"
       closed: "Closed"
       brew_count: "Brews"
+      channeling_count:
+        one: "1 of %{total} channeled"
+        other: "%{count} of %{total} channeled"
       channeling_rate: "Channeling"
       country: "Country"
       consumed: "Consumed"

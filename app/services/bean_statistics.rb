@@ -42,8 +42,11 @@ class BeanStatistics
     end
 
     def rates
+      channeling_count = brews.count(&:channeling?)
+
       {
-        channeling_percent: percentage(brews.count(&:channeling?), brews.size)
+        channeling_count:,
+        channeling_percent: percentage(channeling_count, brews.size)
       }
     end
 

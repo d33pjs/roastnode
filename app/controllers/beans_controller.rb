@@ -3,7 +3,10 @@ class BeansController < ApplicationController
   before_action :set_bean, only: %i[show edit update close reopen duplicate destroy]
 
   def index
-    @beans = current_workspace.beans.order(Arel.sql("archived_at ASC NULLS FIRST"), Arel.sql("opened_on ASC NULLS LAST"), :name)
+    @beans = current_workspace.beans
+      .includes(:primary_photo_record, photos_attachments: :blob)
+      .order(Arel.sql("archived_at ASC NULLS FIRST"), Arel.sql("opened_on ASC NULLS LAST"), :name)
+    @bean_channeling_statistics = channeling_statistics_for(@beans)
   end
 
   def show
@@ -99,5 +102,22 @@ class BeansController < ApplicationController
         :blend_percentage,
         { photos: [] }
       ])
+    end
+
+    def channeling_statistics_for(beans)
+      bean_ids = beans.map(&:id)
+      totals = current_workspace.brews.where(bean_id: bean_ids).group(:bean_id).count
+      channeled = current_workspace.brews.where(bean_id: bean_ids, channeling: true).group(:bean_id).count
+
+      bean_ids.index_with do |bean_id|
+        total = totals[bean_id].to_i
+        count = channeled[bean_id].to_i
+
+        {
+          count:,
+          total:,
+          percent: total.zero? ? 0 : ((count.to_d / total) * 100).round
+        }
+      end
     end
 end
