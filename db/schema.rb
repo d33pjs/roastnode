@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_110100) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_143000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -45,8 +45,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_110100) do
   create_table "beans", force: :cascade do |t|
     t.datetime "archived_at"
     t.decimal "bag_size_grams", precision: 10, scale: 2, null: false
+    t.string "blend_percentage"
+    t.string "blend_type", default: "unknown", null: false
+    t.string "country"
     t.datetime "created_at", null: false
     t.bigint "data_import_id"
+    t.boolean "decaffeinated", default: false, null: false
+    t.string "elevation"
+    t.string "farm"
+    t.string "farmer"
+    t.string "harvested"
     t.string "import_source"
     t.string "import_source_id"
     t.string "name", null: false
@@ -60,12 +68,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_110100) do
     t.date "purchased_on"
     t.integer "rating"
     t.jsonb "raw_import_data", default: {}, null: false
+    t.string "region"
     t.decimal "remaining_grams", precision: 10, scale: 2, null: false
     t.date "roast_date"
+    t.decimal "roast_degree", precision: 3, scale: 1
     t.string "roast_level"
+    t.string "roast_type", default: "unknown", null: false
     t.string "roaster_name"
     t.text "tasting_notes"
     t.datetime "updated_at", null: false
+    t.string "variety"
     t.bigint "workspace_id", null: false
     t.index ["data_import_id"], name: "index_beans_on_data_import_id"
     t.index ["workspace_id", "archived_at"], name: "index_beans_on_workspace_id_and_archived_at"
