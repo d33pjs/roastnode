@@ -36,6 +36,6 @@ class EquipmentEventsController < ApplicationController
     end
 
     def equipment_event_params
-      params.expect(equipment_event: [ :occurred_at, :notes, { event_types: [], equipment_ids: [] } ])
+      params.expect(equipment_event: [ :occurred_at, :notes, { event_types: [], equipment_ids: [], photos: [] } ])
     end
 end

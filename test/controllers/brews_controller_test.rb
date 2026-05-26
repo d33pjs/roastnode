@@ -34,6 +34,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:puck_screen).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:other_workspace_tool).id.to_s, count: 0
+    assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
   end
 
   test "new falls back to first open bean when last bean is closed" do
@@ -68,6 +69,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
               total_time_seconds: "31",
               taste_balance: "neutral",
               rating: "4",
+              photos: [ photo_upload ],
               preparation_tool_ids: [
                 preparation_tools(:wdt).id,
                 preparation_tools(:other_workspace_tool).id,
@@ -83,6 +85,17 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to brew_path(brew)
     assert_equal 201.5.to_d, bean.reload.remaining_grams
     assert_equal [ "WDT", "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+    assert_equal 1, brew.photos.count
+  end
+
+  test "show renders private photos through scoped media route" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(brews(:morning_espresso))
+
+    get brew_path(brews(:morning_espresso))
+
+    assert_response :success
+    assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
   test "viewer cannot create brew" do

@@ -52,6 +52,7 @@ en:
       notes: "Private notes"
       opened_on: "Opened on"
       origin: "Origin"
+      photos: "Photos"
       remaining: "Remaining (g)"
       roaster: "Roaster"
       title: "Add bean"
@@ -61,6 +62,7 @@ en:
       closed: "Closed"
       notes: "Notes"
       open: "Open"
+      photos: "Photos"
       remaining: "Remaining"
       status: "Status"
       unknown_origin: "Unknown origin"
@@ -86,6 +88,7 @@ en:
       notes: "Notes"
       no_preparation_tools: "No preparation tools yet."
       preparation_tools: "Preparation tools"
+      photos: "Photos"
       rating: "Rating"
       taste: "Taste balance"
       temperature: "Temperature (C)"
@@ -99,6 +102,7 @@ en:
       grinder: "Grinder"
       machine: "Machine"
       notes: "Notes"
+      photos: "Photos"
       rating: "Rating"
       retention: "Retention"
       taste: "Taste"
@@ -124,6 +128,7 @@ en:
       model: "Model"
       name: "Name"
       notes: "Notes"
+      photos: "Photos"
       title: "Add equipment"
     show:
       back: "Back to equipment"
@@ -136,6 +141,7 @@ en:
       no_brews: "No brews yet."
       no_events: "No equipment events yet."
       notes: "Notes"
+      photos: "Photos"
       recent_brews: "Recent brews"
       recent_events: "Recent events"
       unknown_model: "Unknown model"
@@ -149,6 +155,7 @@ en:
       event_types: "Event types"
       notes: "Notes"
       occurred_at: "Occurred at"
+      photos: "Photos"
       title: "Log equipment event"
     show:
       back: "Back to dashboard"
@@ -156,6 +163,7 @@ en:
       equipment: "Equipment"
       eyebrow: "Equipment event"
       notes: "Notes"
+      photos: "Photos"
   home:
     index:
       eyebrow: "Private coffee infrastructure"

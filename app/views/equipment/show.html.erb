@@ -35,6 +35,12 @@
       </section>
     <% end %>
 
+    <%= render "shared/photo_grid",
+      record: @equipment,
+      title: t(".photos"),
+      section_class: "mt-8 rounded-lg border border-stone-200 bg-white p-5 shadow-sm",
+      title_class: "font-semibold text-stone-950" %>
+
     <div class="mt-8 grid gap-6 lg:grid-cols-2">
       <section>
         <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".recent_events") %></h2>

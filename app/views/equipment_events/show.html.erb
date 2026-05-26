@@ -21,6 +21,12 @@
           <p class="mt-2 whitespace-pre-line text-stone-700"><%= @equipment_event.notes %></p>
         </section>
       <% end %>
+
+      <%= render "shared/photo_grid",
+        record: @equipment_event,
+        title: t(".photos"),
+        section_class: "mt-6 border-t border-stone-100 pt-6",
+        title_class: "font-semibold text-stone-950" %>
     </article>
   </section>
 </main>

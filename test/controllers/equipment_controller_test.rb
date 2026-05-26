@@ -23,13 +23,25 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
         equipment: {
           name: "Eureka Mignon",
           kind: "grinder",
-          model: "Specialita"
+          model: "Specialita",
+          photos: [ photo_upload ]
         }
       }
     end
 
     assert_redirected_to equipment_index_path
-    assert_equal "grinder", workspaces(:household).equipment.order(:created_at).last.kind
+    equipment = workspaces(:household).equipment.order(:created_at).last
+    assert_equal "grinder", equipment.kind
+    assert_equal 1, equipment.photos.count
+  end
+
+  test "new includes photo upload" do
+    sign_in_as(users(:one))
+
+    get new_equipment_path
+
+    assert_response :success
+    assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
   end
 
   test "viewer cannot create equipment" do
@@ -55,6 +67,16 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
     assert_select "p", text: /18 g/
+  end
+
+  test "show renders private photos through scoped media route" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(equipment(:household_grinder))
+
+    get equipment_path(equipment(:household_grinder))
+
+    assert_response :success
+    assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
   test "show is scoped to active workspace" do

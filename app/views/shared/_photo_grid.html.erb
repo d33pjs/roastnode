@@ -1,0 +1,10 @@
+<% if record.photos.attached? %>
+  <section class="<%= section_class %>">
+    <h2 class="<%= title_class %>"><%= title %></h2>
+    <div class="mt-3 grid gap-3 sm:grid-cols-3">
+      <% record.photos.attachments.each do |photo| %>
+        <%= image_tag media_attachment_path(photo), alt: "", class: "h-40 w-full rounded-md border border-stone-200 object-cover" %>
+      <% end %>
+    </div>
+  </section>
+<% end %>

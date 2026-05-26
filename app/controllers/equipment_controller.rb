@@ -35,7 +35,7 @@ class EquipmentController < ApplicationController
     end
 
     def equipment_params
-      params.expect(equipment: [ :name, :kind, :model, :notes ])
+      params.expect(equipment: [ :name, :kind, :model, :notes, { photos: [] } ])
     end
 
     def equipment_brews_scope

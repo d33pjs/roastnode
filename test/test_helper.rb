@@ -14,3 +14,20 @@ module ActiveSupport
     # Add more helper methods to be used by all tests here...
   end
 end
+
+module PhotoTestHelper
+  def photo_upload
+    fixture_file_upload("photo.jpg", "image/jpeg")
+  end
+
+  def attach_photo(record)
+    File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
+      record.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
+    end
+    record.photos.attachments.last
+  end
+end
+
+class ActionDispatch::IntegrationTest
+  include PhotoTestHelper
+end

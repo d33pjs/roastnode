@@ -12,6 +12,7 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "machine_backflush"
     assert_select "label", text: equipment(:household_grinder).name
     assert_select "label", text: equipment(:other_workspace_grinder).name, count: 0
+    assert_select "input[type=file][name=?][multiple=multiple]", "equipment_event[photos][]"
   end
 
   test "member can create equipment event" do
@@ -26,7 +27,8 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
             event_types: [ "grinder_cleaning" ],
             occurred_at: "2026-05-26 08:30",
             notes: "Quick brush out.",
-            equipment_ids: [ equipment(:household_grinder).id ]
+            equipment_ids: [ equipment(:household_grinder).id ],
+            photos: [ photo_upload ]
           }
         }
       end
@@ -36,6 +38,17 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to equipment_event_path(event)
     assert_equal user, event.user
     assert_includes event.equipment, equipment(:household_grinder)
+    assert_equal 1, event.photos.count
+  end
+
+  test "show renders private photos through scoped media route" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(equipment_events(:grinder_cleaning))
+
+    get equipment_event_path(equipment_events(:grinder_cleaning))
+
+    assert_response :success
+    assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
   test "member can create equipment event with multiple event types" do

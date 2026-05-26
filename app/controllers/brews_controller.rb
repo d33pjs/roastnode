@@ -124,7 +124,7 @@ class BrewsController < ApplicationController
         :taste_balance,
         :rating,
         :notes,
-        { preparation_tool_ids: [] }
+        { preparation_tool_ids: [], photos: [] }
       ])
     end
 end

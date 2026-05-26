@@ -29,5 +29,11 @@
         <p class="mt-2 whitespace-pre-line text-stone-700"><%= @bean.notes %></p>
       </section>
     <% end %>
+
+    <%= render "shared/photo_grid",
+      record: @bean,
+      title: t(".photos"),
+      section_class: "mt-6 rounded-lg border border-stone-200 bg-white p-5 shadow-sm",
+      title_class: "text-lg font-semibold text-stone-950" %>
   </section>
 </main>

@@ -45,7 +45,8 @@ class BeansController < ApplicationController
         :purchased_on,
         :purchase_price_cents,
         :rating,
-        :notes
+        :notes,
+        { photos: [] }
       ])
     end
 end

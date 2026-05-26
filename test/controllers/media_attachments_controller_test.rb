@@ -20,11 +20,4 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  private
-    def attach_photo(record)
-      File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
-        record.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
-      end
-      record.photos.attachments.last
-    end
 end
