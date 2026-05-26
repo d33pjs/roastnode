@@ -27,6 +27,18 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", workspace_invites_path, text: I18n.t("workspaces.show.invites")
+    assert_select "a[href=?]", workspace_export_path, text: I18n.t("workspaces.show.export")
+  end
+
+  test "workspace member does not see export link" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    get root_path
+
+    assert_response :success
+    assert_select "a[href=?]", workspace_export_path, count: 0
   end
 
   test "workspace dashboard shows coffee actions and recent activity" do

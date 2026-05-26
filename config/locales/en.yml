@@ -257,6 +257,7 @@ en:
         brew: "Espresso with %{bean}"
         equipment_event: "%{event} for %{equipment}"
       eyebrow: "Household workspace"
+      export: "Export JSON"
       invites: "Invites"
       members: "Members"
       no_activity: "No activity yet."

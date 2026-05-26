@@ -12,6 +12,9 @@
         <% if current_workspace_policy.manage? %>
           <%= link_to t(".invites"), workspace_invites_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <% end %>
+        <% if current_workspace_policy.export? %>
+          <%= link_to t(".export"), workspace_export_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+        <% end %>
         <%= link_to t(".members"), memberships_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <%= button_to t(".sign_out"), session_path, method: :delete, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
       </div>
