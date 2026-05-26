@@ -305,12 +305,17 @@ en:
       photos: "Photos"
       title: "Add equipment"
     show:
+      analytics: "Usage analytics"
+      average_rating: "Average rating"
       back: "Back to equipment"
       brew: "Espresso with %{bean}"
+      brews_by_day: "Brews by day"
       brews_since_service: "Brews since service"
+      channeling_rate: "Channeling"
       grams_since_service: "Grams since service"
       last_service: "Last service"
       log_event: "Log event"
+      maintenance_markers: "Maintenance markers"
       never: "Never"
       no_brews: "No brews yet."
       no_events: "No equipment events yet."
@@ -318,6 +323,9 @@ en:
       photos: "Photos"
       recent_brews: "Recent brews"
       recent_events: "Recent events"
+      total_brews: "Total brews"
+      total_ground: "Total ground"
+      unknown: "Unknown"
       unknown_model: "Unknown model"
   equipment_events:
     create:

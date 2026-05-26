@@ -16,15 +16,60 @@
     <section class="grid gap-4 sm:grid-cols-3">
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".brews_since_service") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= @brews_since_service %></p>
+        <p data-testid="equipment-brews-since-service" class="mt-2 text-3xl font-bold text-stone-950"><%= @equipment_statistics[:service][:brews_since_service] %></p>
       </div>
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".grams_since_service") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= number_with_precision(@grams_since_service, precision: 1, strip_insignificant_zeros: true) %> g</p>
+        <p data-testid="equipment-grams-since-service" class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_grams(@equipment_statistics[:service][:grams_since_service]) %></p>
       </div>
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".last_service") %></p>
         <p class="mt-2 text-lg font-bold text-stone-950"><%= @last_service_event ? l(@last_service_event.occurred_at.to_date, format: :long) : t(".never") %></p>
+      </div>
+    </section>
+
+    <section class="mt-8 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+      <h2 class="text-lg font-semibold text-stone-950"><%= t(".analytics") %></h2>
+
+      <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-md bg-stone-50 p-4">
+          <p class="text-xs font-bold uppercase text-stone-500"><%= t(".total_brews") %></p>
+          <p data-testid="equipment-total-brews" class="mt-1 text-2xl font-bold text-stone-950"><%= @equipment_statistics[:totals][:brew_count] %></p>
+        </div>
+        <div class="rounded-md bg-stone-50 p-4">
+          <p class="text-xs font-bold uppercase text-stone-500"><%= t(".total_ground") %></p>
+          <p data-testid="equipment-total-ground" class="mt-1 text-2xl font-bold text-stone-950"><%= statistics_grams(@equipment_statistics[:totals][:total_bean_weight_grams]) %></p>
+        </div>
+        <div class="rounded-md bg-stone-50 p-4">
+          <p class="text-xs font-bold uppercase text-stone-500"><%= t(".average_rating") %></p>
+          <p class="mt-1 text-2xl font-bold text-stone-950">
+            <% if @equipment_statistics[:averages][:rating].present? %>
+              <%= number_with_precision(@equipment_statistics[:averages][:rating], precision: 1, strip_insignificant_zeros: true) %>/5
+            <% else %>
+              <%= t(".unknown") %>
+            <% end %>
+          </p>
+        </div>
+        <div class="rounded-md bg-stone-50 p-4">
+          <p class="text-xs font-bold uppercase text-stone-500"><%= t(".channeling_rate") %></p>
+          <p class="mt-1 text-2xl font-bold text-stone-950"><%= statistics_percent(@equipment_statistics[:rates][:channeling_percent]) %></p>
+        </div>
+      </div>
+
+      <div class="mt-5 grid gap-5 lg:grid-cols-2">
+        <div>
+          <h3 class="text-sm font-semibold uppercase text-stone-600"><%= t(".brews_by_day") %></h3>
+          <div class="mt-3 rounded-md border border-stone-200 p-3">
+            <%= render "statistics/day_bars", points: @equipment_statistics[:series][:brews_by_day], value_key: :count, maximum: @equipment_statistics[:series][:brews_by_day].map { |point| point[:count] }.max, suffix: "" %>
+          </div>
+        </div>
+
+        <div>
+          <h3 class="text-sm font-semibold uppercase text-stone-600"><%= t(".maintenance_markers") %></h3>
+          <div class="mt-3 rounded-md border border-stone-200 p-3">
+            <%= render "statistics/bar_list", values: @equipment_statistics[:distributions][:event_types], maximum: @equipment_statistics[:distributions][:event_types].values.max, empty_label: t(".no_events") %>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -60,7 +105,7 @@
 
       <section>
         <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".recent_brews") %></h2>
-        <div class="divide-y divide-stone-100 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+        <div data-testid="equipment-recent-brews" class="divide-y divide-stone-100 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
           <% if @recent_brews.any? %>
             <% @recent_brews.each do |brew| %>
               <%= link_to brew_path(brew), class: "block p-4 hover:bg-stone-50" do %>

@@ -69,6 +69,37 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: /18 g/
   end
 
+  test "show renders usage analytics" do
+    sign_in_as(users(:one))
+    grinder = equipment(:household_grinder)
+    brew = beans(:open_household).brews.create!(
+      workspace: grinder.workspace,
+      user: users(:one),
+      grinder:,
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 25, 8, 15, 0),
+      bean_weight_grams: 19,
+      ground_weight_grams: 19,
+      dose_grams: 19,
+      beverage_grams: 45,
+      rating: 5,
+      channeling: true
+    )
+
+    get equipment_path(grinder)
+
+    assert_response :success
+    assert_select "h2", I18n.t("equipment.show.analytics")
+    assert_select "[data-testid=equipment-total-brews]", "2"
+    assert_select "[data-testid=equipment-total-ground]", "37 g"
+    assert_select "[data-testid=equipment-brews-since-service]"
+    assert_select "[data-testid=equipment-grams-since-service]"
+    assert_select "[data-testid=equipment-recent-brews] a[href=?]", brew_path(brew), text: /House Blend/
+    assert_select "h3", I18n.t("equipment.show.brews_by_day")
+    assert_select "h3", I18n.t("equipment.show.maintenance_markers")
+    assert_select "body", text: /Other Grinder/, count: 0
+  end
+
   test "show renders private photos through scoped media route" do
     sign_in_as(users(:one))
     attachment = attach_photo(equipment(:household_grinder))
