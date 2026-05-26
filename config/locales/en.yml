@@ -34,12 +34,16 @@ en:
   authorization:
     denied: "You do not have permission to do that."
   media_attachments:
+    primary:
+      updated: "Primary photo updated."
     destroy:
       destroyed: "Photo removed."
   shared:
     photo_grid:
       delete: "Remove"
       download: "Download"
+      make_primary: "Make primary"
+      primary: "Primary"
       view: "View"
   beanconqueror_imports:
     create:

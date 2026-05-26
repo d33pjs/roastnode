@@ -1,4 +1,6 @@
 class Bean < ApplicationRecord
+  include HasPrimaryPhoto
+
   ROAST_TYPES = %w[unknown espresso filter omni].freeze
   BLEND_TYPES = %w[unknown single_origin blend].freeze
   DUPLICATE_DISPLAY_DATE_FORMAT = "%d.%m.%Y"
@@ -45,7 +47,14 @@ class Bean < ApplicationRecord
 
     transaction do
       duplicate = workspace.beans.create!(duplicate_attributes)
-      duplicate.photos.attach(photos.map(&:blob)) if photos.attached?
+      if photos.attached?
+        duplicate.photos.attach(photos.map(&:blob))
+        if primary_photo_attachment.present?
+          primary_blob_id = primary_photo_attachment.blob_id
+          duplicate_primary = duplicate.photos.attachments.detect { |attachment| attachment.blob_id == primary_blob_id }
+          duplicate.update!(primary_photo_attachment_id: duplicate_primary.id) if duplicate_primary
+        end
+      end
     end
 
     duplicate

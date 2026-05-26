@@ -238,6 +238,20 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
   end
 
+  test "hero brew card uses primary bean photo" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    first = attach_photo(brew.bean)
+    primary = attach_photo(brew.bean)
+    brew.bean.update!(primary_photo_attachment_id: primary.id)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(primary)
+    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(first), count: 0
+  end
+
   test "show renders unknown username when display name is blank" do
     sign_in_as(users(:one))
 

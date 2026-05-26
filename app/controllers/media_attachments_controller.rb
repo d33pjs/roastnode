@@ -16,6 +16,18 @@ class MediaAttachmentsController < ApplicationController
       filename: @attachment.blob.filename.to_s
   end
 
+  def primary
+    unless current_workspace_policy.write?
+      redirect_to root_path, alert: t("authorization.denied")
+      return
+    end
+
+    record = @attachment.record
+    record.set_primary_photo!(@attachment)
+
+    redirect_back_or_to record_path(record), notice: t(".updated")
+  end
+
   def destroy
     unless current_workspace_policy.write?
       redirect_to root_path, alert: t("authorization.denied")

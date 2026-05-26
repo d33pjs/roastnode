@@ -87,6 +87,10 @@ class BeanTest < ActiveSupport::TestCase
     File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
       bean.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
     end
+    File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
+      bean.photos.attach(io: file, filename: "label.jpg", content_type: "image/jpeg")
+    end
+    bean.set_primary_photo!(bean.photos.last)
 
     duplicate = bean.duplicate_for_new_bag!
 
@@ -97,6 +101,7 @@ class BeanTest < ActiveSupport::TestCase
     assert_nil duplicate.archived_at
     assert_equal bean.roaster_name, duplicate.roaster_name
     assert_equal bean.photos.first.blob, duplicate.photos.first.blob
+    assert_equal bean.primary_photo_attachment.blob, duplicate.primary_photo_attachment.blob
   end
 
   test "display name for collection adds opened date only for duplicate open bags" do

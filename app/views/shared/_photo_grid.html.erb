@@ -2,6 +2,7 @@
   <section class="<%= section_class %>">
     <h2 class="<%= title_class %>"><%= title %></h2>
     <div class="mt-3 grid gap-3 sm:grid-cols-3">
+      <% primary_photo = record.primary_photo_attachment %>
       <% record.photos.attachments.each do |photo| %>
         <figure class="relative overflow-hidden rounded-md border border-stone-200 bg-stone-100">
           <%= link_to media_attachment_path(photo), target: "_blank", rel: "noopener", class: "block" do %>
@@ -16,6 +17,14 @@
             <%= link_to t(".download"),
               download_media_attachment_path(photo),
               class: "rounded-md border border-stone-200 px-3 py-1.5 text-xs font-bold text-stone-800 hover:bg-stone-50" %>
+            <% if photo == primary_photo %>
+              <span class="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-900"><%= t(".primary") %></span>
+            <% elsif current_workspace_policy.write? %>
+              <%= button_to t(".make_primary"),
+                primary_media_attachment_path(photo),
+                method: :patch,
+                class: "rounded-md border border-stone-200 px-3 py-1.5 text-xs font-bold text-stone-800 hover:bg-stone-50" %>
+            <% end %>
           </figcaption>
           <% if current_workspace_policy.write? %>
             <%= button_to t(".delete"),

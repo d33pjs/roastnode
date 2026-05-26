@@ -31,6 +31,7 @@ Rails.application.routes.draw do
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
     get :download, on: :member
+    patch :primary, on: :member
   end
   resource :workspace_export, only: :show
   get "workspace_export/beans.csv" => "workspace_exports#beans", as: :workspace_export_beans

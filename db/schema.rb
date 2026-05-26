@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_224500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -61,6 +61,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
     t.text "notes"
     t.date "opened_on"
     t.string "origin"
+    t.bigint "primary_photo_attachment_id"
     t.string "process"
     t.integer "purchase_price_cents"
     t.string "purchase_source"
@@ -80,6 +81,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
     t.string "variety"
     t.bigint "workspace_id", null: false
     t.index ["data_import_id"], name: "index_beans_on_data_import_id"
+    t.index ["primary_photo_attachment_id"], name: "index_beans_on_primary_photo_attachment_id"
     t.index ["workspace_id", "archived_at"], name: "index_beans_on_workspace_id_and_archived_at"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_beans_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id"], name: "index_beans_on_workspace_id"
@@ -118,6 +120,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
     t.text "notes"
     t.datetime "occurred_at", null: false
     t.integer "preinfusion_seconds"
+    t.bigint "primary_photo_attachment_id"
     t.integer "rating"
     t.jsonb "raw_import_data", default: {}, null: false
     t.string "retention_marker", default: "unknown", null: false
@@ -130,6 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
     t.index ["data_import_id"], name: "index_brews_on_data_import_id"
     t.index ["grinder_id"], name: "index_brews_on_grinder_id"
     t.index ["machine_id"], name: "index_brews_on_machine_id"
+    t.index ["primary_photo_attachment_id"], name: "index_brews_on_primary_photo_attachment_id"
     t.index ["user_id"], name: "index_brews_on_user_id"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_brews_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
@@ -161,10 +165,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
     t.string "model"
     t.string "name", null: false
     t.text "notes"
+    t.bigint "primary_photo_attachment_id"
     t.jsonb "raw_import_data", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["data_import_id"], name: "index_equipment_on_data_import_id"
+    t.index ["primary_photo_attachment_id"], name: "index_equipment_on_primary_photo_attachment_id"
     t.index ["workspace_id", "archived_at"], name: "index_equipment_on_workspace_id_and_archived_at"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_equipment_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "kind"], name: "index_equipment_on_workspace_id_and_kind"
@@ -187,9 +193,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
     t.string "event_types", default: [], null: false, array: true
     t.text "notes"
     t.datetime "occurred_at", null: false
+    t.bigint "primary_photo_attachment_id"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.bigint "workspace_id", null: false
+    t.index ["primary_photo_attachment_id"], name: "index_equipment_events_on_primary_photo_attachment_id"
     t.index ["user_id"], name: "index_equipment_events_on_user_id"
     t.index ["workspace_id", "event_type"], name: "index_equipment_events_on_workspace_id_and_event_type"
     t.index ["workspace_id", "occurred_at"], name: "index_equipment_events_on_workspace_id_and_occurred_at"

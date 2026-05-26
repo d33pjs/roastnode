@@ -1,4 +1,6 @@
 class EquipmentEvent < ApplicationRecord
+  include HasPrimaryPhoto
+
   enum :event_type, {
     grinder_cleaning: "grinder_cleaning",
     grinder_deep_cleaning: "grinder_deep_cleaning",

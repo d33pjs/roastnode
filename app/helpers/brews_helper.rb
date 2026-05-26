@@ -88,7 +88,7 @@ module BrewsHelper
   end
 
   def brew_card_photo_attachment(brew)
-    brew.bean.photos.attachments.order(:id).first || brew.photos.attachments.order(:id).first
+    brew.bean.primary_photo_attachment || brew.primary_photo_attachment
   end
 
   private

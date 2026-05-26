@@ -6,7 +6,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 
 - European timestamp with seconds: `dd.mm.yyyy HH:MM:ss`.
 - Active workspace/household name on the card.
-- Bean roaster, bean name, compact origin/process/roast-level descriptor, and the first bean photo when available. Keep the photo to the right of the name block so the text stays the first read.
+- Bean roaster, bean name, compact origin/process/roast-level descriptor, and the bean primary photo when available. Keep the photo to the right of the name block so the text stays the first read.
 - Safe logged-by label from the user's profile username, falling back to `unknown username`.
 - Dose from the espresso form.
 - Brew ratio calculated from beverage yield and dose, including total time when present.
@@ -35,6 +35,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - The metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and shortens the retention label to `Ret.`.
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
+- Use `brew_card_photo_attachment`, which prefers the bean's primary package photo and falls back through the normal primary-photo helper.
 - Keep the card dense; avoid adding explanatory headings inside the chart.
 - Keep the mobile chart compact: the x-axis intentionally maps total time into a shorter central span while preserving proportional timing for preinfusion, first drip, and total time.
 - Preserve private media rendering through `media_attachment_path`.

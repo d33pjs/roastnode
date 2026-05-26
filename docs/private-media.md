@@ -12,6 +12,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Photo galleries on detail pages.
 - Clickable photo thumbnails that open the private original image in a new tab.
 - Per-photo private download links.
+- Primary-photo selection for photo-enabled records.
 - Per-photo removal controls for workspace writers.
 - Current photo management on bean and brew edit screens.
 - App-scoped media delivery through `MediaAttachmentsController`.
@@ -24,11 +25,12 @@ Views must render photos through `media_attachment_path(attachment)`, not raw Ra
 
 Viewing and downloading photos use `MediaAttachmentsController#show` and `MediaAttachmentsController#download`. Both actions are read-scoped to the active workspace. Removing a photo uses the same scoped media route and additionally requires `current_workspace_policy.write?`. The controller detaches the attachment from the parent record instead of purging the blob immediately, because duplicated bean bags can intentionally reuse the same photo blob.
 
+Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, and equipment events. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
+
 ## Current Limits
 
-- There is no primary-photo picker yet.
 - Images are served inline or downloaded at original size.
-- Variants, thumbnails, direct-upload progress, S3/object storage, and archive/export handling are deferred.
+- Cropping, generated variants, thumbnails, direct-upload progress, S3/object storage, and archive/export handling are deferred.
 - Orphaned blob cleanup is deferred until the storage policy is formalized.
 
 ## Agent Notes
@@ -38,4 +40,5 @@ Viewing and downloading photos use `MediaAttachmentsController#show` and `MediaA
 - Do not expose `rails_blob_path`, `rails_storage_proxy_path`, or signed blob URLs in app views unless the privacy model is redesigned first.
 - Keep photo removal write-scoped and routed through `MediaAttachmentsController#destroy`.
 - Keep photo viewing and download links routed through `MediaAttachmentsController` so workspace scoping stays centralized.
+- Keep primary photo changes routed through `MediaAttachmentsController#primary` so workspace scoping and write authorization stay centralized.
 - Avoid image variants until the project has a real image-processing dependency and thumbnail policy.

@@ -1,4 +1,6 @@
 class Equipment < ApplicationRecord
+  include HasPrimaryPhoto
+
   enum :kind, {
     grinder: "grinder",
     machine: "machine"

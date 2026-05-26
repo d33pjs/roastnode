@@ -1,4 +1,6 @@
 class Brew < ApplicationRecord
+  include HasPrimaryPhoto
+
   RETENTION_TOLERANCE_GRAMS = BigDecimal("0.2")
 
   enum :method, {
