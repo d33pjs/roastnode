@@ -1,4 +1,6 @@
 class User < ApplicationRecord
+  UNKNOWN_DISPLAY_LABEL = "unknown username"
+
   has_secure_password
   has_many :sessions, dependent: :destroy
   has_many :memberships, dependent: :destroy
@@ -24,7 +26,7 @@ class User < ApplicationRecord
   end
 
   def display_label
-    display_name.presence || email_name_segment.presence || email_address
+    display_name.presence || UNKNOWN_DISPLAY_LABEL
   end
 
   def ensure_active_workspace!
@@ -33,9 +35,4 @@ class User < ApplicationRecord
     update!(active_workspace: workspaces.first)
     active_workspace
   end
-
-  private
-    def email_name_segment
-      email_address.to_s.split("@").first.to_s.split(/[._-]/).first
-    end
 end

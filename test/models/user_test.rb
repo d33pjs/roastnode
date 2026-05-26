@@ -12,9 +12,9 @@ class UserTest < ActiveSupport::TestCase
     assert_equal "Jens", user.display_label
   end
 
-  test "display_label falls back to first email name segment" do
+  test "display_label falls back to unknown username" do
     user = User.new(email_address: "jens.actinoide@example.com")
 
-    assert_equal "jens", user.display_label
+    assert_equal "unknown username", user.display_label
   end
 end

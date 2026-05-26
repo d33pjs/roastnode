@@ -99,6 +99,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show renders compact hero brew card" do
+    users(:one).update!(display_name: "Jens")
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
     brew.update!(
@@ -121,10 +122,12 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
     assert_select "body", text: /one@example.com/, count: 0
+    assert_select "[data-testid=brew-byline]", "Logged by Jens"
     assert_select "[data-testid=brew-metrics].grid-cols-4"
     assert_select "[data-testid=brew-dose]", "18.2 g"
     assert_select "[data-testid=brew-beverage]", count: 0
-    assert_select "[data-testid=brew-ratio]", "1:2,47 in 31s"
+    assert_select "[data-testid=brew-ratio-main]", "1:2,47"
+    assert_select "[data-testid=brew-ratio-time]", "in 31s"
     assert_select "[data-testid=brew-grind]", "12"
     assert_select "[data-testid=brew-rating][aria-label=?]", "Rating 4 of 5 beans" do
       assert_select ".rating-bean--filled", 4
@@ -133,10 +136,23 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-balance]", "Balance: Neutral"
     assert_select "[data-testid=brew-preinfusion-label]", "6s Preinfusion"
     assert_select "[data-testid=brew-first-drip-label]", "8s First drip"
+    assert_select "[data-testid=brew-first-drip-callout]"
     assert_select "[data-testid=brew-total-time-label]", "31s"
     assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
+    assert_select "[data-testid=brew-temperature-callout]"
+    assert_select "[data-testid=brew-axis-max]", "50 g"
     assert_select "[data-testid=brew-tool]", "WDT"
     assert_select "h2", text: I18n.t("brews.show.details"), count: 0
+  end
+
+  test "show renders unknown username when display name is blank" do
+    sign_in_as(users(:one))
+
+    get brew_path(brews(:morning_espresso))
+
+    assert_response :success
+    assert_select "[data-testid=brew-byline]", "Logged by unknown username"
+    assert_select "body", text: /one@example.com/, count: 0
   end
 
   test "writer sees brew correction actions" do

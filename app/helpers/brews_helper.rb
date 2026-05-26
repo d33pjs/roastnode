@@ -22,14 +22,33 @@ module BrewsHelper
   end
 
   def brew_card_ratio(brew)
+    ratio = brew_card_ratio_value(brew)
+    return ratio if ratio == t("brews.show.unknown") || brew.total_time_seconds.blank?
+
+    t("brews.show.ratio_with_time", ratio: ratio.delete_prefix("1:"), time: brew_card_seconds(brew.total_time_seconds))
+  end
+
+  def brew_card_ratio_value(brew)
     return t("brews.show.unknown") if brew.dose_grams.blank? || brew.beverage_grams.blank?
     return t("brews.show.unknown") if brew.dose_grams.to_d.zero?
 
     ratio = brew.beverage_grams.to_d / brew.dose_grams.to_d
-    ratio_label = brew_card_decimal(ratio)
-    return "1:#{ratio_label}" if brew.total_time_seconds.blank?
+    "1:#{brew_card_decimal(ratio)}"
+  end
 
-    t("brews.show.ratio_with_time", ratio: ratio_label, time: brew_card_seconds(brew.total_time_seconds))
+  def brew_card_ratio_time(brew)
+    return if brew.total_time_seconds.blank?
+
+    t("brews.show.ratio_time", time: brew_card_seconds(brew.total_time_seconds))
+  end
+
+  def brew_card_axis_max_grams(value)
+    return if value.blank?
+
+    grams = value.to_d
+    return if grams <= 0
+
+    ((grams / 5).floor + 1) * 5
   end
 
   def brew_card_chart_x(seconds, total_seconds)
