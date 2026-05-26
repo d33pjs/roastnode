@@ -15,9 +15,16 @@ class User < ApplicationRecord
   belongs_to :active_workspace, class_name: "Workspace", optional: true
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
+  normalizes :display_name, with: ->(name) { name.strip.presence }
+
+  validates :display_name, length: { maximum: 80 }
 
   def membership_for(workspace)
     memberships.find_by(workspace:)
+  end
+
+  def display_label
+    display_name.presence || email_name_segment.presence || email_address
   end
 
   def ensure_active_workspace!
@@ -26,4 +33,9 @@ class User < ApplicationRecord
     update!(active_workspace: workspaces.first)
     active_workspace
   end
+
+  private
+    def email_name_segment
+      email_address.to_s.split("@").first.to_s.split(/[._-]/).first
+    end
 end

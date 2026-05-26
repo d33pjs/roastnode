@@ -5,4 +5,16 @@ class UserTest < ActiveSupport::TestCase
     user = User.new(email_address: " DOWNCASED@EXAMPLE.COM ")
     assert_equal("downcased@example.com", user.email_address)
   end
+
+  test "display_label uses profile display name when present" do
+    user = User.new(email_address: "jens@example.com", display_name: "Jens")
+
+    assert_equal "Jens", user.display_label
+  end
+
+  test "display_label falls back to first email name segment" do
+    user = User.new(email_address: "jens.actinoide@example.com")
+
+    assert_equal "jens", user.display_label
+  end
 end

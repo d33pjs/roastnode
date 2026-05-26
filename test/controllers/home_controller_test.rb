@@ -17,6 +17,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "p", text: I18n.t("workspaces.show.signed_in_as", email: user.email_address)
+    assert_select "a[href=?]", edit_profile_path, text: I18n.t("workspaces.show.profile")
     assert_select "a[href=?]", new_session_path, count: 0
   end
 

@@ -154,11 +154,14 @@ en:
       edit: "Edit"
       grind_setting: "Grind"
       grinder: "Grinder"
+      first_drip_label: "%{seconds} First drip"
       machine: "Machine"
       notes: "Notes"
       photos: "Photos"
       rating: "Rating"
       rating_beans: "Rating %{rating} of %{maximum} beans"
+      ratio: "Ratio"
+      ratio_with_time: "1:%{ratio} in %{time}"
       retention: "Retention"
       taste: "Taste"
       temperature_label: "Temperature %{temperature}"
@@ -246,6 +249,14 @@ en:
       name: "Name"
       notes: "Notes"
       title: "Add preparation tool"
+  profiles:
+    edit:
+      back: "Back to dashboard"
+      save: "Save profile"
+      title: "Profile"
+      username: "Username"
+    update:
+      updated: "Profile updated."
   statistics:
     index:
       average_brew_cost: "Average brew cost"
@@ -348,6 +359,7 @@ en:
       no_activity: "No activity yet."
       no_open_beans: "No open beans yet."
       open_beans: "Open beans"
+      profile: "Profile"
       recent_activity: "Recent activity"
       role: "Role: %{role}"
       sign_out: "Sign out"

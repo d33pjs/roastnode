@@ -51,6 +51,17 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "show uses display label instead of email byline" do
+    users(:one).update!(display_name: "Jens")
+    sign_in_as(users(:one))
+
+    get equipment_event_path(equipment_events(:grinder_cleaning))
+
+    assert_response :success
+    assert_select "p", text: I18n.t("equipment_events.show.byline", user: "Jens")
+    assert_select "body", text: /one@example.com/, count: 0
+  end
+
   test "member can create equipment event with multiple event types" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

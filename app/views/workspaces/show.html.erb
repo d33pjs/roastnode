@@ -18,6 +18,7 @@
         <% if current_workspace_policy.manage? %>
           <%= link_to t(".import"), new_beanconqueror_import_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <% end %>
+        <%= link_to t(".profile"), edit_profile_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <%= link_to t(".members"), memberships_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <%= button_to t(".sign_out"), session_path, method: :delete, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
       </div>
