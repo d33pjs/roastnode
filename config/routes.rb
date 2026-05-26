@@ -17,6 +17,7 @@ Rails.application.routes.draw do
   resources :equipment_events, only: %i[new create show]
   resources :preparation_tools, only: %i[index new create]
   resources :brews, only: %i[new create show]
+  resources :media_attachments, only: :show
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
