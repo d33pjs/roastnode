@@ -102,7 +102,33 @@ module BrewsHelper
     brew.bean.primary_photo_attachment || brew.primary_photo_attachment
   end
 
+  def brew_related_photo_groups(brew)
+    [
+      related_photo_group(t("brews.show.related_bean_photos"), brew.bean.display_name, brew.bean),
+      *related_equipment_photo_groups(brew),
+      *related_preparation_tool_photo_groups(brew)
+    ].compact
+  end
+
   private
+    def related_photo_group(title, name, record)
+      return unless record&.photos&.attached?
+
+      { title:, name:, record: }
+    end
+
+    def related_equipment_photo_groups(brew)
+      [ brew.grinder, brew.machine ].compact.uniq.map do |equipment|
+        related_photo_group(t("brews.show.related_equipment_photos"), equipment.name, equipment)
+      end
+    end
+
+    def related_preparation_tool_photo_groups(brew)
+      brew_card_tools(brew).filter_map(&:preparation_tool).uniq.map do |tool|
+        related_photo_group(t("brews.show.related_tool_photos"), tool.name, tool)
+      end
+    end
+
     def brew_card_decimal(value)
       number_with_precision(value, precision: 2, strip_insignificant_zeros: true).tr(".", ",")
     end

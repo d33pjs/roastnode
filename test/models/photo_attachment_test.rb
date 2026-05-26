@@ -25,6 +25,12 @@ class PhotoAttachmentTest < ActiveSupport::TestCase
     assert equipment_events(:grinder_cleaning).photos.attached?
   end
 
+  test "preparation tools can have photos" do
+    attach_photo(preparation_tools(:wdt))
+
+    assert preparation_tools(:wdt).photos.attached?
+  end
+
   private
     def attach_photo(record)
       File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|

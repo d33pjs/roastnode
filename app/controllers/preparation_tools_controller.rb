@@ -21,6 +21,6 @@ class PreparationToolsController < ApplicationController
 
   private
     def preparation_tool_params
-      params.expect(preparation_tool: [ :name, :brew_method, :notes ])
+      params.expect(preparation_tool: [ :name, :brew_method, :notes, { photos: [] } ])
     end
 end

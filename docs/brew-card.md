@@ -23,7 +23,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - Hero card internals are intentionally not links. On the dashboard the whole card is wrapped in a single brew-detail link, and nested anchors break browser rendering.
 - Edit/delete actions remain available to workspace writers.
 - Brew detail pages show the full log below the hero card, including channeling, notes, inventory weights, and timing fields that do not belong in the hero.
-- Existing private photos remain below the full log.
+- Existing private brew photos remain below the full log, followed by read-only related photos from the bean, grinder, machine, and selected preparation tools when those records have photos.
 - The card does not expose the user's email address.
 - The dashboard renders the latest brew and the latest highest-rated brew as hero cards after login.
 

@@ -4,6 +4,7 @@ class PreparationTool < ApplicationRecord
 
   has_many :brew_preparation_tools, dependent: :nullify
   has_many :brews, through: :brew_preparation_tools
+  has_many_attached :photos
 
   before_validation :set_defaults
 

@@ -13,6 +13,15 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: preparation_tools(:other_workspace_tool).name, count: 0
   end
 
+  test "new shows photo upload" do
+    sign_in_as(users(:one))
+
+    get new_preparation_tool_path
+
+    assert_response :success
+    assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
+  end
+
   test "member can create preparation tool" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -23,13 +32,16 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
         preparation_tool: {
           name: "Paper filter",
           brew_method: "espresso",
-          notes: "Bottom filter"
+          notes: "Bottom filter",
+          photos: [ photo_upload ]
         }
       }
     end
 
     assert_redirected_to preparation_tools_path
-    assert_equal "Paper filter", workspaces(:household).preparation_tools.order(:created_at).last.name
+    tool = workspaces(:household).preparation_tools.order(:created_at).last
+    assert_equal "Paper filter", tool.name
+    assert_equal 1, tool.photos.count
   end
 
   test "viewer cannot create preparation tool" do

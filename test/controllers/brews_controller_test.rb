@@ -165,6 +165,27 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "show renders related bean equipment and preparation tool photos" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    bean_photo = attach_photo(brew.bean)
+    grinder_photo = attach_photo(brew.grinder)
+    machine_photo = attach_photo(brew.machine)
+    tool_photo = attach_photo(preparation_tools(:wdt))
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-related-photos]"
+    assert_select "[data-testid=brew-related-photo-group]", text: /#{Regexp.escape(I18n.t("brews.show.related_bean_photos"))}/
+    assert_select "[data-testid=brew-related-photo-group]", text: /#{Regexp.escape(brew.bean.display_name)}/
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(bean_photo)
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(grinder_photo)
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(machine_photo)
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(tool_photo)
+    assert_select "a[href=?]", download_media_attachment_path(tool_photo), text: I18n.t("shared.related_photo_group.download")
+  end
+
   test "show renders compact hero brew card" do
     users(:one).update!(display_name: "Jens")
     sign_in_as(users(:one))

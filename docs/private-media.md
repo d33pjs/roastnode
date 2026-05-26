@@ -8,9 +8,10 @@ Private Media adds basic photo capture to the current household coffee records.
 - Active Storage-backed photo attachments for brews.
 - Active Storage-backed photo attachments for equipment.
 - Active Storage-backed photo attachments for equipment events.
+- Active Storage-backed photo attachments for preparation tools.
 - Active Storage-backed identity images for users: avatar and public banner.
 - Active Storage-backed identity images for workspaces: logo and banner.
-- Multi-photo upload fields on the create forms for those records.
+- Multi-photo upload fields on create forms for photo-enabled records where a create form exists.
 - Photo galleries on detail pages.
 - Clickable photo thumbnails that open the private original image in a new tab.
 - Per-photo private download links.
@@ -30,7 +31,7 @@ Viewing and downloading photos use `MediaAttachmentsController#show` and `MediaA
 
 User avatar/banner replacement is limited to the signed-in user. Workspace logo/banner replacement is limited to owners and admins through the workspace settings page.
 
-Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, and equipment events. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
+Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, and equipment events. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid. Preparation tool photos do not currently have a primary-photo workflow.
 
 Cropping uses `MediaAttachmentsController#crop` and requires workspace write access. The crop page renders the private image through `media_attachment_path`, then the `photo-crop` Stimulus controller uses browser canvas APIs to create a normal image upload. Save-as-new adds another photo to the same record. Overwrite attaches the cropped image and removes the old attachment; if the overwritten photo was primary, the new attachment becomes primary automatically. This avoids depending on native libvips/ImageMagick availability in the app runtime.
 

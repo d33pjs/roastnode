@@ -59,6 +59,9 @@ en:
       make_primary: "Make primary"
       primary: "Primary"
       view: "View"
+    related_photo_group:
+      download: "Download"
+      view: "View"
   beanconqueror_imports:
     create:
       created: "Beanconqueror import processed."
@@ -299,6 +302,10 @@ en:
       ratio: "Ratio"
       ratio_time: "in %{time}"
       ratio_with_time: "1:%{ratio} in %{time}"
+      related_bean_photos: "Bean photos"
+      related_equipment_photos: "Equipment photos"
+      related_photos: "Related photos"
+      related_tool_photos: "Preparation tool photos"
       retention: "Retention"
       taste: "Taste"
       temperature: "Temperature"
