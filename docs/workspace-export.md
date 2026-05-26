@@ -9,6 +9,7 @@ Workspace Export is the first Roastnode data portability feature.
 - Structured payload format with `format`, `version`, and `generated_at`.
 - Workspace metadata.
 - Membership roles with user email/display name.
+- Import batch metadata.
 - Beans, equipment, preparation tools, brews, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
 - Photo metadata for photo-enabled records.
 
@@ -36,6 +37,7 @@ The top-level JSON shape is:
   "generated_at": "2026-05-26T10:00:00Z",
   "workspace": {},
   "memberships": [],
+  "data_imports": [],
   "beans": [],
   "equipment": [],
   "preparation_tools": [],
@@ -51,7 +53,6 @@ Local IDs are included so relationships can be reconstructed inside a single exp
 
 ## Deferred
 
-- Beanconqueror-compatible import/export.
 - Media ZIP export.
 - Scheduled backups.
 - Workspace deletion and transfer.

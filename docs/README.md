@@ -7,6 +7,8 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/superpowers/specs/2026-05-25-foundation-design.md` describes the first implementation slice.
 - `docs/workspace-core.md` describes workspaces, roles, invites, and the workspace-scoping rule for future product data.
 - `docs/coffee-core.md` describes beans, equipment, required-bean espresso logging, inventory deduction, and deferred recipe scope.
+- `docs/brew-corrections.md` describes brew edits/deletes and inventory correction rules.
+- `docs/beanconqueror-import.md` describes practical Beanconqueror JSON import.
 - `docs/equipment-events.md` describes maintenance events, equipment detail pages, and timeline activity rules.
 - `docs/preparation-tools.md` describes method-scoped brew checklist tools and brew snapshots.
 - `docs/private-media.md` describes private photo upload, display, and scoped media delivery.

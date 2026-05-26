@@ -10,6 +10,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Basic private photos for beans, brews, equipment, and equipment events.
 - Espresso brew logging with a required bean.
 - Automatic inventory deduction when a brew is saved.
+- Brew correction flows for edit/delete with inventory adjustment.
 - Inventory adjustment history for brew consumption.
 - Dashboard actions, open beans, compact status, and recent activity.
 
@@ -18,7 +19,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Recipes, recipe snapshots, and target definitions.
 - Advanced media handling, including deletion, primary-photo selection, thumbnails, and object storage.
 - Advanced maintenance analytics.
-- Beanconqueror import and workspace export.
+- Beanconqueror media import and full round-trip compatibility.
 - Advanced stats and screenshot-ready brew cards.
 
 ## Brew Bean Selection
@@ -65,7 +66,7 @@ Fresh fields:
 - `Bean#remaining_grams` defaults to `bag_size_grams` when a bean is created.
 - Creating a brew subtracts `bean_weight_grams` from the selected bean.
 - Creating a brew also records an `InventoryAdjustment` with reason `brew`.
-- Brew editing/deletion inventory reversal is deferred and must be designed before implementation.
+- Brew editing/deletion adjusts or reverses the brew inventory movement in one transaction.
 
 ## Agent Notes
 
@@ -75,3 +76,4 @@ Fresh fields:
 - Do not add recipe fields to brew forms until the dedicated recipes slice exists.
 - Preparation tools are checklist records, not equipment records.
 - Render photos through `media_attachment_path`, never raw Active Storage blob URLs.
+- Beanconqueror import is a practical JSON subset, not full feature parity.
