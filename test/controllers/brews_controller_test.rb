@@ -20,10 +20,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "option[selected][value=?]", beans(:open_household).id.to_s
     assert_select "option[selected][value=?]", equipment(:household_grinder).id.to_s
     assert_select "option[selected][value=?]", equipment(:household_machine).id.to_s
-    assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "18.0"
+    assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "18.0", count: 0
     assert_select "input[name=?][value=?]", "brew[ground_weight_grams]", "18.0", count: 0
-    assert_select "input[name=?][value=?]", "brew[dose_grams]", "18.0"
-    assert_select "input[name=?][value=?]", "brew[beverage_grams]", "40.0"
+    assert_select "input[name=?][value=?]", "brew[dose_grams]", "18.0", count: 0
+    assert_select "input[name=?][value=?]", "brew[beverage_grams]", "40.0", count: 0
     assert_select "input[name=?][value=?]", "brew[grind_setting]", "12"
     assert_select "input[name=?][value=?]", "brew[brew_temperature_celsius]", "93.0"
     assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "28", count: 0

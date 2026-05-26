@@ -44,16 +44,16 @@ Copied fields:
 - grinder
 - machine
 - active preparation tools from the previous brew
-- bean weight
-- dose
-- beverage yield
 - grind setting
 - brew temperature
-- pre-infusion time
+- pre-infusion seconds
 
 Fresh fields:
 
+- bean weight
 - ground-out weight
+- dose
+- beverage yield
 - total time
 - first drip time
 - rating

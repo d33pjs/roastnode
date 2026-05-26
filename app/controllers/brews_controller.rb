@@ -83,9 +83,6 @@ class BrewsController < ApplicationController
       attributes.merge(
         grinder: default_equipment(last_brew.grinder),
         machine: default_equipment(last_brew.machine),
-        bean_weight_grams: last_brew.bean_weight_grams,
-        dose_grams: last_brew.dose_grams,
-        beverage_grams: last_brew.beverage_grams,
         grind_setting: last_brew.grind_setting,
         brew_temperature_celsius: last_brew.brew_temperature_celsius,
         preinfusion_seconds: last_brew.preinfusion_seconds

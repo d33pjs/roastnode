@@ -32,7 +32,7 @@ Deferred:
 
 Espresso brew logging requires a bean. The form defaults to the current user's last brewed bean in the active workspace when that bean is still open and has remaining inventory. If that bean is unavailable, the form selects the first open bean ordered by opened date, then creation date. If no open beans exist, the user is sent to create a bean before logging a brew.
 
-The form also pre-fills setup fields from the current user's last brew: grinder, machine, bean weight, dose, beverage yield, grind setting, brew temperature, and pre-infusion time. It does not copy outcome or subjective fields such as ground-out weight, total time, first drip time, rating, notes, channeling, or taste balance.
+The form also pre-fills setup fields from the current user's last brew: bean, grinder, machine, active preparation tools, grind setting, brew temperature, and pre-infusion seconds. It does not copy outcome, dose/yield, or subjective fields such as bean weight, ground-out weight, dose, beverage yield, total time, first drip time, rating, notes, channeling, or taste balance.
 
 Recipes are intentionally excluded from this slice. Brews record actual outcomes directly. Targets and recipe-based defaults will be a later advanced feature.
 
