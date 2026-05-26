@@ -46,8 +46,8 @@
 
 - [x] Add `docs/beanconqueror-import.md`.
 - [x] Update `docs/README.md`, `docs/coffee-core.md`, `docs/workspace-export.md`, and `AGENTS.md`.
-- [ ] Run `env PARALLEL_WORKERS=1 bin/rails test`.
-- [ ] Run `env RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop`.
-- [ ] Run `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`.
-- [ ] Confirm `http://miniknubbel.internal:3001` returns 200.
-- [ ] Commit with `git commit -m "Document Beanconqueror import"`.
+- [x] Run `env PARALLEL_WORKERS=1 bin/rails test`.
+- [x] Run `env RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop`.
+- [x] Run `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`.
+- [x] Confirm `http://miniknubbel.internal:3001` returns 200.
+- [x] Commit with `git commit -m "Document Beanconqueror import"`.

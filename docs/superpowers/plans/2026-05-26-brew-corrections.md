@@ -39,4 +39,4 @@
 - [x] Add `docs/brew-corrections.md`.
 - [x] Update `docs/coffee-core.md` and `AGENTS.md`.
 - [x] Run focused controller tests.
-- [ ] Commit with `git commit -m "Document brew corrections"`.
+- [x] Commit with `git commit -m "Document brew corrections"`.
