@@ -23,6 +23,8 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Do not build public account creation from invite links yet; current invite acceptance assumes the user is already signed in.
 - Espresso brew logging requires an open bean. Default to the current user's last active brewed bean, then the first open bean. Redirect to bean creation when no open bean exists.
 - Recipes are deliberately deferred. Do not introduce recipe tables, recipe snapshots, or recipe-based defaults in Coffee Core work.
+- Equipment events are first-class workspace records. Use them for grinder and machine maintenance history instead of burying maintenance in equipment notes.
+- Dashboard recent activity should include brews, equipment events, and manual inventory adjustments. Do not show automatic brew inventory adjustments as separate timeline entries.
 
 ## Local Development Intent
 

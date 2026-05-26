@@ -42,7 +42,7 @@ Supported event types for this slice:
 - `burr_change`
 - `other`
 
-`EquipmentEventEquipment` joins events to affected equipment records. The join is required so later slices can support events that affect both a grinder and a machine without changing the public model.
+`EquipmentEventItem` joins events to affected equipment records. The join is required so later slices can support events that affect both a grinder and a machine without changing the public model.
 
 ## Authorization And Isolation
 

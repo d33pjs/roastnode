@@ -4,7 +4,7 @@
 
 **Goal:** Add first-class workspace equipment events and show them in the private workspace timeline and equipment detail pages.
 
-**Architecture:** Add an `EquipmentEvent` model plus a join model for affected equipment. Follow existing workspace-scoped Rails controller/view patterns and keep all event creation behind `current_workspace_policy.write?`.
+**Architecture:** Add an `EquipmentEvent` model plus an `EquipmentEventItem` join model for affected equipment. Follow existing workspace-scoped Rails controller/view patterns and keep all event creation behind `current_workspace_policy.write?`.
 
 **Tech Stack:** Rails 8.1, Active Record, PostgreSQL, ERB views, Tailwind utility classes, Minitest.
 
@@ -13,9 +13,9 @@
 ## Files
 
 - Create `db/migrate/20260526080000_create_equipment_events.rb`
-- Create `db/migrate/20260526080100_create_equipment_event_equipment.rb`
+- Create `db/migrate/20260526080100_create_equipment_event_items.rb`
 - Create `app/models/equipment_event.rb`
-- Create `app/models/equipment_event_equipment.rb`
+- Create `app/models/equipment_event_item.rb`
 - Modify `app/models/workspace.rb`
 - Modify `app/models/user.rb`
 - Modify `app/models/equipment.rb`
@@ -34,7 +34,7 @@
 - Modify `test/controllers/equipment_controller_test.rb`
 - Modify `test/controllers/home_controller_test.rb`
 - Create `test/fixtures/equipment_events.yml`
-- Create `test/fixtures/equipment_event_equipment.yml`
+- Create `test/fixtures/equipment_event_items.yml`
 - Add `docs/equipment-events.md`
 - Update `docs/README.md`
 - Update `AGENTS.md`
@@ -44,7 +44,7 @@
 ### Task 1: Data Model
 
 - [ ] Write failing model tests for valid events, workspace consistency, and event/equipment joins.
-- [ ] Add migrations for `equipment_events` and `equipment_event_equipment`.
+- [ ] Add migrations for `equipment_events` and `equipment_event_items`.
 - [ ] Add model associations, enum values, validations, and helper scopes.
 - [ ] Add fixtures for a grinder cleaning event and a machine backflush event.
 - [ ] Run `env PARALLEL_WORKERS=1 bin/rails test test/models/equipment_event_test.rb`.
