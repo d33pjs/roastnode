@@ -98,6 +98,42 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "show renders compact hero brew card" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.update!(
+      occurred_at: Time.zone.local(2026, 5, 26, 11, 22, 8),
+      dose_grams: 18.2,
+      beverage_grams: 45.0,
+      grind_setting: "12",
+      brew_temperature_celsius: 93.0,
+      preinfusion_seconds: 6,
+      total_time_seconds: 31,
+      rating: 4,
+      taste_balance: "neutral"
+    )
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-hero-card]"
+    assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
+    assert_select "[data-testid=brew-workspace]", workspaces(:household).name
+    assert_select "[data-testid=brew-dose]", "18.2 g"
+    assert_select "[data-testid=brew-beverage]", "45 g"
+    assert_select "[data-testid=brew-grind]", "12"
+    assert_select "[data-testid=brew-rating][aria-label=?]", "Rating 4 of 5 beans" do
+      assert_select ".rating-bean--filled", 4
+      assert_select ".rating-bean--empty", 1
+    end
+    assert_select "[data-testid=brew-balance]", "Balance: Neutral"
+    assert_select "[data-testid=brew-preinfusion-label]", "6s Preinfusion"
+    assert_select "[data-testid=brew-total-time-label]", "31s"
+    assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
+    assert_select "[data-testid=brew-tool]", "WDT"
+    assert_select "h2", text: I18n.t("brews.show.details"), count: 0
+  end
+
   test "writer sees brew correction actions" do
     sign_in_as(users(:one))
 

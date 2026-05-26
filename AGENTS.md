@@ -23,6 +23,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Do not build public account creation from invite links yet; current invite acceptance assumes the user is already signed in.
 - Espresso brew logging requires an open bean. Default to the current user's last active brewed bean, then the first open bean. Redirect to bean creation when no open bean exists. Copy only curated setup fields from the user's last brew: bean, grinder, machine, active preparation tools, grind setting, brew temperature, and pre-infusion seconds. Keep bean weight, ground-out weight, dose, beverage yield, total time, first drip, rating, notes, channeling, and taste fresh.
 - Brew corrections must use `Brew#update_with_inventory_correction!` and `Brew#destroy_with_inventory_reversal!` so bean inventory and brew inventory adjustments stay consistent.
+- Brew detail pages use a dense Hero Brew Card. Show `dose_grams` as Dose, render rating as visual bean marks, and display preparation tools from `BrewPreparationTool#tool_name` snapshots.
 - Preparation tools are method-scoped checklist records, not equipment. Brews snapshot selected preparation tool names and preselect active tools from the user's last brew.
 - Recipes are deliberately deferred. Do not introduce recipe tables, recipe snapshots, or recipe-based defaults in Coffee Core work.
 - Beanconqueror import is currently a conservative JSON subset. Preserve raw import data, use source UUIDs for duplicate handling, skip unsupported records with warnings, and do not import media bytes yet.

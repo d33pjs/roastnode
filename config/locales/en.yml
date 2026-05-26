@@ -28,6 +28,9 @@
 #       enabled: "ON"
 
 en:
+  time:
+    formats:
+      european_seconds: "%d.%m.%Y %H:%M:%S"
   authorization:
     denied: "You do not have permission to do that."
   beanconqueror_imports:
@@ -142,22 +145,28 @@ en:
       updated: "Brew corrected."
     show:
       back: "Back to dashboard"
+      balance: "Balance: %{balance}"
       byline: "Logged by %{user}"
+      card_method: "Espresso"
       delete: "Delete"
       details: "Details"
-      dose: "Bean in"
+      dose: "Dose"
       edit: "Edit"
+      grind_setting: "Grind"
       grinder: "Grinder"
       machine: "Machine"
       notes: "Notes"
       photos: "Photos"
       rating: "Rating"
+      rating_beans: "Rating %{rating} of %{maximum} beans"
       retention: "Retention"
       taste: "Taste"
+      temperature_label: "Temperature %{temperature}"
       time: "Time"
       title: "Espresso with %{bean}"
+      tools: "Tools"
       unknown: "Unknown"
-      yield: "Yield"
+      yield: "Beverage"
   equipment:
     create:
       created: "Equipment added."

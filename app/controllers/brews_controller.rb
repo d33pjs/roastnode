@@ -55,7 +55,7 @@ class BrewsController < ApplicationController
 
   private
     def set_brew
-      @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user).find(params[:id])
+      @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user, :brew_preparation_tools).find(params[:id])
     end
 
     def load_form_options(selected_bean: nil)
