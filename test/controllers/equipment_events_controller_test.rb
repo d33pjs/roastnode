@@ -1,0 +1,80 @@
+require "test_helper"
+
+class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
+  test "new shows event form with active workspace equipment" do
+    sign_in_as(users(:one))
+
+    get new_equipment_event_path
+
+    assert_response :success
+    assert_select "h1", I18n.t("equipment_events.new.title")
+    assert_select "label", text: equipment(:household_grinder).name
+    assert_select "label", text: equipment(:other_workspace_grinder).name, count: 0
+  end
+
+  test "member can create equipment event" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    assert_difference -> { workspaces(:household).equipment_events.count }, 1 do
+      assert_difference -> { EquipmentEventItem.count }, 1 do
+        post equipment_events_path, params: {
+          equipment_event: {
+            event_type: "grinder_cleaning",
+            occurred_at: "2026-05-26 08:30",
+            notes: "Quick brush out.",
+            equipment_ids: [ equipment(:household_grinder).id ]
+          }
+        }
+      end
+    end
+
+    event = workspaces(:household).equipment_events.order(:created_at).last
+    assert_redirected_to equipment_event_path(event)
+    assert_equal user, event.user
+    assert_includes event.equipment, equipment(:household_grinder)
+  end
+
+  test "viewer cannot create equipment event" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    assert_no_difference -> { workspaces(:household).equipment_events.count } do
+      post equipment_events_path, params: {
+        equipment_event: {
+          event_type: "other",
+          equipment_ids: [ equipment(:household_grinder).id ]
+        }
+      }
+    end
+
+    assert_redirected_to root_path
+  end
+
+  test "create rejects equipment from another workspace" do
+    sign_in_as(users(:one))
+
+    assert_no_difference -> { workspaces(:household).equipment_events.count } do
+      post equipment_events_path, params: {
+        equipment_event: {
+          event_type: "grinder_cleaning",
+          equipment_ids: [ equipment(:other_workspace_grinder).id ]
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "div", text: /must belong to the workspace/
+  end
+
+  test "show is scoped to active workspace" do
+    sign_in_as(users(:one))
+
+    get equipment_event_path(equipment_events(:other_workspace_event))
+
+    assert_response :not_found
+  end
+end

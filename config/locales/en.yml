@@ -123,6 +123,23 @@ en:
       name: "Name"
       notes: "Notes"
       title: "Add equipment"
+  equipment_events:
+    create:
+      created: "Equipment event logged."
+    new:
+      back: "Back to dashboard"
+      create: "Save event"
+      equipment: "Affected equipment"
+      event_type: "Event type"
+      notes: "Notes"
+      occurred_at: "Occurred at"
+      title: "Log equipment event"
+    show:
+      back: "Back to dashboard"
+      byline: "Logged by %{user}"
+      equipment: "Equipment"
+      eyebrow: "Equipment event"
+      notes: "Notes"
   home:
     index:
       eyebrow: "Private coffee infrastructure"
