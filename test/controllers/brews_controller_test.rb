@@ -47,6 +47,24 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "option[selected][value=?]", beans(:second_open_household).id.to_s
   end
 
+  test "new disambiguates duplicate open bean labels with opened date" do
+    duplicate = workspaces(:household).beans.create!(
+      name: beans(:open_household).name,
+      roaster_name: beans(:open_household).roaster_name,
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.new(2026, 5, 20)
+    )
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "option[value=?]", beans(:open_household).id.to_s, text: "Good Coffee - House Blend (opened 10.05.2026)"
+    assert_select "option[value=?]", duplicate.id.to_s, text: "Good Coffee - House Blend (opened 20.05.2026)"
+    assert_select "option[value=?]", beans(:second_open_household).id.to_s, text: "North Star - Morning Lot"
+  end
+
   test "member can create espresso brew and consume selected bean" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
