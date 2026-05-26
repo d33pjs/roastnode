@@ -32,7 +32,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Workspace analytics live in `WorkspaceStatistics`; keep aggregation workspace-scoped and query-backed until data volume justifies summaries.
 - Equipment events are first-class workspace records. Use them for grinder and machine maintenance history instead of burying maintenance in equipment notes. A single equipment event can have multiple `event_types`.
 - Photos are private workspace data attached through Active Storage. Render app photos through `media_attachment_path(attachment)` and remove them through `MediaAttachmentsController#destroy` so active-workspace and write-policy checks stay centralized; do not use raw Active Storage blob/proxy URLs in app views.
-- Typography uses self-hosted Genos from `app/assets/fonts/genos/` under the SIL Open Font License 1.1. Do not add runtime Google Fonts references; keep the vendored `OFL.txt` with the font files.
+- Typography uses self-hosted Elms Sans from `app/assets/fonts/elmssans/` under the SIL Open Font License 1.1. Do not add runtime Google Fonts references; keep the vendored `OFL.txt` with the font files.
 - Workspace export is owner-only and uses the active workspace. Keep export payloads structured, omit sessions/passwords/invite tokens, and do not include signed media URLs or raw photo bytes until a dedicated media archive design exists.
 - Dashboard recent activity should include brews, equipment events, and manual inventory adjustments. Do not show automatic brew inventory adjustments as separate timeline entries.
 

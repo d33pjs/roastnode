@@ -1,20 +1,21 @@
 # Typography
 
-Roastnode self-hosts Genos as its global app font.
+Roastnode self-hosts Elms Sans as its global app font.
 
 ## Included Now
 
-- Variable Genos roman and italic TrueType font files under `app/assets/fonts/genos/`.
+- Variable Elms Sans roman and italic TrueType font files under `app/assets/fonts/elmssans/`.
 - The upstream `OFL.txt` license file stored next to the font files.
-- Tailwind theme font tokens set to Genos for sans and mono text.
+- The Google Fonts `METADATA.pb` file stored next to the font files for provenance.
+- Tailwind theme font tokens set to Elms Sans for sans and mono text.
 - `@font-face` declarations in the application layout, using `asset_path` so font URLs are digest-stamped.
-- Base CSS forcing text, form controls, buttons, and code-like text to inherit Genos.
+- Base CSS forcing text, form controls, buttons, and code-like text to inherit Elms Sans.
 
 ## License Notes
 
-Genos is from `googlefonts/genos` and is licensed under the SIL Open Font License 1.1.
+Elms Sans is from Google Fonts' `ofl/elmssans` package and is licensed under the SIL Open Font License 1.1.
 
-The OFL allows the font to be bundled with software, including commercial software, as long as the license conditions are followed. Keep `app/assets/fonts/genos/OFL.txt` with the vendored font files.
+The OFL allows the font to be bundled with software, including commercial software, as long as the license conditions are followed. Keep `app/assets/fonts/elmssans/OFL.txt` with the vendored font files.
 
 ## Agent Notes
 

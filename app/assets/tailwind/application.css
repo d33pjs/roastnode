@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Genos", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Genos", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Elms Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Elms Sans", ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer base {
