@@ -43,6 +43,8 @@ bin/dev
 
 Open `http://localhost:3001`.
 
+After signing in, users without a workspace are prompted to create a private household workspace. That user becomes the workspace owner and can create invite links for other signed-in users.
+
 ## Native Rails Commands
 
 ```bash

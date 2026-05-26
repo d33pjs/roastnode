@@ -5,6 +5,7 @@ This folder is the durable project memory for humans and AI agents.
 ## Start Here
 
 - `docs/superpowers/specs/2026-05-25-foundation-design.md` describes the first implementation slice.
+- `docs/workspace-core.md` describes workspaces, roles, invites, and the workspace-scoping rule for future product data.
 - `docs/setup.md` describes local Rails and Docker Compose setup.
 - `AGENTS.md` contains repository-wide guidance for AI coding agents.
 

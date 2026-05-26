@@ -8,6 +8,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Keep v1 private by default. Public and federation features are future work and must not leak household data.
 - Prefer Rails-native, boring security patterns over custom cleverness.
 - Store measurements in canonical metric units: grams, seconds, Celsius.
+- Treat `Workspace` as the ownership boundary for domain data. Beans, equipment, recipes, brews, inventory, photos, and statistics should belong to a workspace unless a future ADR explicitly says otherwise.
 - Keep documentation in `docs/` current as decisions land.
 
 ## Working Rules
@@ -16,7 +17,10 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Commit often with small, descriptive commits.
 - Protect user changes. Do not revert unrelated local edits.
 - Scope early implementation to foundation, authentication, workspaces, memberships, and private household flows.
+- Use `current_workspace`, `current_membership`, and `current_workspace_policy` from `ApplicationController` instead of ad hoc workspace lookups in controllers.
 - Add tests for authorization and workspace isolation whenever adding workspace-scoped behavior.
+- Owners and admins can manage workspace settings and invite links. Members can write normal workspace data. Viewers are read-only.
+- Do not build public account creation from invite links yet; current invite acceptance assumes the user is already signed in.
 
 ## Local Development Intent
 

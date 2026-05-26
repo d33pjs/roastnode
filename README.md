@@ -2,7 +2,7 @@
 
 Roastnode is a Rails-first, self-hostable coffee tracking app for private household workspaces.
 
-The first slice is a Rails 8.1 foundation with PostgreSQL, Hotwire, Tailwind CSS, Rails-native authentication, and setup defaults that run beside other local projects.
+The first slices are a Rails 8.1 foundation, Rails-native authentication, and Workspace Core: private household onboarding, member roles, workspace switching, and invite links.
 
 ## Quick Start
 
@@ -28,6 +28,6 @@ The non-default host ports are intentional so Roastnode can run beside another p
 ## Documentation
 
 - Setup: `docs/setup.md`
+- Workspace Core: `docs/workspace-core.md`
 - Agent guidance: `AGENTS.md`
 - Design specs and implementation plans: `docs/superpowers/`
-
