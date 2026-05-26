@@ -374,6 +374,10 @@ en:
   profiles:
     edit:
       back: "Back to dashboard"
+      default_landing_screen: "Default landing screen"
+      landing_screens:
+        dashboard: "Dashboard"
+        log_espresso: "Log espresso"
       save: "Save profile"
       title: "Profile"
       username: "Username"

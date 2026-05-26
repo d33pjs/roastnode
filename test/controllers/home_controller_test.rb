@@ -71,6 +71,21 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
   end
 
+  test "root honors log espresso landing preference while dashboard remains accessible" do
+    user = users(:one)
+    user.update!(default_landing_screen: "log_espresso")
+    sign_in_as(user)
+
+    get root_path
+
+    assert_redirected_to new_brew_path
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=dashboard-primary-actions]"
+  end
+
   test "workspace dashboard shows latest and latest best hero cards" do
     workspace = workspaces(:household)
     user = users(:one)

@@ -17,4 +17,15 @@ class UserTest < ActiveSupport::TestCase
 
     assert_equal "unknown username", user.display_label
   end
+
+  test "default landing screen is constrained to supported screens" do
+    user = users(:one)
+
+    user.default_landing_screen = "log_espresso"
+    assert_predicate user, :valid?
+    assert_predicate user, :default_landing_log_espresso?
+
+    user.default_landing_screen = "side_quest"
+    assert_not_predicate user, :valid?
+  end
 end

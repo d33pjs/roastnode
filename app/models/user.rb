@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   UNKNOWN_DISPLAY_LABEL = "unknown username"
+  DEFAULT_LANDING_SCREENS = %w[dashboard log_espresso].freeze
 
   has_secure_password
   has_many :sessions, dependent: :destroy
@@ -20,6 +21,11 @@ class User < ApplicationRecord
   normalizes :display_name, with: ->(name) { name.strip.presence }
 
   validates :display_name, length: { maximum: 80 }
+  validates :default_landing_screen, inclusion: { in: DEFAULT_LANDING_SCREENS }
+
+  def default_landing_log_espresso?
+    default_landing_screen == "log_espresso"
+  end
 
   def membership_for(workspace)
     memberships.find_by(workspace:)

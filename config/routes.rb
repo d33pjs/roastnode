@@ -3,6 +3,7 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
 
   root "home#index"
+  get "dashboard" => "home#dashboard", as: :dashboard
   resource :profile, only: %i[edit update]
   resource :workspace_onboarding, only: %i[new create]
   resources :workspaces, only: [] do

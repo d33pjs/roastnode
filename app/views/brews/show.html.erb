@@ -3,7 +3,7 @@
 
   <section class="mx-auto max-w-5xl px-6 py-10">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <%= link_to t(".back"), root_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+      <%= link_to t(".back"), dashboard_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
 
       <% if current_workspace_policy.write? %>
         <div class="flex flex-wrap gap-2">

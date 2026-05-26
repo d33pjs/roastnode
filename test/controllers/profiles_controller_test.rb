@@ -9,16 +9,18 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "input[name=?]", "user[display_name]"
+    assert_select "select[name=?]", "user[default_landing_screen]"
   end
 
-  test "signed-in user can update display name" do
+  test "signed-in user can update display name and landing preference" do
     user = users(:one)
     sign_in_as(user)
 
-    patch profile_path, params: { user: { display_name: "Jens" } }
+    patch profile_path, params: { user: { display_name: "Jens", default_landing_screen: "log_espresso" } }
 
     assert_redirected_to root_path
     assert_equal "Jens", user.reload.display_name
+    assert_equal "log_espresso", user.default_landing_screen
   end
 
   test "profile does not accept unrelated user attributes" do

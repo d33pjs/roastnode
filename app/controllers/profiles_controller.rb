@@ -15,6 +15,6 @@ class ProfilesController < ApplicationController
 
   private
     def profile_params
-      params.require(:user).permit(:display_name)
+      params.require(:user).permit(:display_name, :default_landing_screen)
     end
 end

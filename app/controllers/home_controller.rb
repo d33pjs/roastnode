@@ -4,16 +4,30 @@ class HomeController < ApplicationController
   def index
     return unless authenticated?
 
-    if current_workspace
-      load_dashboard
-      render "workspaces/show"
-    else
-      @workspace = Workspace.new(kind: :household, default_currency: "EUR")
-      render "workspace_onboardings/new"
+    if current_workspace && Current.user.default_landing_log_espresso?
+      return redirect_to new_brew_path
     end
+
+    render_dashboard
+  end
+
+  def dashboard
+    return redirect_to root_path unless authenticated?
+
+    render_dashboard
   end
 
   private
+    def render_dashboard
+      if current_workspace
+        load_dashboard
+        render "workspaces/show"
+      else
+        @workspace = Workspace.new(kind: :household, default_currency: "EUR")
+        render "workspace_onboardings/new"
+      end
+    end
+
     def load_dashboard
       @open_beans = current_workspace.beans.open.limit(5)
       @brews_this_week = current_workspace.brews.where(occurred_at: Time.current.all_week).count
