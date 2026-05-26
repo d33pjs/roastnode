@@ -84,6 +84,8 @@ en:
       needs_bean: "Open a bean before logging espresso."
       none: "None"
       notes: "Notes"
+      no_preparation_tools: "No preparation tools yet."
+      preparation_tools: "Preparation tools"
       rating: "Rating"
       taste: "Taste balance"
       temperature: "Temperature (C)"

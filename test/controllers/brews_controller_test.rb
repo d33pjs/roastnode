@@ -31,6 +31,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[first_drip_seconds]", "8", count: 0
     assert_select "input[name=?][value=?]", "brew[rating]", "4", count: 0
     assert_select "textarea[name=?]", "brew[notes]", text: ""
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
+    assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:puck_screen).id.to_s
+    assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:other_workspace_tool).id.to_s, count: 0
   end
 
   test "new falls back to first open bean when last bean is closed" do
@@ -51,27 +54,35 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference -> { workspaces(:household).brews.count }, 1 do
       assert_difference -> { InventoryAdjustment.count }, 1 do
-        post brews_path, params: {
-          brew: {
-            bean_id: bean.id,
-            grinder_id: equipment(:household_grinder).id,
-            machine_id: equipment(:household_machine).id,
-            bean_weight_grams: "18.5",
-            ground_weight_grams: "18.3",
-            dose_grams: "18.2",
-            beverage_grams: "42",
-            grind_setting: "14",
-            total_time_seconds: "31",
-            taste_balance: "neutral",
-            rating: "4"
+        assert_difference -> { BrewPreparationTool.count }, 2 do
+          post brews_path, params: {
+            brew: {
+              bean_id: bean.id,
+              grinder_id: equipment(:household_grinder).id,
+              machine_id: equipment(:household_machine).id,
+              bean_weight_grams: "18.5",
+              ground_weight_grams: "18.3",
+              dose_grams: "18.2",
+              beverage_grams: "42",
+              grind_setting: "14",
+              total_time_seconds: "31",
+              taste_balance: "neutral",
+              rating: "4",
+              preparation_tool_ids: [
+                preparation_tools(:wdt).id,
+                preparation_tools(:other_workspace_tool).id,
+                preparation_tools(:puck_screen).id
+              ]
+            }
           }
-        }
+        end
       end
     end
 
     brew = workspaces(:household).brews.order(:created_at).last
     assert_redirected_to brew_path(brew)
     assert_equal 201.5.to_d, bean.reload.remaining_grams
+    assert_equal [ "WDT", "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
   end
 
   test "viewer cannot create brew" do

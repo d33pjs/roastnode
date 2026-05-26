@@ -18,10 +18,13 @@ class BrewsController < ApplicationController
 
   def create
     load_form_options
-    @brew = current_workspace.brews.new(brew_params)
+    attributes = brew_params
+    preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
+    @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
+    @brew = current_workspace.brews.new(attributes)
     @brew.user = Current.user
 
-    if @brew.save
+    if save_brew_with_preparation_tools
       redirect_to @brew, notice: t(".created")
     else
       render :new, status: :unprocessable_entity
@@ -37,6 +40,7 @@ class BrewsController < ApplicationController
       @beans = current_workspace.beans.open
       @grinders = current_workspace.equipment.grinder.order(:name)
       @machines = current_workspace.equipment.machine.order(:name)
+      @preparation_tools = current_workspace.preparation_tools.active.espresso.ordered
     end
 
     def default_brew_attributes
@@ -44,6 +48,7 @@ class BrewsController < ApplicationController
       bean = default_brew_bean(last_brew)
       return { bean: nil } unless bean
 
+      @selected_preparation_tools = default_preparation_tools(last_brew)
       attributes = {
         bean:,
         occurred_at: Time.current
@@ -64,7 +69,7 @@ class BrewsController < ApplicationController
     end
 
     def last_brew_for_defaults
-      Current.user.brews.where(workspace: current_workspace).includes(:bean, :grinder, :machine).order(occurred_at: :desc, created_at: :desc).first
+      Current.user.brews.where(workspace: current_workspace).includes(:bean, :grinder, :machine, :preparation_tools).order(occurred_at: :desc, created_at: :desc).first
     end
 
     def default_brew_bean(last_brew)
@@ -75,6 +80,29 @@ class BrewsController < ApplicationController
 
     def default_equipment(equipment)
       equipment if equipment&.workspace_id == current_workspace.id
+    end
+
+    def default_preparation_tools(last_brew)
+      return [] unless last_brew
+
+      last_brew.preparation_tools.select do |tool|
+        tool.workspace_id == current_workspace.id && tool.active? && tool.brew_method == "espresso"
+      end
+    end
+
+    def preparation_tools_from_ids(ids)
+      tools_by_id = current_workspace.preparation_tools.active.espresso.where(id: ids).index_by(&:id)
+      ids.map { |id| tools_by_id[id.to_i] }.compact
+    end
+
+    def save_brew_with_preparation_tools
+      Brew.transaction do
+        @brew.save!
+        @brew.snapshot_preparation_tools!(@selected_preparation_tools)
+      end
+      true
+    rescue ActiveRecord::RecordInvalid
+      false
     end
 
     def brew_params
@@ -95,7 +123,8 @@ class BrewsController < ApplicationController
         :channeling,
         :taste_balance,
         :rating,
-        :notes
+        :notes,
+        { preparation_tool_ids: [] }
       ])
     end
 end

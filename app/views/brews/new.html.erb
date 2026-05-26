@@ -27,6 +27,22 @@
         </div>
       </div>
 
+      <fieldset>
+        <legend class="text-sm font-medium text-stone-700"><%= t(".preparation_tools") %></legend>
+        <% if @preparation_tools.any? %>
+          <div class="mt-2 grid gap-2 sm:grid-cols-2">
+            <% @preparation_tools.each do |tool| %>
+              <label for="<%= dom_id(tool, :brew) %>" class="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-800">
+                <%= check_box_tag "brew[preparation_tool_ids][]", tool.id, @selected_preparation_tools.include?(tool), id: dom_id(tool, :brew), class: "rounded border-stone-300 text-stone-950" %>
+                <span><%= tool.name %></span>
+              </label>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="mt-2 text-sm text-stone-600"><%= t(".no_preparation_tools") %></p>
+        <% end %>
+      </fieldset>
+
       <div class="grid gap-5 sm:grid-cols-4">
         <div>
           <%= form.label :bean_weight_grams, t(".bean_weight"), class: "block text-sm font-medium text-stone-700" %>
