@@ -1,0 +1,118 @@
+<%= form_with model: brew, class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+  <% if brew.errors.any? %>
+    <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <%= brew.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :bean_id, t("brews.form.bean"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.select :bean_id, @beans.map { |bean| [ bean.display_name, bean.id ] }, {}, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2">
+    <div>
+      <%= form.label :grinder_id, t("brews.form.grinder"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.select :grinder_id, @grinders.map { |item| [ item.name, item.id ] }, { include_blank: t("brews.form.none") }, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :machine_id, t("brews.form.machine"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.select :machine_id, @machines.map { |item| [ item.name, item.id ] }, { include_blank: t("brews.form.none") }, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+  </div>
+
+  <fieldset>
+    <legend class="text-sm font-medium text-stone-700"><%= t("brews.form.preparation_tools") %></legend>
+    <% if @preparation_tools.any? %>
+      <div class="mt-2 grid gap-2 sm:grid-cols-2">
+        <% @preparation_tools.each do |tool| %>
+          <label for="<%= dom_id(tool, :brew) %>" class="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-800">
+            <%= check_box_tag "brew[preparation_tool_ids][]", tool.id, @selected_preparation_tools.include?(tool), id: dom_id(tool, :brew), class: "rounded border-stone-300 text-stone-950" %>
+            <span><%= tool.name %></span>
+          </label>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="mt-2 text-sm text-stone-600"><%= t("brews.form.no_preparation_tools") %></p>
+    <% end %>
+  </fieldset>
+
+  <div class="grid gap-5 sm:grid-cols-4">
+    <div>
+      <%= form.label :bean_weight_grams, t("brews.form.bean_weight"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :bean_weight_grams, step: 0.1, inputmode: "decimal", autofocus: true, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :ground_weight_grams, t("brews.form.ground_weight"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :ground_weight_grams, step: 0.1, inputmode: "decimal", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :dose_grams, t("brews.form.dose"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :dose_grams, step: 0.1, inputmode: "decimal", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :beverage_grams, t("brews.form.beverage"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :beverage_grams, step: 0.1, inputmode: "decimal", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-5">
+    <div>
+      <%= form.label :grind_setting, t("brews.form.grind_setting"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.text_field :grind_setting, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :brew_temperature_celsius, t("brews.form.temperature"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :brew_temperature_celsius, step: 0.1, inputmode: "decimal", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :total_time_seconds, t("brews.form.total_time"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :total_time_seconds, inputmode: "numeric", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :preinfusion_seconds, t("brews.form.preinfusion"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :preinfusion_seconds, inputmode: "numeric", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :first_drip_seconds, t("brews.form.first_drip"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :first_drip_seconds, inputmode: "numeric", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-3">
+    <div>
+      <%= form.label :taste_balance, t("brews.form.taste"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.select :taste_balance, Brew.taste_balances.keys.map { |balance| [ balance.humanize, balance ] }, {}, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :rating, t("brews.form.rating"), class: "block text-sm font-medium text-stone-700" %>
+      <%= form.number_field :rating, min: 0, max: 5, inputmode: "numeric", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    </div>
+
+    <label class="flex items-end gap-2 pb-2 text-sm font-medium text-stone-700">
+      <%= form.check_box :channeling, class: "h-4 w-4 rounded border-stone-300 text-stone-950" %>
+      <%= t("brews.form.channeling") %>
+    </label>
+  </div>
+
+  <div>
+    <%= form.label :notes, t("brews.form.notes"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.text_area :notes, rows: 4, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.label :photos, t("brews.form.photos"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm text-stone-700 file:mr-4 file:rounded-md file:border-0 file:bg-stone-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-stone-800" %>
+  </div>
+
+  <%= form.submit submit_label, class: "sticky bottom-4 rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+<% end %>

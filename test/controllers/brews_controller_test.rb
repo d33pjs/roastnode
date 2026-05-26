@@ -98,6 +98,92 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "writer sees brew correction actions" do
+    sign_in_as(users(:one))
+
+    get brew_path(brews(:morning_espresso))
+
+    assert_response :success
+    assert_select "a[href=?]", edit_brew_path(brews(:morning_espresso)), text: I18n.t("brews.show.edit")
+    assert_select "form[action=?]", brew_path(brews(:morning_espresso))
+  end
+
+  test "writer can edit brew" do
+    sign_in_as(users(:one))
+
+    get edit_brew_path(brews(:morning_espresso))
+
+    assert_response :success
+    assert_select "h1", I18n.t("brews.edit.title")
+    assert_select "form[action=?]", brew_path(brews(:morning_espresso))
+    assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "18.0"
+  end
+
+  test "writer can update brew and inventory" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    patch brew_path(brew), params: {
+      brew: {
+        bean_id: beans(:open_household).id,
+        grinder_id: equipment(:household_grinder).id,
+        machine_id: equipment(:household_machine).id,
+        bean_weight_grams: "20.0",
+        ground_weight_grams: "19.8",
+        dose_grams: "19.5",
+        beverage_grams: "44",
+        taste_balance: "neutral",
+        preparation_tool_ids: [ preparation_tools(:puck_screen).id ]
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_equal 148.to_d, beans(:open_household).reload.remaining_grams
+    assert_equal(-20.to_d, brew.inventory_adjustment.reload.delta_grams)
+    assert_equal [ "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+  end
+
+  test "writer can delete brew and reverse inventory" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    assert_difference -> { Brew.count }, -1 do
+      delete brew_path(brew)
+    end
+
+    assert_redirected_to root_path
+    assert_equal 168.to_d, beans(:open_household).reload.remaining_grams
+  end
+
+  test "viewer cannot edit update or delete brew" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    brew = brews(:morning_espresso)
+
+    get edit_brew_path(brew)
+    assert_redirected_to root_path
+
+    assert_no_changes -> { brew.reload.bean_weight_grams } do
+      patch brew_path(brew), params: { brew: { bean_weight_grams: "20" } }
+    end
+    assert_redirected_to root_path
+
+    assert_no_difference -> { Brew.count } do
+      delete brew_path(brew)
+    end
+    assert_redirected_to root_path
+  end
+
+  test "edit is scoped to active workspace" do
+    sign_in_as(users(:one))
+
+    get edit_brew_path(brews(:other_workspace_brew))
+
+    assert_response :not_found
+  end
+
   test "viewer cannot create brew" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)

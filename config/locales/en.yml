@@ -70,6 +70,32 @@ en:
   brews:
     create:
       created: "Brew logged."
+    destroy:
+      destroyed: "Brew deleted and inventory restored."
+    edit:
+      back: "Back to brew"
+      title: "Edit espresso"
+      update: "Save correction"
+    form:
+      bean: "Bean"
+      bean_weight: "Bean in (g)"
+      beverage: "Beverage (g)"
+      channeling: "Obvious channeling"
+      dose: "Dose (g)"
+      first_drip: "First drip (s)"
+      grinder: "Grinder"
+      grind_setting: "Grind setting"
+      ground_weight: "Ground out (g)"
+      machine: "Machine"
+      none: "None"
+      notes: "Notes"
+      no_preparation_tools: "No preparation tools yet."
+      photos: "Photos"
+      preparation_tools: "Preparation tools"
+      rating: "Rating"
+      taste: "Taste balance"
+      temperature: "Temperature (C)"
+      total_time: "Total time (s)"
     new:
       back: "Back to dashboard"
       bean: "Bean"
@@ -94,11 +120,15 @@ en:
       temperature: "Temperature (C)"
       title: "Log espresso"
       total_time: "Total time (s)"
+    update:
+      updated: "Brew corrected."
     show:
       back: "Back to dashboard"
       byline: "Logged by %{user}"
+      delete: "Delete"
       details: "Details"
       dose: "Bean in"
+      edit: "Edit"
       grinder: "Grinder"
       machine: "Machine"
       notes: "Notes"

@@ -1,8 +1,13 @@
 class BrewsController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create]
-  before_action :set_brew, only: :show
+  before_action :authorize_workspace_write!, only: %i[new create edit update destroy]
+  before_action :set_brew, only: %i[show edit update destroy]
 
   def show
+  end
+
+  def edit
+    load_form_options(selected_bean: @brew.bean)
+    @selected_preparation_tools = @brew.preparation_tools.to_a
   end
 
   def new
@@ -31,13 +36,32 @@ class BrewsController < ApplicationController
     end
   end
 
+  def update
+    load_form_options(selected_bean: @brew.bean)
+    attributes = brew_params
+    preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
+    @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
+
+    @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
+    redirect_to @brew, notice: t(".updated")
+  rescue ActiveRecord::RecordInvalid
+    render :edit, status: :unprocessable_entity
+  end
+
+  def destroy
+    @brew.destroy_with_inventory_reversal!
+    redirect_to root_path, notice: t(".destroyed")
+  end
+
   private
     def set_brew
       @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user).find(params[:id])
     end
 
-    def load_form_options
-      @beans = current_workspace.beans.open
+    def load_form_options(selected_bean: nil)
+      @beans = current_workspace.beans.open.to_a
+      @beans << selected_bean if selected_bean && @beans.exclude?(selected_bean)
+      @beans.sort_by! { |bean| [ bean.opened_on || Date.new(9999, 12, 31), bean.created_at, bean.name ] }
       @grinders = current_workspace.equipment.grinder.order(:name)
       @machines = current_workspace.equipment.machine.order(:name)
       @preparation_tools = current_workspace.preparation_tools.active.espresso.ordered

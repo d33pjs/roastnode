@@ -16,7 +16,7 @@ Rails.application.routes.draw do
   resources :equipment, only: %i[index new create show]
   resources :equipment_events, only: %i[new create show]
   resources :preparation_tools, only: %i[index new create]
-  resources :brews, only: %i[new create show]
+  resources :brews, only: %i[new create show edit update destroy]
   resources :media_attachments, only: :show
   resource :workspace_export, only: :show
 
