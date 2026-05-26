@@ -183,20 +183,29 @@ en:
     switch:
       switched: "Switched to %{name}."
     show:
-      cards:
-        beans:
-          body: "Shared bean inventory lands here next."
-          title: "Beans"
-        brews:
-          body: "Fast espresso logging will become the primary action."
-          title: "Brews"
-        equipment:
-          body: "Grinders, machines, and maintenance events will be workspace-scoped."
-          title: "Equipment"
+      actions:
+        add_bean: "Add bean"
+        add_equipment: "Add equipment"
+        beans: "Beans"
+        equipment: "Equipment"
+        log_brew: "Log espresso"
+      activity:
+        adjustment: "%{amount} g inventory adjustment for %{bean}"
+        brew: "Espresso with %{bean}"
       eyebrow: "Household workspace"
       invites: "Invites"
       members: "Members"
+      no_activity: "No activity yet."
+      no_open_beans: "No open beans yet."
+      open_beans: "Open beans"
+      recent_activity: "Recent activity"
       role: "Role: %{role}"
       sign_out: "Sign out"
       signed_in_as: "Signed in as %{email}"
+      status:
+        brews_this_week: "Brews this week"
+        grams_remaining: "Grams remaining"
+        open_beans: "Open beans"
       switcher: "Switch workspace"
+      unknown_roaster: "Unknown roaster"
+      view_all: "View all"

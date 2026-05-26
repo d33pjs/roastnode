@@ -29,6 +29,22 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", workspace_invites_path, text: I18n.t("workspaces.show.invites")
   end
 
+  test "workspace dashboard shows coffee actions and recent activity" do
+    sign_in_as(users(:one))
+
+    get root_path
+
+    assert_response :success
+    assert_select "a[href=?]", new_brew_path, text: I18n.t("workspaces.show.actions.log_brew")
+    assert_select "a[href=?]", new_bean_path, text: I18n.t("workspaces.show.actions.add_bean")
+    assert_select "a[href=?]", new_equipment_path, text: I18n.t("workspaces.show.actions.add_equipment")
+    assert_select "h2", I18n.t("workspaces.show.open_beans")
+    assert_select "a[href=?]", bean_path(beans(:open_household)), text: /#{beans(:open_household).name}/
+    assert_select "a[href=?]", bean_path(beans(:other_workspace_open)), count: 0
+    assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
+    assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
+  end
+
   test "shows onboarding for signed-in user without workspace" do
     user = User.create!(email_address: "workspace-needed@example.com", password: "password")
     sign_in_as(user)
