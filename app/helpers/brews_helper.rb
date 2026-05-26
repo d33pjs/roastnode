@@ -60,8 +60,8 @@ module BrewsHelper
   def brew_card_chart_x(seconds, total_seconds)
     return if seconds.blank? || total_seconds.blank? || total_seconds.to_f <= 0
 
-    start_x = 48
-    end_x = 690
+    start_x = 44
+    end_x = 444
     x_position = start_x + (seconds.to_f / total_seconds.to_f * (end_x - start_x))
 
     x_position.clamp(start_x, end_x).round
@@ -79,6 +79,10 @@ module BrewsHelper
 
   def brew_card_tool_names(brew)
     brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+  end
+
+  def brew_card_photo_attachment(brew)
+    brew.bean.photos.attachments.order(:id).first || brew.photos.attachments.order(:id).first
   end
 
   private

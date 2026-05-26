@@ -6,12 +6,13 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 
 - European timestamp with seconds: `dd.mm.yyyy HH:MM:ss`.
 - Active workspace/household name on the card.
-- Bean roaster, bean name, and compact origin/process/roast-level descriptor.
+- Bean roaster, bean name, compact origin/process/roast-level descriptor, and the first bean photo when available.
 - Safe logged-by label from the user's profile username, falling back to `unknown username`.
 - Dose from the espresso form.
 - Brew ratio calculated from beverage yield and dose, including total time when present.
 - Grind setting.
-- Rating as five visual bean marks, with taste balance below it in the same metric rectangle as a readable two-line value.
+- Rating as five visual bean marks.
+- Taste balance as its own compact metric rectangle.
 - Extraction chart with beverage curve, preinfusion marker, first-drip marker when present, total time, and a separate temperature line.
 - Chart labels use small callouts when they would otherwise collide with plot or guide lines.
 - The beverage y-axis label rounds above the actual beverage yield, for example `45.2 g` displays against a `50 g` axis marker.
@@ -30,9 +31,9 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 
 - Use `BrewPreparationTool#tool_name` for displayed tools, not current `PreparationTool#name`.
 - The card shows `dose_grams` as Dose. `bean_weight_grams` remains inventory input and is not the main card dose.
-- The top metric row stays four-up at narrow widths: Dose, Ratio, Grind, Rating/Balance. Keep ratio large and show total time as smaller secondary text inside the same rectangle.
+- The metric area uses Dose, Ratio, Grind, Rating, and Balance. Mobile keeps the cards readable by wrapping the grid instead of forcing five tiny cards into one row.
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
 - Keep the card dense; avoid adding explanatory headings inside the chart.
-- Keep the mobile chart compact: its SVG viewBox intentionally crops out excess quiet area while preserving readable labels.
+- Keep the mobile chart compact: the x-axis intentionally maps total time into a shorter central span while preserving proportional timing for preinfusion, first drip, and total time.
 - Preserve private media rendering through `media_attachment_path`.

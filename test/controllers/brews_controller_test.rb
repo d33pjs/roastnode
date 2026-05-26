@@ -120,6 +120,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     users(:one).update!(display_name: "Jens")
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
+    bean_photo = attach_photo(brew.bean)
     brew.update!(
       occurred_at: Time.zone.local(2026, 5, 26, 11, 22, 8),
       dose_grams: 18.2,
@@ -139,13 +140,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=brew-hero-card]"
-    assert_select "img[data-testid=brew-card-brand-mark][alt=?]", ""
+    assert_select "[data-testid=brew-card-header] img[data-testid=brew-card-brand-mark][alt=?]", ""
     assert_select "img[data-testid=brew-card-brand-mark][src*=?]", "logo_mark_transparent"
+    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
     assert_select "body", text: /one@example.com/, count: 0
     assert_select "[data-testid=brew-byline]", "Logged by Jens"
-    assert_select "[data-testid=brew-metrics].grid-cols-4"
+    assert_select "[data-testid=brew-metrics].grid-cols-3"
     assert_select "[data-testid=brew-dose]", "18.2 g"
     assert_select "[data-testid=brew-beverage]", count: 0
     assert_select "[data-testid=brew-ratio-main]", "1:2,47"
@@ -155,10 +157,12 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".rating-bean--filled", 4
       assert_select ".rating-bean--empty", 1
     end
-    assert_select "[data-testid=brew-rating-card] [data-testid=brew-balance]", /Balance\s+Neutral/
+    assert_select "[data-testid=brew-rating-card] [data-testid=brew-balance]", count: 0
+    assert_select "[data-testid=brew-balance-card] [data-testid=brew-balance]", /Balance\s+Neutral/
     assert_select "[data-testid=brew-balance] .block", text: "Balance"
     assert_select "[data-testid=brew-balance] .block", text: "Neutral"
-    assert_select "[data-testid=brew-chart-grid] svg.h-44[viewBox='0 0 720 178'][preserveAspectRatio=none]"
+    assert_select "[data-testid=brew-chart-grid] svg.h-40[viewBox='0 0 560 168'][preserveAspectRatio=none]"
+    assert_select "[data-testid=brew-total-time-guide][x1=?]", "444"
     assert_select "[data-testid=brew-preinfusion-label]", "6s Preinfusion"
     assert_select "[data-testid=brew-first-drip-label]", "8s First drip"
     assert_select "[data-testid=brew-first-drip-callout]"

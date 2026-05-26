@@ -1,31 +1,39 @@
 <% card_class = local_assigns.fetch(:card_class, "") %>
 <% compact = local_assigns.fetch(:compact, false) %>
 <% chart_id = local_assigns.fetch(:chart_id, "brew-shot-fill-#{brew.id}") %>
+<% brew_photo = brew_card_photo_attachment(brew) %>
 
 <article data-testid="brew-hero-card" class="relative overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
-  <%= render "shared/brand_mark",
-    testid: "brew-card-brand-mark",
-    container_class: "pointer-events-none absolute right-4 top-4 z-20 hidden h-14 w-14 sm:block",
-    image_class: "h-full w-full object-contain drop-shadow-sm" %>
-
-  <div class="bg-stone-950 p-5 sm:pr-20">
-    <div class="flex flex-wrap items-center gap-2">
+  <div class="bg-stone-950 p-5">
+    <div data-testid="brew-card-header" class="flex flex-wrap items-center gap-2">
       <span data-testid="brew-timestamp" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= brew_card_timestamp(brew) %></span>
       <span data-testid="brew-workspace" class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= current_workspace.name %></span>
       <span class="rounded-full border border-white/20 px-3 py-1 text-xs font-bold text-stone-200"><%= t("brews.show.card_method") %></span>
+      <%= render "shared/brand_mark",
+        testid: "brew-card-brand-mark",
+        container_class: "ml-auto h-10 w-10 shrink-0 sm:h-12 sm:w-12",
+        image_class: "h-full w-full object-contain drop-shadow-sm" %>
     </div>
 
-    <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.95fr_1.05fr] lg:items-end" unless compact %>">
-      <div>
-        <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
-        <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
-        <% if brew_card_bean_descriptor(brew.bean).present? %>
-          <p class="mt-2 text-sm text-stone-300"><%= brew_card_bean_descriptor(brew.bean) %></p>
+    <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.9fr_1.1fr] lg:items-end" unless compact %>">
+      <div class="flex items-start gap-3">
+        <% if brew_photo.present? %>
+          <div class="h-20 w-16 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10 sm:h-24 sm:w-20">
+            <%= image_tag media_attachment_path(brew_photo), alt: brew.bean.name, data: { testid: "brew-bean-photo" }, class: "h-full w-full object-cover" %>
+          </div>
         <% end %>
-        <p data-testid="brew-byline" class="mt-2 text-xs text-stone-400"><%= t("brews.show.byline", user: brew.user.display_label) %></p>
+
+        <div class="min-w-0">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
+          <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
+          <% if brew_card_bean_descriptor(brew.bean).present? %>
+            <p class="mt-2 text-sm text-stone-300"><%= brew_card_bean_descriptor(brew.bean) %></p>
+          <% end %>
+          <p data-testid="brew-byline" class="mt-2 text-xs text-stone-400"><%= t("brews.show.byline", user: brew.user.display_label) %></p>
+        </div>
       </div>
 
-      <div data-testid="brew-metrics" class="grid grid-cols-4 gap-1 sm:gap-2">
+      <div data-testid="brew-metrics" class="grid grid-cols-3 gap-1 sm:grid-cols-5 sm:gap-2">
         <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.dose") %></p>
           <p data-testid="brew-dose" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_grams(brew.dose_grams) %></p>
@@ -51,9 +59,12 @@
               <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-stone-400" %>"></span>
             <% end %>
           </div>
+        </div>
+        <div data-testid="brew-balance-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.balance_label") %></p>
           <p data-testid="brew-balance" class="mt-1 leading-tight text-green-300">
             <span class="block text-[0.55rem] font-bold uppercase text-green-200 sm:text-[0.65rem]"><%= t("brews.show.balance_label") %></span>
-            <span class="block text-[0.68rem] font-bold sm:text-xs"><%= brew.taste_balance.humanize %></span>
+            <span class="block text-[0.75rem] font-bold sm:text-sm"><%= brew.taste_balance.humanize %></span>
           </p>
         </div>
       </div>
@@ -61,12 +72,12 @@
   </div>
 
   <div data-testid="brew-chart-grid" class="brew-chart-grid bg-stone-50 px-1 py-1 text-stone-950 sm:px-4 sm:py-3">
-    <% preinfusion_x = brew_card_chart_x(brew.preinfusion_seconds, brew.total_time_seconds) || 210 %>
+    <% preinfusion_x = brew_card_chart_x(brew.preinfusion_seconds, brew.total_time_seconds) || 172 %>
     <% first_drip_x = brew_card_chart_x(brew.first_drip_seconds, brew.total_time_seconds) %>
-    <% total_time_x = brew_card_chart_x(brew.total_time_seconds, brew.total_time_seconds) || 690 %>
-    <% first_drip_label_x = first_drip_x ? [ first_drip_x + 14, 560 ].min : nil %>
+    <% total_time_x = brew_card_chart_x(brew.total_time_seconds, brew.total_time_seconds) || 444 %>
+    <% first_drip_label_x = first_drip_x ? [ first_drip_x + 12, 396 ].min : nil %>
     <% axis_max_grams = brew_card_axis_max_grams(brew.beverage_grams) || brew.beverage_grams %>
-    <svg class="block h-44 w-full sm:h-64" viewBox="0 0 720 178" role="img" aria-label="<%= t("brews.show.yield") %>" preserveAspectRatio="none">
+    <svg class="block h-40 w-full sm:h-56" viewBox="0 0 560 168" role="img" aria-label="<%= t("brews.show.yield") %>" preserveAspectRatio="none">
       <defs>
         <linearGradient id="<%= chart_id %>" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stop-color="#0f172a" stop-opacity=".16" />
@@ -74,37 +85,37 @@
         </linearGradient>
       </defs>
 
-      <line x1="48" y1="136" x2="690" y2="136" stroke="#1c1917" stroke-width="2.5" />
-      <line x1="48" y1="20" x2="48" y2="136" stroke="#1c1917" stroke-width="2.5" />
+      <line x1="44" y1="130" x2="444" y2="130" stroke="#1c1917" stroke-width="2.5" />
+      <line x1="44" y1="20" x2="44" y2="130" stroke="#1c1917" stroke-width="2.5" />
 
-      <path d="M48 136 C106 138, 164 138, 210 133 C244 130, 270 112, 302 91 C348 61, 412 45, 488 37 C548 31, 622 32, 690 41" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" />
-      <path d="M48 136 C106 138, 164 138, 210 133 C244 130, 270 112, 302 91 C348 61, 412 45, 488 37 C548 31, 622 32, 690 41 L690 136 L48 136 Z" fill="url(#<%= chart_id %>)" />
+      <path d="M44 130 C78 132, 116 132, 144 128 C166 125, 184 109, 206 91 C238 64, 280 50, 326 42 C366 35, 408 36, 444 42" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" />
+      <path d="M44 130 C78 132, 116 132, 144 128 C166 125, 184 109, 206 91 C238 64, 280 50, 326 42 C366 35, 408 36, 444 42 L444 130 L44 130 Z" fill="url(#<%= chart_id %>)" />
 
-      <path d="M48 9 C170 8, 282 8, 390 8 C510 7, 610 8, 690 11" fill="none" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" />
+      <path d="M44 9 C124 8, 204 8, 284 8 C352 7, 404 8, 444 11" fill="none" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" />
 
-      <line x1="<%= preinfusion_x %>" y1="25" x2="<%= preinfusion_x %>" y2="145" stroke="#78716c" stroke-width="2.5" stroke-dasharray="6 8" />
+      <line x1="<%= preinfusion_x %>" y1="25" x2="<%= preinfusion_x %>" y2="140" stroke="#78716c" stroke-width="2.5" stroke-dasharray="6 8" />
       <% if first_drip_x.present? %>
-        <line x1="<%= first_drip_x %>" y1="25" x2="<%= first_drip_x %>" y2="145" stroke="#0f766e" stroke-width="2.5" stroke-dasharray="4 7" />
+        <line x1="<%= first_drip_x %>" y1="25" x2="<%= first_drip_x %>" y2="140" stroke="#0f766e" stroke-width="2.5" stroke-dasharray="4 7" />
       <% end %>
-      <line x1="<%= total_time_x %>" y1="25" x2="<%= total_time_x %>" y2="145" stroke="#78716c" stroke-width="2.5" stroke-dasharray="6 8" />
-      <line x1="48" y1="48" x2="34" y2="48" stroke="#78716c" stroke-width="2.5" />
+      <line data-testid="brew-total-time-guide" x1="<%= total_time_x %>" y1="25" x2="<%= total_time_x %>" y2="140" stroke="#78716c" stroke-width="2.5" stroke-dasharray="6 8" />
+      <line x1="44" y1="48" x2="30" y2="48" stroke="#78716c" stroke-width="2.5" />
 
-      <text x="10" y="141" font-size="13" fill="#57534e">0g</text>
+      <text x="8" y="135" font-size="13" fill="#57534e">0g</text>
       <text data-testid="brew-axis-max" x="6" y="52" font-size="13" fill="#57534e"><%= brew_card_grams(axis_max_grams) %></text>
-      <text x="36" y="162" font-size="13" fill="#57534e">0s</text>
-      <text data-testid="brew-preinfusion-label" x="<%= [ preinfusion_x - 40, 58 ].max %>" y="162" font-size="13" fill="#57534e"><%= brew_card_seconds(brew.preinfusion_seconds) %> Preinfusion</text>
+      <text x="32" y="157" font-size="13" fill="#57534e">0s</text>
+      <text data-testid="brew-preinfusion-label" x="<%= [ preinfusion_x - 36, 54 ].max %>" y="157" font-size="13" fill="#57534e"><%= brew_card_seconds(brew.preinfusion_seconds) %> Preinfusion</text>
       <% if first_drip_x.present? %>
         <g data-testid="brew-first-drip-callout">
-          <rect x="<%= first_drip_label_x - 7 %>" y="97" width="126" height="20" rx="5" fill="#f0fdfa" fill-opacity=".95" />
-          <text data-testid="brew-first-drip-label" x="<%= first_drip_label_x %>" y="112" font-size="13" font-weight="800" fill="#0f766e"><%= t("brews.show.first_drip_label", seconds: brew_card_seconds(brew.first_drip_seconds)) %></text>
+          <rect x="<%= first_drip_label_x - 7 %>" y="95" width="126" height="20" rx="5" fill="#f0fdfa" fill-opacity=".95" />
+          <text data-testid="brew-first-drip-label" x="<%= first_drip_label_x %>" y="110" font-size="13" font-weight="800" fill="#0f766e"><%= t("brews.show.first_drip_label", seconds: brew_card_seconds(brew.first_drip_seconds)) %></text>
         </g>
       <% end %>
-      <text data-testid="brew-total-time-label" x="<%= total_time_x - 19 %>" y="162" font-size="13" fill="#57534e"><%= brew_card_seconds(brew.total_time_seconds) %></text>
+      <text data-testid="brew-total-time-label" x="<%= total_time_x - 19 %>" y="157" font-size="13" fill="#57534e"><%= brew_card_seconds(brew.total_time_seconds) %></text>
       <g data-testid="brew-temperature-callout">
-        <rect x="540" y="18" width="140" height="21" rx="5" fill="#fffbeb" fill-opacity=".95" />
-        <text data-testid="brew-temperature-label" x="548" y="33" font-size="14" font-weight="800" fill="#a16207"><%= t("brews.show.temperature_label", temperature: brew_card_temperature(brew.brew_temperature_celsius)) %></text>
+        <rect x="382" y="18" width="138" height="21" rx="5" fill="#fffbeb" fill-opacity=".95" />
+        <text data-testid="brew-temperature-label" x="390" y="33" font-size="14" font-weight="800" fill="#a16207"><%= t("brews.show.temperature_label", temperature: brew_card_temperature(brew.brew_temperature_celsius)) %></text>
       </g>
-      <text x="500" y="65" font-size="14" font-weight="800" fill="#0f172a"><%= brew_card_grams(brew.beverage_grams) %></text>
+      <text x="342" y="65" font-size="14" font-weight="800" fill="#0f172a"><%= brew_card_grams(brew.beverage_grams) %></text>
     </svg>
   </div>
 
