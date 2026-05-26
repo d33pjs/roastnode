@@ -36,4 +36,10 @@ class ApplicationController < ActionController::Base
 
       redirect_to root_path, alert: t("authorization.denied")
     end
+
+    def authorize_workspace_export!
+      return if current_workspace_policy.export?
+
+      redirect_to root_path, alert: t("authorization.denied")
+    end
 end
