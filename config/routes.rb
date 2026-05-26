@@ -30,6 +30,7 @@ Rails.application.routes.draw do
   resources :brews, only: %i[new create show edit update destroy]
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
+    match :crop, on: :member, via: %i[get patch]
     get :download, on: :member
     patch :primary, on: :member
   end

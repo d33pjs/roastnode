@@ -34,12 +34,26 @@ en:
   authorization:
     denied: "You do not have permission to do that."
   media_attachments:
+    crop:
+      back: "Back"
+      created: "Cropped photo added."
+      eyebrow: "Photo"
+      invalid_image: "Choose an image crop first."
+      make_primary: "Use as primary photo"
+      not_image: "Only image attachments can be cropped."
+      overwrite: "Overwrite old photo"
+      save: "Save crop"
+      save_mode: "Save"
+      save_new: "Save as new photo"
+      title: "Crop photo"
+      updated: "Photo replaced."
     primary:
       updated: "Primary photo updated."
     destroy:
       destroyed: "Photo removed."
   shared:
     photo_grid:
+      crop: "Crop"
       delete: "Remove"
       download: "Download"
       make_primary: "Make primary"

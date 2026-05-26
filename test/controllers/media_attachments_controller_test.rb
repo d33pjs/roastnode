@@ -42,6 +42,91 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "writer opens crop editor for an active workspace attachment" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:open_household))
+
+    get crop_media_attachment_path(attachment)
+
+    assert_response :success
+    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "input[type=file][name=?]", "crop[file]"
+    assert_select "input[type=radio][name=?][value=?]", "crop[mode]", "new"
+    assert_select "input[type=radio][name=?][value=?]", "crop[mode]", "overwrite"
+  end
+
+  test "viewer cannot open crop editor" do
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    sign_in_as(users(:two))
+    attachment = attach_photo(beans(:open_household))
+
+    get crop_media_attachment_path(attachment)
+
+    assert_redirected_to root_path
+    assert_equal I18n.t("authorization.denied"), flash[:alert]
+  ensure
+    memberships(:member)&.update!(role: "member")
+  end
+
+  test "writer saves cropped image as a new primary attachment" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    original = attach_photo(bean)
+
+    assert_difference -> { bean.photos.attachments.reload.count }, 1 do
+      patch crop_media_attachment_path(original), params: {
+        crop: {
+          file: photo_upload(filename: "cropped.jpg"),
+          mode: "new",
+          primary: "1"
+        }
+      }
+    end
+
+    new_attachment = bean.photos.attachments.order(:id).last
+    assert_redirected_to bean_path(bean)
+    assert_equal I18n.t("media_attachments.crop.created"), flash[:notice]
+    assert_equal new_attachment.id, bean.reload.primary_photo_attachment_id
+    assert ActiveStorage::Attachment.exists?(original.id)
+  end
+
+  test "writer overwrites an attachment with a cropped image and preserves primary" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    original = attach_photo(bean)
+    bean.set_primary_photo!(original)
+
+    assert_no_difference -> { bean.photos.attachments.reload.count } do
+      patch crop_media_attachment_path(original), params: {
+        crop: {
+          file: photo_upload(filename: "replacement.jpg"),
+          mode: "overwrite"
+        }
+      }
+    end
+
+    new_attachment = bean.photos.attachments.order(:id).last
+    assert_redirected_to bean_path(bean)
+    assert_equal I18n.t("media_attachments.crop.updated"), flash[:notice]
+    assert_equal new_attachment.id, bean.reload.primary_photo_attachment_id
+    assert_not ActiveStorage::Attachment.exists?(original.id)
+  end
+
+  test "writer cannot crop another workspace attachment" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:other_workspace_open))
+
+    patch crop_media_attachment_path(attachment), params: {
+      crop: {
+        file: photo_upload(filename: "cropped.jpg"),
+        mode: "new"
+      }
+    }
+
+    assert_response :not_found
+  end
+
   test "writer removes an active workspace attachment" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
@@ -138,6 +223,7 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", media_attachment_path(attachment), text: I18n.t("shared.photo_grid.view")
     assert_select "a[href=?]", download_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.download")
     assert_select "span", text: I18n.t("shared.photo_grid.primary")
+    assert_select "a[href=?]", crop_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.crop")
     assert_select "form[action='#{media_attachment_path(attachment)}'] button", text: I18n.t("shared.photo_grid.delete")
 
     second = attach_photo(beans(:open_household))
@@ -152,6 +238,7 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", media_attachment_path(attachment), text: I18n.t("shared.photo_grid.view")
     assert_select "a[href=?]", download_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.download")
+    assert_select "a[href=?]", crop_media_attachment_path(attachment), count: 0
     assert_select "form[action='#{primary_media_attachment_path(second)}']", count: 0
     assert_select "form[action='#{media_attachment_path(attachment)}']", count: 0
   ensure

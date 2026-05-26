@@ -16,11 +16,15 @@ class MediaAttachmentsController < ApplicationController
       filename: @attachment.blob.filename.to_s
   end
 
+  def crop
+    return unless ensure_write_policy!
+    return redirect_to record_path(@attachment.record), alert: t(".not_image") unless @attachment.blob.image?
+
+    save_crop if request.patch?
+  end
+
   def primary
-    unless current_workspace_policy.write?
-      redirect_to root_path, alert: t("authorization.denied")
-      return
-    end
+    return unless ensure_write_policy!
 
     record = @attachment.record
     record.set_primary_photo!(@attachment)
@@ -29,10 +33,7 @@ class MediaAttachmentsController < ApplicationController
   end
 
   def destroy
-    unless current_workspace_policy.write?
-      redirect_to root_path, alert: t("authorization.denied")
-      return
-    end
+    return unless ensure_write_policy!
 
     record = @attachment.record
     @attachment.destroy!
@@ -47,6 +48,43 @@ class MediaAttachmentsController < ApplicationController
 
     def ensure_attachment_in_current_workspace!
       head :not_found unless attachment_in_current_workspace?(@attachment)
+    end
+
+    def ensure_write_policy!
+      return true if current_workspace_policy.write?
+
+      redirect_to root_path, alert: t("authorization.denied")
+      false
+    end
+
+    def save_crop
+      attributes = crop_params
+      file = attributes[:file]
+
+      unless file&.content_type&.start_with?("image/")
+        redirect_to crop_media_attachment_path(@attachment), alert: t(".invalid_image")
+        return
+      end
+
+      record = @attachment.record
+      overwrite = attributes[:mode] == "overwrite"
+      make_primary = attributes[:primary] == "1"
+      was_primary = record.primary_photo_attachment == @attachment
+      new_attachment = nil
+
+      record.transaction do
+        record.photos.attach(file)
+        new_attachment = record.photos.attachments.max_by(&:id)
+        @attachment.destroy! if overwrite
+        record.set_primary_photo!(new_attachment) if make_primary || (overwrite && was_primary)
+      end
+
+      notice_key = overwrite ? ".updated" : ".created"
+      redirect_to record_path(record), notice: t(notice_key)
+    end
+
+    def crop_params
+      params.expect(crop: [ :file, :mode, :primary ])
     end
 
     def attachment_in_current_workspace?(attachment)

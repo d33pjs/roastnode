@@ -1,0 +1,66 @@
+<% record = @attachment.record %>
+<% primary_photo = record.primary_photo_attachment %>
+
+<main class="mx-auto max-w-6xl px-5 py-8">
+  <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <p class="text-sm font-semibold uppercase tracking-normal text-stone-500"><%= t(".eyebrow") %></p>
+      <h1 class="text-3xl font-black text-stone-950"><%= t(".title") %></h1>
+    </div>
+    <%= link_to t(".back"), polymorphic_path(record), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-bold text-stone-800 hover:bg-stone-50" %>
+  </div>
+
+  <section
+    class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]"
+    data-controller="photo-crop"
+    data-photo-crop-filename-value="<%= "cropped-#{@attachment.blob.filename.base}.jpg" %>">
+    <div class="overflow-hidden rounded-md border border-stone-200 bg-stone-950 p-3 shadow-sm">
+      <div
+        class="relative mx-auto block max-h-[72vh] max-w-full touch-none overflow-hidden rounded-md bg-stone-900"
+        data-photo-crop-target="stage"
+        data-action="pointerdown->photo-crop#start pointermove->photo-crop#move pointerup->photo-crop#finish pointercancel->photo-crop#finish">
+        <%= image_tag media_attachment_path(@attachment),
+          alt: "",
+          class: "block max-h-[72vh] w-full select-none object-contain",
+          draggable: false,
+          data: { photo_crop_target: "image" } %>
+        <div
+          class="pointer-events-none absolute hidden border-2 border-amber-400 bg-amber-300/15 shadow-[0_0_0_9999px_rgba(0,0,0,0.45)]"
+          data-photo-crop-target="box"></div>
+      </div>
+    </div>
+
+    <aside class="space-y-4">
+      <div class="overflow-hidden rounded-md border border-stone-200 bg-white shadow-sm">
+        <canvas class="block aspect-square w-full bg-stone-100 object-contain" data-photo-crop-target="preview"></canvas>
+      </div>
+
+      <%= form_with url: crop_media_attachment_path(@attachment),
+        method: :patch,
+        multipart: true,
+        data: { photo_crop_target: "form", action: "submit->photo-crop#submit" },
+        class: "space-y-4 rounded-md border border-stone-200 bg-white p-4 shadow-sm" do %>
+        <%= file_field_tag "crop[file]", accept: "image/*", class: "sr-only", data: { photo_crop_target: "fileInput" } %>
+
+        <fieldset class="space-y-2">
+          <legend class="text-sm font-black uppercase tracking-normal text-stone-500"><%= t(".save_mode") %></legend>
+          <label class="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm font-bold text-stone-800">
+            <%= radio_button_tag "crop[mode]", "new", true, class: "accent-stone-950" %>
+            <%= t(".save_new") %>
+          </label>
+          <label class="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm font-bold text-stone-800">
+            <%= radio_button_tag "crop[mode]", "overwrite", false, class: "accent-stone-950" %>
+            <%= t(".overwrite") %>
+          </label>
+        </fieldset>
+
+        <label class="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm font-bold text-stone-800">
+          <%= check_box_tag "crop[primary]", "1", primary_photo == @attachment, class: "accent-stone-950" %>
+          <%= t(".make_primary") %>
+        </label>
+
+        <%= button_tag t(".save"), class: "w-full rounded-md bg-stone-950 px-4 py-3 text-sm font-black text-white shadow-sm hover:bg-stone-800" %>
+      <% end %>
+    </aside>
+  </section>
+</main>

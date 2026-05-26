@@ -16,8 +16,8 @@ module ActiveSupport
 end
 
 module PhotoTestHelper
-  def photo_upload
-    fixture_file_upload("photo.jpg", "image/jpeg")
+  def photo_upload(filename: "photo.jpg")
+    fixture_file_upload("photo.jpg", "image/jpeg", filename:)
   end
 
   def attach_photo(record)

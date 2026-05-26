@@ -13,6 +13,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Clickable photo thumbnails that open the private original image in a new tab.
 - Per-photo private download links.
 - Primary-photo selection for photo-enabled records.
+- Browser-side photo cropping with save-as-new and overwrite modes.
 - Per-photo removal controls for workspace writers.
 - Current photo management on bean and brew edit screens.
 - App-scoped media delivery through `MediaAttachmentsController`.
@@ -27,10 +28,12 @@ Viewing and downloading photos use `MediaAttachmentsController#show` and `MediaA
 
 Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, and equipment events. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
 
+Cropping uses `MediaAttachmentsController#crop` and requires workspace write access. The crop page renders the private image through `media_attachment_path`, then the `photo-crop` Stimulus controller uses browser canvas APIs to create a normal image upload. Save-as-new adds another photo to the same record. Overwrite attaches the cropped image and removes the old attachment; if the overwritten photo was primary, the new attachment becomes primary automatically. This avoids depending on native libvips/ImageMagick availability in the app runtime.
+
 ## Current Limits
 
-- Images are served inline or downloaded at original size.
-- Cropping, generated variants, thumbnails, direct-upload progress, S3/object storage, and archive/export handling are deferred.
+- Images are served inline or downloaded at original size unless the user explicitly saves a cropped replacement.
+- Generated variants, thumbnails, direct-upload progress, S3/object storage, and archive/export handling are deferred.
 - Orphaned blob cleanup is deferred until the storage policy is formalized.
 
 ## Agent Notes
@@ -41,4 +44,5 @@ Primary photo selection uses `MediaAttachmentsController#primary` and requires w
 - Keep photo removal write-scoped and routed through `MediaAttachmentsController#destroy`.
 - Keep photo viewing and download links routed through `MediaAttachmentsController` so workspace scoping stays centralized.
 - Keep primary photo changes routed through `MediaAttachmentsController#primary` so workspace scoping and write authorization stay centralized.
-- Avoid image variants until the project has a real image-processing dependency and thumbnail policy.
+- Keep photo cropping routed through `MediaAttachmentsController#crop`; it accepts a browser-generated image upload rather than processing the source blob on the server.
+- Avoid generated image variants until the project has a thumbnail policy and a verified native image-processing runtime.
