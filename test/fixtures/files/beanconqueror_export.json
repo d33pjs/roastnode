@@ -1,0 +1,109 @@
+{
+  "BEANS": [
+    {
+      "name": "BC Espresso",
+      "roaster": "BC Roaster",
+      "roastingDate": "2026-05-01",
+      "buyDate": "2026-05-02",
+      "openDate": "2026-05-05",
+      "aromatics": "Chocolate, orange",
+      "note": "Imported bean note.",
+      "weight": 250,
+      "cost": 12.9,
+      "rating": 4,
+      "url": "https://example.test/beans/bc-espresso",
+      "roast": "MEDIUM",
+      "finished": false,
+      "bean_information": [
+        {
+          "country": "Colombia",
+          "region": "Huila",
+          "processing": "washed"
+        }
+      ],
+      "config": {
+        "uuid": "bc-bean-1",
+        "unix_timestamp": 1777766400
+      }
+    }
+  ],
+  "MILL": [
+    {
+      "name": "BC Grinder",
+      "note": "Imported grinder.",
+      "config": {
+        "uuid": "bc-grinder-1",
+        "unix_timestamp": 1777766400
+      },
+      "finished": false
+    }
+  ],
+  "PREPARATION": [
+    {
+      "name": "BC Espresso Machine",
+      "note": "Imported preparation.",
+      "type": "ESPRESSO",
+      "style_type": "ESPRESSO",
+      "tools": [
+        {
+          "name": "BC WDT",
+          "note": "Imported tool.",
+          "config": {
+            "uuid": "bc-tool-1",
+            "unix_timestamp": 1777766400
+          }
+        }
+      ],
+      "config": {
+        "uuid": "bc-prep-1",
+        "unix_timestamp": 1777766400
+      },
+      "finished": false
+    }
+  ],
+  "BREWS": [
+    {
+      "bean": "bc-bean-1",
+      "mill": "bc-grinder-1",
+      "method_of_preparation": "bc-prep-1",
+      "method_of_preparation_tools": ["bc-tool-1"],
+      "coffee_type": "Espresso",
+      "bean_weight_in": 18.5,
+      "grind_weight": 18.3,
+      "brew_beverage_quantity": 42,
+      "brew_quantity": 42,
+      "grind_size": "14",
+      "brew_temperature": 93,
+      "brew_time": 31,
+      "coffee_first_drip_time": 8,
+      "coffee_blooming_time": 5,
+      "note": "Imported brew note.",
+      "rating": 4,
+      "config": {
+        "uuid": "bc-brew-1",
+        "unix_timestamp": 1777770000
+      }
+    },
+    {
+      "bean": "bc-bean-1",
+      "mill": "bc-grinder-1",
+      "method_of_preparation": "bc-prep-1",
+      "coffee_type": "Pour Over",
+      "bean_weight_in": 15,
+      "brew_quantity": 250,
+      "config": {
+        "uuid": "bc-brew-filter",
+        "unix_timestamp": 1777773600
+      }
+    }
+  ],
+  "SETTINGS": [],
+  "VERSION": [
+    {
+      "config": {
+        "uuid": "bc-version-1",
+        "unix_timestamp": 1777766400
+      }
+    }
+  ]
+}
