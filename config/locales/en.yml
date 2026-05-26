@@ -226,6 +226,7 @@ en:
     show:
       back: "Back to dashboard"
       balance: "Balance: %{balance}"
+      balance_label: "Balance"
       byline: "Logged by %{user}"
       bean: "Bean"
       bean_weight: "Bean in"

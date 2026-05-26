@@ -155,8 +155,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".rating-bean--filled", 4
       assert_select ".rating-bean--empty", 1
     end
-    assert_select "[data-testid=brew-rating-card] [data-testid=brew-balance]", "Balance: Neutral"
-    assert_select "[data-testid=brew-chart-grid] svg.h-56"
+    assert_select "[data-testid=brew-rating-card] [data-testid=brew-balance]", /Balance\s+Neutral/
+    assert_select "[data-testid=brew-balance] .block", text: "Balance"
+    assert_select "[data-testid=brew-balance] .block", text: "Neutral"
+    assert_select "[data-testid=brew-chart-grid] svg.h-44[viewBox='0 0 720 178'][preserveAspectRatio=none]"
     assert_select "[data-testid=brew-preinfusion-label]", "6s Preinfusion"
     assert_select "[data-testid=brew-first-drip-label]", "8s First drip"
     assert_select "[data-testid=brew-first-drip-callout]"
