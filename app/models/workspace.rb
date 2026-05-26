@@ -13,6 +13,7 @@ class Workspace < ApplicationRecord
   has_many :equipment, dependent: :destroy
   has_many :brews, dependent: :destroy
   has_many :inventory_adjustments, dependent: :destroy
+  has_many :equipment_events, dependent: :destroy
 
   validates :name, presence: true
   validates :default_currency, presence: true

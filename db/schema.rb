@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_070300) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_080100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,6 +81,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_070300) do
     t.bigint "workspace_id", null: false
     t.index ["workspace_id", "kind"], name: "index_equipment_on_workspace_id_and_kind"
     t.index ["workspace_id"], name: "index_equipment_on_workspace_id"
+  end
+
+  create_table "equipment_event_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "equipment_event_id", null: false
+    t.bigint "equipment_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["equipment_event_id", "equipment_id"], name: "idx_on_equipment_event_id_equipment_id_22b5e78c10", unique: true
+    t.index ["equipment_event_id"], name: "index_equipment_event_items_on_equipment_event_id"
+    t.index ["equipment_id"], name: "index_equipment_event_items_on_equipment_id"
+  end
+
+  create_table "equipment_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "event_type", null: false
+    t.text "notes"
+    t.datetime "occurred_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["user_id"], name: "index_equipment_events_on_user_id"
+    t.index ["workspace_id", "event_type"], name: "index_equipment_events_on_workspace_id_and_event_type"
+    t.index ["workspace_id", "occurred_at"], name: "index_equipment_events_on_workspace_id_and_occurred_at"
+    t.index ["workspace_id"], name: "index_equipment_events_on_workspace_id"
   end
 
   create_table "inventory_adjustments", force: :cascade do |t|
@@ -166,6 +190,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_070300) do
   add_foreign_key "brews", "users"
   add_foreign_key "brews", "workspaces"
   add_foreign_key "equipment", "workspaces"
+  add_foreign_key "equipment_event_items", "equipment"
+  add_foreign_key "equipment_event_items", "equipment_events"
+  add_foreign_key "equipment_events", "users"
+  add_foreign_key "equipment_events", "workspaces"
   add_foreign_key "inventory_adjustments", "beans"
   add_foreign_key "inventory_adjustments", "brews"
   add_foreign_key "inventory_adjustments", "users"

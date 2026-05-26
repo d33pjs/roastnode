@@ -1,0 +1,11 @@
+grinder_cleaning_grinder:
+  equipment_event: grinder_cleaning
+  equipment: household_grinder
+
+machine_backflush_machine:
+  equipment_event: machine_backflush
+  equipment: household_machine
+
+other_workspace_event_grinder:
+  equipment_event: other_workspace_event
+  equipment: other_workspace_grinder
