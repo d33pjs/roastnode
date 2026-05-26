@@ -18,6 +18,8 @@ Workspace Core is the first real Roastnode product slice after Rails foundation 
 
 Use `WorkspacePolicy` for role checks. Controllers should prefer the helper methods exposed by `ApplicationController`: `current_workspace`, `current_membership`, and `current_workspace_policy`.
 
+Workspace export is owner-only in the current slice. Admins can manage invites and shared coffee data, but they do not see the JSON export link unless that policy is intentionally changed later.
+
 ## Invite Flow
 
 Owners and admins can open the workspace dashboard and use **Invites** to create links for the `admin`, `member`, or `viewer` roles. Invite links can be revoked and expire automatically.
@@ -29,4 +31,5 @@ Invite acceptance currently requires an already signed-in user. Public signup-fr
 - New domain tables should include `workspace_id` unless they are intentionally global.
 - Query domain records through `current_workspace` in controllers to avoid cross-workspace leaks.
 - Add authorization and isolation tests for every workspace-scoped controller.
+- Exports should use `current_workspace` as their scope and avoid accepting workspace IDs from params.
 - Keep copy and docs clear that v1 is private; public profiles, federation, and roaster-facing workflows are future work.

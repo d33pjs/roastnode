@@ -10,6 +10,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/equipment-events.md` describes maintenance events, equipment detail pages, and timeline activity rules.
 - `docs/preparation-tools.md` describes method-scoped brew checklist tools and brew snapshots.
 - `docs/private-media.md` describes private photo upload, display, and scoped media delivery.
+- `docs/workspace-export.md` describes owner-only JSON workspace export.
 - `docs/setup.md` describes local Rails and Docker Compose setup.
 - `AGENTS.md` contains repository-wide guidance for AI coding agents.
 
