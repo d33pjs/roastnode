@@ -14,37 +14,37 @@
 
 ### Task 1: Active Storage And Attachments
 
-- [ ] Install Active Storage migrations.
-- [ ] Add `has_many_attached :photos` to Bean, Brew, Equipment, and EquipmentEvent.
-- [ ] Add an image fixture for upload tests.
-- [ ] Write model tests proving each parent accepts photos.
-- [ ] Run focused model tests.
-- [ ] Commit with `git commit -m "Add private photo attachments"`.
+- [x] Install Active Storage migrations.
+- [x] Add `has_many_attached :photos` to Bean, Brew, Equipment, and EquipmentEvent.
+- [x] Add an image fixture for upload tests.
+- [x] Write model tests proving each parent accepts photos.
+- [x] Run focused model tests.
+- [x] Commit with `git commit -m "Add private photo attachments"`.
 
 ### Task 2: Scoped Media Delivery
 
-- [ ] Write controller tests for same-workspace and cross-workspace attachment access.
-- [ ] Add `MediaAttachmentsController#show`.
-- [ ] Add `media_attachment_path`.
-- [ ] Stream blobs only when the attachment record belongs to `current_workspace`.
-- [ ] Run focused media controller tests.
-- [ ] Commit with `git commit -m "Add scoped media delivery"`.
+- [x] Write controller tests for same-workspace and cross-workspace attachment access.
+- [x] Add `MediaAttachmentsController#show`.
+- [x] Add `media_attachment_path`.
+- [x] Stream blobs only when the attachment record belongs to `current_workspace`.
+- [x] Run focused media controller tests.
+- [x] Commit with `git commit -m "Add scoped media delivery"`.
 
 ### Task 3: Upload And Display
 
-- [ ] Add photo fields to bean, brew, equipment, and equipment event forms.
-- [ ] Permit `photos: []` in each controller.
-- [ ] Show photo grids on bean, brew, equipment, and event detail pages.
-- [ ] Add/update controller tests for attachment creation and scoped image links.
-- [ ] Run focused controller tests.
-- [ ] Commit with `git commit -m "Add photo upload fields"`.
+- [x] Add photo fields to bean, brew, equipment, and equipment event forms.
+- [x] Permit `photos: []` in each controller.
+- [x] Show photo grids on bean, brew, equipment, and event detail pages.
+- [x] Add/update controller tests for attachment creation and scoped image links.
+- [x] Run focused controller tests.
+- [x] Commit with `git commit -m "Add photo upload fields"`.
 
 ### Task 4: Docs And Verification
 
-- [ ] Add `docs/private-media.md`.
-- [ ] Update `docs/README.md` and `AGENTS.md`.
-- [ ] Run `env PARALLEL_WORKERS=1 bin/rails test`.
-- [ ] Run `env RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop`.
-- [ ] Run `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`.
-- [ ] Confirm `http://miniknubbel.internal:3001` returns 200.
+- [x] Add `docs/private-media.md`.
+- [x] Update `docs/README.md` and `AGENTS.md`.
+- [x] Run `env PARALLEL_WORKERS=1 bin/rails test`.
+- [x] Run `env RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop`.
+- [x] Run `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`.
+- [x] Confirm `http://miniknubbel.internal:3001` returns 200.
 - [ ] Commit docs with `git commit -m "Document private media"`.

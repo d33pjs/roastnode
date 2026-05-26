@@ -11,6 +11,7 @@ Equipment Events records maintenance and service history for workspace equipment
 - Viewer read-only access.
 - Equipment detail pages with recent events, recent brews, and simple service counters.
 - Workspace recent activity entries for equipment events.
+- Basic private photos on equipment events.
 
 ## Event Types
 
@@ -43,7 +44,7 @@ It deliberately hides automatic brew inventory adjustments because the brew itse
 
 ## Deferred
 
-- Equipment event photos.
+- Photo deletion, primary-photo selection, and thumbnail variants.
 - Maintenance reminders.
 - Advanced usage analytics and charts.
 - Import/export mapping for equipment events.

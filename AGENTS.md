@@ -25,6 +25,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Preparation tools are method-scoped checklist records, not equipment. Brews snapshot selected preparation tool names and preselect active tools from the user's last brew.
 - Recipes are deliberately deferred. Do not introduce recipe tables, recipe snapshots, or recipe-based defaults in Coffee Core work.
 - Equipment events are first-class workspace records. Use them for grinder and machine maintenance history instead of burying maintenance in equipment notes. A single equipment event can have multiple `event_types`.
+- Photos are private workspace data attached through Active Storage. Render app photos through `media_attachment_path(attachment)` so `MediaAttachmentsController` can enforce active-workspace access; do not use raw Active Storage blob/proxy URLs in app views.
 - Dashboard recent activity should include brews, equipment events, and manual inventory adjustments. Do not show automatic brew inventory adjustments as separate timeline entries.
 
 ## Local Development Intent
