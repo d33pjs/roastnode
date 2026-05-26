@@ -18,6 +18,24 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
+    <style>
+      @font-face {
+        font-family: "Genos";
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url("<%= asset_path("genos/Genos-Variable.ttf") %>") format("truetype");
+      }
+
+      @font-face {
+        font-family: "Genos";
+        font-style: italic;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url("<%= asset_path("genos/Genos-Italic-Variable.ttf") %>") format("truetype");
+      }
+    </style>
+
     <%# Includes all stylesheet files in app/assets/stylesheets %>
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>

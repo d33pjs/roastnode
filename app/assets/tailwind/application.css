@@ -1,1 +1,21 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Genos", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Genos", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html,
+  body,
+  button,
+  input,
+  select,
+  textarea,
+  code,
+  kbd,
+  samp,
+  pre {
+    font-family: var(--font-sans);
+  }
+}
