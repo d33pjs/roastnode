@@ -287,8 +287,23 @@ en:
       yield: "Beverage"
       yes: "Yes"
   equipment:
+    archive:
+      archived: "Equipment archived."
     create:
       created: "Equipment added."
+    destroy:
+      destroyed: "Equipment deleted."
+    edit:
+      back: "Back to equipment"
+      photos: "Current photos"
+      title: "Edit equipment"
+      update: "Save equipment"
+    form:
+      kind: "Kind"
+      model: "Model"
+      name: "Name"
+      notes: "Notes"
+      photos: "Photos"
     index:
       back: "Back to dashboard"
       kind: "Kind"
@@ -306,14 +321,22 @@ en:
       notes: "Notes"
       photos: "Photos"
       title: "Add equipment"
+    reopen:
+      reopened: "Equipment reopened."
     show:
       analytics: "Usage analytics"
+      archive: "Archive"
       average_rating: "Average rating"
       back: "Back to equipment"
       brew: "Espresso with %{bean}"
       brews_by_day: "Brews by day"
       brews_since_service: "Brews since service"
       channeling_rate: "Channeling"
+      danger_zone: "Danger zone"
+      danger_zone_body: "Delete this equipment, its photos, and maintenance links. Existing brews are kept and their grinder or machine reference is cleared."
+      delete: "Delete equipment"
+      delete_confirmation: "Delete this equipment? Existing brews will stay, but this cannot be undone."
+      edit: "Edit"
       grams_since_service: "Grams since service"
       last_service: "Last service"
       log_event: "Log event"
@@ -323,12 +346,15 @@ en:
       no_events: "No equipment events yet."
       notes: "Notes"
       photos: "Photos"
+      reopen: "Reopen"
       recent_brews: "Recent brews"
       recent_events: "Recent events"
       total_brews: "Total brews"
       total_ground: "Total ground"
       unknown: "Unknown"
       unknown_model: "Unknown model"
+    update:
+      updated: "Equipment updated."
   equipment_events:
     create:
       created: "Equipment event logged."

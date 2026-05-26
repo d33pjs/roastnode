@@ -37,6 +37,20 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
   end
 
+  test "new does not offer archived equipment" do
+    archived_grinder = equipment(:household_grinder)
+    archived_machine = equipment(:household_machine)
+    archived_grinder.update!(archived_at: Time.current)
+    archived_machine.update!(archived_at: Time.current)
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "select[name=?] option[value=?]", "brew[grinder_id]", archived_grinder.id.to_s, count: 0
+    assert_select "select[name=?] option[value=?]", "brew[machine_id]", archived_machine.id.to_s, count: 0
+  end
+
   test "new autofocuses the user's preferred brew field" do
     users(:one).update!(default_brew_focus_field: "dose_grams")
     sign_in_as(users(:one))

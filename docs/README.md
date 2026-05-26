@@ -18,6 +18,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/brew-card.md` describes the compact screenshot-worthy brew detail card.
 - `docs/beanconqueror-import.md` describes practical Beanconqueror JSON import.
 - `docs/equipment-events.md` describes maintenance events, equipment detail pages, and timeline activity rules.
+- `docs/equipment-lifecycle.md` describes equipment edit, archive, reopen, delete, and historical-reference behavior.
 - `docs/preparation-tools.md` describes method-scoped brew checklist tools and brew snapshots.
 - `docs/private-media.md` describes private photo upload, display, and scoped media delivery.
 - `docs/workspace-export.md` describes owner-only JSON and CSV workspace exports.

@@ -32,7 +32,7 @@ class EquipmentEventsController < ApplicationController
     end
 
     def load_form_options
-      @equipment_options = current_workspace.equipment.order(:kind, :name)
+      @equipment_options = current_workspace.equipment.active.order(:kind, :name)
     end
 
     def equipment_event_params

@@ -44,6 +44,36 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
   end
 
+  test "edit renders current photos and updates equipment with added photos" do
+    sign_in_as(users(:one))
+    equipment = equipment(:household_grinder)
+    existing_photo = attach_photo(equipment)
+
+    get edit_equipment_path(equipment)
+
+    assert_response :success
+    assert_select "h1", I18n.t("equipment.edit.title")
+    assert_select "img[src=?]", media_attachment_path(existing_photo)
+    assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
+
+    assert_difference -> { equipment.reload.photos.count }, 1 do
+      patch equipment_path(equipment), params: {
+        equipment: {
+          name: "Eureka Atom",
+          kind: "grinder",
+          model: "Atom 75",
+          notes: "Single dosing setup.",
+          photos: [ photo_upload ]
+        }
+      }
+    end
+
+    assert_redirected_to equipment_path(equipment)
+    assert_equal "Eureka Atom", equipment.reload.name
+    assert_equal "Atom 75", equipment.model
+    assert_equal "Single dosing setup.", equipment.notes
+  end
+
   test "viewer cannot create equipment" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
@@ -67,6 +97,70 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
     assert_select "p", text: /18 g/
+  end
+
+  test "show exposes equipment management and danger zone actions" do
+    sign_in_as(users(:one))
+    equipment = equipment(:household_grinder)
+
+    get equipment_path(equipment)
+
+    assert_response :success
+    assert_select "a[href=?]", edit_equipment_path(equipment), text: I18n.t("equipment.show.edit")
+    assert_select "form[action=?]", archive_equipment_path(equipment)
+    assert_select "[data-testid=equipment-danger-zone]"
+    assert_select "form[action=?]", equipment_path(equipment)
+  end
+
+  test "archive and reopen equipment" do
+    sign_in_as(users(:one))
+    equipment = equipment(:household_grinder)
+
+    patch archive_equipment_path(equipment)
+
+    assert_redirected_to equipment_path(equipment)
+    assert equipment.reload.archived?
+
+    patch reopen_equipment_path(equipment)
+
+    assert_redirected_to equipment_path(equipment)
+    assert_not equipment.reload.archived?
+  end
+
+  test "destroy removes equipment without deleting brew history" do
+    sign_in_as(users(:one))
+    grinder = equipment(:household_grinder)
+    brew = brews(:morning_espresso)
+
+    assert_difference -> { workspaces(:household).equipment.count }, -1 do
+      assert_no_difference -> { Brew.count } do
+        delete equipment_path(grinder)
+      end
+    end
+
+    assert_redirected_to equipment_index_path
+    assert_nil brew.reload.grinder
+  end
+
+  test "viewer cannot manage equipment" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    equipment = equipment(:household_grinder)
+
+    get edit_equipment_path(equipment)
+    assert_redirected_to root_path
+
+    patch equipment_path(equipment), params: { equipment: { name: "Nope", kind: "grinder" } }
+    assert_redirected_to root_path
+
+    patch archive_equipment_path(equipment)
+    assert_redirected_to root_path
+
+    delete equipment_path(equipment)
+    assert_redirected_to root_path
+    assert Equipment.exists?(equipment.id)
   end
 
   test "show renders usage analytics" do

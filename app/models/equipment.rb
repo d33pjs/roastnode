@@ -13,7 +13,29 @@ class Equipment < ApplicationRecord
   has_many :equipment_events, through: :equipment_event_items
   has_many_attached :photos
 
+  scope :active, -> { where(archived_at: nil) }
+
   validates :name, presence: true
   validates :kind, presence: true
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
+
+  def archived?
+    archived_at.present?
+  end
+
+  def archive!
+    update!(archived_at: Time.current)
+  end
+
+  def reopen!
+    update!(archived_at: nil)
+  end
+
+  def destroy_with_history!
+    transaction do
+      grinder_brews.update_all(grinder_id: nil)
+      machine_brews.update_all(machine_id: nil)
+      destroy!
+    end
+  end
 end

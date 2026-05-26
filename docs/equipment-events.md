@@ -10,6 +10,7 @@ Equipment Events records maintenance and service history for workspace equipment
 - Event logging by owners, admins, and members.
 - Viewer read-only access.
 - Equipment detail pages with recent events, recent brews, usage analytics, maintenance marker distribution, and service counters.
+- Archived equipment is hidden from new event logging while remaining visible in historical event detail pages.
 - Workspace recent activity entries for equipment events.
 - Basic private photos on equipment events.
 

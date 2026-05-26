@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_26_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_26_223000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -152,6 +152,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_210000) do
   end
 
   create_table "equipment", force: :cascade do |t|
+    t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.bigint "data_import_id"
     t.string "import_source"
@@ -164,6 +165,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_26_210000) do
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["data_import_id"], name: "index_equipment_on_data_import_id"
+    t.index ["workspace_id", "archived_at"], name: "index_equipment_on_workspace_id_and_archived_at"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_equipment_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "kind"], name: "index_equipment_on_workspace_id_and_kind"
     t.index ["workspace_id"], name: "index_equipment_on_workspace_id"

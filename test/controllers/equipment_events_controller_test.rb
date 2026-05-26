@@ -15,6 +15,17 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment_event[photos][]"
   end
 
+  test "new does not offer archived equipment" do
+    archived = equipment(:household_grinder)
+    archived.update!(archived_at: Time.current)
+    sign_in_as(users(:one))
+
+    get new_equipment_event_path
+
+    assert_response :success
+    assert_select "label", text: archived.name, count: 0
+  end
+
   test "member can create equipment event" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

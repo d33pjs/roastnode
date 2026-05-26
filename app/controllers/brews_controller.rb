@@ -6,7 +6,7 @@ class BrewsController < ApplicationController
   end
 
   def edit
-    load_form_options(selected_bean: @brew.bean)
+    load_form_options(selected_bean: @brew.bean, selected_grinder: @brew.grinder, selected_machine: @brew.machine)
     @selected_preparation_tools = @brew.preparation_tools.to_a
     @autofocus_field = nil
     @draft_storage_key = nil
@@ -64,12 +64,12 @@ class BrewsController < ApplicationController
       @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user, :brew_preparation_tools).find(params[:id])
     end
 
-    def load_form_options(selected_bean: nil)
+    def load_form_options(selected_bean: nil, selected_grinder: nil, selected_machine: nil)
       @beans = current_workspace.beans.open.to_a
       @beans << selected_bean if selected_bean && @beans.exclude?(selected_bean)
       @beans.sort_by! { |bean| [ bean.opened_on || Date.new(9999, 12, 31), bean.created_at, bean.name ] }
-      @grinders = current_workspace.equipment.grinder.order(:name)
-      @machines = current_workspace.equipment.machine.order(:name)
+      @grinders = equipment_options(kind: :grinder, selected_equipment: selected_grinder)
+      @machines = equipment_options(kind: :machine, selected_equipment: selected_machine)
       @preparation_tools = current_workspace.preparation_tools.active.espresso.ordered
     end
 
@@ -106,7 +106,13 @@ class BrewsController < ApplicationController
     end
 
     def default_equipment(equipment)
-      equipment if equipment&.workspace_id == current_workspace.id
+      equipment if equipment&.workspace_id == current_workspace.id && !equipment.archived?
+    end
+
+    def equipment_options(kind:, selected_equipment: nil)
+      options = current_workspace.equipment.active.public_send(kind).order(:name).to_a
+      options << selected_equipment if selected_equipment && options.exclude?(selected_equipment)
+      options.sort_by(&:name)
     end
 
     def default_preparation_tools(last_brew)
