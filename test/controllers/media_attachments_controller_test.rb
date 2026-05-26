@@ -24,6 +24,46 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_match attachment.blob.filename.to_s, response.headers["Content-Disposition"]
   end
 
+  test "serves avatar for a user in the active workspace" do
+    users(:two).update!(active_workspace: workspaces(:household))
+    sign_in_as(users(:two))
+    attachment = attach_named_photo(users(:one), :avatar, filename: "avatar.jpg")
+
+    get media_attachment_path(attachment)
+
+    assert_response :success
+    assert_equal "image/jpeg", response.media_type
+  end
+
+  test "does not serve avatar for an unrelated user" do
+    sign_in_as(users(:one))
+    other_user = User.create!(email_address: "outsider@example.com", password: "password")
+    attachment = attach_named_photo(other_user, :avatar, filename: "avatar.jpg")
+
+    get media_attachment_path(attachment)
+
+    assert_response :not_found
+  end
+
+  test "serves active workspace logo" do
+    sign_in_as(users(:one))
+    attachment = attach_named_photo(workspaces(:household), :logo, filename: "logo.jpg")
+
+    get media_attachment_path(attachment)
+
+    assert_response :success
+    assert_equal "image/jpeg", response.media_type
+  end
+
+  test "does not serve another workspace logo" do
+    sign_in_as(users(:one))
+    attachment = attach_named_photo(workspaces(:other_household), :logo, filename: "logo.jpg")
+
+    get media_attachment_path(attachment)
+
+    assert_response :not_found
+  end
+
   test "does not download another workspace attachment" do
     sign_in_as(users(:one))
     attachment = attach_photo(beans(:other_workspace_open))

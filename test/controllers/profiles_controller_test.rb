@@ -11,8 +11,24 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=profile-email]", user.email_address
     assert_select "input[name=?]", "user[display_name]"
     assert_select "input[name=?]", "user[email_address]", count: 0
+    assert_select "input[type=file][name=?]", "user[avatar]"
+    assert_select "input[type=file][name=?]", "user[public_banner]"
     assert_select "select[name=?]", "user[default_landing_screen]"
     assert_select "select[name=?]", "user[default_brew_focus_field]"
+    assert_select "a[data-testid=back-link][href=?]", dashboard_path
+  end
+
+  test "profile edit previews existing identity media" do
+    user = users(:one)
+    avatar = attach_named_photo(user, :avatar, filename: "avatar.jpg")
+    banner = attach_named_photo(user, :public_banner, filename: "banner.jpg")
+    sign_in_as(user)
+
+    get edit_profile_path
+
+    assert_response :success
+    assert_select "img[data-testid=profile-avatar-preview][src=?]", media_attachment_path(avatar)
+    assert_select "img[data-testid=profile-public-banner-preview][src=?]", media_attachment_path(banner)
   end
 
   test "signed-in user can update display name and form preferences" do
@@ -31,6 +47,23 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Jens", user.reload.display_name
     assert_equal "log_espresso", user.default_landing_screen
     assert_equal "dose_grams", user.default_brew_focus_field
+  end
+
+  test "signed-in user can update identity media" do
+    user = users(:one)
+    sign_in_as(user)
+
+    patch profile_path, params: {
+      user: {
+        display_name: "Jens",
+        avatar: photo_upload(filename: "avatar.jpg"),
+        public_banner: photo_upload(filename: "public-banner.jpg")
+      }
+    }
+
+    assert_redirected_to root_path
+    assert user.reload.avatar.attached?
+    assert user.public_banner.attached?
   end
 
   test "profile does not accept unrelated user attributes" do

@@ -16,6 +16,8 @@ class Workspace < ApplicationRecord
   has_many :inventory_adjustments, dependent: :destroy
   has_many :equipment_events, dependent: :destroy
   has_many :preparation_tools, dependent: :destroy
+  has_one_attached :logo
+  has_one_attached :banner
 
   normalizes :default_currency, with: ->(currency) { currency.strip.upcase }
 

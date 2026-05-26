@@ -26,6 +26,13 @@ module PhotoTestHelper
     end
     record.photos.attachments.last
   end
+
+  def attach_named_photo(record, attachment_name, filename: "photo.jpg")
+    File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
+      record.public_send(attachment_name).attach(io: file, filename:, content_type: "image/jpeg")
+    end
+    record.public_send(attachment_name).attachment
+  end
 end
 
 class ActionDispatch::IntegrationTest

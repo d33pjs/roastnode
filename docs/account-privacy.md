@@ -12,6 +12,10 @@ Use `User#display_label` for casual product UI:
 
 `display_label` uses the profile username and falls back to `unknown username`. Do not fall back to `email_address` in these places.
 
+## Profile Media
+
+Users can upload an avatar and a public banner from the Profile page. The avatar is shown next to the logged-by label on Hero Brew Cards when available. Both files are still served through the private media controller; the "public" banner name describes intended future profile use, not unauthenticated file delivery.
+
 ## Email Placement
 
 The Profile page shows the signed-in user's email as a read-only account detail. Workspace member lists, invite management, exports, and the instance-admin account list may still use email addresses where account identity is the point of the screen.

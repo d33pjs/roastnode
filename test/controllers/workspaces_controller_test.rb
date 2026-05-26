@@ -10,6 +10,22 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("workspaces.edit.title")
     assert_select "input[name=?][value=?]", "workspace[name]", workspaces(:household).name
     assert_select "input[name=?][value=?]", "workspace[default_currency]", "EUR"
+    assert_select "input[type=file][name=?]", "workspace[logo]"
+    assert_select "input[type=file][name=?]", "workspace[banner]"
+    assert_select "a[data-testid=back-link][href=?]", dashboard_path
+  end
+
+  test "workspace edit previews existing identity media" do
+    workspace = workspaces(:household)
+    logo = attach_named_photo(workspace, :logo, filename: "workspace-logo.jpg")
+    banner = attach_named_photo(workspace, :banner, filename: "workspace-banner.jpg")
+    sign_in_as(users(:one))
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "img[data-testid=workspace-logo-preview][src=?]", media_attachment_path(logo)
+    assert_select "img[data-testid=workspace-banner-preview][src=?]", media_attachment_path(banner)
   end
 
   test "owner can update active workspace name and default currency" do
@@ -25,6 +41,24 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to dashboard_path
     assert_equal "Jens Coffee Lab", workspaces(:household).reload.name
     assert_equal "EUR", workspaces(:household).default_currency
+  end
+
+  test "owner can update workspace identity media" do
+    workspace = workspaces(:household)
+    sign_in_as(users(:one))
+
+    patch workspace_path, params: {
+      workspace: {
+        name: workspace.name,
+        default_currency: workspace.default_currency,
+        logo: photo_upload(filename: "logo.jpg"),
+        banner: photo_upload(filename: "banner.jpg")
+      }
+    }
+
+    assert_redirected_to dashboard_path
+    assert workspace.reload.logo.attached?
+    assert workspace.banner.attached?
   end
 
   test "admin can update active workspace settings" do

@@ -170,6 +170,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
     bean_photo = attach_photo(brew.bean)
+    avatar = attach_named_photo(users(:one), :avatar, filename: "avatar.jpg")
+    workspace_logo = attach_named_photo(workspaces(:household), :logo, filename: "workspace-logo.jpg")
     brew.update!(
       occurred_at: Time.zone.local(2026, 5, 26, 11, 22, 8),
       bean_weight_grams: 18.6,
@@ -195,13 +197,16 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-card-header].flex-nowrap"
     assert_select "[data-testid=brew-timestamp].text-\\[0\\.58rem\\]"
     assert_select "[data-testid=brew-workspace].truncate"
+    assert_select "[data-testid=brew-workspace] img[data-testid=brew-workspace-logo][src=?]", media_attachment_path(workspace_logo)
     assert_select "img[data-testid=brew-card-brand-mark][src*=?]", "logo_mark_transparent"
     assert_select "[data-testid=brew-title-block] + [data-testid=brew-bean-photo-frame] img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
     assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
+    assert_select "a[data-testid=brew-bean-link][href=?]", bean_path(brew.bean), text: brew.bean.name
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
     assert_select "body", text: /one@example.com/, count: 0
     assert_select "[data-testid=brew-byline]", "Logged by Jens"
+    assert_select "[data-testid=brew-byline] img[data-testid=brew-user-avatar][src=?]", media_attachment_path(avatar)
     assert_select "[data-testid=brew-metrics].grid-cols-3"
     assert_select "[data-testid=brew-dose]", "18.2 g"
     assert_select "[data-testid=brew-beverage]", count: 0
@@ -229,12 +234,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
     assert_select "[data-testid=brew-temperature-callout][transform='translate(536 132) rotate(-90)']"
     assert_select "[data-testid=brew-axis-max]", "50 g"
-    assert_select "[data-testid=brew-tool]", "WDT"
+    assert_select "a[data-testid=brew-grinder-link][href=?]", equipment_path(brew.grinder)
+    assert_select "a[data-testid=brew-machine-link][href=?]", equipment_path(brew.machine)
+    assert_select "a[data-testid=brew-tool][href=?]", preparation_tools_path(anchor: "preparation_tool_#{preparation_tools(:wdt).id}"), "WDT"
     assert_select "[data-testid=brew-log-details]"
+    assert_select "[data-testid=brew-detail-bean] a[href=?]", bean_path(brew.bean), text: brew.bean.display_name
     assert_select "[data-testid=brew-detail-bean-weight]", "18.6 g"
     assert_select "[data-testid=brew-detail-ground-weight]", "18.2 g"
     assert_select "[data-testid=brew-detail-beverage]", "45 g"
     assert_select "[data-testid=brew-detail-channeling]", "Yes"
+    assert_select "[data-testid=brew-detail-grinder] a[href=?]", equipment_path(brew.grinder), text: brew.grinder.name
+    assert_select "[data-testid=brew-detail-machine] a[href=?]", equipment_path(brew.machine), text: brew.machine.name
+    assert_select "a[data-testid=brew-detail-tool][href=?]", preparation_tools_path(anchor: "preparation_tool_#{preparation_tools(:wdt).id}"), text: "WDT"
     assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
   end
 

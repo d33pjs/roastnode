@@ -3,7 +3,7 @@
 
   <section class="mx-auto max-w-5xl px-6 py-10">
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-      <%= link_to t(".back"), dashboard_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+      <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
 
       <% if current_workspace_policy.write? %>
         <div class="flex flex-wrap gap-2">
@@ -29,7 +29,9 @@
         </div>
         <div>
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".bean") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.bean.display_name %></dd>
+          <dd data-testid="brew-detail-bean" class="mt-1 text-sm font-semibold text-stone-950">
+            <%= link_to @brew.bean.display_name, bean_path(@brew.bean), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+          </dd>
         </div>
         <div>
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".bean_weight") %></dt>
@@ -89,15 +91,35 @@
         </div>
         <div>
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".grinder") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.grinder&.name || t(".unknown") %></dd>
+          <dd data-testid="brew-detail-grinder" class="mt-1 text-sm font-semibold text-stone-950">
+            <% if @brew.grinder.present? %>
+              <%= link_to @brew.grinder.name, equipment_path(@brew.grinder), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+            <% else %>
+              <%= t(".unknown") %>
+            <% end %>
+          </dd>
         </div>
         <div>
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".machine") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.machine&.name || t(".unknown") %></dd>
+          <dd data-testid="brew-detail-machine" class="mt-1 text-sm font-semibold text-stone-950">
+            <% if @brew.machine.present? %>
+              <%= link_to @brew.machine.name, equipment_path(@brew.machine), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+            <% else %>
+              <%= t(".unknown") %>
+            <% end %>
+          </dd>
         </div>
         <div>
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".tools") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_tool_names(@brew).to_sentence.presence || t(".no_preparation_tools") %></dd>
+          <dd data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
+            <% if brew_card_tools(@brew).any? %>
+              <% brew_card_tools(@brew).each do |tool| %>
+                <%= link_to tool.tool_name, brew_card_tool_path(tool), data: { testid: "brew-detail-tool" }, class: "rounded-full bg-stone-100 px-2.5 py-1 text-stone-800 hover:bg-stone-200" %>
+              <% end %>
+            <% else %>
+              <%= t(".no_preparation_tools") %>
+            <% end %>
+          </dd>
         </div>
       </dl>
 

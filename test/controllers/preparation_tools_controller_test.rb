@@ -8,6 +8,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("preparation_tools.index.title")
+    assert_select "tr#preparation_tool_#{preparation_tools(:wdt).id}"
     assert_select "td", text: preparation_tools(:wdt).name
     assert_select "td", text: preparation_tools(:other_workspace_tool).name, count: 0
   end

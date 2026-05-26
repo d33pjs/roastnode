@@ -32,6 +32,6 @@ class WorkspacesController < ApplicationController
     end
 
     def workspace_params
-      params.require(:workspace).permit(:name, :default_currency)
+      params.require(:workspace).permit(:name, :default_currency, :logo, :banner)
     end
 end

@@ -87,6 +87,17 @@ module BrewsHelper
     brew.brew_preparation_tools.order(:position).pluck(:tool_name)
   end
 
+  def brew_card_tools(brew)
+    brew.brew_preparation_tools.includes(:preparation_tool).order(:position)
+  end
+
+  def brew_card_tool_path(brew_preparation_tool)
+    tool = brew_preparation_tool.preparation_tool
+    return preparation_tools_path unless tool
+
+    preparation_tools_path(anchor: dom_id(tool))
+  end
+
   def brew_card_photo_attachment(brew)
     brew.bean.primary_photo_attachment || brew.primary_photo_attachment
   end

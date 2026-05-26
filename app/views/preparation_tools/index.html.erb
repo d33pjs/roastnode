@@ -2,7 +2,7 @@
   <section class="mx-auto max-w-5xl px-6 py-10">
     <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <%= link_to t(".back"), dashboard_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+        <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
         <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
         <p class="mt-2 text-stone-700"><%= current_workspace.name %></p>
       </div>
@@ -23,7 +23,7 @@
         </thead>
         <tbody class="divide-y divide-stone-100">
           <% @preparation_tools.each do |tool| %>
-            <tr>
+            <tr id="<%= dom_id(tool) %>">
               <td class="px-4 py-3 text-sm font-medium text-stone-950"><%= tool.name %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= tool.brew_method.humanize %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= tool.active? ? t(".active") : t(".inactive") %></td>

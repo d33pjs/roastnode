@@ -62,6 +62,17 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "show links affected equipment to details" do
+    event = equipment_events(:grinder_cleaning)
+    sign_in_as(users(:one))
+
+    get equipment_event_path(event)
+
+    assert_response :success
+    assert_select "[data-testid=equipment-event-equipment] a[href=?]", equipment_path(equipment(:household_grinder)),
+      text: equipment(:household_grinder).name
+  end
+
   test "show uses display label instead of email byline" do
     users(:one).update!(display_name: "Jens")
     sign_in_as(users(:one))

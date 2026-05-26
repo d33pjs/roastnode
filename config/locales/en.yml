@@ -466,6 +466,7 @@ en:
       title: "Add preparation tool"
   profiles:
     edit:
+      avatar: "Avatar"
       back: "Back to dashboard"
       brew_focus_fields:
         bean_weight_grams: "Bean in"
@@ -486,6 +487,7 @@ en:
         log_espresso: "Log espresso"
       save: "Save profile"
       title: "Profile"
+      public_banner: "Public banner"
       username: "Username"
     update:
       updated: "Profile updated."
@@ -568,7 +570,9 @@ en:
   workspaces:
     edit:
       back: "Back to dashboard"
+      banner: "Household banner"
       default_currency: "Default currency"
+      logo: "Household logo"
       name: "Household name"
       save: "Save workspace"
       title: "Workspace settings"
