@@ -354,6 +354,27 @@ en:
       intro: "Roastnode is the shared household workspace for beans, brews, equipment, inventory, photos, and the coffee data you should not have to ask for twice."
       sign_in: "Sign in"
       title: "Roastnode"
+  instance_admin:
+    index:
+      back: "Back to dashboard"
+      demo_data: "Demo data"
+      demo_data_note: "Optional seed data stays explicit and guarded for production."
+      disabled: "Disabled"
+      eyebrow: "Private instance"
+      instance_mode: "Instance mode"
+      intro: "A small owner-only control surface for private hosting, safety checks, and future maintenance tools."
+      metric_labels:
+        beans: "Beans"
+        brews: "Brews"
+        equipment: "Equipment"
+        users: "Users"
+        workspaces: "Workspaces"
+      metrics: "Instance totals"
+      private_mode: "Private"
+      private_mode_note: "Household data remains behind authentication and workspace membership."
+      public_registration: "Public registration"
+      public_registration_note: "New members still join through explicit household invites."
+      title: "Instance admin"
   preparation_tools:
     create:
       created: "Preparation tool added."
@@ -505,6 +526,7 @@ en:
         best: "Latest best brew"
         latest: "Latest brew"
       import: "Import Beanconqueror"
+      instance_admin: "Instance admin"
       invites: "Invites"
       members: "Members"
       more_actions: "More tools"

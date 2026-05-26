@@ -24,6 +24,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/statistics.md` describes the first private workspace analytics page.
 - `docs/typography.md` describes the self-hosted Elms Sans font setup and license note.
 - `docs/branding.md` describes logo files, current placements, and browser icon usage.
+- `docs/instance-admin.md` describes the private instance admin dashboard and the `User#instance_admin` boundary.
 - `docs/setup.md` describes local Rails and Docker Compose setup.
 - `AGENTS.md` contains repository-wide guidance for AI coding agents.
 

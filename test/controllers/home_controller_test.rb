@@ -41,6 +41,17 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("workspaces.show.import")
   end
 
+  test "instance admin sees instance admin link" do
+    user = users(:one)
+    user.update!(instance_admin: true)
+    sign_in_as(user)
+
+    get root_path
+
+    assert_response :success
+    assert_select "a[href='/instance_admin']", text: I18n.t("workspaces.show.instance_admin"), count: 2
+  end
+
   test "workspace member does not see export link" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -53,6 +64,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", workspace_export_beans_path, count: 0
     assert_select "a[href=?]", workspace_export_brews_path, count: 0
     assert_select "a[href=?]", edit_workspace_path, count: 0
+    assert_select "a[href='/instance_admin']", count: 0
   end
 
   test "workspace dashboard shows coffee actions and recent activity" do

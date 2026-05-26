@@ -42,4 +42,10 @@ class ApplicationController < ActionController::Base
 
       redirect_to root_path, alert: t("authorization.denied")
     end
+
+    def authorize_instance_admin!
+      return if Current.user&.instance_admin?
+
+      redirect_to root_path, alert: t("authorization.denied")
+    end
 end
