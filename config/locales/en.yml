@@ -63,6 +63,8 @@ en:
       created: "Bean added."
     duplicate:
       duplicated: "Bean bag duplicated."
+    destroy:
+      destroyed: "Bean and brew history deleted."
     edit:
       back: "Back to bean"
       photos: "Current photos"
@@ -123,6 +125,14 @@ en:
       close: "Close bag"
       closed: "Closed"
       country: "Country"
+      danger_zone: "Danger zone"
+      danger_zone_body:
+        one: "Delete this bean, its 1 brew, and all inventory movements for this bean."
+        other: "Delete this bean, its %{count} brews, and all inventory movements for this bean."
+      delete: "Delete bean and brew history"
+      delete_confirmation:
+        one: "Delete this bean and 1 brew? This cannot be undone."
+        other: "Delete this bean and %{count} brews? This cannot be undone."
       decaffeinated: "Decaffeinated"
       details: "Details"
       duplicate: "Duplicate bag"

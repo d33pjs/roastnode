@@ -1,6 +1,6 @@
 class BeansController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create edit update close reopen duplicate]
-  before_action :set_bean, only: %i[show edit update close reopen duplicate]
+  before_action :authorize_workspace_write!, only: %i[new create edit update close reopen duplicate destroy]
+  before_action :set_bean, only: %i[show edit update close reopen duplicate destroy]
 
   def index
     @beans = current_workspace.beans.order(Arel.sql("archived_at ASC NULLS FIRST"), Arel.sql("opened_on ASC NULLS LAST"), :name)
@@ -54,6 +54,11 @@ class BeansController < ApplicationController
   def duplicate
     duplicate = @bean.duplicate_for_new_bag!
     redirect_to edit_bean_path(duplicate), notice: t(".duplicated")
+  end
+
+  def destroy
+    @bean.destroy_with_history!
+    redirect_to beans_path, notice: t(".destroyed")
   end
 
   private

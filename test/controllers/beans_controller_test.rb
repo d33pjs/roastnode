@@ -155,6 +155,43 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "show renders danger zone for writers" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-danger-zone]"
+    assert_select "form[action=?][method=post]", bean_path(bean)
+    assert_select "input[name=_method][value=delete]"
+    assert_select "button", text: I18n.t("beans.show.delete")
+    assert_select "[data-turbo-confirm=?]", I18n.t("beans.show.delete_confirmation", count: bean.brews.count)
+  end
+
+  test "writer can delete bean with brew history" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.inventory_adjustments.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      delta_grams: 12,
+      reason: "manual",
+      note: "Manual correction."
+    )
+
+    assert_difference -> { Bean.count }, -1 do
+      assert_difference -> { Brew.count }, -1 do
+        assert_difference -> { InventoryAdjustment.count }, -2 do
+          delete bean_path(bean)
+        end
+      end
+    end
+
+    assert_redirected_to beans_path
+    assert_equal I18n.t("beans.destroy.destroyed"), flash[:notice]
+  end
+
   test "viewer cannot create bean" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
@@ -168,12 +205,16 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "viewer cannot edit close reopen or duplicate bean" do
+  test "viewer cannot edit close reopen duplicate or delete bean" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
     sign_in_as(user)
     bean = beans(:open_household)
+
+    get bean_path(bean)
+    assert_response :success
+    assert_select "[data-testid=bean-danger-zone]", count: 0
 
     get edit_bean_path(bean)
     assert_redirected_to root_path
@@ -190,6 +231,11 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_difference -> { workspaces(:household).beans.count } do
       post duplicate_bean_path(bean)
+    end
+    assert_redirected_to root_path
+
+    assert_no_difference -> { workspaces(:household).beans.count } do
+      delete bean_path(bean)
     end
     assert_redirected_to root_path
   end

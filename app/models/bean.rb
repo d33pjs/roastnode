@@ -51,6 +51,20 @@ class Bean < ApplicationRecord
     duplicate
   end
 
+  def destroy_with_history!
+    transaction do
+      brews_to_destroy = brews.to_a
+
+      inventory_adjustments.destroy_all
+      brews_to_destroy.each do |brew|
+        brew.association(:inventory_adjustment).reset
+        brew.destroy!
+      end
+      association(:brews).reset
+      destroy!
+    end
+  end
+
   def display_name
     [ roaster_name, name ].compact_blank.join(" - ")
   end

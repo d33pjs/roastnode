@@ -115,4 +115,30 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal "Good Coffee - House Blend (opened 20.05.2026)", second.display_name_for_collection(beans)
     assert_equal "North Star - Morning Lot", beans(:second_open_household).display_name_for_collection(beans)
   end
+
+  test "destroys bean with brews and inventory history" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    manual_adjustment = bean.inventory_adjustments.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      delta_grams: 25,
+      reason: "manual",
+      note: "Found extra beans."
+    )
+    other_workspace_brew = brews(:other_workspace_brew)
+
+    assert_difference -> { Bean.count }, -1 do
+      assert_difference -> { Brew.count }, -1 do
+        assert_difference -> { InventoryAdjustment.count }, -2 do
+          bean.destroy_with_history!
+        end
+      end
+    end
+
+    assert_nil Bean.find_by(id: bean.id)
+    assert_nil Brew.find_by(id: brew.id)
+    assert_nil InventoryAdjustment.find_by(id: manual_adjustment.id)
+    assert_predicate Brew.find_by(id: other_workspace_brew.id), :present?
+  end
 end

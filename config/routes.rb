@@ -13,7 +13,7 @@ Rails.application.routes.draw do
     post :accept, on: :member
     patch :revoke, on: :member
   end
-  resources :beans, only: %i[index new create show edit update] do
+  resources :beans, only: %i[index new create show edit update destroy] do
     patch :close, on: :member
     patch :reopen, on: :member
     post :duplicate, on: :member
