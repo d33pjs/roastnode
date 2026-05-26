@@ -48,6 +48,12 @@ module BrewsHelper
     t("brews.show.ratio_time", time: brew_card_seconds(brew.total_time_seconds))
   end
 
+  def brew_card_retention_grams(brew)
+    return t("brews.show.unknown") if brew.bean_weight_grams.blank? || brew.ground_weight_grams.blank?
+
+    brew_card_grams(brew.bean_weight_grams.to_d - brew.ground_weight_grams.to_d)
+  end
+
   def brew_card_axis_max_grams(value)
     return if value.blank?
 
@@ -61,7 +67,7 @@ module BrewsHelper
     return if seconds.blank? || total_seconds.blank? || total_seconds.to_f <= 0
 
     start_x = 44
-    end_x = 444
+    end_x = 500
     x_position = start_x + (seconds.to_f / total_seconds.to_f * (end_x - start_x))
 
     x_position.clamp(start_x, end_x).round

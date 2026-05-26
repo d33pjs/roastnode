@@ -123,6 +123,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     bean_photo = attach_photo(brew.bean)
     brew.update!(
       occurred_at: Time.zone.local(2026, 5, 26, 11, 22, 8),
+      bean_weight_grams: 18.6,
+      ground_weight_grams: 18.2,
       dose_grams: 18.2,
       beverage_grams: 45.0,
       grind_setting: "12",
@@ -153,16 +155,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-ratio-main]", "1:2,47"
     assert_select "[data-testid=brew-ratio-time]", "in 31s"
     assert_select "[data-testid=brew-grind]", "12"
+    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0.4 g"
     assert_select "[data-testid=brew-rating-card] [data-testid=brew-rating][aria-label=?]", "Rating 4 of 5 beans" do
       assert_select ".rating-bean--filled", 4
       assert_select ".rating-bean--empty", 1
     end
     assert_select "[data-testid=brew-rating-card] [data-testid=brew-balance]", count: 0
-    assert_select "[data-testid=brew-balance-card] [data-testid=brew-balance]", /Balance\s+Neutral/
-    assert_select "[data-testid=brew-balance] .block", text: "Balance"
-    assert_select "[data-testid=brew-balance] .block", text: "Neutral"
-    assert_select "[data-testid=brew-chart-grid] svg.h-40[viewBox='0 0 560 168'][preserveAspectRatio=none]"
-    assert_select "[data-testid=brew-total-time-guide][x1=?]", "444"
+    assert_select "[data-testid=brew-balance-card] > p", text: "Balance"
+    assert_select "[data-testid=brew-balance-card] [data-testid=brew-balance]", "Neutral"
+    assert_select "[data-testid=brew-balance] .block", count: 0
+    assert_select "[data-testid=brew-chart-grid] svg.h-auto[viewBox='0 0 560 168']"
+    assert_select "[data-testid=brew-chart-grid] svg[preserveAspectRatio]", count: 0
+    assert_select "[data-testid=brew-total-time-guide][x1=?]", "500"
     assert_select "[data-testid=brew-preinfusion-label]", "6s Preinfusion"
     assert_select "[data-testid=brew-first-drip-label]", "8s First drip"
     assert_select "[data-testid=brew-first-drip-callout]"
@@ -172,8 +176,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-axis-max]", "50 g"
     assert_select "[data-testid=brew-tool]", "WDT"
     assert_select "[data-testid=brew-log-details]"
-    assert_select "[data-testid=brew-detail-bean-weight]", "18 g"
-    assert_select "[data-testid=brew-detail-ground-weight]", "18 g"
+    assert_select "[data-testid=brew-detail-bean-weight]", "18.6 g"
+    assert_select "[data-testid=brew-detail-ground-weight]", "18.2 g"
     assert_select "[data-testid=brew-detail-beverage]", "45 g"
     assert_select "[data-testid=brew-detail-channeling]", "Yes"
     assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
