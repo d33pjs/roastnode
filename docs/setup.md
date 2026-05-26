@@ -45,6 +45,21 @@ Open `http://localhost:3001`.
 
 After signing in, users without a workspace are prompted to create a private household workspace. That user becomes the workspace owner and can create invite links for other signed-in users.
 
+## Optional Demo Data
+
+Load a sample household for local exploration:
+
+```bash
+bin/rails roastnode:demo:load
+```
+
+Demo login:
+
+- Email: `demo@roastnode.local`
+- Password: `roastnode-demo`
+
+The task is idempotent. It refuses to run in production unless `ROASTNODE_ALLOW_DEMO_DATA=1` is set.
+
 ## Native Rails Commands
 
 ```bash
