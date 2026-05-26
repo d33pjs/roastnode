@@ -19,6 +19,10 @@ class Bean < ApplicationRecord
     archived_at.blank? && remaining_grams.positive?
   end
 
+  def display_name
+    [ roaster_name, name ].compact_blank.join(" - ")
+  end
+
   private
     def set_default_remaining_grams
       self.remaining_grams = bag_size_grams if remaining_grams.nil? && bag_size_grams.present?
