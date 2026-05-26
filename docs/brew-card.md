@@ -20,7 +20,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - Chart labels use small callouts when they would otherwise collide with plot or guide lines.
 - The beverage y-axis label rounds above the actual beverage yield, for example `45.2 g` displays against a `50 g` axis marker.
 - Grinder, machine, and brew preparation tool snapshots in one compact row, with tiny primary equipment photos when available.
-- Bean names, bean package photos, grinder/machine pills, and preparation-tool chips link back to their relevant detail or list anchor.
+- Hero card internals are intentionally not links. On the dashboard the whole card is wrapped in a single brew-detail link, and nested anchors break browser rendering.
 - Edit/delete actions remain available to workspace writers.
 - Brew detail pages show the full log below the hero card, including channeling, notes, inventory weights, and timing fields that do not belong in the hero.
 - Existing private photos remain below the full log.
@@ -38,6 +38,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - The metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and shortens the retention label to `Ret.`.
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
+- Keep cross-links in the full brew details below the hero card, not inside the hero card partial.
 - Use `brew_card_photo_attachment`, which prefers the bean's primary package photo and falls back through the normal primary-photo helper.
 - Keep grinder and machine primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.
 - Keep user avatars and household logos small; they should act like identity marks, not extra content blocks.

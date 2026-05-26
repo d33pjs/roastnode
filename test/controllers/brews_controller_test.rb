@@ -201,7 +201,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=brew-card-brand-mark][src*=?]", "logo_mark_transparent"
     assert_select "[data-testid=brew-title-block] + [data-testid=brew-bean-photo-frame] img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
     assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
-    assert_select "a[data-testid=brew-bean-link][href=?]", bean_path(brew.bean), text: brew.bean.name
+    assert_select "[data-testid=brew-bean-link]", count: 0
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
     assert_select "body", text: /one@example.com/, count: 0
@@ -234,9 +234,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
     assert_select "[data-testid=brew-temperature-callout][transform='translate(536 132) rotate(-90)']"
     assert_select "[data-testid=brew-axis-max]", "50 g"
-    assert_select "a[data-testid=brew-grinder-link][href=?]", equipment_path(brew.grinder)
-    assert_select "a[data-testid=brew-machine-link][href=?]", equipment_path(brew.machine)
-    assert_select "a[data-testid=brew-tool][href=?]", preparation_tools_path(anchor: "preparation_tool_#{preparation_tools(:wdt).id}"), "WDT"
+    assert_select "[data-testid=brew-grinder-link]", count: 0
+    assert_select "[data-testid=brew-machine-link]", count: 0
+    assert_select "a[data-testid=brew-tool]", count: 0
+    assert_select "[data-testid=brew-tool]", "WDT"
     assert_select "[data-testid=brew-log-details]"
     assert_select "[data-testid=brew-detail-bean] a[href=?]", bean_path(brew.bean), text: brew.bean.display_name
     assert_select "[data-testid=brew-detail-bean-weight]", "18.6 g"

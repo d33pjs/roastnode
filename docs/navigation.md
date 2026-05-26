@@ -4,10 +4,9 @@ Roastnode detail pages should cross-link records wherever that helps a household
 
 ## Included Now
 
-- Brew hero cards link bean names and bean photos to the bean detail page.
-- Brew hero cards link grinder and machine pills to equipment detail pages.
-- Brew hero cards link preparation-tool chips to the matching row anchor on the preparation tools list when the brew snapshot still has a live tool record.
-- Brew detail fields link beans, grinders, machines, and preparation tools in the same way.
+- Dashboard brew hero cards are wrapped in one link to the brew detail page.
+- Hero card internals do not emit links, because the shared partial is used inside the dashboard link.
+- Brew detail fields below the hero card link beans, grinders, machines, and preparation tools.
 - Equipment event detail pages link affected equipment names to equipment detail pages.
 - Back links use the shared `shared/back_link` partial so they render as tap-friendly buttons on mobile.
 

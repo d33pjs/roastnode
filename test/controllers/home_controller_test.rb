@@ -149,6 +149,10 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", I18n.t("workspaces.show.hero.best")
     assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", brew_path(latest)
     assert_select "[data-testid=dashboard-latest-best-brew-card] a[href=?]", brew_path(best)
+    assert_select "[data-testid=dashboard-latest-brew-card] a", count: 1
+    assert_select "[data-testid=dashboard-latest-best-brew-card] a", count: 1
+    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", bean_path(latest.bean), count: 0
+    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", equipment_path(latest.grinder), count: 0
     assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-timestamp]", "26.05.2026 12:00:00"
     assert_select "[data-testid=dashboard-latest-best-brew-card] [data-testid=brew-rating][aria-label=?]", "Rating 5 of 5 beans"
   end

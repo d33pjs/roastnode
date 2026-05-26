@@ -12,7 +12,7 @@
 - [x] Add equipment event/preparation tool navigation tests.
 - [x] Implement `User` and `Workspace` identity attachments and settings form previews.
 - [x] Extend private media authorization for user and workspace records.
-- [x] Add avatar/logo to the brew hero card and link beans, equipment, and preparation tools.
+- [x] Add avatar/logo to the brew hero card and link beans, equipment, and preparation tools from the full detail section.
 - [x] Replace old text-style back links with a shared button-like partial.
 - [x] Update docs and the agent guide.
 - [ ] Run focused tests, then full verification.
