@@ -42,6 +42,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", bean_path(beans(:open_household)), text: /#{beans(:open_household).name}/
     assert_select "a[href=?]", bean_path(beans(:other_workspace_open)), count: 0
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
+    assert_select "p", text: I18n.t("workspaces.show.activity.adjustment", amount: "-18", bean: beans(:open_household).name), count: 0
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
   end
 
