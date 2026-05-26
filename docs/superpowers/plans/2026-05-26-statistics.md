@@ -14,10 +14,10 @@
 
 ### Task 1: Statistics Service
 
-- [ ] Write service tests for scoped totals, cost calculations, equipment leaders, recent day series, taste distribution, channeling rate, retention markers, and bean breakdowns.
-- [ ] Implement `WorkspaceStatistics`.
-- [ ] Run `env PARALLEL_WORKERS=1 bin/rails test test/services/workspace_statistics_test.rb`.
-- [ ] Commit with `git commit -m "Add workspace statistics service"`.
+- [x] Write service tests for scoped totals, cost calculations, equipment leaders, recent day series, taste distribution, channeling rate, retention markers, and bean breakdowns.
+- [x] Implement `WorkspaceStatistics`.
+- [x] Run `env PARALLEL_WORKERS=1 bin/rails test test/services/workspace_statistics_test.rb`.
+- [x] Commit with `git commit -m "Add workspace statistics service"`.
 
 ### Task 2: Statistics Page
 
