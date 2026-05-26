@@ -7,7 +7,8 @@ class PreparationToolsController < ApplicationController
   end
 
   def show
-    @recent_brews = @preparation_tool.brews.includes(:bean).order(occurred_at: :desc, created_at: :desc).limit(10)
+    @preparation_tool_statistics = PreparationToolStatistics.new(preparation_tool: @preparation_tool).call
+    @recent_brews = @preparation_tool_statistics[:recent_brews]
   end
 
   def new

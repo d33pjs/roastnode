@@ -23,10 +23,11 @@ Included:
 - channeling rate
 - retention/exchange marker counts
 - top roasters, origins, and processes by bean count
+- detail analytics for beans, equipment, and preparation tools
 
 ## Architecture
 
-Create a focused `WorkspaceStatistics` service that accepts a workspace and returns a plain object/hash for the view. Keep the controller thin: authorize read access through the active workspace, call the service, render the page.
+Create focused statistics services that accept the scoped record and return a plain object/hash for the view. `WorkspaceStatistics` owns the workspace dashboard-style page; `BeanStatistics`, `EquipmentStatistics`, and `PreparationToolStatistics` own detail drill-downs. Keep controllers thin: authorize/read through the active workspace, call the service, render the page.
 
 The view should be dense and utilitarian, consistent with the current Rails/Tailwind UI. Charts are compact HTML/SVG-style bar rows for now. The service shape should make it easy to replace the visual layer with Stimulus + ECharts later.
 
@@ -43,7 +44,5 @@ The view should be dense and utilitarian, consistent with the current Rails/Tail
 
 - ECharts/Stimulus interactivity.
 - Date range filters.
-- Per-bean detail analytics.
-- Per-equipment analytics beyond existing equipment detail counters.
 - Exporting charts.
 - Materialized summary tables.

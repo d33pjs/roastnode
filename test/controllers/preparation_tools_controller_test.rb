@@ -27,6 +27,9 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", preparation_tools(:wdt).name
     assert_select "[data-testid=preparation-tool-status]", I18n.t("preparation_tools.show.active")
     assert_select "[data-testid=preparation-tool-brew-count]", "1"
+    assert_select "[data-testid=preparation-tool-total-ground]", "18 g"
+    assert_select "[data-testid=preparation-tool-channeling-rate]", "0%"
+    assert_select "[data-testid=preparation-tool-recent-brews] a[href=?]", brew_path(brews(:morning_espresso))
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
     assert_select "img[src=?]", media_attachment_path(attachment)
     assert_select "a[href=?]", edit_preparation_tool_path(preparation_tools(:wdt)), text: I18n.t("preparation_tools.show.edit")

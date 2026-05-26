@@ -18,6 +18,9 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Taste balance distribution.
 - Retention marker distribution.
 - Bean breakdowns by roaster, origin, and process.
+- Bean detail analytics through `BeanStatistics`.
+- Equipment detail analytics through `EquipmentStatistics`.
+- Preparation tool detail analytics through `PreparationToolStatistics`.
 
 ## Cost Rules
 
@@ -29,7 +32,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 ## Agent Notes
 
 - All analytics must be scoped to the active workspace.
-- `WorkspaceStatistics` owns aggregation logic; keep controllers and views thin.
+- `WorkspaceStatistics`, `BeanStatistics`, `EquipmentStatistics`, and `PreparationToolStatistics` own aggregation logic; keep controllers and views thin.
 - Use live queries/Ruby aggregation for now. Do not add materialized summaries until data volume requires it.
 - Imported brews and beans count like native records.
 - ECharts/Stimulus interactivity is deferred.
