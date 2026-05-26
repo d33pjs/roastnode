@@ -38,10 +38,12 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_brew_path, text: I18n.t("workspaces.show.actions.log_brew")
     assert_select "a[href=?]", new_bean_path, text: I18n.t("workspaces.show.actions.add_bean")
     assert_select "a[href=?]", new_equipment_path, text: I18n.t("workspaces.show.actions.add_equipment")
+    assert_select "a[href=?]", new_equipment_event_path, text: I18n.t("workspaces.show.actions.add_equipment_event")
     assert_select "h2", I18n.t("workspaces.show.open_beans")
     assert_select "a[href=?]", bean_path(beans(:open_household)), text: /#{beans(:open_household).name}/
     assert_select "a[href=?]", bean_path(beans(:other_workspace_open)), count: 0
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
+    assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "p", text: I18n.t("workspaces.show.activity.adjustment", amount: "-18", bean: beans(:open_household).name), count: 0
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
   end

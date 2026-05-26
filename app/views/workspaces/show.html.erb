@@ -34,6 +34,7 @@
           <%= link_to t(".actions.log_brew"), new_brew_path, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
           <%= link_to t(".actions.add_bean"), new_bean_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <%= link_to t(".actions.add_equipment"), new_equipment_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <%= link_to t(".actions.add_equipment_event"), new_equipment_event_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <% end %>
         <%= link_to t(".actions.beans"), beans_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
         <%= link_to t(".actions.equipment"), equipment_index_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
@@ -89,6 +90,11 @@
               <% if activity.is_a?(Brew) %>
                 <%= link_to brew_path(activity), class: "block p-4 hover:bg-stone-50" do %>
                   <p class="font-semibold text-stone-950"><%= t(".activity.brew", bean: activity.bean.name) %></p>
+                  <p class="mt-1 text-sm text-stone-600"><%= l(activity.occurred_at, format: :short) %></p>
+                <% end %>
+              <% elsif activity.is_a?(EquipmentEvent) %>
+                <%= link_to equipment_event_path(activity), class: "block p-4 hover:bg-stone-50" do %>
+                  <p class="font-semibold text-stone-950"><%= t(".activity.equipment_event", event: activity.event_type.humanize, equipment: activity.equipment.map(&:name).to_sentence) %></p>
                   <p class="mt-1 text-sm text-stone-600"><%= l(activity.occurred_at, format: :short) %></p>
                 <% end %>
               <% else %>

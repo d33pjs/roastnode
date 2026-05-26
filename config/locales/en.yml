@@ -217,12 +217,14 @@ en:
       actions:
         add_bean: "Add bean"
         add_equipment: "Add equipment"
+        add_equipment_event: "Add equipment event"
         beans: "Beans"
         equipment: "Equipment"
         log_brew: "Log espresso"
       activity:
         adjustment: "%{amount} g inventory adjustment for %{bean}"
         brew: "Espresso with %{bean}"
+        equipment_event: "%{event} for %{equipment}"
       eyebrow: "Household workspace"
       invites: "Invites"
       members: "Members"

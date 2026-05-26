@@ -21,6 +21,7 @@ class HomeController < ApplicationController
       @grams_remaining = current_workspace.beans.open.sum(:remaining_grams)
       @recent_brews = current_workspace.brews.includes(:bean, :user).order(occurred_at: :desc, created_at: :desc).limit(5)
       @recent_adjustments = current_workspace.inventory_adjustments.manual.includes(:bean, :user).order(occurred_at: :desc, created_at: :desc).limit(5)
-      @recent_activity = (@recent_brews.to_a + @recent_adjustments.to_a).sort_by(&:occurred_at).reverse.first(8)
+      @recent_equipment_events = current_workspace.equipment_events.includes(:equipment, :user).recent.limit(5)
+      @recent_activity = (@recent_brews.to_a + @recent_adjustments.to_a + @recent_equipment_events.to_a).sort_by(&:occurred_at).reverse.first(8)
     end
 end
