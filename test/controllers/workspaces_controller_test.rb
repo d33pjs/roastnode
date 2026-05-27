@@ -24,8 +24,8 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     get edit_workspace_path
 
     assert_response :success
-    assert_select "img[data-testid=workspace-logo-preview][src=?]", media_attachment_path(logo)
-    assert_select "img[data-testid=workspace-banner-preview][src=?]", media_attachment_path(banner)
+    assert_select "img[data-testid=workspace-logo-preview][src=?]", media_attachment_path(logo, variant: :thumbnail)
+    assert_select "img[data-testid=workspace-banner-preview][src=?]", media_attachment_path(banner, variant: :thumbnail)
   end
 
   test "owner can update active workspace name and default currency" do

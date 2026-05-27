@@ -14,6 +14,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Multi-photo upload fields on create forms for photo-enabled records where a create form exists.
 - Photo galleries on detail pages.
 - Clickable photo thumbnails that open the private original image in a new tab.
+- Generated private thumbnail variants for in-page previews.
 - Per-photo private download links.
 - Primary-photo selection for photo-enabled records.
 - Browser-side photo cropping with save-as-new and overwrite modes.
@@ -30,6 +31,8 @@ Views must render photos through `media_attachment_path(attachment)`, not raw Ra
 
 Viewing and downloading photos use `MediaAttachmentsController#show` and `MediaAttachmentsController#download`. Both actions are read-scoped to the active workspace. Removing a photo uses the same scoped media route and additionally requires `current_workspace_policy.write?`. The controller detaches the attachment from the parent record instead of purging the blob immediately, because duplicated bean bags can intentionally reuse the same photo blob.
 
+In-page previews can request `media_attachment_path(attachment, variant: :thumbnail)`. The controller only supports the `thumbnail` variant, applies the same workspace visibility checks as original media, and returns `404 Not Found` for unknown variants. Thumbnails use Active Storage variants with `resize_to_limit: [480, 480]`. If the local native image-processing runtime is missing or cannot process a file, the controller logs the error and falls back to the original bytes for that thumbnail response.
+
 User avatar/banner replacement is limited to the signed-in user. Workspace logo/banner replacement is limited to owners and admins through the workspace settings page.
 
 Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, and preparation tools. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
@@ -38,8 +41,8 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 
 ## Current Limits
 
-- Images are served inline or downloaded at original size unless the user explicitly saves a cropped replacement.
-- Generated variants, thumbnails, direct-upload progress, and S3/object storage are deferred.
+- Originals are served inline or downloaded at original size unless the user explicitly saves a cropped replacement.
+- Direct-upload progress and S3/object storage are deferred.
 - Orphaned blob cleanup is deferred until the storage policy is formalized.
 
 ## Agent Notes
@@ -51,5 +54,5 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 - Keep photo viewing and download links routed through `MediaAttachmentsController` so workspace scoping stays centralized.
 - Keep primary photo changes routed through `MediaAttachmentsController#primary` so workspace scoping and write authorization stay centralized.
 - Keep photo cropping routed through `MediaAttachmentsController#crop`; it accepts a browser-generated image upload rather than processing the source blob on the server.
-- Avoid generated image variants until the project has a thumbnail policy and a verified native image-processing runtime.
+- Keep preview thumbnails behind `MediaAttachmentsController` with `variant: :thumbnail`; do not expose raw variant/blob URLs.
 - Keep workspace media archives owner-only through `WorkspaceExportsController#media`. Include workspace-owned media and workspace identity images, but do not include user avatars/public banners without a separate account-data export decision.

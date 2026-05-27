@@ -59,7 +59,7 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     get equipment_event_path(equipment_events(:grinder_cleaning))
 
     assert_response :success
-    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
   test "show exposes management and danger zone actions" do
@@ -133,7 +133,7 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?][checked]", "equipment_event[event_types][]", "grinder_cleaning"
     assert_select "input[type=checkbox][name=?][value=?][checked]", "equipment_event[equipment_ids][]", equipment(:household_grinder).id.to_s
     assert_select "textarea[name=?]", "equipment_event[notes]", text: event.notes
-    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment_event[photos][]"
   end
 

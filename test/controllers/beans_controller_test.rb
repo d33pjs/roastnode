@@ -24,8 +24,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "th", text: "Channeling", count: 0
-    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(primary)
-    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(first), count: 0
+    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
     assert_select "[data-testid=?]", "bean-list-remaining-#{bean.id}", "150 g of 250 g"
     assert_select "[data-testid^=bean-list-channeling]", count: 0
   end
@@ -255,7 +255,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(beans(:open_household))
 
     assert_response :success
-    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
   test "show renders bean analytics" do

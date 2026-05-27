@@ -20,7 +20,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Preparation tools: method-scoped checklist records with ordering, archive/reopen, edit/delete, additive photos, primary/crop/download/remove media, brew snapshots, and detail analytics.
 - Equipment: edit/archive/reopen/delete lifecycle, additive photos, primary/crop/download/remove media, list photos, detail analytics, and historical brew safety when equipment is deleted.
 - Equipment events: first-class maintenance logs with multiple event types, multiple affected equipment records, photos, edit/delete, equipment detail history, and dashboard activity.
-- Private media: app photos are served through `MediaAttachmentsController`, with active-workspace checks, view/download/crop/primary/remove controls, and related photo groups.
+- Private media: app photos are served through `MediaAttachmentsController`, with active-workspace checks, private thumbnail variants, view/download/crop/primary/remove controls, and related photo groups.
 - Workspace export: owner-only structured JSON, beans CSV, brews CSV, and media ZIP with manifest for workspace-owned media.
 - Beanconqueror import: conservative JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed.
@@ -43,13 +43,12 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Beanconqueror depth: media import, settings, waters, green beans, pressure profiles, graph/device data, background import processing, possible duplicate review, and full round-trip export are open.
 - Analytics depth: interactive charting, richer correlations/recommendations, equipment event markers inside charts, and materialized summaries for large data sets are open.
 - Maintenance automation: reminders, notification schedules, and recurring service suggestions are not built.
-- Media infrastructure: generated thumbnails/variants, direct-upload progress, S3-compatible storage hardening, object lifecycle cleanup, and account-data media export are open.
+- Media infrastructure: direct-upload progress, S3-compatible storage hardening, object lifecycle cleanup, and account-data media export are open.
 - Self-hosting operations: backups, restore flow, production hardening guides, background job monitoring, and health checks beyond the current instance dashboard are open.
 - Public future: public profiles, public brew sharing links, roaster catalog publishing, public/private coffee profile split, federation, billing/subscriptions, marketplace checkout, native mobile apps, offline mode, and device/smart-scale integrations remain outside current v1.
 
 ## Good Next Slices
 
-- Thumbnail/variant generation for media-heavy pages.
 - Recipe target definitions and brew-time recipe snapshots.
 - Interactive analytics charts, starting with workspace and bean detail screens.
 - Maintenance reminders based on equipment events and usage counters.

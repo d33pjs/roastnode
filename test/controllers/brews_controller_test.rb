@@ -233,7 +233,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brews(:morning_espresso))
 
     assert_response :success
-    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
   test "show renders related bean equipment and preparation tool photos" do
@@ -250,10 +250,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-related-photos]"
     assert_select "[data-testid=brew-related-photo-group]", text: /#{Regexp.escape(I18n.t("brews.show.related_bean_photos"))}/
     assert_select "[data-testid=brew-related-photo-group]", text: /#{Regexp.escape(brew.bean.display_name)}/
-    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(bean_photo)
-    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(grinder_photo)
-    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(machine_photo)
-    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(tool_photo)
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(bean_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(grinder_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(machine_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(tool_photo, variant: :thumbnail)
     assert_select "a[href=?]", download_media_attachment_path(tool_photo), text: I18n.t("shared.related_photo_group.download")
   end
 
@@ -289,16 +289,16 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-card-header].flex-nowrap"
     assert_select "[data-testid=brew-timestamp].text-\\[0\\.58rem\\]"
     assert_select "[data-testid=brew-workspace].truncate"
-    assert_select "[data-testid=brew-workspace] img[data-testid=brew-workspace-logo][src=?]", media_attachment_path(workspace_logo)
+    assert_select "[data-testid=brew-workspace] img[data-testid=brew-workspace-logo][src=?]", media_attachment_path(workspace_logo, variant: :thumbnail)
     assert_select "img[data-testid=brew-card-brand-mark][src*=?]", "logo_mark_transparent"
-    assert_select "[data-testid=brew-title-block] + [data-testid=brew-bean-photo-frame] img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
-    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo)
+    assert_select "[data-testid=brew-title-block] + [data-testid=brew-bean-photo-frame] img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo, variant: :thumbnail)
     assert_select "[data-testid=brew-bean-link]", count: 0
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
     assert_select "body", text: /one@example.com/, count: 0
     assert_select "[data-testid=brew-byline]", "Logged by Jens"
-    assert_select "[data-testid=brew-byline] img[data-testid=brew-user-avatar][src=?]", media_attachment_path(avatar)
+    assert_select "[data-testid=brew-byline] img[data-testid=brew-user-avatar][src=?]", media_attachment_path(avatar, variant: :thumbnail)
     assert_select "[data-testid=brew-metrics].grid-cols-3"
     assert_select "[data-testid=brew-dose]", "18,2 g"
     assert_select "[data-testid=brew-beverage]", count: 0
@@ -380,8 +380,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
-    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(primary)
-    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(first), count: 0
+    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
   end
 
   test "hero brew card shows tiny primary equipment photos" do
@@ -395,8 +395,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
-    assert_select "img[data-testid=brew-grinder-photo][src=?]", media_attachment_path(grinder_photo)
-    assert_select "img[data-testid=brew-machine-photo][src=?]", media_attachment_path(machine_photo)
+    assert_select "img[data-testid=brew-grinder-photo][src=?]", media_attachment_path(grinder_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-machine-photo][src=?]", media_attachment_path(machine_photo, variant: :thumbnail)
   end
 
   test "show renders unknown username when display name is blank" do

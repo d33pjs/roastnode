@@ -22,8 +22,8 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     get equipment_index_path
 
     assert_response :success
-    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(primary)
-    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(first), count: 0
+    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
   end
 
   test "member can create equipment" do
@@ -66,7 +66,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("equipment.edit.title")
-    assert_select "img[src=?]", media_attachment_path(existing_photo)
+    assert_select "img[src=?]", media_attachment_path(existing_photo, variant: :thumbnail)
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
 
     assert_difference -> { equipment.reload.photos.count }, 1 do
@@ -244,7 +244,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     get equipment_path(equipment(:household_grinder))
 
     assert_response :success
-    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
   test "show is scoped to active workspace" do

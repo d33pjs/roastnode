@@ -31,8 +31,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     get edit_profile_path
 
     assert_response :success
-    assert_select "img[data-testid=profile-avatar-preview][src=?]", media_attachment_path(avatar)
-    assert_select "img[data-testid=profile-public-banner-preview][src=?]", media_attachment_path(banner)
+    assert_select "img[data-testid=profile-avatar-preview][src=?]", media_attachment_path(avatar, variant: :thumbnail)
+    assert_select "img[data-testid=profile-public-banner-preview][src=?]", media_attachment_path(banner, variant: :thumbnail)
   end
 
   test "signed-in user can update display name and form preferences" do

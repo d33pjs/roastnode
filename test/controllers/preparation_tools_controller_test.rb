@@ -31,7 +31,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=preparation-tool-channeling-rate]", "0%"
     assert_select "[data-testid=preparation-tool-recent-brews] a[href=?]", brew_path(brews(:morning_espresso))
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
-    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
     assert_select "a[href=?]", edit_preparation_tool_path(preparation_tools(:wdt)), text: I18n.t("preparation_tools.show.edit")
     assert_select "form[action=?]", archive_preparation_tool_path(preparation_tools(:wdt))
     assert_select "[data-testid=preparation-tool-danger-zone]"
@@ -123,7 +123,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("preparation_tools.edit.title")
-    assert_select "img[src=?]", media_attachment_path(existing_photo)
+    assert_select "img[src=?]", media_attachment_path(existing_photo, variant: :thumbnail)
     assert_select "input[name=?][value=?]", "preparation_tool[position]", tool.position.to_s
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
 

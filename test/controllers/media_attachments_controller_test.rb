@@ -12,6 +12,27 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_match "inline", response.headers["Content-Disposition"]
   end
 
+  test "serves thumbnail variant through scoped media route" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:open_household))
+
+    get media_attachment_path(attachment, variant: :thumbnail)
+
+    assert_response :success
+    assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
+    assert_match "inline", response.headers["Content-Disposition"]
+    assert_match "thumbnail-photo.jpg", response.headers["Content-Disposition"]
+  end
+
+  test "does not serve unsupported media variant" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:open_household))
+
+    get media_attachment_path(attachment, variant: :poster)
+
+    assert_response :not_found
+  end
+
   test "downloads active workspace attachment" do
     sign_in_as(users(:one))
     attachment = attach_photo(beans(:open_household))
@@ -261,6 +282,7 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", media_attachment_path(attachment), text: I18n.t("shared.photo_grid.view")
+    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
     assert_select "a[href=?]", download_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.download")
     assert_select "span", text: I18n.t("shared.photo_grid.primary")
     assert_select "a[href=?]", crop_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.crop")

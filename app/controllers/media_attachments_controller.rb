@@ -1,19 +1,19 @@
 class MediaAttachmentsController < ApplicationController
+  THUMBNAIL_VARIANT = "thumbnail"
+  THUMBNAIL_TRANSFORMATIONS = { resize_to_limit: [ 480, 480 ] }.freeze
+
   before_action :set_attachment
   before_action :ensure_attachment_in_current_workspace!
 
   def show
-    send_data @attachment.blob.download,
-      type: @attachment.blob.content_type,
-      disposition: "inline",
-      filename: @attachment.blob.filename.to_s
+    return send_thumbnail if params[:variant] == THUMBNAIL_VARIANT
+    return head :not_found if params[:variant].present?
+
+    send_blob(disposition: "inline")
   end
 
   def download
-    send_data @attachment.blob.download,
-      type: @attachment.blob.content_type,
-      disposition: "attachment",
-      filename: @attachment.blob.filename.to_s
+    send_blob(disposition: "attachment")
   end
 
   def crop
@@ -47,6 +47,42 @@ class MediaAttachmentsController < ApplicationController
   private
     def set_attachment
       @attachment = ActiveStorage::Attachment.find(params[:id])
+    end
+
+    def send_blob(disposition:, filename: @attachment.blob.filename.to_s, data: @attachment.blob.download)
+      send_data data,
+        type: @attachment.blob.content_type,
+        disposition:,
+        filename:
+    end
+
+    def send_thumbnail
+      return head :not_found unless @attachment.blob.image?
+
+      response.set_header("X-Roastnode-Media-Variant", THUMBNAIL_VARIANT)
+      send_blob(
+        disposition: "inline",
+        filename: "thumbnail-#{@attachment.blob.filename}",
+        data: thumbnail_data
+      )
+    end
+
+    def thumbnail_data
+      @attachment.blob.variant(THUMBNAIL_TRANSFORMATIONS).processed.download
+    rescue LoadError => error
+      log_thumbnail_fallback(error)
+      @attachment.blob.download
+    rescue => error
+      log_thumbnail_fallback(error)
+      @attachment.blob.download
+    end
+
+    def log_thumbnail_fallback(error)
+      Rails.logger.info("Falling back to original media for thumbnail #{attachment_log_id}: #{error.class}: #{error.message}")
+    end
+
+    def attachment_log_id
+      "#{@attachment.record_type}##{@attachment.record_id}/#{@attachment.name}/#{@attachment.id}"
     end
 
     def ensure_attachment_in_current_workspace!

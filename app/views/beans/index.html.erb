@@ -29,7 +29,7 @@
               <td class="px-4 py-3 text-sm font-medium text-stone-950">
                 <%= link_to bean_path(bean), class: "flex items-center gap-3 hover:underline" do %>
                   <% if photo.present? %>
-                    <%= image_tag media_attachment_path(photo), alt: "", data: { testid: "bean-list-photo" }, class: "h-12 w-12 shrink-0 rounded-md object-cover ring-1 ring-stone-200" %>
+                    <%= image_tag media_attachment_path(photo, variant: :thumbnail), alt: "", data: { testid: "bean-list-photo" }, class: "h-12 w-12 shrink-0 rounded-md object-cover ring-1 ring-stone-200" %>
                   <% else %>
                     <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-stone-100 text-sm font-black text-stone-500 ring-1 ring-stone-200"><%= bean.name.first&.upcase || "?" %></span>
                   <% end %>

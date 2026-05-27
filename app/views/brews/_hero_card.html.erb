@@ -13,7 +13,7 @@
       <span data-testid="brew-timestamp" class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= brew_card_timestamp(brew) %></span>
       <span data-testid="brew-workspace" class="inline-flex min-w-0 max-w-[7.5rem] items-center gap-1 truncate whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs">
         <% if workspace_logo.present? %>
-          <%= image_tag media_attachment_path(workspace_logo), alt: "", data: { testid: "brew-workspace-logo" }, class: "h-3 w-3 shrink-0 rounded-full object-cover ring-1 ring-white/20 sm:h-4 sm:w-4" %>
+          <%= image_tag media_attachment_path(workspace_logo, variant: :thumbnail), alt: "", data: { testid: "brew-workspace-logo" }, class: "h-3 w-3 shrink-0 rounded-full object-cover ring-1 ring-white/20 sm:h-4 sm:w-4" %>
         <% end %>
         <span class="min-w-0 truncate"><%= current_workspace.name %></span>
       </span>
@@ -34,7 +34,7 @@
           <% end %>
           <div data-testid="brew-byline" class="mt-2 flex items-center gap-1.5 text-xs text-stone-400">
             <% if user_avatar.present? %>
-              <%= image_tag media_attachment_path(user_avatar), alt: "", data: { testid: "brew-user-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+              <%= image_tag media_attachment_path(user_avatar, variant: :thumbnail), alt: "", data: { testid: "brew-user-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
             <% end %>
             <span><%= t("brews.show.byline", user: brew.user.display_label) %></span>
           </div>
@@ -42,7 +42,7 @@
 
         <% if brew_photo.present? %>
           <div data-testid="brew-bean-photo-frame" class="h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10 sm:h-16 sm:w-14">
-            <%= image_tag media_attachment_path(brew_photo), alt: brew.bean.name, data: { testid: "brew-bean-photo" }, class: "h-full w-full object-cover" %>
+            <%= image_tag media_attachment_path(brew_photo, variant: :thumbnail), alt: brew.bean.name, data: { testid: "brew-bean-photo" }, class: "h-full w-full object-cover" %>
           </div>
         <% end %>
       </div>
@@ -138,13 +138,13 @@
     <div class="flex flex-wrap items-center gap-2">
       <span class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100">
         <% if grinder_photo.present? %>
-          <%= image_tag media_attachment_path(grinder_photo), alt: "", data: { testid: "brew-grinder-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+          <%= image_tag media_attachment_path(grinder_photo, variant: :thumbnail), alt: "", data: { testid: "brew-grinder-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
         <% end %>
         <span class="truncate"><%= t("brews.show.grinder") %>: <%= brew.grinder&.name || t("brews.show.unknown") %></span>
       </span>
       <span class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100">
         <% if machine_photo.present? %>
-          <%= image_tag media_attachment_path(machine_photo), alt: "", data: { testid: "brew-machine-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+          <%= image_tag media_attachment_path(machine_photo, variant: :thumbnail), alt: "", data: { testid: "brew-machine-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
         <% end %>
         <span class="truncate"><%= t("brews.show.machine") %>: <%= brew.machine&.name || t("brews.show.unknown") %></span>
       </span>

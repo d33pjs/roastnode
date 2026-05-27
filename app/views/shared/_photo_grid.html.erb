@@ -6,7 +6,7 @@
       <% record.photos.attachments.each do |photo| %>
         <figure class="relative overflow-hidden rounded-md border border-stone-200 bg-stone-100">
           <%= link_to media_attachment_path(photo), target: "_blank", rel: "noopener", class: "block" do %>
-            <%= image_tag media_attachment_path(photo), alt: "", class: "h-40 w-full object-cover" %>
+            <%= image_tag media_attachment_path(photo, variant: :thumbnail), alt: "", class: "h-40 w-full object-cover" %>
           <% end %>
           <figcaption class="flex flex-wrap gap-2 bg-white/95 p-2">
             <%= link_to t(".view"),
