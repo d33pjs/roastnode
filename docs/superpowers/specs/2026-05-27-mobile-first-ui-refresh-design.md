@@ -6,15 +6,26 @@ Make Roastnode feel calm, modern, and mobile-first while preserving its private 
 
 ## Approved Direction
 
-Use a mobile app shell with bottom tabs:
+Use one clean app navigation structure:
 
+- Log
 - Dashboard
 - Beans
-- centered Log action
 - Stats
-- More
+- Gear
+- Account
+- Settings
+- Sign out
 
-The bottom tab bar is the primary mobile navigation. The desktop/tablet shell should keep the same information architecture but can use roomier navigation and layouts for deeper statistics, exports, and administration. Logging espresso remains the most prominent daily action.
+Logging espresso remains the most prominent daily action, but it should exist in only one place. The mobile navigation should not use a fixed floating bottom bar because iOS Safari and installed web-app chrome cause it to jump during scroll. Mobile navigation should sit in normal page flow as a stable app header/menu. Desktop/tablet should use the same information architecture with roomier inline navigation.
+
+The navigation groups are:
+
+- Gear: equipment and preparation tools.
+- Account: profile, members, workspace/household settings, and invites.
+- Settings: import and export/data operations.
+
+Dashboard-level action strips should not duplicate the global navigation. Beans owns adding another bag; Gear owns equipment and tool management.
 
 Use the approved A2 visual language: Nordic hearth with a blue/fjord tint. The light theme is the default and uses warm off-white surfaces, blue-slate accents, restrained coffee ink, and occasional honey highlights. The dark theme uses soft blue-black surfaces rather than pure black. Theme choice is stored per user, not inferred only from browser settings.
 

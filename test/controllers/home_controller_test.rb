@@ -21,14 +21,26 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "html.theme-dark"
-    assert_select "[data-testid=app-mobile-navigation].md\\:hidden"
-    assert_select "[data-testid=app-desktop-navigation].hidden.md\\:flex"
+    assert_select "[data-testid=app-navigation]"
+    assert_select "[data-testid=app-mobile-menu]"
+    assert_select "[data-testid=app-desktop-navigation]"
+    assert_select "[data-testid=app-mobile-navigation]", count: 0
+    assert_select "[data-testid=app-nav-more]", count: 0
+    assert_select "a[data-testid=app-nav-log][href=?]", new_brew_path
     assert_select "a[data-testid=app-nav-dashboard][href=?]", dashboard_path
     assert_select "a[data-testid=app-nav-beans][href=?]", beans_path
-    assert_select "a[data-testid=app-nav-log][href=?]", new_brew_path
     assert_select "a[data-testid=app-nav-statistics][href=?]", statistics_path
-    assert_select "[data-testid=app-nav-more]"
+    assert_select "[data-testid=app-nav-gear]"
+    assert_select "[data-testid=app-nav-account]"
+    assert_select "[data-testid=app-nav-settings]"
+    assert_select "a[href=?]", equipment_index_path, text: I18n.t("shared.app_navigation.equipment")
+    assert_select "a[href=?]", preparation_tools_path, text: I18n.t("shared.app_navigation.preparation_tools")
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("shared.app_navigation.profile")
+    assert_select "a[href=?]", memberships_path, text: I18n.t("shared.app_navigation.members")
+    assert_select "a[href=?]", workspace_export_path, text: I18n.t("shared.app_navigation.export")
+    assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("shared.app_navigation.import")
+    assert_select "form[action=?][method=post]", session_path
+    assert_no_match(/fixed inset-x-3 bottom-3/, response.body)
     assert_no_match user.email_address, response.body
   end
 
@@ -42,12 +54,13 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
     assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_transparent"
-    assert_select "[data-testid=app-mobile-navigation].md\\:hidden"
-    assert_select "[data-testid=app-desktop-navigation].hidden.md\\:flex"
+    assert_select "[data-testid=app-navigation]"
+    assert_select "[data-testid=app-mobile-navigation]", count: 0
+    assert_select "[data-testid=app-desktop-navigation]"
     assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label)
     assert_no_match user.email_address, response.body
-    assert_select "a[href=?]", edit_profile_path, text: I18n.t("workspaces.show.profile")
-    assert_select "a[href=?]", edit_workspace_path, text: I18n.t("workspaces.show.settings")
+    assert_select "a[href=?]", edit_profile_path, text: I18n.t("shared.app_navigation.profile")
+    assert_select "a[href=?]", edit_workspace_path, text: I18n.t("shared.app_navigation.workspace_settings")
     assert_select "a[href=?]", new_session_path, count: 0
   end
 
@@ -69,12 +82,12 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "a[href=?]", workspace_invites_path, text: I18n.t("workspaces.show.invites")
-    assert_select "a[href=?]", workspace_export_path, text: I18n.t("workspaces.show.export")
-    assert_select "a[href=?]", workspace_export_beans_path, text: I18n.t("workspaces.show.export_beans")
-    assert_select "a[href=?]", workspace_export_brews_path, text: I18n.t("workspaces.show.export_brews")
-    assert_select "a[href=?]", workspace_export_media_path, text: I18n.t("workspaces.show.export_media")
-    assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("workspaces.show.import")
+    assert_select "a[href=?]", workspace_invites_path, text: I18n.t("shared.app_navigation.invites")
+    assert_select "a[href=?]", workspace_export_path, text: I18n.t("shared.app_navigation.export")
+    assert_select "a[href=?]", workspace_export_beans_path, text: I18n.t("shared.app_navigation.export_beans")
+    assert_select "a[href=?]", workspace_export_brews_path, text: I18n.t("shared.app_navigation.export_brews")
+    assert_select "a[href=?]", workspace_export_media_path, text: I18n.t("shared.app_navigation.export_media")
+    assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("shared.app_navigation.import")
   end
 
   test "instance admin sees instance admin link" do
@@ -85,7 +98,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "a[href='/instance_admin']", { minimum: 1, text: I18n.t("workspaces.show.instance_admin") }
+    assert_select "a[href='/instance_admin']", { minimum: 1, text: I18n.t("shared.app_navigation.instance_admin") }
   end
 
   test "workspace member does not see export link" do
@@ -104,18 +117,18 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='/instance_admin']", count: 0
   end
 
-  test "workspace dashboard shows coffee actions and recent activity" do
+  test "workspace dashboard shows overview and recent activity without duplicate command strips" do
     sign_in_as(users(:one))
 
     get root_path
 
     assert_response :success
-    assert_select "[data-testid=dashboard-primary-actions]"
-    assert_select "[data-testid=dashboard-secondary-actions]"
-    assert_select "a[href=?]", new_brew_path, text: I18n.t("workspaces.show.actions.log_brew")
-    assert_select "a[href=?]", new_bean_path, text: I18n.t("workspaces.show.actions.add_bean")
-    assert_select "a[href=?]", new_equipment_path, text: I18n.t("workspaces.show.actions.add_equipment")
-    assert_select "a[href=?]", new_equipment_event_path, text: I18n.t("workspaces.show.actions.add_equipment_event")
+    assert_select "[data-testid=dashboard-primary-actions]", count: 0
+    assert_select "[data-testid=dashboard-secondary-actions]", count: 0
+    assert_select "main a[href=?]", new_brew_path, count: 0
+    assert_select "main a[href=?]", new_bean_path, count: 0
+    assert_select "main a[href=?]", new_equipment_path, count: 0
+    assert_select "main a[href=?]", new_equipment_event_path, count: 0
     assert_select "h2", I18n.t("workspaces.show.open_beans")
     assert_select "a[href=?]", bean_path(beans(:open_household)), text: /#{beans(:open_household).name}/
     assert_select "a[href=?]", bean_path(beans(:other_workspace_open)), count: 0
@@ -137,7 +150,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-shell]"
     assert_select "[data-testid=dashboard-open-beans] img[data-testid=dashboard-open-bean-photo][src=?]",
       media_attachment_path(photo, variant: :thumbnail)
-    assert_select "[data-testid=dashboard-primary-actions]"
+    assert_select "[data-testid=dashboard-primary-actions]", count: 0
+    assert_select "[data-testid=dashboard-secondary-actions]", count: 0
     assert_select "[data-testid=dashboard-recent-activity]"
     assert_select "[data-testid=workspace-mobile-menu]", count: 0
     assert_select "[data-testid=workspace-desktop-menu]", count: 0
@@ -173,7 +187,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get dashboard_path
 
     assert_response :success
-    assert_select "[data-testid=dashboard-primary-actions]"
+    assert_select "[data-testid=dashboard-shell]"
+    assert_select "[data-testid=dashboard-primary-actions]", count: 0
   end
 
   test "workspace dashboard shows latest and latest best hero cards" do

@@ -74,7 +74,7 @@
     min-height: 100vh;
     background-color: var(--rn-canvas);
     color: var(--rn-ink);
-    padding-bottom: 6.5rem;
+    padding-bottom: 2rem;
   }
 
   .rn-shell {
@@ -89,7 +89,15 @@
     box-shadow: 0 18px 50px rgba(47, 83, 101, 0.08);
   }
 
+  .rn-app-nav {
+    position: relative;
+    z-index: 60;
+  }
+
   .rn-nav-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 999px;
     padding: 0.65rem 0.9rem;
     color: var(--rn-muted);
@@ -103,47 +111,56 @@
   }
 
   .rn-nav-link-primary {
-    background-color: var(--rn-coffee);
-    color: #fff8e8;
+    background-color: var(--rn-accent-strong);
+    color: #f8faf6;
   }
 
-  .rn-mobile-nav-link {
-    display: grid;
-    place-items: center;
-    gap: 0.2rem;
-    color: var(--rn-muted);
-    font-size: 0.65rem;
-    font-weight: 850;
-    line-height: 1;
-  }
-
-  .rn-mobile-nav-icon {
-    width: 1.15rem;
-    height: 1.15rem;
-    border: 2px solid currentColor;
-    border-radius: 0.45rem;
-  }
-
-  .rn-mobile-nav-link-log {
-    margin-top: -1.35rem;
-    color: #fff8e8;
-  }
-
-  .rn-mobile-nav-log-icon {
-    width: 2.85rem;
-    height: 2.85rem;
+  .rn-nav-menu-panel {
+    border: 1px solid var(--rn-line);
     border-radius: 1rem;
-    background-color: var(--rn-coffee);
-    box-shadow: 0 12px 26px rgba(58, 42, 33, 0.25);
+    background-color: var(--rn-surface);
+    padding: 0.5rem;
+    color: var(--rn-ink);
+    box-shadow: 0 18px 42px rgba(47, 83, 101, 0.14);
   }
 
-  .rn-more-link {
+  .rn-nav-group {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .rn-nav-group-title {
+    padding: 0.35rem 0.7rem 0.1rem;
+    color: var(--rn-muted);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .rn-nav-sub-link {
+    display: block;
     border-radius: 0.85rem;
     padding: 0.7rem 0.85rem;
     color: var(--rn-ink);
+    font-size: 0.9rem;
+    font-weight: 800;
   }
 
-  .rn-more-link:hover {
+  .rn-nav-sub-link:hover {
     background-color: var(--rn-surface-muted);
+  }
+
+  .rn-nav-sign-out {
+    border-radius: 999px;
+    padding: 0.65rem 0.9rem;
+    color: var(--rn-muted);
+    font-size: 0.875rem;
+    font-weight: 800;
+  }
+
+  .rn-nav-sign-out:hover {
+    background-color: var(--rn-surface-muted);
+    color: var(--rn-ink);
   }
 }

@@ -123,6 +123,6 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "a[href=?]", statistics_path, text: I18n.t("workspaces.show.actions.statistics")
+    assert_select "a[data-testid=app-nav-statistics][href=?]", statistics_path, text: I18n.t("shared.app_navigation.statistics")
   end
 end
