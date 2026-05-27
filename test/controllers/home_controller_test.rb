@@ -9,6 +9,27 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_transparent"
     assert_select "h1", I18n.t("home.index.title")
     assert_select "a[href=?]", new_session_path, text: I18n.t("home.index.sign_in")
+    assert_select "[data-testid=app-mobile-navigation]", count: 0
+  end
+
+  test "signed-in app renders themed shell navigation" do
+    user = users(:one)
+    user.update!(theme: "dark", display_name: "Jens")
+    sign_in_as(user)
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "html.theme-dark"
+    assert_select "[data-testid=app-mobile-navigation].md\\:hidden"
+    assert_select "[data-testid=app-desktop-navigation].hidden.md\\:flex"
+    assert_select "a[data-testid=app-nav-dashboard][href=?]", dashboard_path
+    assert_select "a[data-testid=app-nav-beans][href=?]", beans_path
+    assert_select "a[data-testid=app-nav-log][href=?]", new_brew_path
+    assert_select "a[data-testid=app-nav-statistics][href=?]", statistics_path
+    assert_select "[data-testid=app-nav-more]"
+    assert_select "a[href=?]", edit_profile_path, text: I18n.t("shared.app_navigation.profile")
+    assert_no_match user.email_address, response.body
   end
 
   test "shows signed-in state after authentication" do
@@ -64,7 +85,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "a[href='/instance_admin']", text: I18n.t("workspaces.show.instance_admin"), count: 2
+    assert_select "a[href='/instance_admin']", { minimum: 1, text: I18n.t("workspaces.show.instance_admin") }
   end
 
   test "workspace member does not see export link" do

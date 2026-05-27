@@ -1,0 +1,70 @@
+<nav data-testid="app-desktop-navigation" class="hidden border-b border-rn-line bg-rn-surface px-6 py-3 shadow-sm backdrop-blur md:flex md:items-center md:justify-between">
+  <%= link_to dashboard_path, class: "flex items-center gap-3 text-sm font-extrabold text-rn-ink" do %>
+    <%= render "shared/brand_mark",
+      container_class: "block h-8 w-8",
+      image_class: "h-full w-full object-contain" %>
+    <span><%= current_workspace.name %></span>
+  <% end %>
+
+  <div class="flex items-center gap-2">
+    <%= link_to t("shared.app_navigation.dashboard"), dashboard_path, data: { testid: "app-nav-dashboard" }, class: "rn-nav-link" %>
+    <%= link_to t("shared.app_navigation.beans"), beans_path, data: { testid: "app-nav-beans" }, class: "rn-nav-link" %>
+    <% if current_workspace_policy.write? %>
+      <%= link_to t("shared.app_navigation.log"), new_brew_path, data: { testid: "app-nav-log" }, class: "rn-nav-link rn-nav-link-primary" %>
+    <% end %>
+    <%= link_to t("shared.app_navigation.statistics"), statistics_path, data: { testid: "app-nav-statistics" }, class: "rn-nav-link" %>
+    <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-nav-link" %>
+    <%= link_to t("shared.app_navigation.more"), edit_profile_path, data: { testid: "app-nav-more" }, class: "rn-nav-link" %>
+  </div>
+</nav>
+
+<nav data-testid="app-mobile-navigation" class="fixed inset-x-3 bottom-3 z-50 grid grid-cols-5 items-end gap-1 rounded-[1.35rem] border border-rn-line bg-rn-surface p-2 shadow-2xl backdrop-blur md:hidden">
+  <%= link_to dashboard_path, data: { testid: "app-nav-dashboard" }, class: "rn-mobile-nav-link" do %>
+    <span class="rn-mobile-nav-icon" aria-hidden="true"></span>
+    <span><%= t("shared.app_navigation.dashboard") %></span>
+  <% end %>
+
+  <%= link_to beans_path, data: { testid: "app-nav-beans" }, class: "rn-mobile-nav-link" do %>
+    <span class="rn-mobile-nav-icon" aria-hidden="true"></span>
+    <span><%= t("shared.app_navigation.beans") %></span>
+  <% end %>
+
+  <% if current_workspace_policy.write? %>
+    <%= link_to new_brew_path, data: { testid: "app-nav-log" }, class: "rn-mobile-nav-link rn-mobile-nav-link-log" do %>
+      <span class="rn-mobile-nav-log-icon" aria-hidden="true"></span>
+      <span><%= t("shared.app_navigation.log") %></span>
+    <% end %>
+  <% else %>
+    <span class="rn-mobile-nav-link rn-mobile-nav-link-log opacity-60">
+      <span class="rn-mobile-nav-log-icon" aria-hidden="true"></span>
+      <span><%= t("shared.app_navigation.log") %></span>
+    </span>
+  <% end %>
+
+  <%= link_to statistics_path, data: { testid: "app-nav-statistics" }, class: "rn-mobile-nav-link" do %>
+    <span class="rn-mobile-nav-icon" aria-hidden="true"></span>
+    <span><%= t("shared.app_navigation.statistics") %></span>
+  <% end %>
+
+  <details data-testid="app-nav-more" class="group relative">
+    <summary class="rn-mobile-nav-link cursor-pointer list-none">
+      <span class="rn-mobile-nav-icon" aria-hidden="true"></span>
+      <span><%= t("shared.app_navigation.more") %></span>
+    </summary>
+    <div class="absolute bottom-16 right-0 grid min-w-56 gap-1 rounded-2xl border border-rn-line bg-rn-surface p-2 text-sm font-bold text-rn-ink shadow-2xl">
+      <%= link_to t("shared.app_navigation.profile"), edit_profile_path, class: "rn-more-link" %>
+      <%= link_to t("shared.app_navigation.members"), memberships_path, class: "rn-more-link" %>
+      <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-more-link" %>
+      <%= link_to t("shared.app_navigation.preparation_tools"), preparation_tools_path, class: "rn-more-link" %>
+      <% if current_workspace_policy.manage? %>
+        <%= link_to t("shared.app_navigation.settings"), edit_workspace_path, class: "rn-more-link" %>
+        <%= link_to t("shared.app_navigation.invites"), workspace_invites_path, class: "rn-more-link" %>
+        <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-more-link" %>
+      <% end %>
+      <% if Current.user.instance_admin? %>
+        <%= link_to t("shared.app_navigation.instance_admin"), instance_admin_path, class: "rn-more-link" %>
+      <% end %>
+      <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-more-link w-full text-left" %>
+    </div>
+  </details>
+</nav>

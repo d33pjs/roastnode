@@ -52,6 +52,21 @@ en:
     destroy:
       destroyed: "Photo removed."
   shared:
+    app_navigation:
+      beans: "Beans"
+      dashboard: "Dashboard"
+      equipment: "Equipment"
+      import: "Import"
+      instance_admin: "Instance admin"
+      invites: "Invites"
+      log: "Log"
+      members: "Members"
+      more: "More"
+      preparation_tools: "Tools"
+      profile: "Profile"
+      settings: "Settings"
+      sign_out: "Sign out"
+      statistics: "Stats"
     photo_grid:
       crop: "Crop"
       delete: "Remove"

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html class="<%= Current.user&.dark_theme? ? "theme-dark" : "theme-light" %>">
   <head>
     <title><%= content_for(:title) || "Roastnode" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -40,7 +40,8 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body>
+  <body class="min-h-screen bg-rn-canvas text-rn-ink antialiased">
     <%= yield %>
+    <%= render "shared/app_navigation" if Current.user.present? && current_workspace.present? %>
   </body>
 </html>
