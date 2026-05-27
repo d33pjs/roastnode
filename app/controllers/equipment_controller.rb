@@ -9,7 +9,12 @@ class EquipmentController < ApplicationController
   end
 
   def show
-    @equipment_statistics = EquipmentStatistics.new(equipment: @equipment).call
+    @equipment_statistics_start_date, @equipment_statistics_end_date = equipment_statistics_date_range
+    @equipment_statistics = EquipmentStatistics.new(
+      equipment: @equipment,
+      start_date: @equipment_statistics_start_date,
+      end_date: @equipment_statistics_end_date
+    ).call
     @recent_events = @equipment_statistics[:recent_events]
     @recent_brews = @equipment_statistics[:recent_brews]
     @last_service_event = @equipment_statistics[:service][:last_event]
@@ -65,6 +70,25 @@ class EquipmentController < ApplicationController
   private
     def set_equipment
       @equipment = current_workspace.equipment.find(params[:id])
+    end
+
+    def equipment_statistics_date_range
+      start_date = parse_equipment_statistics_date(params[:start_date])
+      end_date = parse_equipment_statistics_date(params[:end_date])
+
+      if start_date.present? && end_date.present? && start_date > end_date
+        [ end_date, start_date ]
+      else
+        [ start_date, end_date ]
+      end
+    end
+
+    def parse_equipment_statistics_date(value)
+      return nil if value.blank?
+
+      Date.iso8601(value)
+    rescue ArgumentError
+      nil
     end
 
     def equipment_params

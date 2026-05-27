@@ -207,6 +207,36 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Other Grinder/, count: 0
   end
 
+  test "show filters equipment analytics by date range" do
+    sign_in_as(users(:one))
+    grinder = equipment(:household_grinder)
+    bean = beans(:open_household)
+    brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+    bean.brews.create!(
+      workspace: grinder.workspace,
+      user: users(:one),
+      grinder:,
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 20, 8, 15, 0),
+      bean_weight_grams: 20,
+      ground_weight_grams: 20,
+      dose_grams: 20,
+      beverage_grams: 45,
+      rating: 3,
+      channeling: true
+    )
+
+    get equipment_path(grinder), params: { start_date: "2026-05-26", end_date: "2026-05-26" }
+
+    assert_response :success
+    assert_select "input[data-testid=equipment-statistics-start-date][value='2026-05-26']"
+    assert_select "input[data-testid=equipment-statistics-end-date][value='2026-05-26']"
+    assert_select "[data-testid=equipment-total-brews]", "1"
+    assert_select "[data-testid=equipment-total-ground]", "18 g"
+    assert_select "[data-testid=equipment-recent-brews] a[href=?]", brew_path(brews(:morning_espresso)), text: /House Blend/
+    assert_select "[data-testid=equipment-recent-brews] a[href=?]", brew_path(Brew.order(:created_at).last), count: 0
+  end
+
   test "show renders private photos through scoped media route" do
     sign_in_as(users(:one))
     attachment = attach_photo(equipment(:household_grinder))

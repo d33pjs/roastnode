@@ -58,11 +58,14 @@ Equipment detail pages now show:
 - total brews using the equipment
 - total bean-in grams through the equipment
 - average rating and channeling rate
+- optional date range filters for brew-derived usage analytics
 - brews and grams since the latest relevant service event
 - brews-by-day bars
 - maintenance marker counts by event type
 
 Relevant service events are grinder cleaning, grinder deep cleaning, and burr changes for grinders; machine descaling and backflush for machines.
+
+Date range filters are inclusive and apply to brew-derived usage analytics: total brews, total bean-in grams, average rating, channeling, brews-by-day bars, and recent brews. Service counters, last service, recent events, and maintenance marker counts stay current equipment-history views.
 
 ## Deferred
 

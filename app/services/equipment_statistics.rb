@@ -2,8 +2,13 @@ class EquipmentStatistics
   RECENT_DAYS = 14
   RECENT_LIMIT = 5
 
-  def initialize(equipment:)
+  def initialize(equipment:, start_date: nil, end_date: nil)
     @equipment = equipment
+    @start_date = start_date&.to_date
+    @end_date = end_date&.to_date
+    if @start_date.present? && @end_date.present? && @start_date > @end_date
+      @start_date, @end_date = @end_date, @start_date
+    end
   end
 
   def call
@@ -20,10 +25,14 @@ class EquipmentStatistics
   end
 
   private
-    attr_reader :equipment
+    attr_reader :equipment, :start_date, :end_date
 
     def brews
-      @brews ||= brews_scope.includes(:bean).order(occurred_at: :desc, created_at: :desc).to_a
+      @brews ||= apply_date_range(brews_scope).includes(:bean).order(occurred_at: :desc, created_at: :desc).to_a
+    end
+
+    def all_brews
+      @all_brews ||= brews_scope.includes(:bean).order(occurred_at: :desc, created_at: :desc).to_a
     end
 
     def events
@@ -100,9 +109,9 @@ class EquipmentStatistics
 
     def brews_since_service
       @brews_since_service ||= if last_service_event
-        brews.select { |brew| brew.occurred_at >= last_service_event.occurred_at }
+        all_brews.select { |brew| brew.occurred_at >= last_service_event.occurred_at }
       else
-        brews
+        all_brews
       end
     end
 
@@ -116,11 +125,21 @@ class EquipmentStatistics
     end
 
     def recent_dates
-      @recent_dates ||= ((RECENT_DAYS - 1).days.ago.to_date..Date.current).to_a
+      @recent_dates ||= begin
+        range_end = end_date || Date.current
+        range_start = start_date || (range_end - (RECENT_DAYS - 1))
+        (range_start..range_end).to_a
+      end
     end
 
     def brews_by_date
       @brews_by_date ||= brews.select { |brew| recent_dates.include?(brew.occurred_at.to_date) }.group_by { |brew| brew.occurred_at.to_date }
+    end
+
+    def apply_date_range(scope)
+      scope = scope.where(occurred_at: start_date.beginning_of_day..) if start_date.present?
+      scope = scope.where(occurred_at: ..end_date.end_of_day) if end_date.present?
+      scope
     end
 
     def rounded_average(values, precision:)
