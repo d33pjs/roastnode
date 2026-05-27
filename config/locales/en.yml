@@ -698,6 +698,7 @@ en:
       export: "Export JSON"
       export_beans: "Beans CSV"
       export_brews: "Brews CSV"
+      export_media: "Media ZIP"
       hero:
         best: "Latest best brew"
         latest: "Latest brew"

@@ -25,7 +25,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 ## Explicitly Deferred
 
 - Recipes, recipe snapshots, and target definitions.
-- Advanced media handling, including primary-photo selection, thumbnails, media archive export, and object storage.
+- Advanced media handling, including thumbnails and object storage.
 - Beanconqueror media import and full round-trip compatibility.
 - Interactive ECharts analytics and exportable brew card images.
 

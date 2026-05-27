@@ -52,6 +52,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", workspace_export_path, text: I18n.t("workspaces.show.export")
     assert_select "a[href=?]", workspace_export_beans_path, text: I18n.t("workspaces.show.export_beans")
     assert_select "a[href=?]", workspace_export_brews_path, text: I18n.t("workspaces.show.export_brews")
+    assert_select "a[href=?]", workspace_export_media_path, text: I18n.t("workspaces.show.export_media")
     assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("workspaces.show.import")
   end
 
@@ -77,6 +78,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", workspace_export_path, count: 0
     assert_select "a[href=?]", workspace_export_beans_path, count: 0
     assert_select "a[href=?]", workspace_export_brews_path, count: 0
+    assert_select "a[href=?]", workspace_export_media_path, count: 0
     assert_select "a[href=?]", edit_workspace_path, count: 0
     assert_select "a[href='/instance_admin']", count: 0
   end

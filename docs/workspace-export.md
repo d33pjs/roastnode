@@ -6,6 +6,7 @@ Workspace Export is the first Roastnode data portability feature.
 
 - Owner-only JSON export for the active workspace.
 - Owner-only CSV exports for beans and brews.
+- Owner-only media ZIP export for workspace-owned photos.
 - Dashboard export link visible only to owners.
 - Structured payload format with `format`, `version`, and `generated_at`.
 - Workspace metadata.
@@ -15,6 +16,16 @@ Workspace Export is the first Roastnode data portability feature.
 - Rich bean metadata, including roast type, degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
 - Photo metadata for photo-enabled records.
 - Preparation tool lifecycle fields, including active status, position, and photo metadata.
+
+## Media ZIP Export
+
+The media archive is available at `/workspace_export/media.zip`. It contains:
+
+- `manifest.json` with workspace metadata and one row per exported attachment.
+- `data/workspace-export.json`, matching the normal JSON export payload.
+- Original media files under stable `media/<record_collection>/<record_id>/<attachment_name>/<attachment_id>-<filename>` paths.
+
+The archive includes workspace logo/banner and photos attached to beans, equipment, preparation tools, brews, and equipment events in the active workspace. It does not include user avatars or user public banners, because those belong to user accounts rather than the workspace export contract.
 
 ## CSV Exports
 
@@ -38,9 +49,10 @@ The export intentionally excludes:
 - password digests
 - sessions
 - invite tokens
-- raw photo bytes
 - signed media URLs
 - records from other workspaces
+
+Raw photo bytes are included only in the separate owner-only media ZIP.
 
 ## Payload Contract
 
@@ -69,7 +81,6 @@ Local IDs are included so relationships can be reconstructed inside a single exp
 
 ## Deferred
 
-- Media ZIP export.
 - Scheduled backups.
 - Workspace deletion and transfer.
 - Non-owner export policy variants.

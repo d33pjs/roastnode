@@ -1,5 +1,6 @@
 require "test_helper"
 require "csv"
+require "zip"
 
 class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
   test "owner downloads active workspace export as json attachment" do
@@ -77,4 +78,51 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
     get workspace_export_brews_path
     assert_redirected_to root_path
   end
+
+  test "owner downloads media zip export" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:open_household))
+
+    get workspace_export_media_path
+
+    assert_response :success
+    assert_equal "application/zip", response.media_type
+    assert_match "attachment", response.headers["Content-Disposition"]
+    assert_match "jens-household-media.zip", response.headers["Content-Disposition"]
+
+    entries = read_zip_entries(response.body)
+    assert_includes entries.keys, "manifest.json"
+    manifest = JSON.parse(entries.fetch("manifest.json"))
+    file = manifest.fetch("files").find { |row| row.fetch("attachment_id") == attachment.id }
+    assert_equal "Bean", file.fetch("record_type")
+    assert_includes entries.keys, file.fetch("path")
+  end
+
+  test "member cannot export media zip" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    get workspace_export_media_path
+
+    assert_redirected_to root_path
+  end
+
+  private
+    def attach_photo(record)
+      File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
+        record.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
+      end
+      record.photos.attachments.last
+    end
+
+    def read_zip_entries(archive)
+      entries = {}
+      Zip::File.open_buffer(archive) do |zip|
+        zip.each do |entry|
+          entries[entry.name] = entry.get_input_stream.read
+        end
+      end
+      entries
+    end
 end

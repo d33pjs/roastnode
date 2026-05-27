@@ -20,6 +20,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Per-photo removal controls for workspace writers.
 - Current photo management on bean and brew edit screens.
 - App-scoped media delivery through `MediaAttachmentsController`.
+- Owner-only media ZIP export for workspace-owned originals.
 
 ## Privacy Rule
 
@@ -38,7 +39,7 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 ## Current Limits
 
 - Images are served inline or downloaded at original size unless the user explicitly saves a cropped replacement.
-- Generated variants, thumbnails, direct-upload progress, S3/object storage, and archive/export handling are deferred.
+- Generated variants, thumbnails, direct-upload progress, and S3/object storage are deferred.
 - Orphaned blob cleanup is deferred until the storage policy is formalized.
 
 ## Agent Notes
@@ -51,3 +52,4 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 - Keep primary photo changes routed through `MediaAttachmentsController#primary` so workspace scoping and write authorization stay centralized.
 - Keep photo cropping routed through `MediaAttachmentsController#crop`; it accepts a browser-generated image upload rather than processing the source blob on the server.
 - Avoid generated image variants until the project has a thumbnail policy and a verified native image-processing runtime.
+- Keep workspace media archives owner-only through `WorkspaceExportsController#media`. Include workspace-owned media and workspace identity images, but do not include user avatars/public banners without a separate account-data export decision.

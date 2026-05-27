@@ -40,6 +40,7 @@ Rails.application.routes.draw do
   resource :workspace_export, only: :show
   get "workspace_export/beans.csv" => "workspace_exports#beans", as: :workspace_export_beans
   get "workspace_export/brews.csv" => "workspace_exports#brews", as: :workspace_export_brews
+  get "workspace_export/media.zip" => "workspace_exports#media", as: :workspace_export_media
   resources :beanconqueror_imports, only: %i[new create show]
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html

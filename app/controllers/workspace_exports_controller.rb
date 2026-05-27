@@ -24,6 +24,15 @@ class WorkspaceExportsController < ApplicationController
       disposition: "attachment"
   end
 
+  def media
+    archive = WorkspaceMediaArchiveBuilder.new(current_workspace).call
+
+    send_data archive,
+      filename: "#{current_workspace.name.parameterize}-media.zip",
+      type: "application/zip",
+      disposition: "attachment"
+  end
+
   private
     def csv_export
       @csv_export ||= WorkspaceCsvExportBuilder.new(current_workspace)
