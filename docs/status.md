@@ -8,7 +8,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 - Rails 8.1 monolith at the repository root, with PostgreSQL, Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
 - Rails-native authentication, password reset flow, private-by-default app shell, and a small read-only instance admin dashboard.
-- Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links, memberships page, and workspace-scoped controller patterns.
+- Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with private invite-only account creation, memberships page, and workspace-scoped controller patterns.
 - Profile settings: display name, username-style display label, avatar, public banner, preferred landing screen, espresso focus field, hidden espresso fields, number format, and time format.
 - Workspace settings: household name, currency, logo, and banner.
 - Coffee core: rich beans, equipment, espresso brews, inventory adjustments, retention markers, dashboard activity, and required-open-bean espresso logging.
@@ -38,7 +38,6 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 - Recipes and recipe snapshots: target definitions for espresso and other methods, default preparation tools, target dose/yield/time ranges, and brew-time snapshots.
 - Non-espresso method templates: the app is espresso-first; other methods are not yet first-class logging flows.
-- Invite signup flow: accepting an invite currently assumes the user is already signed in. Account creation from invite links is deferred.
 - Workspace administration depth: workspace deletion, ownership transfer, richer member management, and public/private registration settings are not built.
 - Full i18n: English UI exists with metric storage; complete locale files, German UI, and broader unit preferences are still open.
 - Beanconqueror depth: media import, settings, waters, green beans, pressure profiles, graph/device data, background import processing, possible duplicate review, and full round-trip export are open.
@@ -50,9 +49,8 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 ## Good Next Slices
 
-- Recipe target definitions and brew-time recipe snapshots.
-- Invite acceptance with account creation for private installs without SMTP.
 - Thumbnail/variant generation for media-heavy pages.
+- Recipe target definitions and brew-time recipe snapshots.
 - Interactive analytics charts, starting with workspace and bean detail screens.
 - Maintenance reminders based on equipment events and usage counters.
 - Production self-hosting guide with backup and restore checks.

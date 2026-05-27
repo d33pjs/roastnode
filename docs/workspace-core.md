@@ -8,7 +8,7 @@ Workspace Core is the first real Roastnode product slice after Rails foundation 
 - `Membership` connects a `User` to a `Workspace` with one role.
 - `User#active_workspace` stores the current workspace for dashboard and scoped actions.
 - `User#default_landing_screen` stores whether `/` should open the dashboard or the espresso form.
-- `WorkspaceInvite` stores token links for adding signed-in users to a workspace.
+- `WorkspaceInvite` stores token links for adding signed-in or newly-created users to a workspace.
 - Workspace settings currently include the household/workspace name and default currency.
 
 ## Roles
@@ -26,7 +26,9 @@ Workspace export is owner-only in the current slice. Admins can manage invites a
 
 Owners and admins can open the workspace dashboard and use **Invites** to create links for the `admin`, `member`, or `viewer` roles. Invite links can be revoked and expire automatically.
 
-Invite acceptance currently requires an already signed-in user. Public signup-from-invite is intentionally deferred so the first workspace flow stays private and Rails-native.
+Signed-in users can accept an invite directly. People without an account can create one from a valid invite page, join the invited workspace in the same flow, and start a session. This is still private invite-only signup, not public registration.
+
+Invites with `email_address` are email-bound: only a user account with that normalized email address can accept them. Blank-email invites remain "anyone with the link" invites.
 
 ## Settings
 

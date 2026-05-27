@@ -30,8 +30,15 @@ class WorkspaceInvite < ApplicationRecord
     accepted_at.blank? && revoked_at.blank? && expires_at.future?
   end
 
+  def acceptable_for?(user)
+    acceptable? && (email_address.blank? || normalized_email(user&.email_address) == email_address)
+  end
+
   def accept!(user)
-    raise ActiveRecord::RecordInvalid, self unless acceptable?
+    unless acceptable_for?(user)
+      errors.add(:base, "is not available for this email") if acceptable? && email_address.present?
+      raise ActiveRecord::RecordInvalid, self
+    end
 
     transaction do
       membership = user.memberships.find_or_initialize_by(workspace:)
@@ -59,5 +66,9 @@ class WorkspaceInvite < ApplicationRecord
 
     def role_priority(role)
       ROLE_PRIORITY.fetch(role)
+    end
+
+    def normalized_email(value)
+      value.to_s.strip.downcase
     end
 end

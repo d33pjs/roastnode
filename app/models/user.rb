@@ -51,6 +51,7 @@ class User < ApplicationRecord
   normalizes :email_address, with: ->(e) { e.strip.downcase }
   normalizes :display_name, with: ->(name) { name.strip.presence }
 
+  validates :email_address, presence: true, uniqueness: { case_sensitive: false }
   validates :display_name, length: { maximum: 80 }
   validates :default_landing_screen, inclusion: { in: DEFAULT_LANDING_SCREENS }
   validates :number_format, inclusion: { in: NUMBER_FORMATS }

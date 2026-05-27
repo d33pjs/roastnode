@@ -692,11 +692,21 @@ en:
       title: "Workspace invites"
     revoke:
       revoked: "Invite revoked."
+    signup:
+      created: "Account created. Joined %{workspace}."
+      email_mismatch: "does not match this invite"
     show:
       accept: "Accept invite"
       body: "You will join with the %{role} role."
+      create_account: "Create account and join"
       dashboard: "Go to dashboard"
+      email_bound: "This invite is for %{email}."
+      email_label: "Email"
       eyebrow: "Workspace invite"
+      password_confirmation_label: "Confirm password"
+      password_label: "Password"
+      sign_in: "Already have an account? Sign in"
+      signup_error: "Could not create your account."
       title: "Join %{workspace}"
       unavailable_body: "Ask a workspace owner or admin for a fresh invite link."
       unavailable_eyebrow: "Invite unavailable"

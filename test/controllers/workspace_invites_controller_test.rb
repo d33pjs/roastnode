@@ -58,6 +58,80 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("workspace_invites.show.unavailable_title")
   end
 
+  test "unauthenticated user can view invite signup form" do
+    invite = workspace_invites(:member_invite)
+
+    get workspace_invite_path(invite.token)
+
+    assert_response :success
+    assert_select "h1", I18n.t("workspace_invites.show.title", workspace: invite.workspace.name)
+    assert_select "form[action=?]", signup_workspace_invite_path(invite.token)
+  end
+
+  test "invite signup creates account accepts invite and starts session" do
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "Friend@Example.com")
+
+    assert_difference -> { User.count }, 1 do
+      assert_difference -> { Membership.count }, 1 do
+        post signup_workspace_invite_path(invite.token), params: {
+          user: {
+            email_address: "friend@example.com",
+            password: "password",
+            password_confirmation: "password"
+          }
+        }
+      end
+    end
+
+    user = User.find_by!(email_address: "friend@example.com")
+    assert_redirected_to root_path
+    assert_equal workspaces(:household), user.active_workspace
+    assert_equal "member", user.membership_for(workspaces(:household)).role
+    assert_equal user, invite.reload.accepted_by
+    assert invite.accepted_at.present?
+    assert user.sessions.exists?
+  end
+
+  test "invite signup rejects mismatched email-bound invite" do
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "friend@example.com")
+
+    assert_no_difference -> { User.count } do
+      assert_no_difference -> { Membership.count } do
+        post signup_workspace_invite_path(invite.token), params: {
+          user: {
+            email_address: "other@example.com",
+            password: "password",
+            password_confirmation: "password"
+          }
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil invite.reload.accepted_at
+  end
+
+  test "invite signup rejects existing account email without accepting invite" do
+    invite = workspace_invites(:member_invite)
+
+    assert_no_difference -> { User.count } do
+      assert_no_difference -> { Membership.count } do
+        post signup_workspace_invite_path(invite.token), params: {
+          user: {
+            email_address: users(:one).email_address,
+            password: "password",
+            password_confirmation: "password"
+          }
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil invite.reload.accepted_at
+  end
+
   test "signed-in user can accept invite" do
     user = User.create!(email_address: "new-member@example.com", password: "password")
     invite = workspace_invites(:member_invite)
@@ -73,5 +147,19 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal workspaces(:household), user.reload.active_workspace
     assert_equal user, invite.reload.accepted_by
     assert invite.accepted_at.present?
+  end
+
+  test "signed-in user cannot accept email-bound invite for another address" do
+    user = User.create!(email_address: "other@example.com", password: "password")
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "friend@example.com")
+    sign_in_as(user)
+
+    assert_no_difference -> { user.memberships.count } do
+      post accept_workspace_invite_path(invite.token)
+    end
+
+    assert_redirected_to workspace_invite_path(invite.token)
+    assert_nil invite.reload.accepted_at
   end
 end

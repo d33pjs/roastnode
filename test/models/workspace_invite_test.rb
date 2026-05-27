@@ -13,6 +13,32 @@ class WorkspaceInviteTest < ActiveSupport::TestCase
     assert_not invite.acceptable?
   end
 
+  test "blank email invite is acceptable for any user" do
+    invite = workspace_invites(:member_invite)
+
+    assert invite.acceptable_for?(users(:two))
+  end
+
+  test "email-bound invite is acceptable for matching normalized user email" do
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "Friend@Example.com")
+    user = User.create!(email_address: "friend@example.com", password: "password")
+
+    assert invite.acceptable_for?(user)
+  end
+
+  test "email-bound invite is not acceptable for a different user email" do
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "friend@example.com")
+    user = User.create!(email_address: "other@example.com", password: "password")
+
+    assert_not invite.acceptable_for?(user)
+    assert_raises ActiveRecord::RecordInvalid do
+      invite.accept!(user)
+    end
+    assert_nil invite.reload.accepted_at
+  end
+
   test "accepting invite creates membership with invite role" do
     invite = workspace_invites(:member_invite)
     user = users(:two)

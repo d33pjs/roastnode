@@ -43,7 +43,7 @@ bin/dev
 
 Open `http://localhost:3001`.
 
-After signing in, users without a workspace are prompted to create a private household workspace. That user becomes the workspace owner and can create invite links for other signed-in users.
+After signing in, users without a workspace are prompted to create a private household workspace. That user becomes the workspace owner and can create invite links. Existing users can accept invite links after signing in, and new users can create an account directly from a valid invite link.
 
 ## Optional Demo Data
 
