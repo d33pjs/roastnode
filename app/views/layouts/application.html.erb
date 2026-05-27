@@ -41,7 +41,7 @@
   </head>
 
   <body class="min-h-screen bg-rn-canvas text-rn-ink antialiased">
-    <%= yield %>
     <%= render "shared/app_navigation" if Current.user.present? && current_workspace.present? %>
+    <%= yield %>
   </body>
 </html>

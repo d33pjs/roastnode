@@ -42,8 +42,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
     assert_select "img[data-testid=brand-wordmark][src*=?]", "logo_wordmark_transparent"
-    assert_select "[data-testid=workspace-mobile-menu].sm\\:hidden"
-    assert_select "[data-testid=workspace-desktop-menu].hidden.sm\\:flex"
+    assert_select "[data-testid=app-mobile-navigation].md\\:hidden"
+    assert_select "[data-testid=app-desktop-navigation].hidden.md\\:flex"
     assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label)
     assert_no_match user.email_address, response.body
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("workspaces.show.profile")
@@ -111,8 +111,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=dashboard-primary-actions]"
-    assert_select "[data-testid=dashboard-secondary-actions].hidden.sm\\:flex"
-    assert_select "[data-testid=dashboard-mobile-more-actions].sm\\:hidden"
+    assert_select "[data-testid=dashboard-secondary-actions]"
     assert_select "a[href=?]", new_brew_path, text: I18n.t("workspaces.show.actions.log_brew")
     assert_select "a[href=?]", new_bean_path, text: I18n.t("workspaces.show.actions.add_bean")
     assert_select "a[href=?]", new_equipment_path, text: I18n.t("workspaces.show.actions.add_equipment")
@@ -124,6 +123,24 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "p", text: I18n.t("workspaces.show.activity.adjustment", amount: "-18", bean: beans(:open_household).name), count: 0
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
+  end
+
+  test "workspace dashboard renders open bean primary photos and refreshed sections" do
+    bean = beans(:open_household)
+    photo = attach_photo(bean)
+    bean.set_primary_photo!(photo)
+    sign_in_as(users(:one))
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=dashboard-shell]"
+    assert_select "[data-testid=dashboard-open-beans] img[data-testid=dashboard-open-bean-photo][src=?]",
+      media_attachment_path(photo, variant: :thumbnail)
+    assert_select "[data-testid=dashboard-primary-actions]"
+    assert_select "[data-testid=dashboard-recent-activity]"
+    assert_select "[data-testid=workspace-mobile-menu]", count: 0
+    assert_select "[data-testid=workspace-desktop-menu]", count: 0
   end
 
   test "workspace dashboard shows manual inventory adjustments in recent activity" do

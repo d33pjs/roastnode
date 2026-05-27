@@ -1,123 +1,57 @@
-<main class="min-h-screen bg-stone-50">
+<main class="rn-page">
   <%= render "brews/hero_card_styles" %>
 
-  <section class="mx-auto max-w-6xl px-6 py-10">
-    <header class="flex flex-col gap-4 border-b border-stone-200 pb-8 sm:flex-row sm:items-start sm:justify-between">
+  <section data-testid="dashboard-shell" class="rn-shell max-w-6xl py-6 sm:px-6 lg:py-10">
+    <header class="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-start">
       <div>
-        <%= link_to root_path, class: "mb-4 inline-block" do %>
+        <%= link_to root_path, class: "mb-6 inline-block" do %>
           <%= render "shared/brand_wordmark",
             container_class: "block h-12 w-72 max-w-full sm:h-14 sm:w-80",
             image_class: "h-full w-full object-contain object-left" %>
         <% end %>
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
-        <h1 class="mt-2 text-4xl font-bold text-stone-950"><%= current_workspace.name %></h1>
-        <p class="mt-3 text-stone-700"><%= t(".signed_in_as", user: Current.user.display_label) %></p>
-        <p class="mt-1 text-sm text-stone-600"><%= t(".role", role: current_membership.role.humanize) %></p>
+
+        <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".eyebrow") %></p>
+        <h1 class="mt-2 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= current_workspace.name %></h1>
+        <p class="mt-3 text-sm font-semibold text-rn-muted"><%= t(".signed_in_as", user: Current.user.display_label) %></p>
+        <p class="mt-1 text-sm text-rn-muted"><%= t(".role", role: current_membership.role.humanize) %></p>
       </div>
 
-      <div data-testid="workspace-desktop-menu" class="hidden flex-wrap gap-3 sm:flex sm:justify-end">
-        <% if current_workspace_policy.manage? %>
-          <%= link_to t(".invites"), workspace_invites_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= link_to t(".settings"), edit_workspace_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+      <div data-testid="dashboard-primary-actions" class="grid gap-2 sm:flex sm:flex-wrap sm:justify-end">
+        <% if current_workspace_policy.write? %>
+          <%= link_to t(".actions.log_brew"), new_brew_path, class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-center text-sm font-extrabold text-[#fff8e8] shadow-sm hover:opacity-90" %>
+          <%= link_to t(".actions.add_bean"), new_bean_path, class: "rounded-2xl border border-rn-line bg-rn-surface px-5 py-3 text-center text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
         <% end %>
-        <% if current_workspace_policy.export? %>
-          <%= link_to t(".export"), workspace_export_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= link_to t(".export_beans"), workspace_export_beans_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= link_to t(".export_brews"), workspace_export_brews_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= link_to t(".export_media"), workspace_export_media_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <% end %>
-        <% if current_workspace_policy.manage? %>
-          <%= link_to t(".import"), new_beanconqueror_import_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <% end %>
-        <% if Current.user.instance_admin? %>
-          <%= link_to t(".instance_admin"), instance_admin_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <% end %>
-        <%= link_to t(".profile"), edit_profile_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <%= link_to t(".members"), memberships_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <%= button_to t(".sign_out"), session_path, method: :delete, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
       </div>
-
-      <details data-testid="workspace-mobile-menu" class="sm:hidden">
-        <summary class="cursor-pointer rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900">
-          <%= t(".workspace_menu") %>
-        </summary>
-        <div class="mt-3 grid grid-cols-2 gap-2">
-          <% if current_workspace_policy.manage? %>
-            <%= link_to t(".invites"), workspace_invites_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".settings"), edit_workspace_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <% end %>
-          <% if current_workspace_policy.export? %>
-            <%= link_to t(".export"), workspace_export_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".export_beans"), workspace_export_beans_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".export_brews"), workspace_export_brews_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".export_media"), workspace_export_media_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <% end %>
-          <% if current_workspace_policy.manage? %>
-            <%= link_to t(".import"), new_beanconqueror_import_path, class: "col-span-2 rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <% end %>
-          <% if Current.user.instance_admin? %>
-            <%= link_to t(".instance_admin"), instance_admin_path, class: "col-span-2 rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <% end %>
-          <%= link_to t(".profile"), edit_profile_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= link_to t(".members"), memberships_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= button_to t(".sign_out"), session_path, method: :delete, class: "w-full rounded-md bg-stone-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
-        </div>
-      </details>
     </header>
 
     <% if Current.user.workspaces.many? %>
-      <section class="border-b border-stone-200 py-6">
-        <h2 class="text-sm font-semibold uppercase text-stone-600"><%= t(".switcher") %></h2>
+      <section class="mt-8 rounded-2xl border border-rn-line bg-rn-surface p-4">
+        <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".switcher") %></h2>
         <div class="mt-3 flex flex-wrap gap-2">
           <% Current.user.workspaces.order(:name).each do |workspace| %>
-            <%= button_to workspace.name, switch_workspace_path(workspace), method: :patch, class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-medium text-stone-800 hover:bg-stone-100" %>
+            <%= button_to workspace.name, switch_workspace_path(workspace), method: :patch, class: "rounded-full border border-rn-line px-4 py-2 text-sm font-bold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
           <% end %>
         </div>
       </section>
     <% end %>
 
-    <section class="border-b border-stone-200 py-6">
-      <div data-testid="dashboard-primary-actions" class="flex flex-wrap gap-2 sm:gap-3">
-        <% if current_workspace_policy.write? %>
-          <%= link_to t(".actions.log_brew"), new_brew_path, class: "rounded-md bg-stone-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-stone-800 sm:px-5 sm:py-3" %>
-          <%= link_to t(".actions.add_bean"), new_bean_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100 sm:px-5 sm:py-3" %>
-        <% end %>
-        <details data-testid="dashboard-mobile-more-actions" class="sm:hidden">
-          <summary class="cursor-pointer rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900">
-            <%= t(".more_actions") %>
-          </summary>
-          <div class="mt-3 grid grid-cols-2 gap-2">
-            <% if current_workspace_policy.write? %>
-              <%= link_to t(".actions.add_equipment"), new_equipment_path, class: "col-span-2 rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-              <%= link_to t(".actions.add_equipment_event"), new_equipment_event_path, class: "col-span-2 rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-              <%= link_to t(".actions.add_preparation_tool"), new_preparation_tool_path, class: "col-span-2 rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <% end %>
-            <%= link_to t(".actions.beans"), beans_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".actions.equipment"), equipment_index_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".actions.preparation_tools"), preparation_tools_path, class: "col-span-2 rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".actions.statistics"), statistics_path, class: "rounded-md border border-stone-300 px-4 py-2.5 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          </div>
-        </details>
-      </div>
-
-      <div data-testid="dashboard-secondary-actions" class="mt-3 hidden flex-wrap gap-3 sm:flex">
-        <% if current_workspace_policy.write? %>
-          <%= link_to t(".actions.add_equipment"), new_equipment_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= link_to t(".actions.add_equipment_event"), new_equipment_event_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <%= link_to t(".actions.add_preparation_tool"), new_preparation_tool_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <% end %>
-        <%= link_to t(".actions.beans"), beans_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <%= link_to t(".actions.equipment"), equipment_index_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <%= link_to t(".actions.preparation_tools"), preparation_tools_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-        <%= link_to t(".actions.statistics"), statistics_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-      </div>
+    <section data-testid="dashboard-secondary-actions" class="mt-6 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
+      <% if current_workspace_policy.write? %>
+        <%= link_to t(".actions.add_equipment"), new_equipment_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+        <%= link_to t(".actions.add_equipment_event"), new_equipment_event_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+        <%= link_to t(".actions.add_preparation_tool"), new_preparation_tool_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <% end %>
+      <%= link_to t(".actions.beans"), beans_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <%= link_to t(".actions.equipment"), equipment_index_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <%= link_to t(".actions.preparation_tools"), preparation_tools_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <%= link_to t(".actions.statistics"), statistics_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
     </section>
 
     <% if @latest_brew.present? || @latest_best_brew.present? %>
-      <section class="grid gap-6 border-b border-stone-200 py-8 lg:grid-cols-2">
+      <section class="mt-8 grid gap-6 lg:grid-cols-2">
         <% if @latest_brew.present? %>
           <div data-testid="dashboard-latest-brew-card">
-            <h2 class="mb-3 text-xl font-bold text-stone-950"><%= t(".hero.latest") %></h2>
+            <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".hero.latest") %></h2>
             <%= link_to brew_path(@latest_brew), class: "block" do %>
               <%= render "brews/hero_card", brew: @latest_brew, compact: true, chart_id: "latest-brew-shot-fill-#{@latest_brew.id}" %>
             <% end %>
@@ -126,7 +60,7 @@
 
         <% if @latest_best_brew.present? %>
           <div data-testid="dashboard-latest-best-brew-card">
-            <h2 class="mb-3 text-xl font-bold text-stone-950"><%= t(".hero.best") %></h2>
+            <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".hero.best") %></h2>
             <%= link_to brew_path(@latest_best_brew), class: "block" do %>
               <%= render "brews/hero_card", brew: @latest_best_brew, compact: true, chart_id: "best-brew-shot-fill-#{@latest_best_brew.id}" %>
             <% end %>
@@ -135,71 +69,77 @@
       </section>
     <% end %>
 
-    <section class="grid gap-4 py-8 sm:grid-cols-3">
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".status.brews_this_week") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= @brews_this_week %></p>
+    <section class="mt-8 grid gap-3 sm:grid-cols-3">
+      <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
+        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".status.brews_this_week") %></p>
+        <p class="mt-2 text-3xl font-black text-rn-ink"><%= @brews_this_week %></p>
       </div>
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".status.open_beans") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= @open_bean_count %></p>
+      <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
+        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".status.open_beans") %></p>
+        <p class="mt-2 text-3xl font-black text-rn-ink"><%= @open_bean_count %></p>
       </div>
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".status.grams_remaining") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= profile_grams(@grams_remaining) %></p>
+      <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
+        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".status.grams_remaining") %></p>
+        <p class="mt-2 text-3xl font-black text-rn-ink"><%= profile_grams(@grams_remaining) %></p>
       </div>
     </section>
 
-    <div class="grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-      <section>
+    <div class="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+      <section data-testid="dashboard-open-beans">
         <div class="mb-4 flex items-center justify-between gap-4">
-          <h2 class="text-xl font-bold text-stone-950"><%= t(".open_beans") %></h2>
-          <%= link_to t(".view_all"), beans_path, class: "text-sm font-medium text-stone-600 hover:text-stone-950" %>
+          <h2 class="text-xl font-black text-rn-ink"><%= t(".open_beans") %></h2>
+          <%= link_to t(".view_all"), beans_path, class: "text-sm font-bold text-rn-muted hover:text-rn-ink" %>
         </div>
 
-        <div class="divide-y divide-stone-100 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+        <div class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
           <% if @open_beans.any? %>
             <% @open_beans.each do |bean| %>
-              <%= link_to bean_path(bean), class: "block p-4 hover:bg-stone-50" do %>
-                <div class="flex items-start justify-between gap-4">
-                  <div>
-                    <p class="font-semibold text-stone-950"><%= bean.name %></p>
-                    <p class="mt-1 text-sm text-stone-600"><%= bean.roaster_name.presence || t(".unknown_roaster") %></p>
+              <%= link_to bean_path(bean), class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex min-w-0 items-center gap-3">
+                    <%= render "shared/record_photo_thumb",
+                      record: bean,
+                      testid: "dashboard-open-bean-photo",
+                      class_name: "h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-stone-200" %>
+                    <div class="min-w-0">
+                      <p class="truncate font-extrabold text-rn-ink"><%= bean.name %></p>
+                      <p class="mt-1 truncate text-sm text-rn-muted"><%= bean.roaster_name.presence || t(".unknown_roaster") %></p>
+                    </div>
                   </div>
-                  <p class="text-sm font-semibold text-stone-800"><%= profile_grams(bean.remaining_grams) %></p>
+                  <p class="shrink-0 text-sm font-extrabold text-rn-ink"><%= profile_grams(bean.remaining_grams) %></p>
                 </div>
               <% end %>
             <% end %>
           <% else %>
-            <p class="p-4 text-sm text-stone-600"><%= t(".no_open_beans") %></p>
+            <p class="p-4 text-sm text-rn-muted"><%= t(".no_open_beans") %></p>
           <% end %>
         </div>
       </section>
 
-      <section>
-        <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".recent_activity") %></h2>
-        <div class="divide-y divide-stone-100 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+      <section data-testid="dashboard-recent-activity">
+        <h2 class="mb-4 text-xl font-black text-rn-ink"><%= t(".recent_activity") %></h2>
+        <div class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
           <% if @recent_activity.any? %>
             <% @recent_activity.each do |activity| %>
               <% if activity.is_a?(Brew) %>
-                <%= link_to brew_path(activity), class: "block p-4 hover:bg-stone-50" do %>
-                  <p class="font-semibold text-stone-950"><%= t(".activity.brew", bean: activity.bean.name) %></p>
-                  <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(activity.occurred_at) %></p>
+                <%= link_to brew_path(activity), class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
+                  <p class="font-extrabold text-rn-ink"><%= t(".activity.brew", bean: activity.bean.name) %></p>
+                  <p class="mt-1 text-sm text-rn-muted"><%= profile_timestamp(activity.occurred_at) %></p>
                 <% end %>
               <% elsif activity.is_a?(EquipmentEvent) %>
-                <%= link_to equipment_event_path(activity), class: "block p-4 hover:bg-stone-50" do %>
-                  <p class="font-semibold text-stone-950"><%= t(".activity.equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>
-                  <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(activity.occurred_at) %></p>
+                <%= link_to equipment_event_path(activity), class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
+                  <p class="font-extrabold text-rn-ink"><%= t(".activity.equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>
+                  <p class="mt-1 text-sm text-rn-muted"><%= profile_timestamp(activity.occurred_at) %></p>
                 <% end %>
               <% else %>
-                <div class="p-4">
-                  <p class="font-semibold text-stone-950"><%= t(".activity.adjustment", bean: activity.bean.name, amount: profile_number(activity.delta_grams, precision: 1)) %></p>
-                  <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(activity.occurred_at) %></p>
+                <div class="border-b border-rn-line p-4 last:border-b-0">
+                  <p class="font-extrabold text-rn-ink"><%= t(".activity.adjustment", bean: activity.bean.name, amount: profile_number(activity.delta_grams, precision: 1)) %></p>
+                  <p class="mt-1 text-sm text-rn-muted"><%= profile_timestamp(activity.occurred_at) %></p>
                 </div>
               <% end %>
             <% end %>
           <% else %>
-            <p class="p-4 text-sm text-stone-600"><%= t(".no_activity") %></p>
+            <p class="p-4 text-sm text-rn-muted"><%= t(".no_activity") %></p>
           <% end %>
         </div>
       </section>

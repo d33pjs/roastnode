@@ -14,7 +14,12 @@
     <% end %>
     <%= link_to t("shared.app_navigation.statistics"), statistics_path, data: { testid: "app-nav-statistics" }, class: "rn-nav-link" %>
     <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-nav-link" %>
-    <%= link_to t("shared.app_navigation.more"), edit_profile_path, data: { testid: "app-nav-more" }, class: "rn-nav-link" %>
+    <details data-testid="app-nav-more" class="relative">
+      <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.more") %></summary>
+      <div class="absolute right-0 top-11 z-40 grid min-w-60 gap-1 rounded-2xl border border-rn-line bg-rn-surface p-2 text-sm font-bold text-rn-ink shadow-2xl">
+        <%= render "shared/app_navigation_more_links" %>
+      </div>
+    </details>
   </div>
 </nav>
 
@@ -52,19 +57,7 @@
       <span><%= t("shared.app_navigation.more") %></span>
     </summary>
     <div class="absolute bottom-16 right-0 grid min-w-56 gap-1 rounded-2xl border border-rn-line bg-rn-surface p-2 text-sm font-bold text-rn-ink shadow-2xl">
-      <%= link_to t("shared.app_navigation.profile"), edit_profile_path, class: "rn-more-link" %>
-      <%= link_to t("shared.app_navigation.members"), memberships_path, class: "rn-more-link" %>
-      <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-more-link" %>
-      <%= link_to t("shared.app_navigation.preparation_tools"), preparation_tools_path, class: "rn-more-link" %>
-      <% if current_workspace_policy.manage? %>
-        <%= link_to t("shared.app_navigation.settings"), edit_workspace_path, class: "rn-more-link" %>
-        <%= link_to t("shared.app_navigation.invites"), workspace_invites_path, class: "rn-more-link" %>
-        <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-more-link" %>
-      <% end %>
-      <% if Current.user.instance_admin? %>
-        <%= link_to t("shared.app_navigation.instance_admin"), instance_admin_path, class: "rn-more-link" %>
-      <% end %>
-      <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-more-link w-full text-left" %>
+      <%= render "shared/app_navigation_more_links" %>
     </div>
   </details>
 </nav>

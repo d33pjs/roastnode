@@ -29,7 +29,7 @@ class HomeController < ApplicationController
     end
 
     def load_dashboard
-      @open_beans = current_workspace.beans.open.limit(5)
+      @open_beans = current_workspace.beans.open.includes(:primary_photo_record, photos_attachments: :blob).limit(5)
       @brews_this_week = current_workspace.brews.where(occurred_at: Time.current.all_week).count
       @open_bean_count = current_workspace.beans.open.count
       @grams_remaining = current_workspace.beans.open.sum(:remaining_grams)

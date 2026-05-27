@@ -1,0 +1,13 @@
+<% record = local_assigns.fetch(:record) %>
+<% photo = record&.primary_photo_attachment %>
+<% testid = local_assigns.fetch(:testid, "record-photo") %>
+<% class_name = local_assigns.fetch(:class_name, "h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-stone-200") %>
+<% fallback = local_assigns.fetch(:fallback, record&.respond_to?(:name) ? record.name : "R") %>
+
+<% if photo.present? %>
+  <%= image_tag media_attachment_path(photo, variant: :thumbnail), alt: "", data: { testid: }, class: class_name %>
+<% else %>
+  <span data-testid="<%= "#{testid}-placeholder" %>" class="<%= class_name %> grid place-items-center bg-[var(--rn-surface-muted)] text-sm font-extrabold text-rn-muted">
+    <%= fallback.to_s.first&.upcase || "R" %>
+  </span>
+<% end %>
