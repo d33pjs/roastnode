@@ -81,6 +81,6 @@ Local IDs are included so relationships can be reconstructed inside a single exp
 
 ## Deferred
 
-- Scheduled backups.
+- Instance-wide scheduled backups and empty-server restore. These are a separate v1 operations slice, not an active-workspace export feature.
 - Workspace deletion and transfer.
 - Non-owner export policy variants.

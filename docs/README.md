@@ -25,6 +25,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/preparation-tools.md` describes method-scoped brew checklist tools and brew snapshots.
 - `docs/private-media.md` describes private photo upload, display, and scoped media delivery.
 - `docs/workspace-export.md` describes owner-only JSON and CSV workspace exports.
+- `docs/backup-system.md` describes the planned instance-admin backup and empty-server restore contract.
 - `docs/demo-data.md` describes the optional demo household loader.
 - `docs/statistics.md` describes the first private workspace analytics page.
 - `docs/typography.md` describes the self-hosted Elms Sans font setup and license note.

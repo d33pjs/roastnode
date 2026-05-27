@@ -11,11 +11,13 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Decimal measurement inputs should accept both `18.2` and German-style `18,2`, including common unit suffixes like `g`, `°C`, `€`, and `EUR`. Use comma-friendly text inputs with `inputmode="decimal"` for decimal measurements instead of HTML `number` inputs, and normalize submitted decimal params through `LocalizedNumberParser`. Display formatting for numbers and timestamps comes from `User#number_format` and `User#time_format`; workspace currency remains the currency code source.
 - Treat `Workspace` as the ownership boundary for domain data. Beans, equipment, brews, inventory, photos, and statistics should belong to a workspace unless a future ADR explicitly says otherwise.
 - Treat `User#instance_admin` as an application-level hosting/admin flag, separate from workspace roles. Instance-wide routes must use `authorize_instance_admin!` and must not leak passwords, sessions, invite tokens, signed media URLs, or infrastructure secrets. Keep `InstanceHealthSnapshot` checks read-only and safe for normal page loads.
+- Treat the instance backup system as v1 operational scope, separate from active-workspace export. It must be instance-admin-only, activated/configured inside the app, scheduled through Solid Queue, and able to produce both a full reconstructable archive and a readable all-households JSON export.
 - Keep documentation in `docs/` current as decisions land.
 
 ## Working Rules
 
 - Do not create a nested `roastnode/` app directory. The Rails app lives at the repository root.
+- Keep current solo development on `main`. Do not create separate Git branches or worktrees unless the user explicitly asks to re-enable branching for a specific task.
 - Commit often with small, descriptive commits.
 - Protect user changes. Do not revert unrelated local edits.
 - Scope early implementation to foundation, authentication, workspaces, memberships, and private household flows.
@@ -49,7 +51,8 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Workspace settings include the household logo and banner. The household logo is a small identity mark on Hero Brew Cards. Workspace identity images are visible only for the active workspace and editable only by owners/admins.
 - Typography uses self-hosted Elms Sans from `app/assets/fonts/elmssans/` under the SIL Open Font License 1.1. Do not add runtime Google Fonts references; keep the vendored `OFL.txt` with the font files.
 - Branding assets live in `app/assets/images/brand/`. Use the shared brand partials with `logo_wordmark_transparent.png` and `logo_mark_transparent.png` for visible UI; the `*_transparent_bg.png` source files currently contain baked checkerboards, so avoid them until they are replaced by true alpha-transparent exports.
-- Workspace export is owner-only and uses the active workspace. Keep the JSON export structured for reconstruction, and keep beans/brews CSV exports flat for spreadsheet use. Omit sessions/passwords/invite tokens, and do not include signed media URLs or raw photo bytes until a dedicated media archive design exists.
+- Workspace export is owner-only and uses the active workspace. Keep the JSON export structured for reconstruction, and keep beans/brews CSV exports flat for spreadsheet use. Omit sessions/passwords/invite tokens, and do not include signed media URLs or raw photo bytes in the JSON.
+- Instance backups intentionally cross workspace boundaries but only for instance admins. A full backup must include every household/workspace, users and memberships needed for restore, all coffee records, import metadata, inventory history, and all media files, including account media, in a format that can be re-imported into an empty new server. The readable JSON backup should contain all household/workspace data and stable media references while keeping media bytes in files. Never include password digests, sessions, invite tokens, signed URLs, environment variables, or infrastructure secrets in backup payloads.
 - Optional demo data is loaded explicitly with `bin/rails roastnode:demo:load`. Keep it idempotent and guarded against accidental production credentials.
 - Dashboard recent activity should include brews, equipment events, and manual inventory adjustments. Do not show automatic brew inventory adjustments as separate timeline entries.
 
