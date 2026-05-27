@@ -35,16 +35,16 @@
       </section>
     <% end %>
 
-    <section data-testid="dashboard-secondary-actions" class="mt-6 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible">
+    <section data-testid="dashboard-secondary-actions" class="mt-6 flex flex-wrap gap-2 pb-1">
       <% if current_workspace_policy.write? %>
-        <%= link_to t(".actions.add_equipment"), new_equipment_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
-        <%= link_to t(".actions.add_equipment_event"), new_equipment_event_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
-        <%= link_to t(".actions.add_preparation_tool"), new_preparation_tool_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+        <%= link_to t(".actions.add_equipment"), new_equipment_path, class: "rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+        <%= link_to t(".actions.add_equipment_event"), new_equipment_event_path, class: "rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+        <%= link_to t(".actions.add_preparation_tool"), new_preparation_tool_path, class: "rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
       <% end %>
-      <%= link_to t(".actions.beans"), beans_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
-      <%= link_to t(".actions.equipment"), equipment_index_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
-      <%= link_to t(".actions.preparation_tools"), preparation_tools_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
-      <%= link_to t(".actions.statistics"), statistics_path, class: "shrink-0 rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <%= link_to t(".actions.beans"), beans_path, class: "rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <%= link_to t(".actions.equipment"), equipment_index_path, class: "rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <%= link_to t(".actions.preparation_tools"), preparation_tools_path, class: "rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+      <%= link_to t(".actions.statistics"), statistics_path, class: "rounded-full border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-muted hover:text-rn-ink" %>
     </section>
 
     <% if @latest_brew.present? || @latest_best_brew.present? %>
