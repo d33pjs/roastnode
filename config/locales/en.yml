@@ -271,6 +271,13 @@ en:
       preinfusion: "Preinfusion (s)"
       preparation_tools: "Preparation tools"
       rating: "Rating"
+      sections:
+        bean: "Bean"
+        dose: "Dose and grind"
+        extraction: "Extraction"
+        notes: "Notes"
+        setup: "Setup"
+        taste: "Taste"
       taste: "Taste balance"
       temperature: "Temperature (C)"
       total_time: "Total time (s)"

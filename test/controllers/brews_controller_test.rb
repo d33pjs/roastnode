@@ -17,9 +17,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("brews.new.title")
-    assert_select "option[selected][value=?]", beans(:open_household).id.to_s
-    assert_select "option[selected][value=?]", equipment(:household_grinder).id.to_s
-    assert_select "option[selected][value=?]", equipment(:household_machine).id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", beans(:open_household).id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[grinder_id]", equipment(:household_grinder).id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[machine_id]", equipment(:household_machine).id.to_s
     assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "18.0", count: 0
     assert_select "input[name=?][value=?]", "brew[ground_weight_grams]", "18.0", count: 0
     assert_select "input[name=?][value=?]", "brew[dose_grams]", "18.0", count: 0
@@ -47,8 +47,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path
 
     assert_response :success
-    assert_select "select[name=?] option[value=?]", "brew[grinder_id]", archived_grinder.id.to_s, count: 0
-    assert_select "select[name=?] option[value=?]", "brew[machine_id]", archived_machine.id.to_s, count: 0
+    assert_select "input[type=radio][name=?][value=?]", "brew[grinder_id]", archived_grinder.id.to_s, count: 0
+    assert_select "input[type=radio][name=?][value=?]", "brew[machine_id]", archived_machine.id.to_s, count: 0
   end
 
   test "new autofocuses the user's preferred brew field" do
@@ -87,6 +87,59 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[dose_grams]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[beverage_grams]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[brew_temperature_celsius]"
+  end
+
+  test "new renders shot-first form sections in approved order" do
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "[data-testid=brew-form-section][data-section=bean]"
+    assert_select "[data-testid=brew-form-section][data-section=dose]"
+    assert_select "[data-testid=brew-form-section][data-section=extraction]"
+    assert_select "[data-testid=brew-form-section][data-section=setup]"
+    assert_select "[data-testid=brew-form-section][data-section=taste]"
+    assert_select "[data-testid=brew-form-section][data-section=notes]"
+
+    assert_appears_before "data-section=\"bean\"", "data-section=\"dose\""
+    assert_appears_before "data-section=\"dose\"", "data-section=\"extraction\""
+    assert_appears_before "data-section=\"extraction\"", "data-section=\"setup\""
+    assert_appears_before "data-section=\"setup\"", "data-section=\"taste\""
+    assert_appears_before "data-section=\"taste\"", "data-section=\"notes\""
+
+    assert_appears_before "brew[bean_weight_grams]", "brew[ground_weight_grams]"
+    assert_appears_before "brew[ground_weight_grams]", "brew[dose_grams]"
+    assert_appears_before "brew[dose_grams]", "brew[grind_setting]"
+    assert_appears_before "brew[preinfusion_seconds]", "brew[first_drip_seconds]"
+    assert_appears_before "brew[first_drip_seconds]", "brew[total_time_seconds]"
+    assert_appears_before "brew[total_time_seconds]", "brew[beverage_grams]"
+    assert_appears_before "brew[channeling]", "brew[photos][]"
+    assert_appears_before "brew[photos][]", "brew[grinder_id]"
+    assert_appears_before "brew[machine_id]", "brew[brew_temperature_celsius]"
+    assert_appears_before "brew[taste_balance]", "brew[rating]"
+    assert_appears_before "brew[rating]", "brew[notes]"
+  end
+
+  test "new renders image-backed selectors for beans equipment and preparation tools" do
+    bean_photo = attach_photo(beans(:open_household))
+    grinder_photo = attach_photo(equipment(:household_grinder))
+    machine_photo = attach_photo(equipment(:household_machine))
+    tool_photo = attach_photo(preparation_tools(:wdt))
+    beans(:open_household).set_primary_photo!(bean_photo)
+    equipment(:household_grinder).set_primary_photo!(grinder_photo)
+    equipment(:household_machine).set_primary_photo!(machine_photo)
+    preparation_tools(:wdt).set_primary_photo!(tool_photo)
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", beans(:open_household).id.to_s
+    assert_select "img[data-testid=brew-bean-option-photo][src=?]", media_attachment_path(bean_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-grinder-option-photo][src=?]", media_attachment_path(grinder_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-machine-option-photo][src=?]", media_attachment_path(machine_photo, variant: :thumbnail)
+    assert_select "img[data-testid=brew-tool-option-photo][src=?]", media_attachment_path(tool_photo, variant: :thumbnail)
   end
 
   test "edit ignores hidden brew fields so corrections show the full log" do
@@ -133,7 +186,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path
 
     assert_response :success
-    assert_select "option[selected][value=?]", beans(:second_open_household).id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", beans(:second_open_household).id.to_s
   end
 
   test "new disambiguates duplicate open bean labels with opened date" do
@@ -149,9 +202,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path
 
     assert_response :success
-    assert_select "option[value=?]", beans(:open_household).id.to_s, text: "Good Coffee - House Blend (opened 10.05.2026)"
-    assert_select "option[value=?]", duplicate.id.to_s, text: "Good Coffee - House Blend (opened 20.05.2026)"
-    assert_select "option[value=?]", beans(:second_open_household).id.to_s, text: "North Star - Morning Lot"
+    assert_select "label", text: /Good Coffee - House Blend \(opened 10\.05\.2026\)/
+    assert_select "label", text: /Good Coffee - House Blend \(opened 20\.05\.2026\)/
+    assert_select "label", text: /North Star - Morning Lot/
   end
 
   test "member can create espresso brew and consume selected bean" do
@@ -507,4 +560,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
   end
+
+  private
+    def assert_appears_before(first, second)
+      first_index = response.body.index(first)
+      second_index = response.body.index(second)
+
+      assert first_index, "Expected #{first.inspect} to appear in response body"
+      assert second_index, "Expected #{second.inspect} to appear in response body"
+      assert first_index < second_index, "Expected #{first.inspect} to appear before #{second.inspect}"
+    end
 end

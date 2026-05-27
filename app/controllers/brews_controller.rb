@@ -77,12 +77,12 @@ class BrewsController < ApplicationController
     end
 
     def load_form_options(selected_bean: nil, selected_grinder: nil, selected_machine: nil)
-      @beans = current_workspace.beans.open.to_a
+      @beans = current_workspace.beans.open.includes(:primary_photo_record, photos_attachments: :blob).to_a
       @beans << selected_bean if selected_bean && @beans.exclude?(selected_bean)
       @beans.sort_by! { |bean| [ bean.opened_on || Date.new(9999, 12, 31), bean.created_at, bean.name ] }
       @grinders = equipment_options(kind: :grinder, selected_equipment: selected_grinder)
       @machines = equipment_options(kind: :machine, selected_equipment: selected_machine)
-      @preparation_tools = current_workspace.preparation_tools.active.espresso.ordered
+      @preparation_tools = current_workspace.preparation_tools.active.espresso.ordered.includes(:primary_photo_record, photos_attachments: :blob)
     end
 
     def default_brew_attributes
@@ -122,7 +122,7 @@ class BrewsController < ApplicationController
     end
 
     def equipment_options(kind:, selected_equipment: nil)
-      options = current_workspace.equipment.active.public_send(kind).order(:name).to_a
+      options = current_workspace.equipment.active.public_send(kind).includes(:primary_photo_record, photos_attachments: :blob).order(:name).to_a
       options << selected_equipment if selected_equipment && options.exclude?(selected_equipment)
       options.sort_by(&:name)
     end
