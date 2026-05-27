@@ -13,6 +13,7 @@ Preparation Tools are reusable workspace checklist items for brew preparation. T
 - Destructive danger-zone delete that keeps brew snapshots readable.
 - Manual sort position for checklist ordering.
 - Detail analytics for usage count, total coffee ground, average rating/yield/time, channeling rate, taste balance, retention markers, best brews, and recent brews.
+- Optional date range filters for brew-derived tool analytics.
 - Brew form checklist for active espresso tools.
 - Per-brew snapshots of selected tool names.
 - Last-brew defaults for active tools from the current user's previous brew.
@@ -33,6 +34,10 @@ Saving a brew creates `BrewPreparationTool` snapshot rows with:
 - `position`
 
 The snapshot keeps old brew history readable if a tool is renamed later.
+
+## Analytics
+
+Preparation tool analytics are scoped through the active workspace tool. Date range filters are inclusive and apply to brew-derived values: usage count, total coffee ground, averages, channeling, taste balance, retention markers, best brews, and recent brews. Tool lifecycle fields such as active status, method, and position remain current tool facts.
 
 ## Delete
 

@@ -38,6 +38,42 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", preparation_tool_path(preparation_tools(:wdt))
   end
 
+  test "show filters preparation tool analytics by date range" do
+    sign_in_as(users(:one))
+    tool = preparation_tools(:wdt)
+    brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+    old_brew = beans(:open_household).brews.create!(
+      workspace: tool.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 20, 8, 15, 0),
+      bean_weight_grams: 20,
+      ground_weight_grams: 20,
+      dose_grams: 20,
+      beverage_grams: 45,
+      rating: 3,
+      channeling: true
+    )
+    old_brew.brew_preparation_tools.create!(
+      preparation_tool: tool,
+      tool_name: tool.name,
+      brew_method: tool.brew_method,
+      position: 0
+    )
+
+    get preparation_tool_path(tool), params: { start_date: "2026-05-26", end_date: "2026-05-26" }
+
+    assert_response :success
+    assert_select "input[data-testid=preparation-tool-statistics-start-date][value='2026-05-26']"
+    assert_select "input[data-testid=preparation-tool-statistics-end-date][value='2026-05-26']"
+    assert_select "[data-testid=preparation-tool-brew-count]", "1"
+    assert_select "[data-testid=preparation-tool-total-ground]", "18 g"
+    assert_select "[data-testid=preparation-tool-channeling-rate]", "0%"
+    assert_select "[data-testid=preparation-tool-recent-brews] a[href=?]", brew_path(brews(:morning_espresso))
+    assert_select "[data-testid=preparation-tool-recent-brews] a[href=?]", brew_path(old_brew), count: 0
+  end
+
   test "show is scoped to active workspace" do
     sign_in_as(users(:one))
 

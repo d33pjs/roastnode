@@ -7,7 +7,12 @@ class PreparationToolsController < ApplicationController
   end
 
   def show
-    @preparation_tool_statistics = PreparationToolStatistics.new(preparation_tool: @preparation_tool).call
+    @preparation_tool_statistics_start_date, @preparation_tool_statistics_end_date = preparation_tool_statistics_date_range
+    @preparation_tool_statistics = PreparationToolStatistics.new(
+      preparation_tool: @preparation_tool,
+      start_date: @preparation_tool_statistics_start_date,
+      end_date: @preparation_tool_statistics_end_date
+    ).call
     @recent_brews = @preparation_tool_statistics[:recent_brews]
   end
 
@@ -61,6 +66,25 @@ class PreparationToolsController < ApplicationController
   private
     def set_preparation_tool
       @preparation_tool = current_workspace.preparation_tools.find(params[:id])
+    end
+
+    def preparation_tool_statistics_date_range
+      start_date = parse_preparation_tool_statistics_date(params[:start_date])
+      end_date = parse_preparation_tool_statistics_date(params[:end_date])
+
+      if start_date.present? && end_date.present? && start_date > end_date
+        [ end_date, start_date ]
+      else
+        [ start_date, end_date ]
+      end
+    end
+
+    def parse_preparation_tool_statistics_date(value)
+      return nil if value.blank?
+
+      Date.iso8601(value)
+    rescue ArgumentError
+      nil
     end
 
     def preparation_tool_params

@@ -66,6 +66,56 @@ class PreparationToolStatisticsTest < ActiveSupport::TestCase
     assert_equal [ "12", "10", "11" ], statistics[:recent_brews].map(&:grind_setting)
   end
 
+  test "filters preparation tool analytics by date range" do
+    tool = preparation_tools(:wdt)
+    user = users(:one)
+    bean = beans(:open_household)
+    brews(:morning_espresso).update!(
+      occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0),
+      bean_weight_grams: 18,
+      beverage_grams: 40,
+      total_time_seconds: 28,
+      grind_setting: "12",
+      taste_balance: "neutral",
+      channeling: false,
+      retention_marker: "normal",
+      rating: 4
+    )
+    create_brew_with_tool!(
+      tool:,
+      bean:,
+      user:,
+      occurred_at: Time.zone.local(2026, 5, 20, 9, 30, 0),
+      bean_weight_grams: 20,
+      ground_weight_grams: 20.4,
+      beverage_grams: 50,
+      total_time_seconds: 32,
+      grind_setting: "10",
+      taste_balance: "bitter",
+      channeling: true,
+      retention_marker: "exchange",
+      rating: 3
+    )
+
+    statistics = PreparationToolStatistics.new(
+      preparation_tool: tool,
+      start_date: Date.new(2026, 5, 26),
+      end_date: Date.new(2026, 5, 26)
+    ).call
+
+    assert_equal 1, statistics[:totals][:brew_count]
+    assert_equal 18.to_d, statistics[:totals][:total_bean_weight_grams]
+    assert_equal 4, statistics[:averages][:rating]
+    assert_equal 40, statistics[:averages][:beverage_grams]
+    assert_equal 28, statistics[:averages][:total_time_seconds]
+    assert_equal 0, statistics[:rates][:channeling_count]
+    assert_equal 0, statistics[:rates][:channeling_percent]
+    assert_equal({ "neutral" => 1 }, statistics[:distributions][:taste_balance])
+    assert_equal({ "normal" => 1 }, statistics[:distributions][:retention_marker])
+    assert_equal [ 4 ], statistics[:best_brews].map(&:rating)
+    assert_equal [ "12" ], statistics[:recent_brews].map(&:grind_setting)
+  end
+
   private
     def create_brew_with_tool!(tool:, bean:, user:, **attributes)
       brew = bean.brews.create!(
