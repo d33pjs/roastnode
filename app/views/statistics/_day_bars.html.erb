@@ -6,7 +6,7 @@
       <div class="h-2 overflow-hidden rounded-full bg-stone-100">
         <div class="h-full rounded-full bg-stone-900" style="width: <%= statistics_bar_width(value, maximum) %>%"></div>
       </div>
-      <span class="text-right font-medium text-stone-800"><%= suffix.present? ? number_with_precision(value, precision: 1, strip_insignificant_zeros: true) : value %><%= suffix %></span>
+      <span class="text-right font-medium text-stone-800"><%= suffix.present? ? profile_number(value, precision: 1) : value %><%= suffix %></span>
     </div>
   <% end %>
 </div>

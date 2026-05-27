@@ -60,7 +60,7 @@
           <p class="text-xs font-bold uppercase text-stone-500"><%= t(".average_rating") %></p>
           <p class="mt-1 text-2xl font-bold text-stone-950">
             <% if @preparation_tool_statistics[:averages][:rating].present? %>
-              <%= number_with_precision(@preparation_tool_statistics[:averages][:rating], precision: 1, strip_insignificant_zeros: true) %>/5
+              <%= profile_number(@preparation_tool_statistics[:averages][:rating], precision: 1) %>/5
             <% else %>
               <%= t(".unknown") %>
             <% end %>

@@ -18,6 +18,8 @@ class ProfilesController < ApplicationController
       params.require(:user).permit(
         :display_name,
         :default_landing_screen,
+        :number_format,
+        :time_format,
         :default_brew_focus_field,
         :avatar,
         :public_banner,

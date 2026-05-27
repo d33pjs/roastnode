@@ -300,14 +300,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-byline]", "Logged by Jens"
     assert_select "[data-testid=brew-byline] img[data-testid=brew-user-avatar][src=?]", media_attachment_path(avatar)
     assert_select "[data-testid=brew-metrics].grid-cols-3"
-    assert_select "[data-testid=brew-dose]", "18.2 g"
+    assert_select "[data-testid=brew-dose]", "18,2 g"
     assert_select "[data-testid=brew-beverage]", count: 0
     assert_select "[data-testid=brew-ratio-main]", "1:2,47"
     assert_select "[data-testid=brew-ratio-time]", "in 31s"
     assert_select "[data-testid=brew-grind]", "12"
     assert_select "[data-testid=brew-retention-label] .sm\\:hidden", "Ret."
     assert_select "[data-testid=brew-retention-label] .hidden.sm\\:inline", "Retention"
-    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0.4 g"
+    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0,4 g"
     assert_select "[data-testid=brew-rating-card] [data-testid=brew-rating][aria-label=?]", "Rating 4 of 5 beans" do
       assert_select ".rating-bean--filled", 4
       assert_select ".rating-bean--empty", 1
@@ -332,14 +332,42 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-tool]", "WDT"
     assert_select "[data-testid=brew-log-details]"
     assert_select "[data-testid=brew-detail-bean] a[href=?]", bean_path(brew.bean), text: brew.bean.display_name
-    assert_select "[data-testid=brew-detail-bean-weight]", "18.6 g"
-    assert_select "[data-testid=brew-detail-ground-weight]", "18.2 g"
+    assert_select "[data-testid=brew-detail-bean-weight]", "18,6 g"
+    assert_select "[data-testid=brew-detail-ground-weight]", "18,2 g"
     assert_select "[data-testid=brew-detail-beverage]", "45 g"
     assert_select "[data-testid=brew-detail-channeling]", "Yes"
     assert_select "[data-testid=brew-detail-grinder] a[href=?]", equipment_path(brew.grinder), text: brew.grinder.name
     assert_select "[data-testid=brew-detail-machine] a[href=?]", equipment_path(brew.machine), text: brew.machine.name
     assert_select "a[data-testid=brew-detail-tool][href=?]", preparation_tool_path(preparation_tools(:wdt)), text: "WDT"
     assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
+  end
+
+  test "show formats brew card numbers and timestamps from user profile preferences" do
+    users(:one).update!(
+      number_format: "dot_decimal",
+      time_format: "us_12h_seconds"
+    )
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.update!(
+      occurred_at: Time.zone.local(2026, 5, 26, 11, 22, 8),
+      bean_weight_grams: 18.6,
+      ground_weight_grams: 18.2,
+      dose_grams: 18.2,
+      beverage_grams: 45.0,
+      brew_temperature_celsius: 93.0,
+      total_time_seconds: 31
+    )
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-timestamp]", "05/26/2026 11:22:08 AM"
+    assert_select "[data-testid=brew-dose]", "18.2 g"
+    assert_select "[data-testid=brew-ratio-main]", "1:2.47"
+    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0.4 g"
+    assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
+    assert_select "[data-testid=brew-detail-bean-weight]", "18.6 g"
   end
 
   test "hero brew card uses primary bean photo" do

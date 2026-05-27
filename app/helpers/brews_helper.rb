@@ -1,12 +1,10 @@
 module BrewsHelper
   def brew_card_timestamp(brew)
-    l(brew.occurred_at, format: :european_seconds)
+    profile_timestamp(brew.occurred_at)
   end
 
   def brew_card_grams(value)
-    return t("brews.show.unknown") if value.blank?
-
-    "#{number_with_precision(value, precision: 1, strip_insignificant_zeros: true)} g"
+    profile_grams(value)
   end
 
   def brew_card_seconds(value)
@@ -16,9 +14,7 @@ module BrewsHelper
   end
 
   def brew_card_temperature(value)
-    return t("brews.show.unknown") if value.blank?
-
-    "#{number_with_precision(value, precision: 1, strip_insignificant_zeros: true)}°C"
+    profile_temperature(value)
   end
 
   def brew_card_boolean(value)
@@ -130,6 +126,6 @@ module BrewsHelper
     end
 
     def brew_card_decimal(value)
-      number_with_precision(value, precision: 2, strip_insignificant_zeros: true).tr(".", ",")
+      profile_number(value, precision: 2)
     end
 end

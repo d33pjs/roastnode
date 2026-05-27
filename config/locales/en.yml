@@ -588,7 +588,15 @@ en:
       landing_screens:
         dashboard: "Dashboard"
         log_espresso: "Log espresso"
+      number_format: "Number format"
+      number_formats:
+        comma_decimal: "1.234,5"
+        dot_decimal: "1,234.5"
       save: "Save profile"
+      time_format: "Time format"
+      time_formats:
+        european_24h_seconds: "26.05.2026 14:37:04"
+        us_12h_seconds: "05/26/2026 02:37:04 PM"
       title: "Profile"
       public_banner: "Public banner"
       username: "Username"

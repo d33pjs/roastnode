@@ -1,13 +1,13 @@
 module StatisticsHelper
   def statistics_grams(value)
-    "#{number_with_precision(value || 0, precision: 1, strip_insignificant_zeros: true)} g"
+    "#{profile_number(value || 0, precision: 1)} g"
   end
 
   def statistics_money(cents)
     return t("statistics.index.unknown") if cents.blank?
 
     amount = cents.to_d / 100
-    "#{number_with_precision(amount, precision: 2)} #{current_workspace.default_currency}"
+    "#{profile_number(amount, precision: 2, strip_insignificant_zeros: false)} #{current_workspace.default_currency}"
   end
 
   def statistics_percent(value)

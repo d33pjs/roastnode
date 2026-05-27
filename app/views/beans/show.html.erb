@@ -25,11 +25,11 @@
     <div class="mt-6 grid gap-4 sm:grid-cols-3">
       <section class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <h2 class="text-sm font-semibold uppercase text-stone-600"><%= t(".remaining") %></h2>
-        <p class="mt-2 text-2xl font-bold text-stone-950"><%= number_with_precision(@bean.remaining_grams, precision: 1, strip_insignificant_zeros: true) %> g</p>
+        <p class="mt-2 text-2xl font-bold text-stone-950"><%= profile_grams(@bean.remaining_grams) %></p>
       </section>
       <section class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <h2 class="text-sm font-semibold uppercase text-stone-600"><%= t(".bag_size") %></h2>
-        <p class="mt-2 text-2xl font-bold text-stone-950"><%= number_with_precision(@bean.bag_size_grams, precision: 1, strip_insignificant_zeros: true) %> g</p>
+        <p class="mt-2 text-2xl font-bold text-stone-950"><%= profile_grams(@bean.bag_size_grams) %></p>
       </section>
       <section class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <h2 class="text-sm font-semibold uppercase text-stone-600"><%= t(".status") %></h2>
@@ -79,7 +79,7 @@
           <p class="text-xs font-bold uppercase text-stone-500"><%= t(".average_rating") %></p>
           <p class="mt-1 text-2xl font-bold text-stone-950">
             <% if @bean_statistics[:averages][:rating].present? %>
-              <%= number_with_precision(@bean_statistics[:averages][:rating], precision: 1, strip_insignificant_zeros: true) %>/5
+              <%= profile_number(@bean_statistics[:averages][:rating], precision: 1) %>/5
             <% else %>
               <%= t(".unknown") %>
             <% end %>
@@ -154,7 +154,7 @@
           roast_degree: @bean.roast_degree,
           rating: @bean.rating,
           blend_type: @bean.blend_type.humanize,
-          purchase_price: number_to_currency(@bean.purchase_price, unit: "€"),
+          purchase_price: profile_money(@bean.purchase_price),
           tasting_notes: @bean.tasting_notes,
           decaffeinated: @bean.decaffeinated? ? t(".yes") : t(".no"),
           purchase_url: @bean.purchase_url,

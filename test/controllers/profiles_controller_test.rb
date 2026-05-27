@@ -14,6 +14,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?]", "user[avatar]"
     assert_select "input[type=file][name=?]", "user[public_banner]"
     assert_select "select[name=?]", "user[default_landing_screen]"
+    assert_select "select[name=?]", "user[number_format]"
+    assert_select "select[name=?]", "user[time_format]"
     assert_select "select[name=?]", "user[default_brew_focus_field]"
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "notes"
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "photos"
@@ -41,6 +43,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
       user: {
         display_name: "Jens",
         default_landing_screen: "log_espresso",
+        number_format: "dot_decimal",
+        time_format: "us_12h_seconds",
         default_brew_focus_field: "dose_grams",
         hidden_brew_field_names: %w[rating channeling photos]
       }
@@ -49,6 +53,8 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
     assert_equal "Jens", user.reload.display_name
     assert_equal "log_espresso", user.default_landing_screen
+    assert_equal "dot_decimal", user.number_format
+    assert_equal "us_12h_seconds", user.time_format
     assert_equal "dose_grams", user.default_brew_focus_field
     assert_equal %w[rating channeling photos], user.hidden_brew_field_names
   end

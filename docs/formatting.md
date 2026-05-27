@@ -10,4 +10,11 @@ Decimal measurement inputs should be rendered as `type="text"` with `inputmode="
 
 ## Profile Formatting
 
-Profile-level display preferences for number, time, and currency formatting are still a product-design slice. Currency is currently a workspace setting, so future per-user currency display needs a clear decision about whether it is only formatting or actual conversion.
+Users can choose number and timestamp display preferences from Profile:
+
+- `comma_decimal` displays values like `1.234,5`.
+- `dot_decimal` displays values like `1,234.5`.
+- `european_24h_seconds` displays timestamps like `26.05.2026 14:37:04`.
+- `us_12h_seconds` displays timestamps like `05/26/2026 02:37:04 PM`.
+
+Currency is still owned by the active workspace through `Workspace#default_currency`. Profile number formatting controls the amount display, but it does not perform currency conversion.

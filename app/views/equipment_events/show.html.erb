@@ -12,7 +12,7 @@
       <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
       <h1 class="mt-2 text-3xl font-bold text-stone-950"><%= @equipment_event.event_type_summary %></h1>
       <p class="mt-2 text-stone-700"><%= t(".byline", user: @equipment_event.user.display_label) %></p>
-      <p class="mt-1 text-sm text-stone-600"><%= l(@equipment_event.occurred_at, format: :short) %></p>
+      <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(@equipment_event.occurred_at) %></p>
 
       <dl class="mt-6 grid gap-4 sm:grid-cols-2">
         <div>

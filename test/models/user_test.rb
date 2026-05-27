@@ -39,6 +39,21 @@ class UserTest < ActiveSupport::TestCase
     assert_not_predicate user, :valid?
   end
 
+  test "display formatting preferences are constrained to supported values" do
+    user = users(:one)
+
+    user.number_format = "dot_decimal"
+    user.time_format = "us_12h_seconds"
+    assert_predicate user, :valid?
+
+    user.number_format = "middle_earth"
+    assert_not_predicate user, :valid?
+
+    user.number_format = "comma_decimal"
+    user.time_format = "sundial"
+    assert_not_predicate user, :valid?
+  end
+
   test "hidden brew field names keep only supported fields" do
     user = users(:one)
 

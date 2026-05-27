@@ -64,7 +64,7 @@
           <p class="text-xs font-bold uppercase text-stone-500"><%= t(".average_rating") %></p>
           <p class="mt-1 text-2xl font-bold text-stone-950">
             <% if @equipment_statistics[:averages][:rating].present? %>
-              <%= number_with_precision(@equipment_statistics[:averages][:rating], precision: 1, strip_insignificant_zeros: true) %>/5
+              <%= profile_number(@equipment_statistics[:averages][:rating], precision: 1) %>/5
             <% else %>
               <%= t(".unknown") %>
             <% end %>
@@ -126,7 +126,7 @@
             <% @recent_events.each do |event| %>
               <%= link_to equipment_event_path(event), class: "block p-4 hover:bg-stone-50" do %>
                 <p class="font-semibold text-stone-950"><%= event.event_type_summary %></p>
-                <p class="mt-1 text-sm text-stone-600"><%= l(event.occurred_at, format: :short) %></p>
+                <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(event.occurred_at) %></p>
               <% end %>
             <% end %>
           <% else %>
@@ -142,7 +142,7 @@
             <% @recent_brews.each do |brew| %>
               <%= link_to brew_path(brew), class: "block p-4 hover:bg-stone-50" do %>
                 <p class="font-semibold text-stone-950"><%= t(".brew", bean: brew.bean.name) %></p>
-                <p class="mt-1 text-sm text-stone-600"><%= l(brew.occurred_at, format: :short) %></p>
+                <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(brew.occurred_at) %></p>
               <% end %>
             <% end %>
           <% else %>

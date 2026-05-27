@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   UNKNOWN_DISPLAY_LABEL = "unknown username"
   DEFAULT_LANDING_SCREENS = %w[dashboard log_espresso].freeze
+  NUMBER_FORMATS = %w[comma_decimal dot_decimal].freeze
+  TIME_FORMATS = %w[european_24h_seconds us_12h_seconds].freeze
   DEFAULT_BREW_FOCUS_FIELDS = %w[
     bean_weight_grams
     ground_weight_grams
@@ -51,6 +53,8 @@ class User < ApplicationRecord
 
   validates :display_name, length: { maximum: 80 }
   validates :default_landing_screen, inclusion: { in: DEFAULT_LANDING_SCREENS }
+  validates :number_format, inclusion: { in: NUMBER_FORMATS }
+  validates :time_format, inclusion: { in: TIME_FORMATS }
   validates :default_brew_focus_field, inclusion: { in: DEFAULT_BREW_FOCUS_FIELDS }
   validate :hidden_brew_field_names_supported
 

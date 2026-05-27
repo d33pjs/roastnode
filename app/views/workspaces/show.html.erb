@@ -146,7 +146,7 @@
       </div>
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".status.grams_remaining") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= number_with_precision(@grams_remaining, precision: 1, strip_insignificant_zeros: true) %> g</p>
+        <p class="mt-2 text-3xl font-bold text-stone-950"><%= profile_grams(@grams_remaining) %></p>
       </div>
     </section>
 
@@ -166,7 +166,7 @@
                     <p class="font-semibold text-stone-950"><%= bean.name %></p>
                     <p class="mt-1 text-sm text-stone-600"><%= bean.roaster_name.presence || t(".unknown_roaster") %></p>
                   </div>
-                  <p class="text-sm font-semibold text-stone-800"><%= number_with_precision(bean.remaining_grams, precision: 1, strip_insignificant_zeros: true) %> g</p>
+                  <p class="text-sm font-semibold text-stone-800"><%= profile_grams(bean.remaining_grams) %></p>
                 </div>
               <% end %>
             <% end %>
@@ -184,17 +184,17 @@
               <% if activity.is_a?(Brew) %>
                 <%= link_to brew_path(activity), class: "block p-4 hover:bg-stone-50" do %>
                   <p class="font-semibold text-stone-950"><%= t(".activity.brew", bean: activity.bean.name) %></p>
-                  <p class="mt-1 text-sm text-stone-600"><%= l(activity.occurred_at, format: :short) %></p>
+                  <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(activity.occurred_at) %></p>
                 <% end %>
               <% elsif activity.is_a?(EquipmentEvent) %>
                 <%= link_to equipment_event_path(activity), class: "block p-4 hover:bg-stone-50" do %>
                   <p class="font-semibold text-stone-950"><%= t(".activity.equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>
-                  <p class="mt-1 text-sm text-stone-600"><%= l(activity.occurred_at, format: :short) %></p>
+                  <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(activity.occurred_at) %></p>
                 <% end %>
               <% else %>
                 <div class="p-4">
-                  <p class="font-semibold text-stone-950"><%= t(".activity.adjustment", bean: activity.bean.name, amount: number_with_precision(activity.delta_grams, precision: 1, strip_insignificant_zeros: true)) %></p>
-                  <p class="mt-1 text-sm text-stone-600"><%= l(activity.occurred_at, format: :short) %></p>
+                  <p class="font-semibold text-stone-950"><%= t(".activity.adjustment", bean: activity.bean.name, amount: profile_number(activity.delta_grams, precision: 1)) %></p>
+                  <p class="mt-1 text-sm text-stone-600"><%= profile_timestamp(activity.occurred_at) %></p>
                 </div>
               <% end %>
             <% end %>

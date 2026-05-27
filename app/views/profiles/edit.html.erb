@@ -42,6 +42,24 @@
             class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
         </div>
 
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div>
+            <%= form.label :number_format, t(".number_format"), class: "block text-sm font-medium text-stone-700" %>
+            <%= form.select :number_format,
+              User::NUMBER_FORMATS.map { |format| [ t(".number_formats.#{format}"), format ] },
+              {},
+              class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+          </div>
+
+          <div>
+            <%= form.label :time_format, t(".time_format"), class: "block text-sm font-medium text-stone-700" %>
+            <%= form.select :time_format,
+              User::TIME_FORMATS.map { |format| [ t(".time_formats.#{format}"), format ] },
+              {},
+              class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+          </div>
+        </div>
+
         <div>
           <%= form.label :default_brew_focus_field, t(".default_brew_focus_field"), class: "block text-sm font-medium text-stone-700" %>
           <%= form.select :default_brew_focus_field,
