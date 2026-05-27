@@ -13,6 +13,7 @@ Bean detail pages include the first drill-down analytics slice for a single bag 
 - Recent brews with grind setting, total time, and beverage yield.
 - Taste-balance distribution.
 - Retention-marker distribution.
+- Optional date range filters for brew-derived analytics.
 
 ## Data Rules
 
@@ -22,11 +23,12 @@ Bean detail pages include the first drill-down analytics slice for a single bag 
 - Brew links must go to private brew detail pages, not public share URLs.
 - Remaining percentage reflects the current bean inventory, including brew inventory deductions.
 - The bean list shows each bean's primary photo and remaining amount as `remaining of bag size`; channeling stays on the bean detail analytics card through `BeanStatistics`.
+- Date range filters are inclusive and apply only to brew-derived bean analytics: brew count, consumed grams, averages, channeling, distributions, best brews, and recent brews.
+- Current bag facts stay unfiltered: remaining percentage and open age always reflect the bag as it is now.
 
 ## Deferred
 
 - Interactive ECharts trend lines.
-- Date range filters.
 - Photo and note timelines.
 - Recipe links, because recipes are deferred.
 - Cross-bean comparison from the bean detail page.

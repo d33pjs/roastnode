@@ -2,8 +2,13 @@ class BeanStatistics
   RECENT_BREW_LIMIT = 5
   BEST_BREW_LIMIT = 3
 
-  def initialize(bean:)
+  def initialize(bean:, start_date: nil, end_date: nil)
     @bean = bean
+    @start_date = start_date&.to_date
+    @end_date = end_date&.to_date
+    if @start_date.present? && @end_date.present? && @start_date > @end_date
+      @start_date, @end_date = @end_date, @start_date
+    end
   end
 
   def call
@@ -18,10 +23,15 @@ class BeanStatistics
   end
 
   private
-    attr_reader :bean
+    attr_reader :bean, :start_date, :end_date
 
     def brews
-      @brews ||= bean.brews.includes(:grinder, :machine).order(occurred_at: :desc).to_a
+      @brews ||= begin
+        scope = bean.brews.includes(:grinder, :machine)
+        scope = scope.where(occurred_at: start_date.beginning_of_day..) if start_date.present?
+        scope = scope.where(occurred_at: ..end_date.end_of_day) if end_date.present?
+        scope.order(occurred_at: :desc).to_a
+      end
     end
 
     def totals

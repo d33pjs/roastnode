@@ -59,4 +59,42 @@ class BeanStatisticsTest < ActiveSupport::TestCase
       assert_equal [ "12", "10", "11" ], statistics[:recent_brews].map(&:grind_setting)
     end
   end
+
+  test "filters brew-derived bean analytics by date range while keeping inventory current" do
+    travel_to Time.zone.local(2026, 5, 26, 12, 0, 0) do
+      bean = beans(:open_household)
+      brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+      bean.brews.create!(
+        workspace: bean.workspace,
+        user: users(:one),
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        occurred_at: Time.zone.local(2026, 5, 20, 9, 30, 0),
+        bean_weight_grams: 20,
+        ground_weight_grams: 20.4,
+        dose_grams: 20,
+        beverage_grams: 50,
+        total_time_seconds: 32,
+        grind_setting: "10",
+        taste_balance: "bitter",
+        channeling: true,
+        rating: 3
+      )
+
+      statistics = BeanStatistics.new(
+        bean:,
+        start_date: Date.new(2026, 5, 26),
+        end_date: Date.new(2026, 5, 26)
+      ).call
+
+      assert_equal 1, statistics[:totals][:brew_count]
+      assert_equal 18.to_d, statistics[:totals][:total_bean_weight_grams]
+      assert_equal 52, statistics[:totals][:remaining_percent]
+      assert_equal 0, statistics[:rates][:channeling_count]
+      assert_equal 0, statistics[:rates][:channeling_percent]
+      assert_equal({ "neutral" => 1 }, statistics[:distributions][:taste_balance])
+      assert_equal [ 4 ], statistics[:best_brews].map(&:rating)
+      assert_equal [ "12" ], statistics[:recent_brews].map(&:grind_setting)
+    end
+  end
 end

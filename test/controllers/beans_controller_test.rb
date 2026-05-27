@@ -208,6 +208,38 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Other Workspace Bean/, count: 0
   end
 
+  test "show filters bean analytics by date range" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 20, 9, 30, 0),
+      bean_weight_grams: 20,
+      ground_weight_grams: 20.4,
+      dose_grams: 20,
+      beverage_grams: 50,
+      total_time_seconds: 32,
+      grind_setting: "10",
+      taste_balance: "bitter",
+      channeling: true,
+      rating: 3
+    )
+
+    get bean_path(bean), params: { start_date: "2026-05-26", end_date: "2026-05-26" }
+
+    assert_response :success
+    assert_select "input[data-testid=bean-statistics-start-date][value='2026-05-26']"
+    assert_select "input[data-testid=bean-statistics-end-date][value='2026-05-26']"
+    assert_select "[data-testid=bean-brew-count]", "1"
+    assert_select "[data-testid=bean-consumed]", "18 g"
+    assert_select "[data-testid=bean-channeling-rate]", "0%"
+    assert_select "[data-testid=bean-channeling-count]", text: /0 of 1/
+  end
+
   test "show renders danger zone for writers" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

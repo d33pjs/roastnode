@@ -9,7 +9,12 @@ class BeansController < ApplicationController
   end
 
   def show
-    @bean_statistics = BeanStatistics.new(bean: @bean).call
+    @bean_statistics_start_date, @bean_statistics_end_date = bean_statistics_date_range
+    @bean_statistics = BeanStatistics.new(
+      bean: @bean,
+      start_date: @bean_statistics_start_date,
+      end_date: @bean_statistics_end_date
+    ).call
   end
 
   def new
@@ -67,6 +72,25 @@ class BeansController < ApplicationController
   private
     def set_bean
       @bean = current_workspace.beans.find(params[:id])
+    end
+
+    def bean_statistics_date_range
+      start_date = parse_bean_statistics_date(params[:start_date])
+      end_date = parse_bean_statistics_date(params[:end_date])
+
+      if start_date.present? && end_date.present? && start_date > end_date
+        [ end_date, start_date ]
+      else
+        [ start_date, end_date ]
+      end
+    end
+
+    def parse_bean_statistics_date(value)
+      return nil if value.blank?
+
+      Date.iso8601(value)
+    rescue ArgumentError
+      nil
     end
 
     def bean_params
