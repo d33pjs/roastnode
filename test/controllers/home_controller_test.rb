@@ -105,6 +105,24 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
   end
 
+  test "workspace dashboard shows manual inventory adjustments in recent activity" do
+    bean = beans(:open_household)
+    bean.inventory_adjustments.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      delta_grams: 12.5,
+      reason: "manual",
+      note: "Found extra beans.",
+      occurred_at: Time.zone.local(2026, 5, 27, 10, 15, 0)
+    )
+    sign_in_as(users(:one))
+
+    get root_path
+
+    assert_response :success
+    assert_select "p", text: I18n.t("workspaces.show.activity.adjustment", amount: "12,5", bean: bean.name)
+  end
+
   test "root honors log espresso landing preference while dashboard remains accessible" do
     user = users(:one)
     user.update!(default_landing_screen: "log_espresso")

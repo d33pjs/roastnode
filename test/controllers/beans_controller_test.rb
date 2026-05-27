@@ -332,6 +332,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(bean)
 
     assert_response :success
+    assert_select "a[href=?]", new_bean_inventory_adjustment_path(bean), text: I18n.t("beans.show.adjust_inventory")
     assert_select "[data-testid=bean-danger-zone]"
     assert_select "form[action=?][method=post]", bean_path(bean)
     assert_select "input[name=_method][value=delete]"

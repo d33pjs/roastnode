@@ -147,6 +147,7 @@ en:
       analytics: "Bean analytics"
       apply_filters: "Apply"
       average_rating: "Average rating"
+      adjust_inventory: "Adjust inventory"
       bag_size: "Bag size"
       best_brews: "Best brews"
       blend_percentage: "Percentage"
@@ -327,6 +328,17 @@ en:
       unknown: "Unknown"
       yield: "Beverage"
       yes: "Yes"
+  inventory_adjustments:
+    create:
+      created: "Inventory adjusted."
+    form:
+      delta_grams: "Adjustment (g)"
+      note: "Note"
+      occurred_at: "Occurred at"
+    new:
+      back: "Back to bean"
+      create: "Save adjustment"
+      title: "Adjust inventory"
   equipment:
     archive:
       archived: "Equipment archived."

@@ -16,6 +16,18 @@ class InventoryAdjustment < ApplicationRecord
   validate :bean_belongs_to_workspace
   validate :brew_belongs_to_workspace
 
+  def save_with_inventory_update
+    return false unless valid?
+
+    transaction do
+      save!
+      update_bean_inventory! if manual?
+    end
+    true
+  rescue ActiveRecord::RecordInvalid
+    false
+  end
+
   private
     def set_occurred_at
       self.occurred_at ||= Time.current
@@ -31,5 +43,11 @@ class InventoryAdjustment < ApplicationRecord
       return if brew.blank? || workspace.blank? || brew.workspace_id == workspace_id
 
       errors.add(:brew, "must belong to the workspace")
+    end
+
+    def update_bean_inventory!
+      bean.with_lock do
+        bean.update!(remaining_grams: [ bean.remaining_grams + delta_grams, 0 ].max)
+      end
     end
 end

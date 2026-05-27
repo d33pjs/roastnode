@@ -11,6 +11,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Workspace writer photo removal through the private media controller.
 - Espresso brew logging with a required bean.
 - Automatic inventory deduction when a brew is saved.
+- Manual bean inventory adjustments for count corrections.
 - Brew correction flows for edit/delete with inventory adjustment.
 - Inventory adjustment history for brew consumption.
 - Compact screenshot-worthy brew detail cards.
@@ -81,6 +82,7 @@ Fresh fields:
 - If multiple open beans have the same roaster/name, the espresso logging selector appends the opened date to those duplicate labels only.
 - Creating a brew subtracts `bean_weight_grams` from the selected bean.
 - Creating a brew also records an `InventoryAdjustment` with reason `brew`.
+- Manual inventory adjustments are logged from a bean detail page with reason `manual`; they add their signed gram delta to the bean and clamp remaining inventory at zero.
 - Brew editing/deletion adjusts or reverses the brew inventory movement in one transaction.
 
 ## Agent Notes

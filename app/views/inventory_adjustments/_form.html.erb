@@ -1,0 +1,24 @@
+<%= form_with model: [ bean, inventory_adjustment ], class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+  <% if inventory_adjustment.errors.any? %>
+    <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <%= inventory_adjustment.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :delta_grams, t("inventory_adjustments.form.delta_grams"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.text_field :delta_grams, inputmode: "decimal", autofocus: true, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.label :occurred_at, t("inventory_adjustments.form.occurred_at"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.datetime_field :occurred_at, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <div>
+    <%= form.label :note, t("inventory_adjustments.form.note"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.text_area :note, rows: 4, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+  </div>
+
+  <%= form.submit submit_label, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+<% end %>
