@@ -14,8 +14,22 @@
           <%= form.date_field :end_date, value: @statistics_end_date.iso8601, data: { testid: "statistics-end-date" }, class: "mt-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-base text-stone-950 shadow-sm" %>
         </div>
         <%= form.submit t(".apply_filters"), class: "rounded-lg bg-stone-950 px-4 py-2 font-semibold text-white shadow-sm" %>
-        <%= link_to t(".reset_filters"), statistics_path, class: "rounded-lg border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-950 shadow-sm" %>
+        <%= link_to t(".reset_timerange"), statistics_path, class: "rounded-lg border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-950 shadow-sm" %>
       <% end %>
+      <div data-testid="statistics-timeframes" class="mt-4 flex flex-wrap items-center gap-2">
+        <span class="text-sm font-semibold uppercase text-stone-600"><%= t(".quick_timeframes") %></span>
+        <% @statistics_timeframe_options.each do |timeframe| %>
+          <% active = @statistics_timeframe == timeframe %>
+          <%= link_to t(".timeframes.#{timeframe}"),
+            statistics_path(timeframe:),
+            aria: { current: active ? "page" : nil },
+            data: { testid: "statistics-timeframe-#{timeframe}" },
+            class: [
+              "rounded-lg border px-3 py-1.5 text-sm font-semibold shadow-sm",
+              active ? "border-stone-950 bg-stone-950 text-white" : "border-stone-300 bg-white text-stone-950 hover:bg-stone-100"
+            ] %>
+        <% end %>
+      </div>
     </header>
 
     <section class="grid gap-4 py-8 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,6 +1,8 @@
 require "test_helper"
 
 class StatisticsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveSupport::Testing::TimeHelpers
+
   test "workspace member sees scoped statistics" do
     sign_in_as(users(:one))
 
@@ -42,6 +44,65 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[data-testid=statistics-end-date][value='2026-05-26']"
     assert_select "[data-testid=total-brews]", "1"
     assert_select "[data-testid=total-ground]", "18 g"
+  end
+
+  test "workspace member uses relative timeframe shortcuts" do
+    travel_to Time.zone.local(2026, 5, 27, 12, 0, 0) do
+      brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+      workspaces(:household).brews.create!(
+        user: users(:one),
+        bean: beans(:second_open_household),
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        occurred_at: Time.zone.local(2026, 5, 1, 9, 30, 0),
+        bean_weight_grams: 20,
+        ground_weight_grams: 20,
+        dose_grams: 20,
+        beverage_grams: 50,
+        total_time_seconds: 32,
+        rating: 3
+      )
+
+      sign_in_as(users(:one))
+      get statistics_path, params: { timeframe: "last_7_days" }
+
+      assert_response :success
+      assert_select "input[data-testid=statistics-start-date][value='2026-05-21']"
+      assert_select "input[data-testid=statistics-end-date][value='2026-05-27']"
+      assert_select "[data-testid=total-brews]", "1"
+      assert_select "[data-testid=total-ground]", "18 g"
+      assert_select "a[href=?]", statistics_path(timeframe: "last_30_days"), text: I18n.t("statistics.index.timeframes.last_30_days")
+      assert_select "a[href=?]", statistics_path, text: I18n.t("statistics.index.reset_timerange")
+    end
+  end
+
+  test "workspace member uses all time statistics timeframe" do
+    travel_to Time.zone.local(2026, 5, 27, 12, 0, 0) do
+      brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+      workspaces(:household).brews.create!(
+        user: users(:one),
+        bean: beans(:second_open_household),
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        occurred_at: Time.zone.local(2026, 5, 1, 9, 30, 0),
+        bean_weight_grams: 20,
+        ground_weight_grams: 20,
+        dose_grams: 20,
+        beverage_grams: 50,
+        total_time_seconds: 32,
+        rating: 3
+      )
+
+      sign_in_as(users(:one))
+      get statistics_path, params: { timeframe: "all_time" }
+
+      assert_response :success
+      assert_select "input[data-testid=statistics-start-date][value='2026-05-01']"
+      assert_select "input[data-testid=statistics-end-date][value='2026-05-27']"
+      assert_select "[data-testid=total-brews]", "2"
+      assert_select "[data-testid=total-ground]", "38 g"
+      assert_select "a[data-testid=statistics-timeframe-all_time][aria-current=page]", text: I18n.t("statistics.index.timeframes.all_time")
+    end
   end
 
   test "viewer can read statistics" do

@@ -15,7 +15,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Most-used grinder and machine.
 - Recent brews-by-day bars.
 - Recent consumption-by-day bars.
-- Date range filters for brew-based analytics.
+- Manual date range filters and relative timeframe shortcuts for brew-based analytics.
 - Taste balance distribution.
 - Retention marker distribution.
 - Bean breakdowns by roaster, origin, and process.
@@ -34,6 +34,9 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 
 - The workspace statistics page defaults to the most recent 14 days.
 - `start_date` and `end_date` are inclusive and can be supplied as `YYYY-MM-DD` query parameters.
+- `timeframe` can be one of `last_7_days`, `last_30_days`, `last_90_days`, `this_year`, or `all_time`.
+- Timeframe shortcuts take precedence over manual date query parameters.
+- `all_time` starts at the active workspace's first brew and ends at today or the latest brew date, whichever is later. If there are no brews, it uses today for both ends.
 - Brew-derived metrics follow the selected range: total brews, beans ground, average brew cost, leaders, channeling, retention, taste balance, and day bars.
 - Current bean inventory/catalog metrics stay unfiltered: open bean count, known bean spend, and bean breakdowns by roaster/origin/process.
 
