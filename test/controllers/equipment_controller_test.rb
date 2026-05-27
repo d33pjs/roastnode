@@ -8,8 +8,10 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("equipment.index.title")
-    assert_select "a[href=?]", equipment_path(equipment(:household_grinder)), text: /#{equipment(:household_grinder).name}/
-    assert_select "td", text: equipment(:other_workspace_grinder).name, count: 0
+    assert_select "[data-testid=equipment-card-list]"
+    assert_select "a[data-testid=equipment-card][href=?]", equipment_path(equipment(:household_grinder)), text: /#{equipment(:household_grinder).name}/
+    assert_select "table", count: 0
+    assert_select "body", text: equipment(:other_workspace_grinder).name, count: 0
   end
 
   test "index renders primary equipment photo" do
@@ -22,8 +24,8 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     get equipment_index_path
 
     assert_response :success
-    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
-    assert_select "img[data-testid=equipment-list-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
+    assert_select "img[data-testid=equipment-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "img[data-testid=equipment-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
   end
 
   test "member can create equipment" do
@@ -54,6 +56,9 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     get new_equipment_path
 
     assert_response :success
+    assert_select "[data-testid=equipment-form-section][data-section=identity]"
+    assert_select "[data-testid=equipment-form-section][data-section=setup]"
+    assert_select "[data-testid=equipment-form-section][data-section=notes]"
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
   end
 

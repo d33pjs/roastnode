@@ -1,34 +1,59 @@
-<%= form_with model: preparation_tool, class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+<% label_class = "block text-sm font-extrabold text-rn-muted" %>
+<% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+<% section_class = "grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
+<% section_title_class = "text-lg font-black text-rn-ink" %>
+
+<%= form_with model: preparation_tool, class: "mt-6 grid gap-4" do |form| %>
   <% if preparation_tool.errors.any? %>
-    <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
       <%= preparation_tool.errors.full_messages.to_sentence %>
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :name, t("preparation_tools.form.name"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.text_field :name, autofocus: true, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
-  </div>
+  <section data-testid="preparation-tool-form-section" data-section="identity" class="<%= section_class %>">
+    <div>
+      <h2 class="<%= section_title_class %>"><%= t("preparation_tools.form.sections.identity") %></h2>
+    </div>
 
-  <div>
-    <%= form.label :brew_method, t("preparation_tools.form.method"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.select :brew_method, [ [ "Espresso", "espresso" ] ], {}, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
-  </div>
+    <div>
+      <%= form.label :name, t("preparation_tools.form.name"), class: label_class %>
+      <%= form.text_field :name, autofocus: true, class: input_class %>
+    </div>
 
-  <div>
-    <%= form.label :position, t("preparation_tools.form.position"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.number_field :position, min: 0, step: 1, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
-  </div>
+    <div>
+      <%= form.label :photos, t("preparation_tools.form.photos"), class: label_class %>
+      <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm font-bold text-rn-muted file:mr-4 file:rounded-full file:border-0 file:bg-[var(--rn-accent-strong)] file:px-4 file:py-2 file:text-sm file:font-extrabold file:text-[#f8faf6] hover:file:opacity-90" %>
+    </div>
+  </section>
 
-  <div>
-    <%= form.label :notes, t("preparation_tools.form.notes"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.text_area :notes, rows: 4, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
-  </div>
+  <section data-testid="preparation-tool-form-section" data-section="setup" class="<%= section_class %>">
+    <div>
+      <h2 class="<%= section_title_class %>"><%= t("preparation_tools.form.sections.setup") %></h2>
+    </div>
 
-  <div>
-    <%= form.label :photos, t("preparation_tools.form.photos"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm text-stone-700 file:mr-4 file:rounded-md file:border-0 file:bg-stone-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-stone-800" %>
-  </div>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <%= form.label :brew_method, t("preparation_tools.form.method"), class: label_class %>
+        <%= form.select :brew_method, [ [ "Espresso", "espresso" ] ], {}, class: input_class %>
+      </div>
 
-  <%= form.submit submit_label, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+      <div>
+        <%= form.label :position, t("preparation_tools.form.position"), class: label_class %>
+        <%= form.number_field :position, min: 0, step: 1, class: input_class %>
+      </div>
+    </div>
+  </section>
+
+  <section data-testid="preparation-tool-form-section" data-section="notes" class="<%= section_class %>">
+    <div>
+      <h2 class="<%= section_title_class %>"><%= t("preparation_tools.form.sections.notes") %></h2>
+    </div>
+
+    <div>
+      <%= form.label :notes, t("preparation_tools.form.notes"), class: label_class %>
+      <%= form.text_area :notes, rows: 4, class: input_class %>
+    </div>
+  </section>
+
+  <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-accent-strong)] px-5 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
 <% end %>

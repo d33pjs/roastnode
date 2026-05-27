@@ -3,7 +3,9 @@ class PreparationToolsController < ApplicationController
   before_action :set_preparation_tool, only: %i[show edit update archive reopen destroy]
 
   def index
-    @preparation_tools = current_workspace.preparation_tools.ordered
+    @preparation_tools = current_workspace.preparation_tools
+      .includes(:primary_photo_record, photos_attachments: :blob)
+      .ordered
   end
 
   def show

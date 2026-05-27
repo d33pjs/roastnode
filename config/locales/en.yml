@@ -390,6 +390,7 @@ en:
       destroyed: "Equipment deleted."
     edit:
       back: "Back to equipment"
+      eyebrow: "Gear"
       photos: "Current photos"
       title: "Edit equipment"
       update: "Save equipment"
@@ -399,17 +400,25 @@ en:
       name: "Name"
       notes: "Notes"
       photos: "Photos"
+      sections:
+        identity: "Identity"
+        notes: "Notes"
+        setup: "Setup"
     index:
+      active: "Active"
+      archived: "Archived"
       back: "Back to dashboard"
       kind: "Kind"
       model: "Model"
       name: "Name"
       new: "Add equipment"
+      none: "No equipment yet."
       title: "Equipment"
       unknown: "Unknown"
     new:
       back: "Back to equipment"
       create: "Add equipment"
+      eyebrow: "Gear"
       kind: "Kind"
       model: "Model"
       name: "Name"
@@ -544,6 +553,7 @@ en:
       destroyed: "Preparation tool deleted."
     edit:
       back: "Back to preparation tool"
+      eyebrow: "Prep tools"
       photos: "Current photos"
       title: "Edit preparation tool"
       update: "Save preparation tool"
@@ -553,6 +563,10 @@ en:
       notes: "Notes"
       photos: "Photos"
       position: "Sort position"
+      sections:
+        identity: "Identity"
+        notes: "Notes"
+        setup: "Setup"
     index:
       active: "Active"
       back: "Back to dashboard"
@@ -560,11 +574,14 @@ en:
       method: "Method"
       name: "Name"
       new: "Add preparation tool"
+      none: "No preparation tools yet."
+      position: "Position %{position}"
       status: "Status"
       title: "Preparation tools"
     new:
       back: "Back to preparation tools"
       create: "Add preparation tool"
+      eyebrow: "Prep tools"
       title: "Add preparation tool"
     reopen:
       reopened: "Preparation tool reopened."

@@ -10,11 +10,27 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("preparation_tools.index.title")
-    assert_select "tr#preparation_tool_#{preparation_tools(:wdt).id}"
-    assert_select "a[href=?]", preparation_tool_path(preparation_tools(:wdt)), text: preparation_tools(:wdt).name
-    assert_select "tbody tr:first-child a[href=?]", preparation_tool_path(preparation_tools(:puck_screen)),
-      text: preparation_tools(:puck_screen).name
-    assert_select "td", text: preparation_tools(:other_workspace_tool).name, count: 0
+    assert_select "[data-testid=preparation-tool-card-list]"
+    assert_select "a#preparation_tool_#{preparation_tools(:wdt).id}[data-testid=preparation-tool-card][href=?]",
+      preparation_tool_path(preparation_tools(:wdt)),
+      text: /#{preparation_tools(:wdt).name}/
+    assert_appears_before preparation_tool_path(preparation_tools(:puck_screen)), preparation_tool_path(preparation_tools(:wdt))
+    assert_select "table", count: 0
+    assert_select "body", text: preparation_tools(:other_workspace_tool).name, count: 0
+  end
+
+  test "index renders primary preparation tool photo" do
+    sign_in_as(users(:one))
+    tool = preparation_tools(:wdt)
+    first = attach_photo(tool)
+    primary = attach_photo(tool)
+    tool.set_primary_photo!(primary)
+
+    get preparation_tools_path
+
+    assert_response :success
+    assert_select "img[data-testid=preparation-tool-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "img[data-testid=preparation-tool-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
   end
 
   test "show renders tool details photos and usage" do
@@ -88,6 +104,9 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     get new_preparation_tool_path
 
     assert_response :success
+    assert_select "[data-testid=preparation-tool-form-section][data-section=identity]"
+    assert_select "[data-testid=preparation-tool-form-section][data-section=setup]"
+    assert_select "[data-testid=preparation-tool-form-section][data-section=notes]"
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
   end
 
@@ -213,4 +232,14 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
   end
+
+  private
+    def assert_appears_before(first_text, second_text)
+      first_index = response.body.index(first_text)
+      second_index = response.body.index(second_text)
+
+      assert first_index.present?, "Expected #{first_text.inspect} to appear in the response"
+      assert second_index.present?, "Expected #{second_text.inspect} to appear in the response"
+      assert_operator first_index, :<, second_index
+    end
 end
