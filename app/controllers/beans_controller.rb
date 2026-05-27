@@ -27,7 +27,9 @@ class BeansController < ApplicationController
   def create
     attributes = bean_params
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
+    bag_status = extract_bag_status(attributes)
     @bean = current_workspace.beans.new(attributes)
+    @bean.apply_bag_status(bag_status)
 
     if @bean.save
       @bean.photos.attach(photos) if photos.any?
@@ -40,8 +42,11 @@ class BeansController < ApplicationController
   def update
     attributes = bean_params
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
+    bag_status = extract_bag_status(attributes)
+    @bean.assign_attributes(attributes)
+    @bean.apply_bag_status(bag_status)
 
-    if @bean.update(attributes)
+    if @bean.save
       @bean.photos.attach(photos) if photos.any?
       redirect_to @bean, notice: t(".updated")
     else
@@ -50,7 +55,7 @@ class BeansController < ApplicationController
   end
 
   def close
-    @bean.close!
+    @bean.archive!
     redirect_to @bean, notice: t(".closed")
   end
 
@@ -93,6 +98,10 @@ class BeansController < ApplicationController
       nil
     end
 
+    def extract_bag_status(attributes)
+      attributes.delete(:bag_status).presence_in(Bean::BAG_STATUSES)
+    end
+
     def bean_params
       params.expect(bean: [
         :name,
@@ -107,6 +116,7 @@ class BeansController < ApplicationController
         :bag_size_grams,
         :remaining_grams,
         :opened_on,
+        :bag_status,
         :blend_type,
         :decaffeinated,
         :purchase_source,

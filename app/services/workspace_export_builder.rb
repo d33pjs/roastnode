@@ -67,6 +67,7 @@ class WorkspaceExportBuilder
           roast_type: bean.roast_type,
           roast_degree: decimal(bean.roast_degree),
           tasting_notes: bean.tasting_notes,
+          status: bean.bag_status,
           bag_size_grams: decimal(bean.bag_size_grams),
           remaining_grams: decimal(bean.remaining_grams),
           opened_on: date(bean.opened_on),

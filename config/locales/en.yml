@@ -81,7 +81,7 @@ en:
       warnings: "Warnings"
   beans:
     close:
-      closed: "Bean bag closed."
+      closed: "Bean bag archived."
     create:
       created: "Bean added."
     duplicate:
@@ -120,6 +120,7 @@ en:
       roast_degree: "Degree of roast"
       roast_type: "Roast type"
       roaster: "Roaster"
+      status: "Status"
       tasting_notes: "Flavor profile"
       variety: "Variety"
       variety_information: "Variety information"
@@ -150,7 +151,7 @@ en:
       best_brews: "Best brews"
       blend_percentage: "Percentage"
       blend_type: "Blend"
-      close: "Close bag"
+      close: "Archive bag"
       closed: "Closed"
       brew_count: "Brews"
       channeling_count:
@@ -213,6 +214,11 @@ en:
       days:
         one: "1 day"
         other: "%{count} days"
+    statuses:
+      archived: "Archived"
+      open: "Open"
+      stock: "Stock"
+      used_up: "Used up"
     update:
       updated: "Bean updated."
   brews:

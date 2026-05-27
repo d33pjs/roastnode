@@ -3,6 +3,7 @@ class Bean < ApplicationRecord
 
   ROAST_TYPES = %w[unknown espresso filter omni].freeze
   BLEND_TYPES = %w[unknown single_origin blend].freeze
+  BAG_STATUSES = %w[stock open used_up archived].freeze
   DUPLICATE_DISPLAY_DATE_FORMAT = "%d.%m.%Y"
 
   belongs_to :workspace
@@ -14,7 +15,7 @@ class Bean < ApplicationRecord
 
   before_validation :set_default_remaining_grams
 
-  scope :open, -> { where(archived_at: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
+  scope :open, -> { where(archived_at: nil).where.not(opened_on: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
   scope :recent, -> { order(created_at: :desc) }
 
   validates :name, presence: true
@@ -29,16 +30,65 @@ class Bean < ApplicationRecord
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 
   def open?
-    archived_at.blank? && remaining_grams.positive?
+    bag_status == "open"
+  end
+
+  def stock?
+    bag_status == "stock"
+  end
+
+  def used_up?
+    bag_status == "used_up"
+  end
+
+  def archived?
+    bag_status == "archived"
+  end
+
+  def bag_status
+    return "archived" if archived_at.present?
+    return "used_up" if remaining_grams.present? && remaining_grams <= 0
+    return "open" if opened_on.present?
+
+    "stock"
+  end
+
+  def apply_bag_status(status)
+    return if status.blank?
+
+    status = status.to_s
+    raise ArgumentError, "unknown bag status: #{status}" unless BAG_STATUSES.include?(status)
+
+    case status
+    when "stock"
+      self.archived_at = nil
+      self.opened_on = nil
+      self.remaining_grams = bag_size_grams if remaining_grams.blank? || remaining_grams <= 0
+    when "open"
+      self.archived_at = nil
+      self.opened_on ||= Date.current
+      self.remaining_grams = bag_size_grams if remaining_grams.blank? || remaining_grams <= 0
+    when "used_up"
+      self.archived_at = nil
+      self.opened_on ||= Date.current
+      self.remaining_grams = 0
+    when "archived"
+      self.archived_at ||= Time.current
+    end
   end
 
   def close!
+    archive!
+  end
+
+  def archive!
     update!(archived_at: Time.current)
   end
 
   def reopen!
     self.remaining_grams = bag_size_grams if remaining_grams.to_d <= 0
     self.archived_at = nil
+    self.opened_on ||= Date.current
     save!
   end
 

@@ -11,13 +11,87 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal 250.to_d, bean.remaining_grams
   end
 
-  test "open scope returns unarchived beans with remaining inventory first by opened date" do
+  test "open scope returns opened unarchived beans with remaining inventory first by opened date" do
     beans(:open_household).update!(opened_on: Date.new(2026, 5, 1))
     beans(:second_open_household).update!(opened_on: Date.new(2026, 5, 2))
+    stock = workspaces(:household).beans.create!(
+      name: "Pantry Bag",
+      roaster_name: "Good Coffee",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    used_up = workspaces(:household).beans.create!(
+      name: "Finished But Kept",
+      roaster_name: "Good Coffee",
+      bag_size_grams: 250,
+      remaining_grams: 0,
+      opened_on: Date.new(2026, 5, 3)
+    )
 
     assert_equal [ beans(:open_household), beans(:second_open_household) ], workspaces(:household).beans.open.to_a
+    assert_not_includes workspaces(:household).beans.open, stock
+    assert_not_includes workspaces(:household).beans.open, used_up
     assert_not_includes workspaces(:household).beans.open, beans(:archived_household)
     assert_not_includes workspaces(:household).beans.open, beans(:other_workspace_open)
+  end
+
+  test "derives bag status from opened remaining and archived state" do
+    stock = workspaces(:household).beans.create!(
+      name: "Pantry Bag",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    open = beans(:open_household)
+    used_up = workspaces(:household).beans.create!(
+      name: "Finished But Kept",
+      bag_size_grams: 250,
+      remaining_grams: 0,
+      opened_on: Date.current
+    )
+    archived = beans(:archived_household)
+
+    assert_equal "stock", stock.bag_status
+    assert_equal "open", open.bag_status
+    assert_equal "used_up", used_up.bag_status
+    assert_equal "archived", archived.bag_status
+  end
+
+  test "unsaved bean with an opened date defaults to open status for forms" do
+    bean = workspaces(:household).beans.new(opened_on: Date.current)
+
+    assert_equal "open", bean.bag_status
+  end
+
+  test "applies selected bag status to lifecycle fields" do
+    bean = workspaces(:household).beans.build(
+      name: "Pantry Bag",
+      bag_size_grams: 250,
+      remaining_grams: 0,
+      opened_on: Date.current
+    )
+
+    bean.apply_bag_status("stock")
+    assert_nil bean.opened_on
+    assert_nil bean.archived_at
+    assert_equal 250.to_d, bean.remaining_grams
+    assert_equal "stock", bean.bag_status
+
+    bean.apply_bag_status("open")
+    assert_equal Date.current, bean.opened_on
+    assert_nil bean.archived_at
+    assert_equal 250.to_d, bean.remaining_grams
+    assert_equal "open", bean.bag_status
+
+    bean.apply_bag_status("used_up")
+    assert_equal 0.to_d, bean.remaining_grams
+    assert_nil bean.archived_at
+    assert_equal "used_up", bean.bag_status
+
+    bean.apply_bag_status("archived")
+    assert_not_nil bean.archived_at
+    assert_equal "archived", bean.bag_status
   end
 
   test "accepts rich bean metadata" do

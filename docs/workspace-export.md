@@ -34,7 +34,7 @@ CSV exports are separate spreadsheet-friendly downloads:
 - `/workspace_export/beans.csv`
 - `/workspace_export/brews.csv`
 
-The beans CSV includes flat bag metadata such as names, roaster, status, remaining grams, roast data, variety information, purchase details, rating, notes, and timestamps.
+The beans CSV includes flat bag metadata such as names, roaster, derived status (`stock`, `open`, `used_up`, or `archived`), remaining grams, roast data, variety information, purchase details, rating, notes, and timestamps.
 
 The brews CSV includes flat brew history such as occurred time, user labels, bean/equipment names, preparation tool snapshots, weights, brew ratio, timing, temperature, taste balance, rating, retention marker, notes, and timestamps.
 

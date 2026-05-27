@@ -26,6 +26,7 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_not_includes equipment_ids, equipment(:other_workspace_grinder).id
 
     bean_payload = payload[:beans].find { |bean| bean[:id] == beans(:open_household).id }
+    assert_equal "open", bean_payload[:status]
     assert_equal bean_photo.id, bean_payload[:photos].first[:attachment_id]
     assert_equal "photo.jpg", bean_payload[:photos].first[:filename]
     assert_not bean_payload[:photos].first.key?(:url)

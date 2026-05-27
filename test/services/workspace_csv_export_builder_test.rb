@@ -18,6 +18,10 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     exported = rows.find { |row| row.fetch("id").to_i == beans(:open_household).id }
     assert_equal beans(:open_household).name, exported.fetch("name")
     assert_equal beans(:open_household).remaining_grams.to_s("F"), exported.fetch("remaining_grams")
+    assert_equal "open", exported.fetch("status")
+
+    archived = rows.find { |row| row.fetch("id").to_i == beans(:archived_household).id }
+    assert_equal "archived", archived.fetch("status")
   end
 
   test "exports brews as workspace-scoped csv rows with tool snapshots" do

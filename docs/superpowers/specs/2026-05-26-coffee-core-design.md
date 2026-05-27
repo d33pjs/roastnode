@@ -63,7 +63,7 @@ Fields:
 - `rating`
 - `notes`
 
-Open beans are not archived and have `remaining_grams > 0`.
+Bean lifecycle status is derived from those fields: stock bags have no `opened_on`, open bags have `opened_on`, remaining beans, and no `archived_at`, used-up bags have zero remaining beans, and archived bags have `archived_at`.
 
 ### Equipment
 
@@ -135,7 +135,7 @@ Creating a brew subtracts `bean_weight_grams` from the selected bean. If `bean_w
 
 ### Beans
 
-The beans index lists open beans first, then archived/depleted beans. Users with write permission can add a bean. Creating a bean sets `remaining_grams` to `bag_size_grams` when remaining is blank.
+The beans index lists the derived bag status alongside remaining inventory. Users with write permission can add a bean. Creating a bean sets `remaining_grams` to `bag_size_grams` when remaining is blank.
 
 ### Equipment
 

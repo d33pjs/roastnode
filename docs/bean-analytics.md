@@ -22,7 +22,7 @@ Bean detail pages include the first drill-down analytics slice for a single bag 
 - The service uses live Active Record data; do not add summary tables until data volume requires them.
 - Brew links must go to private brew detail pages, not public share URLs.
 - Remaining percentage reflects the current bean inventory, including brew inventory deductions.
-- The bean list shows each bean's primary photo and remaining amount as `remaining of bag size`; channeling stays on the bean detail analytics card through `BeanStatistics`.
+- The bean list shows each bean's primary photo, derived bag status, and remaining amount as `remaining of bag size`; channeling stays on the bean detail analytics card through `BeanStatistics`.
 - Date range filters are inclusive and apply only to brew-derived bean analytics: brew count, consumed grams, averages, channeling, distributions, best brews, and recent brews.
 - Current bag facts stay unfiltered: remaining percentage and open age always reflect the bag as it is now.
 

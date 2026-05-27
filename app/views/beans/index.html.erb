@@ -38,7 +38,7 @@
               </td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= bean.roaster_name.presence || t(".unknown") %></td>
               <td data-testid="bean-list-remaining-<%= bean.id %>" class="px-4 py-3 text-sm text-stone-700"><%= t(".remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></td>
-              <td class="px-4 py-3 text-sm text-stone-700"><%= bean.open? ? t(".open") : t(".closed") %></td>
+              <td class="px-4 py-3 text-sm text-stone-700"><%= t("beans.statuses.#{bean.bag_status}") %></td>
             </tr>
           <% end %>
         </tbody>

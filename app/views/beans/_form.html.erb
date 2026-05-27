@@ -22,7 +22,12 @@
       </div>
     </div>
 
-    <div class="grid gap-5 sm:grid-cols-3">
+    <div class="grid gap-5 sm:grid-cols-4">
+      <div>
+        <%= form.label :bag_status, t("beans.form.status"), class: "block text-sm font-medium text-stone-700" %>
+        <%= form.select :bag_status, Bean::BAG_STATUSES.map { |status| [ t("beans.statuses.#{status}"), status ] }, { selected: bean.bag_status }, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+      </div>
+
       <div>
         <%= form.label :bag_size_grams, t("beans.form.bag_size"), class: "block text-sm font-medium text-stone-700" %>
         <%= form.number_field :bag_size_grams, step: 0.1, inputmode: "decimal", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>

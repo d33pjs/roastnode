@@ -54,6 +54,31 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, bean.photos.count
   end
 
+  test "member can create stock bean" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    assert_difference -> { workspaces(:household).beans.count }, 1 do
+      post beans_path, params: {
+        bean: {
+          bag_status: "stock",
+          name: "Pantry Valley",
+          roaster_name: "Calendar Coffee",
+          bag_size_grams: "250",
+          remaining_grams: "",
+          opened_on: "2026-05-26"
+        }
+      }
+    end
+
+    bean = workspaces(:household).beans.order(:created_at).last
+    assert_redirected_to bean_path(bean)
+    assert_equal "stock", bean.bag_status
+    assert_nil bean.opened_on
+    assert_equal 250.to_d, bean.remaining_grams
+  end
+
   test "new includes photo upload" do
     sign_in_as(users(:one))
 
@@ -62,6 +87,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[type=file][name=?][multiple=multiple]", "bean[photos][]"
     assert_select "input[name=?]", "bean[purchased_on]"
+    assert_select "select[name=?]", "bean[bag_status]"
     assert_select "input[name=?]", "bean[roast_date]"
     assert_select "select[name=?]", "bean[roast_type]"
     assert_select "input[name=?][step=?]", "bean[roast_degree]", "0.5"
@@ -129,6 +155,39 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1490, bean.purchase_price_cents
     assert_predicate bean, :decaffeinated?
     assert_equal "Colombia", bean.country
+  end
+
+  test "writer can update bean lifecycle status" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    patch bean_path(bean), params: {
+      bean: {
+        bag_status: "used_up",
+        name: bean.name,
+        bag_size_grams: bean.bag_size_grams.to_s,
+        remaining_grams: bean.remaining_grams.to_s,
+        opened_on: bean.opened_on.iso8601
+      }
+    }
+
+    assert_redirected_to bean_path(bean)
+    assert_equal "used_up", bean.reload.bag_status
+    assert_equal 0.to_d, bean.remaining_grams
+
+    patch bean_path(bean), params: {
+      bean: {
+        bag_status: "archived",
+        name: bean.name,
+        bag_size_grams: bean.bag_size_grams.to_s,
+        remaining_grams: bean.remaining_grams.to_s,
+        opened_on: bean.opened_on.iso8601
+      }
+    }
+
+    assert_redirected_to bean_path(bean)
+    assert_equal "archived", bean.reload.bag_status
+    assert_not_nil bean.archived_at
   end
 
   test "writer can close and reopen bean" do

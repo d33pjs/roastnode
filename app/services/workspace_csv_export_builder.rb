@@ -45,7 +45,7 @@ class WorkspaceCsvExportBuilder
 
     def bean_value(bean, column)
       case column
-      when "status" then bean.open? ? "open" : "closed"
+      when "status" then bean.bag_status
       when "purchase_price" then money(bean.purchase_price_cents)
       when "remaining_grams", "bag_size_grams", "roast_degree" then decimal(bean.public_send(column))
       when "opened_on", "roast_date", "purchased_on" then date(bean.public_send(column))
