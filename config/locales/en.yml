@@ -605,6 +605,10 @@ en:
         comma_decimal: "1.234,5"
         dot_decimal: "1,234.5"
       save: "Save profile"
+      theme: "Theme"
+      themes:
+        dark: "Dark"
+        light: "Light"
       time_format: "Time format"
       time_formats:
         european_24h_seconds: "26.05.2026 14:37:04"

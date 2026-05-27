@@ -1,6 +1,7 @@
 class User < ApplicationRecord
   UNKNOWN_DISPLAY_LABEL = "unknown username"
   DEFAULT_LANDING_SCREENS = %w[dashboard log_espresso].freeze
+  THEMES = %w[light dark].freeze
   NUMBER_FORMATS = %w[comma_decimal dot_decimal].freeze
   TIME_FORMATS = %w[european_24h_seconds us_12h_seconds].freeze
   DEFAULT_BREW_FOCUS_FIELDS = %w[
@@ -54,6 +55,7 @@ class User < ApplicationRecord
   validates :email_address, presence: true, uniqueness: { case_sensitive: false }
   validates :display_name, length: { maximum: 80 }
   validates :default_landing_screen, inclusion: { in: DEFAULT_LANDING_SCREENS }
+  validates :theme, inclusion: { in: THEMES }
   validates :number_format, inclusion: { in: NUMBER_FORMATS }
   validates :time_format, inclusion: { in: TIME_FORMATS }
   validates :default_brew_focus_field, inclusion: { in: DEFAULT_BREW_FOCUS_FIELDS }
@@ -61,6 +63,10 @@ class User < ApplicationRecord
 
   def default_landing_log_espresso?
     default_landing_screen == "log_espresso"
+  end
+
+  def dark_theme?
+    theme == "dark"
   end
 
   def membership_for(workspace)

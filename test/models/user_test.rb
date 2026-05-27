@@ -54,6 +54,17 @@ class UserTest < ActiveSupport::TestCase
     assert_not_predicate user, :valid?
   end
 
+  test "theme is constrained to supported values" do
+    user = users(:one)
+
+    user.theme = "dark"
+    assert_predicate user, :valid?
+    assert_predicate user, :dark_theme?
+
+    user.theme = "sepia"
+    assert_not_predicate user, :valid?
+  end
+
   test "hidden brew field names keep only supported fields" do
     user = users(:one)
 
