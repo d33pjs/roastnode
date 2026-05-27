@@ -88,8 +88,11 @@ class User < ApplicationRecord
   def ensure_active_workspace!
     return active_workspace if active_workspace.present? && memberships.exists?(workspace: active_workspace)
 
-    update!(active_workspace: workspaces.first)
-    active_workspace
+    workspace = workspaces.first
+    return unless workspace
+
+    update_column(:active_workspace_id, workspace.id)
+    self.active_workspace = workspace
   end
 
   private

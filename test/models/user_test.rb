@@ -65,6 +65,17 @@ class UserTest < ActiveSupport::TestCase
     assert_not_predicate user, :valid?
   end
 
+  test "ensure active workspace only persists workspace pointer" do
+    user = users(:one)
+    user.update!(active_workspace: nil)
+    user.display_name = "a" * 81
+
+    assert_equal workspaces(:household), user.ensure_active_workspace!
+    assert_equal "a" * 81, user.display_name
+    assert_nil user.reload.display_name
+    assert_equal workspaces(:household), user.active_workspace
+  end
+
   test "hidden brew field names keep only supported fields" do
     user = users(:one)
 
