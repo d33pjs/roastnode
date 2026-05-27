@@ -62,27 +62,27 @@
   <div class="grid gap-5 sm:grid-cols-4">
     <div>
       <%= form.label :bean_weight_grams, t("brews.form.bean_weight"), class: "block text-sm font-medium text-stone-700" %>
-      <%= form.number_field :bean_weight_grams, step: 0.1, inputmode: "decimal", autofocus: autofocus_field == "bean_weight_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+      <%= form.text_field :bean_weight_grams, inputmode: "decimal", autofocus: autofocus_field == "bean_weight_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
     </div>
 
     <% unless hide_brew_field.call(:ground_weight_grams) %>
       <div>
         <%= form.label :ground_weight_grams, t("brews.form.ground_weight"), class: "block text-sm font-medium text-stone-700" %>
-        <%= form.number_field :ground_weight_grams, step: 0.1, inputmode: "decimal", autofocus: autofocus_field == "ground_weight_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        <%= form.text_field :ground_weight_grams, inputmode: "decimal", autofocus: autofocus_field == "ground_weight_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
       </div>
     <% end %>
 
     <% unless hide_brew_field.call(:dose_grams) %>
       <div>
         <%= form.label :dose_grams, t("brews.form.dose"), class: "block text-sm font-medium text-stone-700" %>
-        <%= form.number_field :dose_grams, step: 0.1, inputmode: "decimal", autofocus: autofocus_field == "dose_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        <%= form.text_field :dose_grams, inputmode: "decimal", autofocus: autofocus_field == "dose_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
       </div>
     <% end %>
 
     <% unless hide_brew_field.call(:beverage_grams) %>
       <div>
         <%= form.label :beverage_grams, t("brews.form.beverage"), class: "block text-sm font-medium text-stone-700" %>
-        <%= form.number_field :beverage_grams, step: 0.1, inputmode: "decimal", autofocus: autofocus_field == "beverage_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        <%= form.text_field :beverage_grams, inputmode: "decimal", autofocus: autofocus_field == "beverage_grams", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
       </div>
     <% end %>
   </div>
@@ -100,7 +100,7 @@
       <% unless hide_brew_field.call(:brew_temperature_celsius) %>
         <div>
           <%= form.label :brew_temperature_celsius, t("brews.form.temperature"), class: "block text-sm font-medium text-stone-700" %>
-          <%= form.number_field :brew_temperature_celsius, step: 0.1, inputmode: "decimal", autofocus: autofocus_field == "brew_temperature_celsius", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+          <%= form.text_field :brew_temperature_celsius, inputmode: "decimal", autofocus: autofocus_field == "brew_temperature_celsius", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
         </div>
       <% end %>
 

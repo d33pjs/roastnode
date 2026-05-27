@@ -11,6 +11,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/account-privacy.md` describes where to use display labels instead of email addresses.
 - `docs/brew-form-preferences.md` describes per-user espresso form focus behavior.
 - `docs/brew-draft-recovery.md` describes browser-local unsaved espresso draft recovery.
+- `docs/formatting.md` describes comma-friendly decimal entry and pending profile-formatting decisions.
 - `docs/coffee-core.md` describes beans, equipment, required-bean espresso logging, inventory deduction, and deferred recipe scope.
 - `docs/bean-analytics.md` describes the bean detail drill-down analytics slice.
 - `docs/bean-danger-zone.md` describes destructive bean deletion and dependent brew/inventory cleanup.

@@ -8,6 +8,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 - Keep v1 private by default. Public and federation features are future work and must not leak household data.
 - Prefer Rails-native, boring security patterns over custom cleverness.
 - Store measurements in canonical metric units: grams, seconds, Celsius.
+- Decimal measurement inputs should accept both `18.2` and German-style `18,2`, including common unit suffixes like `g`, `°C`, `€`, and `EUR`. Use comma-friendly text inputs with `inputmode="decimal"` for decimal measurements instead of HTML `number` inputs, and normalize submitted decimal params through `LocalizedNumberParser`.
 - Treat `Workspace` as the ownership boundary for domain data. Beans, equipment, brews, inventory, photos, and statistics should belong to a workspace unless a future ADR explicitly says otherwise.
 - Treat `User#instance_admin` as an application-level hosting/admin flag, separate from workspace roles. Instance-wide routes must use `authorize_instance_admin!` and must not leak passwords, sessions, invite tokens, signed media URLs, or infrastructure secrets. Keep `InstanceHealthSnapshot` checks read-only and safe for normal page loads.
 - Keep documentation in `docs/` current as decisions land.

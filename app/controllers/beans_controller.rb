@@ -75,6 +75,13 @@ class BeansController < ApplicationController
   end
 
   private
+    DECIMAL_BEAN_FIELDS = %i[
+      bag_size_grams
+      remaining_grams
+      roast_degree
+      purchase_price
+    ].freeze
+
     def set_bean
       @bean = current_workspace.beans.find(params[:id])
     end
@@ -103,7 +110,7 @@ class BeansController < ApplicationController
     end
 
     def bean_params
-      params.expect(bean: [
+      normalize_decimal_attributes(params.expect(bean: [
         :name,
         :roaster_name,
         :origin,
@@ -134,6 +141,6 @@ class BeansController < ApplicationController
         :harvested,
         :blend_percentage,
         { photos: [] }
-      ])
+      ]), *DECIMAL_BEAN_FIELDS)
     end
 end

@@ -88,9 +88,12 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "bean[photos][]"
     assert_select "input[name=?]", "bean[purchased_on]"
     assert_select "select[name=?]", "bean[bag_status]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "bean[bag_size_grams]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "bean[remaining_grams]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "bean[purchase_price]"
     assert_select "input[name=?]", "bean[roast_date]"
     assert_select "select[name=?]", "bean[roast_type]"
-    assert_select "input[name=?][step=?]", "bean[roast_degree]", "0.5"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "bean[roast_degree]"
     assert_select "input[name=?]", "bean[purchase_price]"
     assert_select "input[name=?]", "bean[decaffeinated]"
     assert_select "input[name=?]", "bean[purchase_url]"
@@ -155,6 +158,29 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1490, bean.purchase_price_cents
     assert_predicate bean, :decaffeinated?
     assert_equal "Colombia", bean.country
+  end
+
+  test "writer can edit bean with comma decimal values" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    patch bean_path(bean), params: {
+      bean: {
+        name: "Comma Blend",
+        bag_size_grams: "1.000,0 g",
+        remaining_grams: "111,5g",
+        roast_degree: "3,5",
+        purchase_price: "14,90 €"
+      }
+    }
+
+    assert_redirected_to bean_path(bean)
+    bean.reload
+    assert_equal "Comma Blend", bean.name
+    assert_equal 1000.to_d, bean.bag_size_grams
+    assert_equal 111.5.to_d, bean.remaining_grams
+    assert_equal 3.5.to_d, bean.roast_degree
+    assert_equal 1490, bean.purchase_price_cents
   end
 
   test "writer can update bean lifecycle status" do

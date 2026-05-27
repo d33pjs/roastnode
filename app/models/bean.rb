@@ -138,7 +138,7 @@ class Bean < ApplicationRecord
     self.purchase_price_cents = if value.blank?
       nil
     else
-      (BigDecimal(value.to_s.tr(",", ".")) * 100).round
+      (BigDecimal(LocalizedNumberParser.normalize_decimal(value).to_s) * 100).round
     end
   end
 

@@ -9,6 +9,16 @@ class ApplicationController < ActionController::Base
   helper_method :current_workspace, :current_membership, :current_workspace_policy
 
   private
+    def normalize_decimal_attributes(attributes, *keys)
+      keys.each do |key|
+        next unless attributes.key?(key)
+
+        attributes[key] = LocalizedNumberParser.normalize_decimal(attributes[key])
+      end
+
+      attributes
+    end
+
     def current_workspace
       return unless Current.user
 

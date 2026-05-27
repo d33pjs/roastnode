@@ -64,6 +64,14 @@ class BrewsController < ApplicationController
   end
 
   private
+    DECIMAL_BREW_FIELDS = %i[
+      bean_weight_grams
+      ground_weight_grams
+      dose_grams
+      beverage_grams
+      brew_temperature_celsius
+    ].freeze
+
     def set_brew
       @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user, brew_preparation_tools: :preparation_tool).find(params[:id])
     end
@@ -143,7 +151,7 @@ class BrewsController < ApplicationController
     end
 
     def brew_params
-      params.expect(brew: [
+      normalize_decimal_attributes(params.expect(brew: [
         :bean_id,
         :grinder_id,
         :machine_id,
@@ -162,7 +170,7 @@ class BrewsController < ApplicationController
         :rating,
         :notes,
         { preparation_tool_ids: [], photos: [] }
-      ])
+      ]), *DECIMAL_BREW_FIELDS)
     end
 
     def brew_draft_storage_key

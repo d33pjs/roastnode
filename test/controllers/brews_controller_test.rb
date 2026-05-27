@@ -76,6 +76,19 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "brew[bean_weight_grams]"
   end
 
+  test "new renders decimal measurement fields as comma-friendly text inputs" do
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[bean_weight_grams]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[ground_weight_grams]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[dose_grams]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[beverage_grams]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[brew_temperature_celsius]"
+  end
+
   test "edit ignores hidden brew fields so corrections show the full log" do
     users(:one).update!(hidden_brew_field_names: %w[rating channeling notes photos])
     sign_in_as(users(:one))
@@ -180,6 +193,37 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 201.5.to_d, bean.reload.remaining_grams
     assert_equal [ "WDT", "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
     assert_equal 1, brew.photos.count
+  end
+
+  test "member can create espresso brew with comma decimal measurements" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    bean = beans(:second_open_household)
+
+    assert_difference -> { workspaces(:household).brews.count }, 1 do
+      post brews_path, params: {
+        brew: {
+          bean_id: bean.id,
+          bean_weight_grams: "18,5g",
+          ground_weight_grams: "18,3",
+          dose_grams: "18,2",
+          beverage_grams: "42,7 g",
+          brew_temperature_celsius: "93,5°C",
+          total_time_seconds: "31",
+          taste_balance: "neutral"
+        }
+      }
+    end
+
+    brew = workspaces(:household).brews.order(:created_at).last
+    assert_redirected_to brew_path(brew)
+    assert_equal 18.5.to_d, brew.bean_weight_grams
+    assert_equal 18.3.to_d, brew.ground_weight_grams
+    assert_equal 18.2.to_d, brew.dose_grams
+    assert_equal 42.7.to_d, brew.beverage_grams
+    assert_equal 93.5.to_d, brew.brew_temperature_celsius
+    assert_equal 201.5.to_d, bean.reload.remaining_grams
   end
 
   test "show renders private photos through scoped media route" do
