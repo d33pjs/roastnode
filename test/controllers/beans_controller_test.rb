@@ -10,7 +10,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", I18n.t("beans.index.title")
     assert_select "a[href=?]", bean_path(bean), text: /#{bean.name}/
-    assert_select "td", text: beans(:other_workspace_open).name, count: 0
+    assert_select "body", text: beans(:other_workspace_open).name, count: 0
   end
 
   test "index renders primary bean photo and remaining summary" do
@@ -24,15 +24,14 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "th", text: "Channeling", count: 0
-    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
-    assert_select "[data-testid=bean-mobile-list].md\\:hidden"
-    assert_select "[data-testid=bean-desktop-table].hidden.md\\:block"
-    assert_select "a[data-testid=bean-mobile-card][href=?]", bean_path(bean)
-    assert_select "img[data-testid=bean-mobile-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
-    assert_select "[data-testid=?]", "bean-mobile-card-remaining-#{bean.id}", "150 g of 250 g"
-    assert_select "[data-testid=?]", "bean-mobile-card-progress-#{bean.id}"
-    assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
-    assert_select "[data-testid=?]", "bean-list-remaining-#{bean.id}", "150 g of 250 g"
+    assert_select "table", count: 0
+    assert_select "[data-testid=bean-card-list]"
+    assert_select "[data-testid=bean-desktop-table]", count: 0
+    assert_select "a[data-testid=bean-card][href=?]", bean_path(bean)
+    assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
+    assert_select "[data-testid=?]", "bean-card-remaining-#{bean.id}", "150 g of 250 g"
+    assert_select "[data-testid=?]", "bean-card-progress-#{bean.id}"
     assert_select "[data-testid^=bean-list-channeling]", count: 0
   end
 
