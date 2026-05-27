@@ -57,55 +57,57 @@
         <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-nav-sign-out" %>
       </div>
 
-      <% if current_workspace_policy.write? %>
-        <%= link_to t("shared.app_navigation.log"), new_brew_path, data: { testid: "app-nav-log" }, class: "rn-nav-link rn-nav-link-primary md:hidden" %>
-      <% end %>
-    </div>
+      <div data-testid="app-mobile-actions" class="ml-auto flex shrink-0 items-center gap-2 md:hidden">
+        <% if current_workspace_policy.write? %>
+          <%= link_to t("shared.app_navigation.log"), new_brew_path, data: { testid: "app-nav-log" }, class: "rn-nav-link rn-nav-link-primary" %>
+        <% end %>
 
-    <details data-testid="app-mobile-menu" class="mt-3 md:hidden">
-      <summary class="rn-nav-link cursor-pointer list-none text-center"><%= t("shared.app_navigation.menu") %></summary>
+        <details data-testid="app-mobile-menu" class="relative">
+          <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.menu") %></summary>
 
-      <div class="rn-nav-menu-panel mt-3 grid gap-3">
-        <div class="grid gap-1">
-          <%= link_to t("shared.app_navigation.dashboard"), dashboard_path, data: { testid: "app-nav-dashboard" }, class: "rn-nav-sub-link" %>
-          <%= link_to t("shared.app_navigation.beans"), beans_path, data: { testid: "app-nav-beans" }, class: "rn-nav-sub-link" %>
-          <%= link_to t("shared.app_navigation.statistics"), statistics_path, data: { testid: "app-nav-statistics" }, class: "rn-nav-sub-link" %>
-        </div>
+          <div class="rn-nav-menu-panel absolute right-0 top-12 z-50 grid w-72 max-w-[calc(100vw-2rem)] gap-3">
+            <div class="grid gap-1">
+              <%= link_to t("shared.app_navigation.dashboard"), dashboard_path, data: { testid: "app-nav-dashboard" }, class: "rn-nav-sub-link" %>
+              <%= link_to t("shared.app_navigation.beans"), beans_path, data: { testid: "app-nav-beans" }, class: "rn-nav-sub-link" %>
+              <%= link_to t("shared.app_navigation.statistics"), statistics_path, data: { testid: "app-nav-statistics" }, class: "rn-nav-sub-link" %>
+            </div>
 
-        <div data-testid="app-nav-gear" class="rn-nav-group">
-          <p class="rn-nav-group-title"><%= t("shared.app_navigation.gear") %></p>
-          <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-nav-sub-link" %>
-          <%= link_to t("shared.app_navigation.preparation_tools"), preparation_tools_path, class: "rn-nav-sub-link" %>
-        </div>
+            <div data-testid="app-nav-gear" class="rn-nav-group">
+              <p class="rn-nav-group-title"><%= t("shared.app_navigation.gear") %></p>
+              <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-nav-sub-link" %>
+              <%= link_to t("shared.app_navigation.preparation_tools"), preparation_tools_path, class: "rn-nav-sub-link" %>
+            </div>
 
-        <div data-testid="app-nav-account" class="rn-nav-group">
-          <p class="rn-nav-group-title"><%= t("shared.app_navigation.account") %></p>
-          <%= link_to t("shared.app_navigation.profile"), edit_profile_path, class: "rn-nav-sub-link" %>
-          <%= link_to t("shared.app_navigation.members"), memberships_path, class: "rn-nav-sub-link" %>
-          <% if current_workspace_policy.manage? %>
-            <%= link_to t("shared.app_navigation.workspace_settings"), edit_workspace_path, class: "rn-nav-sub-link" %>
-            <%= link_to t("shared.app_navigation.invites"), workspace_invites_path, class: "rn-nav-sub-link" %>
-          <% end %>
-          <% if Current.user.instance_admin? %>
-            <%= link_to t("shared.app_navigation.instance_admin"), instance_admin_path, class: "rn-nav-sub-link" %>
-          <% end %>
-        </div>
+            <div data-testid="app-nav-account" class="rn-nav-group">
+              <p class="rn-nav-group-title"><%= t("shared.app_navigation.account") %></p>
+              <%= link_to t("shared.app_navigation.profile"), edit_profile_path, class: "rn-nav-sub-link" %>
+              <%= link_to t("shared.app_navigation.members"), memberships_path, class: "rn-nav-sub-link" %>
+              <% if current_workspace_policy.manage? %>
+                <%= link_to t("shared.app_navigation.workspace_settings"), edit_workspace_path, class: "rn-nav-sub-link" %>
+                <%= link_to t("shared.app_navigation.invites"), workspace_invites_path, class: "rn-nav-sub-link" %>
+              <% end %>
+              <% if Current.user.instance_admin? %>
+                <%= link_to t("shared.app_navigation.instance_admin"), instance_admin_path, class: "rn-nav-sub-link" %>
+              <% end %>
+            </div>
 
-        <div data-testid="app-nav-settings" class="rn-nav-group">
-          <p class="rn-nav-group-title"><%= t("shared.app_navigation.settings") %></p>
-          <% if current_workspace_policy.manage? %>
-            <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-nav-sub-link" %>
-          <% end %>
-          <% if current_workspace_policy.export? %>
-            <%= link_to t("shared.app_navigation.export"), workspace_export_path, class: "rn-nav-sub-link" %>
-            <%= link_to t("shared.app_navigation.export_beans"), workspace_export_beans_path, class: "rn-nav-sub-link" %>
-            <%= link_to t("shared.app_navigation.export_brews"), workspace_export_brews_path, class: "rn-nav-sub-link" %>
-            <%= link_to t("shared.app_navigation.export_media"), workspace_export_media_path, class: "rn-nav-sub-link" %>
-          <% end %>
-        </div>
+            <div data-testid="app-nav-settings" class="rn-nav-group">
+              <p class="rn-nav-group-title"><%= t("shared.app_navigation.settings") %></p>
+              <% if current_workspace_policy.manage? %>
+                <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-nav-sub-link" %>
+              <% end %>
+              <% if current_workspace_policy.export? %>
+                <%= link_to t("shared.app_navigation.export"), workspace_export_path, class: "rn-nav-sub-link" %>
+                <%= link_to t("shared.app_navigation.export_beans"), workspace_export_beans_path, class: "rn-nav-sub-link" %>
+                <%= link_to t("shared.app_navigation.export_brews"), workspace_export_brews_path, class: "rn-nav-sub-link" %>
+                <%= link_to t("shared.app_navigation.export_media"), workspace_export_media_path, class: "rn-nav-sub-link" %>
+              <% end %>
+            </div>
 
-        <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-nav-sign-out w-full text-left" %>
+            <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-nav-sign-out w-full text-left" %>
+          </div>
+        </details>
       </div>
-    </details>
+    </div>
   </div>
 </nav>
