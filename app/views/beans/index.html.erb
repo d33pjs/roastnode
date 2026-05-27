@@ -1,48 +1,103 @@
-<main class="min-h-screen bg-stone-50">
-  <section class="mx-auto max-w-6xl px-6 py-10">
-    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+<main class="rn-page">
+  <section class="rn-shell max-w-6xl py-6 sm:px-6 lg:py-10">
+    <header class="mb-6 flex items-start justify-between gap-4">
       <div>
         <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
-        <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
-        <p class="mt-2 text-stone-700"><%= current_workspace.name %></p>
+        <h1 class="mt-4 text-4xl font-black leading-tight text-rn-ink"><%= t(".title") %></h1>
+        <p class="mt-2 text-sm font-semibold text-rn-muted"><%= current_workspace.name %></p>
       </div>
 
       <% if current_workspace_policy.write? %>
-        <%= link_to t(".new"), new_bean_path, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+        <%= link_to t(".new"), new_bean_path, class: "shrink-0 rounded-2xl bg-[var(--rn-accent-strong)] px-4 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
       <% end %>
     </header>
 
-    <div class="overflow-x-auto rounded-lg border border-stone-200 bg-white shadow-sm">
-      <table class="min-w-[40rem] divide-y divide-stone-200 sm:min-w-full">
-        <thead class="bg-stone-100">
-          <tr>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".bean") %></th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".roaster") %></th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".remaining") %></th>
-            <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".status") %></th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-stone-100">
-          <% @beans.each do |bean| %>
-            <% photo = bean.primary_photo_attachment %>
-            <tr>
-              <td class="px-4 py-3 text-sm font-medium text-stone-950">
-                <%= link_to bean_path(bean), class: "flex items-center gap-3 hover:underline" do %>
-                  <% if photo.present? %>
-                    <%= image_tag media_attachment_path(photo, variant: :thumbnail), alt: "", data: { testid: "bean-list-photo" }, class: "h-12 w-12 shrink-0 rounded-md object-cover ring-1 ring-stone-200" %>
-                  <% else %>
-                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-stone-100 text-sm font-black text-stone-500 ring-1 ring-stone-200"><%= bean.name.first&.upcase || "?" %></span>
+    <div data-testid="bean-mobile-list" class="grid gap-3 md:hidden">
+      <% if @beans.any? %>
+        <% @beans.each do |bean| %>
+          <% remaining_percent = if bean.bag_size_grams.to_d.positive?
+            ((bean.remaining_grams.to_d / bean.bag_size_grams.to_d) * 100).clamp(0, 100)
+          else
+            0
+          end %>
+
+          <%= link_to bean_path(bean), data: { testid: "bean-mobile-card" }, class: "block rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm" do %>
+            <div class="flex items-start gap-3">
+              <%= render "shared/record_photo_thumb",
+                record: bean,
+                testid: "bean-mobile-card-photo",
+                class_name: "h-16 w-16 shrink-0 rounded-2xl object-cover ring-1 ring-stone-200" %>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p class="truncate text-base font-black text-rn-ink"><%= bean.name %></p>
+                    <p class="mt-0.5 truncate text-sm font-semibold text-rn-muted"><%= bean.roaster_name.presence || t(".unknown") %></p>
+                  </div>
+                  <span class="shrink-0 rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-xs font-extrabold text-rn-muted"><%= t("beans.statuses.#{bean.bag_status}") %></span>
+                </div>
+
+                <div class="mt-3">
+                  <div class="flex items-center justify-between gap-3 text-xs font-extrabold text-rn-muted">
+                    <span><%= t(".remaining") %></span>
+                    <span data-testid="bean-mobile-card-remaining-<%= bean.id %>"><%= t(".remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></span>
+                  </div>
+                  <div class="mt-1 h-2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]">
+                    <div data-testid="bean-mobile-card-progress-<%= bean.id %>" class="h-full rounded-full bg-[var(--rn-accent-strong)]" style="width: <%= remaining_percent %>%"></div>
+                  </div>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-2 text-xs font-bold text-rn-muted">
+                  <% if bean.opened_on.present? %>
+                    <span class="rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t(".opened_on", date: l(bean.opened_on)) %></span>
                   <% end %>
-                  <span><%= bean.name %></span>
-                <% end %>
-              </td>
-              <td class="px-4 py-3 text-sm text-stone-700"><%= bean.roaster_name.presence || t(".unknown") %></td>
-              <td data-testid="bean-list-remaining-<%= bean.id %>" class="px-4 py-3 text-sm text-stone-700"><%= t(".remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></td>
-              <td class="px-4 py-3 text-sm text-stone-700"><%= t("beans.statuses.#{bean.bag_status}") %></td>
-            </tr>
+                  <% if bean.roast_date.present? %>
+                    <span class="rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t(".roasted_on", date: l(bean.roast_date)) %></span>
+                  <% end %>
+                  <% if bean.country.present? %>
+                    <span class="rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= bean.country %></span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
           <% end %>
-        </tbody>
-      </table>
+        <% end %>
+      <% else %>
+        <p class="rounded-2xl border border-rn-line bg-rn-surface p-4 text-sm font-semibold text-rn-muted"><%= t(".none") %></p>
+      <% end %>
+    </div>
+
+    <div data-testid="bean-desktop-table" class="hidden md:block">
+      <div class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+        <table class="min-w-full divide-y divide-stone-200">
+          <thead class="bg-[var(--rn-surface-muted)]">
+            <tr>
+              <th class="px-4 py-3 text-left text-sm font-extrabold text-rn-muted"><%= t(".bean") %></th>
+              <th class="px-4 py-3 text-left text-sm font-extrabold text-rn-muted"><%= t(".roaster") %></th>
+              <th class="px-4 py-3 text-left text-sm font-extrabold text-rn-muted"><%= t(".remaining") %></th>
+              <th class="px-4 py-3 text-left text-sm font-extrabold text-rn-muted"><%= t(".status") %></th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-stone-100">
+            <% @beans.each do |bean| %>
+              <tr>
+                <td class="px-4 py-3 text-sm font-extrabold text-rn-ink">
+                  <%= link_to bean_path(bean), class: "flex items-center gap-3 hover:underline" do %>
+                    <%= render "shared/record_photo_thumb",
+                      record: bean,
+                      testid: "bean-list-photo",
+                      class_name: "h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-stone-200" %>
+                    <span><%= bean.name %></span>
+                  <% end %>
+                </td>
+                <td class="px-4 py-3 text-sm text-rn-muted"><%= bean.roaster_name.presence || t(".unknown") %></td>
+                <td data-testid="bean-list-remaining-<%= bean.id %>" class="px-4 py-3 text-sm text-rn-muted"><%= t(".remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></td>
+                <td class="px-4 py-3 text-sm text-rn-muted"><%= t("beans.statuses.#{bean.bag_status}") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 </main>

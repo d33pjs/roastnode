@@ -25,6 +25,12 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "th", text: "Channeling", count: 0
     assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "[data-testid=bean-mobile-list].md\\:hidden"
+    assert_select "[data-testid=bean-desktop-table].hidden.md\\:block"
+    assert_select "a[data-testid=bean-mobile-card][href=?]", bean_path(bean)
+    assert_select "img[data-testid=bean-mobile-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
+    assert_select "[data-testid=?]", "bean-mobile-card-remaining-#{bean.id}", "150 g of 250 g"
+    assert_select "[data-testid=?]", "bean-mobile-card-progress-#{bean.id}"
     assert_select "img[data-testid=bean-list-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
     assert_select "[data-testid=?]", "bean-list-remaining-#{bean.id}", "150 g of 250 g"
     assert_select "[data-testid^=bean-list-channeling]", count: 0
@@ -98,9 +104,38 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "bean[decaffeinated]"
     assert_select "input[name=?]", "bean[purchase_url]"
     assert_select "textarea[name=?]", "bean[tasting_notes]"
-    assert_select "h2", I18n.t("beans.form.variety_information")
+    assert_select "h2", I18n.t("beans.form.sections.origin")
     assert_select "input[name=?]", "bean[country]"
     assert_select "input[name=?]", "bean[blend_percentage]"
+  end
+
+  test "new renders mobile-first bean form sections in approved order" do
+    sign_in_as(users(:one))
+
+    get new_bean_path
+
+    assert_response :success
+    assert_select "[data-testid=bean-form-section][data-section=identity]"
+    assert_select "[data-testid=bean-form-section][data-section=inventory]"
+    assert_select "[data-testid=bean-form-section][data-section=roast]"
+    assert_select "[data-testid=bean-form-section][data-section=origin]"
+    assert_select "[data-testid=bean-form-section][data-section=purchase]"
+    assert_select "[data-testid=bean-form-section][data-section=taste]"
+
+    assert_appears_before "data-section=\"identity\"", "data-section=\"inventory\""
+    assert_appears_before "data-section=\"inventory\"", "data-section=\"roast\""
+    assert_appears_before "data-section=\"roast\"", "data-section=\"origin\""
+    assert_appears_before "data-section=\"origin\"", "data-section=\"purchase\""
+    assert_appears_before "data-section=\"purchase\"", "data-section=\"taste\""
+
+    assert_appears_before "bean[name]", "bean[roaster_name]"
+    assert_appears_before "bean[photos][]", "bean[bag_status]"
+    assert_appears_before "bean[bag_status]", "bean[bag_size_grams]"
+    assert_appears_before "bean[remaining_grams]", "bean[opened_on]"
+    assert_appears_before "bean[roast_date]", "bean[roast_type]"
+    assert_appears_before "bean[country]", "bean[region]"
+    assert_appears_before "bean[purchased_on]", "bean[purchase_price]"
+    assert_appears_before "bean[tasting_notes]", "bean[notes]"
   end
 
   test "writer can edit bean with rich metadata and additive photos" do
@@ -418,4 +453,14 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
+
+  private
+    def assert_appears_before(first, second)
+      first_index = response.body.index(first)
+      second_index = response.body.index(second)
+
+      assert first_index, "Expected #{first.inspect} to appear in response body"
+      assert second_index, "Expected #{second.inspect} to appear in response body"
+      assert first_index < second_index, "Expected #{first.inspect} to appear before #{second.inspect}"
+    end
 end
