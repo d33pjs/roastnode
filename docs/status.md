@@ -1,13 +1,13 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-05-27
+Last reviewed: 2026-05-28
 
 This is the compact status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done, intentionally deferred, or next.
 
 ## Built Now
 
 - Rails 8.1 monolith at the repository root, with PostgreSQL, Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
-- Rails-native authentication, password reset flow, private-by-default app shell, and a small read-only instance admin dashboard.
+- Rails-native authentication, password reset flow, private-by-default app shell, and an instance admin dashboard with safe read-only checks plus backup controls.
 - Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with private invite-only account creation, memberships page, and workspace-scoped controller patterns.
 - Profile settings: display name, username-style display label, avatar, public banner, preferred landing screen, espresso focus field, hidden espresso fields, number format, and time format.
 - Workspace settings: household name, currency, logo, and banner.
@@ -21,7 +21,8 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Equipment: edit/archive/reopen/delete lifecycle, additive photos, primary/crop/download/remove media, list photos, detail analytics, and historical brew safety when equipment is deleted.
 - Equipment events: first-class maintenance logs with multiple event types, multiple affected equipment records, photos, edit/delete, equipment detail history, and dashboard activity.
 - Private media: app photos are served through `MediaAttachmentsController`, with active-workspace checks, private thumbnail variants, view/download/crop/primary/remove controls, and related photo groups.
-- Workspace export: owner-only structured JSON, beans CSV, brews CSV, and media ZIP with manifest for workspace-owned media.
+- Active-workspace export: owner-only structured JSON, beans CSV, brews CSV, and media ZIP with manifest for workspace-owned media.
+- Instance backups: instance-admin-only backup profiles can be activated/configured in the app, scheduled through Solid Queue, run manually, tracked with run history/error metadata, retained by profile policy, and written as either full media ZIP archives or readable all-households JSON.
 - Beanconqueror import: conservative JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed.
 - Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, mobile-friendly back links, cross-links between domain records, optional demo data, and documentation for each shipped slice.
@@ -29,34 +30,43 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 ## Changed From The Initial Idea
 
 - Recipes were in the original v1 idea, but are now deliberately deferred. Do not introduce recipe tables, recipe snapshots, or recipe defaults until a dedicated recipes slice is chosen.
+- Backups were originally framed as documentation plus workspace export. The current v1 direction now needs an in-app, instance-admin-only backup system with scheduled jobs, full reconstructable archives, and readable all-households JSON.
 - Last-brew defaults were narrowed after product testing. The current contract copies only setup fields: bean, grinder, machine, preparation tools, grind setting, temperature, and pre-infusion seconds.
 - Beanconqueror compatibility means practical import first, not round-trip parity.
 - The first analytics implementation is server-rendered/query-backed. ECharts/Stimulus interactivity remains optional future work.
 - User public banner is a product concept, but uploaded files remain private behind authenticated media routes.
 
-## Still Open From The Initial Idea
+## Still Missing For v1
+
+- Empty-server restore/import: a workflow with tests that validates a full instance archive, remaps exported IDs into a clean database/storage area, restores media, and proves the archive can reconstruct a new server. Do not claim backups are complete until export and restore are verified together.
+- Production self-hosting guide: deployment assumptions, backup/restore verification, environment/secrets handling, storage volume guidance, and Docker Compose operations.
+- Operational admin depth: background job visibility, failed-job surfacing, backup/export status, and safe health checks beyond the current read-only instance dashboard.
+- Workspace administration polish: workspace deletion, ownership transfer, richer member management, and any public/private registration settings chosen for private installs.
+
+## Later Versions / v2+
 
 - Recipes and recipe snapshots: target definitions for espresso and other methods, default preparation tools, target dose/yield/time ranges, and brew-time snapshots.
-- Non-espresso method templates: the app is espresso-first; other methods are not yet first-class logging flows.
-- Workspace administration depth: workspace deletion, ownership transfer, richer member management, and public/private registration settings are not built.
-- Full i18n: English UI exists with metric storage; complete locale files, German UI, and broader unit preferences are still open.
-- Beanconqueror depth: media import, settings, waters, green beans, pressure profiles, graph/device data, background import processing, possible duplicate review, and full round-trip export are open.
-- Analytics depth: interactive charting, richer correlations/recommendations, equipment event markers inside charts, and materialized summaries for large data sets are open.
-- Maintenance automation: reminders, notification schedules, and recurring service suggestions are not built.
-- Media infrastructure: direct-upload progress, S3-compatible storage hardening, object lifecycle cleanup, and account-data media export are open.
-- Self-hosting operations: backups, restore flow, production hardening guides, background job monitoring, and health checks beyond the current instance dashboard are open.
-- Public future: public profiles, public brew sharing links, roaster catalog publishing, public/private coffee profile split, federation, billing/subscriptions, marketplace checkout, native mobile apps, offline mode, and device/smart-scale integrations remain outside current v1.
+- Non-espresso method templates beyond the espresso-first household workflow.
+- Full i18n: complete locale files, German UI, and broader unit preferences beyond the current metric storage and comma-friendly number parsing.
+- Beanconqueror depth: media import, settings, waters, green beans, pressure profiles, graph/device data, duplicate review, and full round-trip export.
+- Analytics depth: interactive ECharts/Stimulus charting, richer correlations/recommendations, equipment event markers inside charts, and materialized summaries for large data sets.
+- Maintenance automation: reminders, notification schedules, and recurring service suggestions.
+- Media infrastructure: direct-upload progress, S3-compatible storage hardening, object lifecycle cleanup, and more advanced storage policies.
+- Brew-card sharing: generated image export, public share links, and any social/comment/reaction surface.
+- Public and roaster future: public profiles, public brew sharing, roaster catalog publishing, public/private coffee profile split, roaster workspaces, verification, marketplace checkout, billing/subscriptions, and moderation tools.
+- Federation and wider app surfaces: ActivityPub or other federation for public content only, native mobile apps, offline mode, device/smart-scale integrations, cafe workflows, and full custom form builder.
 
 ## Good Next Slices
 
-- Recipe target definitions and brew-time recipe snapshots.
-- Interactive analytics charts, starting with workspace and bean detail screens.
-- Maintenance reminders based on equipment events and usage counters.
+- Empty-server backup restore: validation, ID remapping, media integrity checks, import task/UI decision, and export-to-restore tests.
 - Production self-hosting guide with backup and restore checks.
+- Instance admin operations: backup status, job status, and failure visibility.
+- Workspace administration polish: deletion, ownership transfer, and richer member management.
 
 ## Source Files
 
 - Original product context: `/Users/d33pjs/Documents/Codex/2026-05-24/grill-me-i-want-to-have/CONTEXT.md`
 - Repository-wide agent rules: `AGENTS.md`
+- Backup system note: `docs/backup-system.md`
 - Documentation index: `docs/README.md`
 - Slice specs and implementation plans: `docs/superpowers/`

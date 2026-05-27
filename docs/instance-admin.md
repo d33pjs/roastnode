@@ -1,16 +1,22 @@
 # Instance Admin
 
-Roastnode now has a minimal instance-level admin surface at `/instance_admin`.
+Roastnode has an instance-level admin surface at `/instance_admin`.
 
 ## Scope
 
-The page is intentionally small. It shows private-install status, read-only health checks, aggregate counts, and a read-only account list for private hosting. It also reminds admins that optional demo data is loaded explicitly with:
+The page is intentionally small. It shows private-install status, read-only health checks, backup profile controls, aggregate counts, and a read-only account list for private hosting. It also reminds admins that optional demo data is loaded explicitly with:
 
 ```sh
 bin/rails roastnode:demo:load
 ```
 
 Do not put user secrets, password digests, session details, invite tokens, or signed media URLs on this page.
+
+## Backups
+
+Instance admins can activate and configure backup profiles from the dashboard. Profiles can produce either a full media ZIP archive or a readable all-households JSON file. Runs are executed by `InstanceBackupJob`, and the production recurring schedule uses `InstanceBackupSchedulerJob` through Solid Queue.
+
+Backup files stay on server storage under the configured relative path. The admin surface may show file paths and run status, but must not expose backup file contents or signed media URLs.
 
 ## Authorization
 
@@ -50,4 +56,4 @@ The dashboard shows an "Instance admin" link only when `Current.user.instance_ad
 
 ## Future Ideas
 
-Good next additions would be background job status, backup/export status, and carefully audited user management. Any destructive or account-mutating instance-wide action needs a dedicated design and tests before implementation.
+Good next additions would be broader background job status, empty-server backup restore, and carefully audited user management. Any destructive, restore, or account-mutating instance-wide action needs a dedicated design, authorization tests, audit trail decisions, and careful copy before implementation.

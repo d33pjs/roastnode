@@ -504,8 +504,40 @@ en:
       sign_in: "Sign in"
       title: "Roastnode"
   instance_admin:
+    backup_profiles:
+      create:
+        created: "Backup profile activated."
+      run:
+        queued: "Backup run queued."
+      update:
+        updated: "Backup profile updated."
     index:
       back: "Back to dashboard"
+      activate_backup: "Activate"
+      backup_enabled: "Enabled"
+      backup_kind_descriptions:
+        full_archive: "ZIP archive with readable JSON plus all original media files for restore-oriented backups."
+        readable_json: "One inspectable JSON export for all households, with stable media references but no media bytes."
+      backup_kind_labels:
+        full_archive: "Full archive"
+        readable_json: "Readable JSON"
+      backup_name: "Name"
+      backup_run_created: "Created"
+      backup_run_file: "File"
+      backup_run_profile: "Profile"
+      backup_run_status: "Status"
+      backup_schedules:
+        daily: "Daily"
+        manual: "Manual"
+        weekly: "Weekly"
+      backup_schedule: "Schedule"
+      backup_statuses:
+        failed: "Failed"
+        queued: "Queued"
+        running: "Running"
+        succeeded: "Succeeded"
+      backups: "Backups"
+      backups_intro: "Instance-admin-only backup profiles run through Solid Queue and write files to server storage."
       demo_data: "Demo data"
       demo_data_note: "Optional seed data stays explicit and guarded for production."
       disabled: "Disabled"
@@ -520,9 +552,11 @@ en:
         storage: "Storage"
         storage_usage: "Storage usage"
       account_role: "Account role"
+      enabled: "Enabled"
       instance_admin_badge: "Instance admin"
       instance_mode: "Instance mode"
       intro: "A small owner-only control surface for private hosting, safety checks, and future maintenance tools."
+      last_backup_run: "Last run: %{status} at %{time}"
       metric_labels:
         beans: "Beans"
         brews: "Brews"
@@ -530,13 +564,19 @@ en:
         users: "Users"
         workspaces: "Workspaces"
       metrics: "Instance totals"
+      no_backup_runs: "No runs yet."
+      pending_file: "Pending"
       private_mode: "Private"
       private_mode_note: "Household data remains behind authentication and workspace membership."
       public_registration: "Public registration"
       public_registration_note: "New members still join through explicit household invites."
       ok: "OK"
       rails_detail: "Rails %{version} / %{environment}"
+      retention_count: "Files to keep"
+      run_backup: "Run now"
+      save_backup: "Save profile"
       storage_usage_detail: "%{blobs} blobs / %{size}"
+      storage_path: "Storage path"
       title: "Instance admin"
       user_badge: "User"
       users: "Users"

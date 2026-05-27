@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_28_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -204,6 +204,37 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
     t.index ["workspace_id"], name: "index_equipment_events_on_workspace_id"
   end
 
+  create_table "instance_backup_profiles", force: :cascade do |t|
+    t.string "backup_kind", null: false
+    t.datetime "created_at", null: false
+    t.boolean "enabled", default: false, null: false
+    t.datetime "last_enqueued_at"
+    t.string "name", null: false
+    t.integer "retention_count", default: 7, null: false
+    t.string "schedule", default: "manual", null: false
+    t.string "storage_path", default: "storage/instance_backups", null: false
+    t.datetime "updated_at", null: false
+    t.index ["backup_kind"], name: "index_instance_backup_profiles_on_backup_kind"
+    t.index ["enabled", "schedule"], name: "index_instance_backup_profiles_on_enabled_and_schedule"
+  end
+
+  create_table "instance_backup_runs", force: :cascade do |t|
+    t.string "backup_kind", null: false
+    t.string "checksum_sha256"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.string "file_path"
+    t.bigint "file_size_bytes"
+    t.datetime "finished_at"
+    t.bigint "instance_backup_profile_id", null: false
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_instance_backup_runs_on_created_at"
+    t.index ["instance_backup_profile_id", "status"], name: "idx_on_instance_backup_profile_id_status_03322145f4"
+    t.index ["instance_backup_profile_id"], name: "index_instance_backup_runs_on_instance_backup_profile_id"
+  end
+
   create_table "inventory_adjustments", force: :cascade do |t|
     t.bigint "bean_id", null: false
     t.bigint "brew_id"
@@ -328,6 +359,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_120000) do
   add_foreign_key "equipment_event_items", "equipment_events"
   add_foreign_key "equipment_events", "users"
   add_foreign_key "equipment_events", "workspaces"
+  add_foreign_key "instance_backup_runs", "instance_backup_profiles"
   add_foreign_key "inventory_adjustments", "beans"
   add_foreign_key "inventory_adjustments", "brews"
   add_foreign_key "inventory_adjustments", "users"

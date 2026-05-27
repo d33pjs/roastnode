@@ -5,6 +5,11 @@ Rails.application.routes.draw do
   root "home#index"
   get "dashboard" => "home#dashboard", as: :dashboard
   get "instance_admin" => "instance_admin#index", as: :instance_admin
+  namespace :instance_admin, path: "instance_admin" do
+    resources :backup_profiles, only: %i[create update] do
+      post :run, on: :member
+    end
+  end
   resource :profile, only: %i[edit update]
   resource :workspace, only: %i[edit update]
   resource :workspace_onboarding, only: %i[new create]
