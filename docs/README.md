@@ -5,6 +5,7 @@ This folder is the durable project memory for humans and AI agents.
 ## Start Here
 
 - `docs/superpowers/specs/2026-05-25-foundation-design.md` describes the first implementation slice.
+- `docs/status.md` summarizes what is built, what changed from the initial idea, and what remains open.
 - `docs/workspace-core.md` describes workspaces, roles, invites, and the workspace-scoping rule for future product data.
 - `docs/workspace-settings.md` describes active-workspace settings for household name and currency.
 - `docs/landing-preferences.md` describes preferred start screens and the stable dashboard route.
