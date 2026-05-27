@@ -1,8 +1,19 @@
 class WorkspaceStatistics
   RECENT_DAYS = 14
 
-  def initialize(workspace:)
+  def self.default_start_date
+    (RECENT_DAYS - 1).days.ago.to_date
+  end
+
+  def self.default_end_date
+    Date.current
+  end
+
+  def initialize(workspace:, start_date: nil, end_date: nil)
     @workspace = workspace
+    @start_date = (start_date || self.class.default_start_date).to_date
+    @end_date = (end_date || self.class.default_end_date).to_date
+    @start_date, @end_date = @end_date, @start_date if @start_date > @end_date
   end
 
   def call
@@ -17,10 +28,14 @@ class WorkspaceStatistics
   end
 
   private
-    attr_reader :workspace
+    attr_reader :workspace, :start_date, :end_date
 
     def brews
-      @brews ||= workspace.brews.includes(:bean, :grinder, :machine).to_a
+      @brews ||= workspace
+        .brews
+        .includes(:bean, :grinder, :machine)
+        .where(occurred_at: start_date.beginning_of_day..end_date.end_of_day)
+        .to_a
     end
 
     def beans
@@ -102,7 +117,7 @@ class WorkspaceStatistics
     end
 
     def recent_dates
-      @recent_dates ||= ((RECENT_DAYS - 1).days.ago.to_date..Date.current).to_a
+      @recent_dates ||= (start_date..end_date).to_a
     end
 
     def brews_by_date

@@ -15,6 +15,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Most-used grinder and machine.
 - Recent brews-by-day bars.
 - Recent consumption-by-day bars.
+- Date range filters for brew-based analytics.
 - Taste balance distribution.
 - Retention marker distribution.
 - Bean breakdowns by roaster, origin, and process.
@@ -28,6 +29,13 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Brew cost is calculated from bean weight and the selected bean's price per gram.
 - Average brew cost includes only brews whose bean has a known purchase price and positive bag size.
 - Unknown prices are allowed and excluded from average-cost calculations.
+
+## Date Range Rules
+
+- The workspace statistics page defaults to the most recent 14 days.
+- `start_date` and `end_date` are inclusive and can be supplied as `YYYY-MM-DD` query parameters.
+- Brew-derived metrics follow the selected range: total brews, beans ground, average brew cost, leaders, channeling, retention, taste balance, and day bars.
+- Current bean inventory/catalog metrics stay unfiltered: open bean count, known bean spend, and bean breakdowns by roaster/origin/process.
 
 ## Agent Notes
 

@@ -4,6 +4,18 @@
       <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
       <p class="mt-4 text-sm font-semibold uppercase text-stone-600"><%= current_workspace.name %></p>
       <h1 class="mt-2 text-4xl font-bold text-stone-950"><%= t(".title") %></h1>
+      <%= form_with url: statistics_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
+        <div>
+          <%= form.label :start_date, t(".start_date"), class: "block text-sm font-semibold uppercase text-stone-600" %>
+          <%= form.date_field :start_date, value: @statistics_start_date.iso8601, data: { testid: "statistics-start-date" }, class: "mt-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-base text-stone-950 shadow-sm" %>
+        </div>
+        <div>
+          <%= form.label :end_date, t(".end_date"), class: "block text-sm font-semibold uppercase text-stone-600" %>
+          <%= form.date_field :end_date, value: @statistics_end_date.iso8601, data: { testid: "statistics-end-date" }, class: "mt-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-base text-stone-950 shadow-sm" %>
+        </div>
+        <%= form.submit t(".apply_filters"), class: "rounded-lg bg-stone-950 px-4 py-2 font-semibold text-white shadow-sm" %>
+        <%= link_to t(".reset_filters"), statistics_path, class: "rounded-lg border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-950 shadow-sm" %>
+      <% end %>
     </header>
 
     <section class="grid gap-4 py-8 sm:grid-cols-2 lg:grid-cols-3">

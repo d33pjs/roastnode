@@ -19,6 +19,7 @@ Included:
 - most-used machine
 - brews by recent day
 - bean consumption by recent day
+- date range filtering for brew-based metrics
 - taste balance distribution
 - channeling rate
 - retention/exchange marker counts
@@ -39,10 +40,13 @@ The view should be dense and utilitarian, consistent with the current Rails/Tail
 - Average known brew cost divides known brew cost by the count of brews whose bean has price data.
 - Unknown grinders/machines are not candidates for "most used".
 - Imported data is included like any other workspace data.
+- The workspace statistics page defaults to the most recent 14 days.
+- Date range query parameters are inclusive.
+- Brew-derived workspace metrics are filtered by the selected date range.
+- Open bean counts, known bean spend, and bean breakdowns remain current catalog/inventory views and are not date-filtered.
 
 ## Deferred
 
 - ECharts/Stimulus interactivity.
-- Date range filters.
 - Exporting charts.
 - Materialized summary tables.

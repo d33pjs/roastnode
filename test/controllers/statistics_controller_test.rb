@@ -16,6 +16,34 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
     assert_select "p", text: /Other Grinder/, count: 0
   end
 
+  test "workspace member filters statistics by date range" do
+    brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+    workspaces(:household).brews.create!(
+      user: users(:one),
+      bean: beans(:second_open_household),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 20, 9, 30, 0),
+      bean_weight_grams: 20,
+      ground_weight_grams: 20.4,
+      dose_grams: 20,
+      beverage_grams: 50,
+      total_time_seconds: 32,
+      channeling: true,
+      taste_balance: "bitter",
+      rating: 3
+    )
+
+    sign_in_as(users(:one))
+    get statistics_path, params: { start_date: "2026-05-26", end_date: "2026-05-26" }
+
+    assert_response :success
+    assert_select "input[data-testid=statistics-start-date][value='2026-05-26']"
+    assert_select "input[data-testid=statistics-end-date][value='2026-05-26']"
+    assert_select "[data-testid=total-brews]", "1"
+    assert_select "[data-testid=total-ground]", "18 g"
+  end
+
   test "viewer can read statistics" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
