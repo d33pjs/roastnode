@@ -7,7 +7,7 @@ The instance backup system is v1 operational scope. It is separate from active-w
 - Instance admins can activate and configure backup profiles inside the app.
 - Backup jobs run manually or on a schedule through Solid Queue.
 - Backups are configurable by profile, starting with a full media archive and a readable all-households JSON export.
-- A full backup is not complete until an empty-server restore path verifies it can reconstruct a new Roastnode server.
+- A full backup is complete only when the archive validates and the restore path proves it can reconstruct a new Roastnode server.
 
 ## Implemented Surface
 
@@ -16,6 +16,10 @@ The instance backup system is v1 operational scope. It is separate from active-w
 - `InstanceBackupSchedulerJob` is configured in `config/recurring.yml` for production and enqueues due enabled profiles through Solid Queue.
 - `InstanceBackupJob` runs a queued `InstanceBackupRun`, writes the backup file, records file size, SHA-256 checksum, timestamps, success/failure status, and error message.
 - Retention is enforced per profile by keeping the newest successful files and deleting older retained file paths.
+- `InstanceBackupArchiveValidator` checks archive format/version, readable JSON format/version, media file presence, and SHA-256 integrity.
+- `InstanceBackupRestorer` imports a full archive into an empty database/storage area, creates fresh database IDs, remaps relationships, restores media files, preserves primary-photo relationships where exported, and gives restored users new random passwords so password digests are never imported.
+- `bin/rails roastnode:backup:validate[path/to/archive.zip]` validates an archive.
+- `bin/rails roastnode:backup:restore[path/to/archive.zip]` restores an archive into an empty server.
 
 ## Full Reconstructable Export
 
@@ -34,13 +38,14 @@ The full export must not include password digests, sessions, invite tokens, sign
 
 The readable export is for humans and inspection. It produces one JSON file with every household/workspace and its data in a clear nested structure. Media bytes may stay in files beside the JSON, but the JSON includes stable paths, checksums, content types, filenames, and ownership metadata.
 
-This export is not a replacement for the full restore archive unless restore tests explicitly prove it can rebuild an empty server.
+The readable export is embedded inside the full archive and is the data source used by restore tests.
 
 ## Restore Contract
 
-Backups are not complete until restore is verified. The next v1 slice should include:
+The restore workflow deliberately runs as a Rails task instead of an app UI. It is destructive operational work and refuses to run unless the target app data is empty.
 
-- an empty-server restore/import workflow
+Restore verification covers:
+
 - format version checks
 - validation before import
 - relationship remapping from exported IDs to new database IDs
@@ -52,4 +57,4 @@ Backups are not complete until restore is verified. The next v1 slice should inc
 - whether the default `storage/instance_backups` location and retention count of 7 should change for production installs
 - whether backup files are encrypted by the app or by the host environment
 - whether offsite upload is built in v1 or documented as host-level setup
-- whether restore is a UI action, a Rails task, or both
+- whether restore should remain task-only or gain a carefully audited UI later

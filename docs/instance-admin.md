@@ -56,4 +56,4 @@ The dashboard shows an "Instance admin" link only when `Current.user.instance_ad
 
 ## Future Ideas
 
-Good next additions would be broader background job status, empty-server backup restore, and carefully audited user management. Any destructive, restore, or account-mutating instance-wide action needs a dedicated design, authorization tests, audit trail decisions, and careful copy before implementation.
+Good next additions would be broader background job status, production backup/restore operations guidance, and carefully audited user management. Any destructive, restore, or account-mutating instance-wide action needs a dedicated design, authorization tests, audit trail decisions, and careful copy before implementation.
