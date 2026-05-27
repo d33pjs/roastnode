@@ -62,6 +62,18 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment)
   end
 
+  test "show exposes management and danger zone actions" do
+    sign_in_as(users(:one))
+    event = equipment_events(:grinder_cleaning)
+
+    get equipment_event_path(event)
+
+    assert_response :success
+    assert_select "a[href=?]", edit_equipment_event_path(event), text: I18n.t("equipment_events.show.edit")
+    assert_select "[data-testid=equipment-event-danger-zone]"
+    assert_select "form[action=?]", equipment_event_path(event)
+  end
+
   test "show links affected equipment to details" do
     event = equipment_events(:grinder_cleaning)
     sign_in_as(users(:one))
@@ -109,6 +121,60 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ equipment(:household_grinder).id, equipment(:household_machine).id ].sort, event.equipment.ids.sort
   end
 
+  test "edit renders current event values photos and affected equipment" do
+    sign_in_as(users(:one))
+    event = equipment_events(:grinder_cleaning)
+    attachment = attach_photo(event)
+
+    get edit_equipment_event_path(event)
+
+    assert_response :success
+    assert_select "h1", I18n.t("equipment_events.edit.title")
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "equipment_event[event_types][]", "grinder_cleaning"
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "equipment_event[equipment_ids][]", equipment(:household_grinder).id.to_s
+    assert_select "textarea[name=?]", "equipment_event[notes]", text: event.notes
+    assert_select "img[src=?]", media_attachment_path(attachment)
+    assert_select "input[type=file][name=?][multiple=multiple]", "equipment_event[photos][]"
+  end
+
+  test "update changes event details equipment links and adds photos" do
+    sign_in_as(users(:one))
+    event = equipment_events(:grinder_cleaning)
+
+    assert_difference -> { event.reload.photos.count }, 1 do
+      patch equipment_event_path(event), params: {
+        equipment_event: {
+          event_types: [ "grinder_deep_cleaning", "burr_change" ],
+          occurred_at: "2026-05-27 09:15",
+          notes: "Deep clean with burr check.",
+          equipment_ids: [ equipment(:household_grinder).id, equipment(:household_machine).id ],
+          photos: [ photo_upload ]
+        }
+      }
+    end
+
+    assert_redirected_to equipment_event_path(event)
+    assert_equal [ "grinder_deep_cleaning", "burr_change" ], event.reload.event_types
+    assert_equal "grinder_deep_cleaning", event.event_type
+    assert_equal "Deep clean with burr check.", event.notes
+    assert_equal [ equipment(:household_grinder).id, equipment(:household_machine).id ].sort, event.equipment.ids.sort
+  end
+
+  test "destroy removes event and event item links" do
+    sign_in_as(users(:one))
+    event = equipment_events(:grinder_cleaning)
+    equipment_count = workspaces(:household).equipment.count
+
+    assert_difference -> { workspaces(:household).equipment_events.count }, -1 do
+      assert_difference -> { EquipmentEventItem.count }, -1 do
+        delete equipment_event_path(event)
+      end
+    end
+
+    assert_redirected_to dashboard_path
+    assert_equal equipment_count, workspaces(:household).equipment.count
+  end
+
   test "viewer cannot create equipment event" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
@@ -125,6 +191,26 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_path
+  end
+
+  test "viewer cannot manage equipment event" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    event = equipment_events(:grinder_cleaning)
+
+    get edit_equipment_event_path(event)
+    assert_redirected_to root_path
+
+    patch equipment_event_path(event), params: { equipment_event: { event_types: [ "other" ], equipment_ids: [ equipment(:household_grinder).id ] } }
+    assert_redirected_to root_path
+
+    delete equipment_event_path(event)
+    assert_redirected_to root_path
+    assert EquipmentEvent.exists?(event.id)
+  ensure
+    memberships(:member)&.update!(role: "member")
   end
 
   test "create rejects equipment from another workspace" do

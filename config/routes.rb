@@ -25,7 +25,7 @@ Rails.application.routes.draw do
     patch :archive, on: :member
     patch :reopen, on: :member
   end
-  resources :equipment_events, only: %i[new create show]
+  resources :equipment_events, only: %i[new create show edit update destroy]
   resources :preparation_tools, only: %i[index new create show edit update destroy] do
     patch :archive, on: :member
     patch :reopen, on: :member

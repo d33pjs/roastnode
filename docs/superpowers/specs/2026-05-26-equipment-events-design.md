@@ -2,7 +2,7 @@
 
 ## Intent
 
-Equipment Events is the next Roastnode slice after Coffee Core. It lets a household record grinder and machine maintenance events and makes the workspace timeline more useful without adding reminders, photos, or advanced analytics yet.
+Equipment Events lets a household record grinder and machine maintenance events and makes the workspace timeline more useful without adding reminders or recurring maintenance automation yet.
 
 ## Included Now
 
@@ -10,13 +10,14 @@ Equipment Events is the next Roastnode slice after Coffee Core. It lets a househ
 - Events created by signed-in workspace users with write access.
 - One event can reference one or more equipment records from the same workspace.
 - One event can include multiple event types for a single maintenance session.
+- Equipment events can be edited or deleted by workspace writers.
+- Equipment events support private photo management through the shared media flow.
 - Dashboard quick action for adding an equipment event.
 - Dashboard recent activity includes brews, equipment events, and manual inventory adjustments.
-- Equipment detail pages show recent events and basic usage context.
+- Equipment detail pages show recent events, service counters, usage analytics, and maintenance marker distributions.
 
 ## Explicitly Deferred
 
-- Photos on equipment events.
 - Maintenance reminders and notification schedules.
 - Complex recurring maintenance rules.
 - Beanconqueror import mapping for maintenance logs.
@@ -34,6 +35,8 @@ Fields:
 - `event_type` compatibility summary, storing the first selected type
 - `occurred_at`
 - `notes`
+- `photos`, Active Storage attachments
+- `primary_photo_attachment_id`
 
 Supported event types for this slice:
 
@@ -49,10 +52,10 @@ Supported event types for this slice:
 ## Authorization And Isolation
 
 - All queries go through `current_workspace`.
-- Owners, admins, and members can create equipment events.
-- Viewers can read equipment and events but cannot create them.
+- Owners, admins, and members can create, edit, and delete equipment events.
+- Viewers can read equipment and events but cannot manage them.
 - Event creation rejects equipment IDs outside the active workspace.
-- Event creation requires at least one event type.
+- Event create/update requires at least one event type.
 
 ## Timeline Rules
 
@@ -84,5 +87,7 @@ Tests must cover:
 - event model validation and workspace consistency
 - controller authorization for members versus viewers
 - cross-workspace equipment IDs being rejected
+- editing event types, affected equipment, and additive photos
+- danger-zone deletion removing event links but not equipment records
 - dashboard timeline rendering equipment events
 - equipment detail showing only active workspace events

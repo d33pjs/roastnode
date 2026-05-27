@@ -389,22 +389,37 @@ en:
   equipment_events:
     create:
       created: "Equipment event logged."
-    new:
-      back: "Back to dashboard"
-      create: "Save event"
+    destroy:
+      destroyed: "Equipment event deleted."
+    edit:
+      back: "Back to equipment event"
+      photos: "Current photos"
+      title: "Edit equipment event"
+      update: "Save event"
+    form:
       equipment: "Affected equipment"
       event_types: "Event types"
       notes: "Notes"
       occurred_at: "Occurred at"
       photos: "Photos"
+    new:
+      back: "Back to dashboard"
+      create: "Save event"
       title: "Log equipment event"
     show:
       back: "Back to dashboard"
       byline: "Logged by %{user}"
+      danger_zone: "Danger zone"
+      danger_zone_body: "Delete this equipment event and its photos. Equipment records and brews stay untouched."
+      delete: "Delete event"
+      delete_confirmation: "Delete this equipment event? This cannot be undone."
+      edit: "Edit"
       equipment: "Equipment"
       eyebrow: "Equipment event"
       notes: "Notes"
       photos: "Photos"
+    update:
+      updated: "Equipment event updated."
   home:
     index:
       eyebrow: "Private coffee infrastructure"

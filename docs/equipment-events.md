@@ -7,12 +7,13 @@ Equipment Events records maintenance and service history for workspace equipment
 - Workspace-scoped equipment events.
 - Affected equipment selection for one or more grinder or machine records.
 - Multiple event types per event, so one maintenance session can record actions like grinder cleaning and machine backflush together.
-- Event logging by owners, admins, and members.
+- Event logging, editing, and deletion by owners, admins, and members.
 - Viewer read-only access.
 - Equipment detail pages with recent events, recent brews, usage analytics, maintenance marker distribution, and service counters.
 - Archived equipment is hidden from new event logging while remaining visible in historical event detail pages.
+- Existing affected archived equipment remains available when editing an old event.
 - Workspace recent activity entries for equipment events.
-- Basic private photos on equipment events.
+- Private photo management on equipment events, including viewing, download, primary selection, cropping, removal, and additive upload while editing.
 
 ## Event Types
 
@@ -44,6 +45,12 @@ It deliberately hides automatic brew inventory adjustments because the brew itse
 - All selected equipment must belong to the event workspace.
 - `EquipmentStatistics` owns grinder/machine usage analytics for equipment detail pages. Keep it scoped through `current_workspace.equipment.find(params[:id])`.
 
+## Corrections And Delete
+
+Equipment event edit reuses the create form. Updates replace event type selections and affected equipment links, and add new photos without replacing existing photos.
+
+Equipment event deletion lives in the event detail danger zone. It removes the event, its join rows, and attached photos. Equipment records, brews, and equipment analytics remain intact except that the deleted event no longer contributes to service counters.
+
 ## Equipment Analytics
 
 Equipment detail pages now show:
@@ -59,7 +66,7 @@ Relevant service events are grinder cleaning, grinder deep cleaning, and burr ch
 
 ## Deferred
 
-- Primary-photo selection and thumbnail variants.
+- Thumbnail variants.
 - Maintenance reminders.
 - Interactive ECharts usage charts.
 - Import/export mapping for equipment events.

@@ -1,6 +1,12 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-3xl px-6 py-10">
-    <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
+
+      <% if current_workspace_policy.write? %>
+        <%= link_to t(".edit"), edit_equipment_event_path(@equipment_event), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+      <% end %>
+    </div>
 
     <article class="mt-6 rounded-lg border border-stone-200 bg-white p-6 shadow-sm">
       <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
@@ -32,5 +38,17 @@
         section_class: "mt-6 border-t border-stone-100 pt-6",
         title_class: "font-semibold text-stone-950" %>
     </article>
+
+    <% if current_workspace_policy.write? %>
+      <section data-testid="equipment-event-danger-zone" class="mt-6 rounded-lg border border-red-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-semibold text-red-800"><%= t(".danger_zone") %></h2>
+        <p class="mt-2 text-sm text-stone-700"><%= t(".danger_zone_body") %></p>
+        <%= button_to t(".delete"),
+          equipment_event_path(@equipment_event),
+          method: :delete,
+          form: { data: { turbo_confirm: t(".delete_confirmation") } },
+          class: "mt-4 rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>
+      </section>
+    <% end %>
   </section>
 </main>
