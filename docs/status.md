@@ -25,6 +25,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Instance backups: instance-admin-only backup profiles can be activated/configured in the app, scheduled through Solid Queue, run manually, tracked with run history/error metadata, retained by profile policy, written as either full media ZIP archives or readable all-households JSON, validated, and restored into an empty server through Rails tasks with ID remapping and media integrity checks.
 - Beanconqueror import: conservative JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed.
+- Production self-hosting guide: deployment assumptions, environment/secrets handling, storage volume guidance, Docker Compose shape, backup validation, empty-server restore drills, and upgrade checks.
 - Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, mobile-friendly back links, cross-links between domain records, optional demo data, and documentation for each shipped slice.
 
 ## Changed From The Initial Idea
@@ -38,7 +39,6 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 ## Still Missing For v1
 
-- Production self-hosting guide: deployment assumptions, backup/restore verification, environment/secrets handling, storage volume guidance, and Docker Compose operations.
 - Operational admin depth: background job visibility, failed-job surfacing, backup/export status, and safe health checks beyond the current read-only instance dashboard.
 - Workspace administration polish: workspace deletion, ownership transfer, richer member management, and any public/private registration settings chosen for private installs.
 
@@ -57,7 +57,6 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 ## Good Next Slices
 
-- Production self-hosting guide with backup and restore checks.
 - Instance admin operations: backup status, job status, and failure visibility.
 - Workspace administration polish: deletion, ownership transfer, and richer member management.
 
@@ -66,5 +65,6 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Original product context: `/Users/d33pjs/Documents/Codex/2026-05-24/grill-me-i-want-to-have/CONTEXT.md`
 - Repository-wide agent rules: `AGENTS.md`
 - Backup system note: `docs/backup-system.md`
+- Production self-hosting guide: `docs/production-self-hosting.md`
 - Documentation index: `docs/README.md`
 - Slice specs and implementation plans: `docs/superpowers/`

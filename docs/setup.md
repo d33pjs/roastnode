@@ -110,3 +110,7 @@ bin/rails --version
 ```
 
 If Bundler warns that your home directory is not writable inside a sandboxed tool, it can still complete by using a temporary home directory. On a normal shell, Bundler should use your regular user gem paths.
+
+## Production
+
+For production deployment, backup verification, restore drills, storage volumes, and Docker Compose shape, see `docs/production-self-hosting.md`.

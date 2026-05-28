@@ -33,6 +33,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/navigation.md` describes cross-links between beans, brews, equipment, preparation tools, and shared back-link UI.
 - `docs/instance-admin.md` describes the private instance admin dashboard and the `User#instance_admin` boundary.
 - `docs/setup.md` describes local Rails and Docker Compose setup.
+- `docs/production-self-hosting.md` describes production deployment assumptions, storage, backups, restore drills, and Docker Compose operations.
 - `AGENTS.md` contains repository-wide guidance for AI coding agents.
 
 ## Documentation Expectations
