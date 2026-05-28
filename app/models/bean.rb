@@ -102,10 +102,11 @@ class Bean < ApplicationRecord
   end
 
   def finish!
-    update!(
+    update_columns(
       archived_at: nil,
       finished_at: Time.current,
-      opened_on: opened_on || Date.current
+      opened_on: opened_on || Date.current,
+      updated_at: Time.current
     )
   end
 
