@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_28_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_28_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -55,6 +55,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_110000) do
     t.string "elevation"
     t.string "farm"
     t.string "farmer"
+    t.datetime "finished_at"
     t.string "harvested"
     t.string "import_source"
     t.string "import_source_id"
@@ -85,6 +86,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_110000) do
     t.index ["duplicated_from_bean_id"], name: "index_beans_on_duplicated_from_bean_id"
     t.index ["primary_photo_attachment_id"], name: "index_beans_on_primary_photo_attachment_id"
     t.index ["workspace_id", "archived_at"], name: "index_beans_on_workspace_id_and_archived_at"
+    t.index ["workspace_id", "finished_at"], name: "index_beans_on_workspace_id_and_finished_at"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_beans_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id"], name: "index_beans_on_workspace_id"
   end

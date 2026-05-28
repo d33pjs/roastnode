@@ -1,6 +1,8 @@
 require "test_helper"
 
 class BeanTest < ActiveSupport::TestCase
+  include ActiveSupport::Testing::TimeHelpers
+
   test "defaults remaining grams to bag size" do
     bean = workspaces(:household).beans.create!(
       name: "La Marianela",
@@ -154,6 +156,48 @@ class BeanTest < ActiveSupport::TestCase
 
     bean.close!
     assert_not_nil bean.archived_at
+  end
+
+  test "finish marks a bag finished while preserving leftover grams" do
+    freeze_time do
+      bean = beans(:open_household)
+      bean.update!(remaining_grams: 14)
+
+      bean.finish!
+
+      assert_equal "finished", bean.bag_status
+      assert_equal Time.current, bean.finished_at
+      assert_equal 14.to_d, bean.remaining_grams
+      assert_nil bean.archived_at
+    end
+  end
+
+  test "reopen clears finished and archived lifecycle fields" do
+    bean = beans(:open_household)
+    bean.update!(remaining_grams: 14)
+    bean.finish!
+
+    bean.reopen!
+
+    assert_equal "open", bean.bag_status
+    assert_nil bean.finished_at
+    assert_nil bean.archived_at
+    assert_equal 14.to_d, bean.remaining_grams
+  end
+
+  test "finished stats use consumed grams and clamped open days" do
+    bean = beans(:open_household)
+    bean.update!(
+      bag_size_grams: 250,
+      remaining_grams: 14,
+      opened_on: Date.new(2026, 5, 10),
+      finished_at: Time.zone.local(2026, 5, 23, 9)
+    )
+
+    assert_equal 236.to_d, bean.finished_used_grams
+    assert_equal 13, bean.finished_open_days
+    assert_equal BigDecimal("18.15"), bean.finished_grams_per_day
+    assert bean.nearly_finished?
   end
 
   test "duplicates a bean as a new open bag with copied photos" do

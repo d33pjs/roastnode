@@ -3,8 +3,9 @@ class Bean < ApplicationRecord
 
   ROAST_TYPES = %w[unknown espresso filter omni].freeze
   BLEND_TYPES = %w[unknown single_origin blend].freeze
-  BAG_STATUSES = %w[stock open used_up archived].freeze
+  BAG_STATUSES = %w[stock open finished used_up archived].freeze
   DUPLICATE_DISPLAY_DATE_FORMAT = "%d.%m.%Y"
+  LOW_REMAINING_GRAMS = BigDecimal("18")
 
   belongs_to :workspace
   belongs_to :data_import, optional: true
@@ -17,7 +18,7 @@ class Bean < ApplicationRecord
 
   before_validation :set_default_remaining_grams
 
-  scope :open, -> { where(archived_at: nil).where.not(opened_on: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
+  scope :open, -> { where(archived_at: nil, finished_at: nil).where.not(opened_on: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
   scope :recent, -> { order(created_at: :desc) }
 
   validates :name, presence: true
@@ -43,12 +44,17 @@ class Bean < ApplicationRecord
     bag_status == "used_up"
   end
 
+  def finished?
+    bag_status == "finished"
+  end
+
   def archived?
     bag_status == "archived"
   end
 
   def bag_status
     return "archived" if archived_at.present?
+    return "finished" if finished_at.present?
     return "used_up" if remaining_grams.present? && remaining_grams <= 0
     return "open" if opened_on.present?
 
@@ -64,17 +70,25 @@ class Bean < ApplicationRecord
     case status
     when "stock"
       self.archived_at = nil
+      self.finished_at = nil
       self.opened_on = nil
       self.remaining_grams = bag_size_grams if remaining_grams.blank? || remaining_grams <= 0
     when "open"
       self.archived_at = nil
+      self.finished_at = nil
       self.opened_on ||= Date.current
       self.remaining_grams = bag_size_grams if remaining_grams.blank? || remaining_grams <= 0
+    when "finished"
+      self.archived_at = nil
+      self.finished_at ||= Time.current
+      self.opened_on ||= Date.current
     when "used_up"
       self.archived_at = nil
+      self.finished_at = nil
       self.opened_on ||= Date.current
       self.remaining_grams = 0
     when "archived"
+      self.finished_at = nil
       self.archived_at ||= Time.current
     end
   end
@@ -84,14 +98,52 @@ class Bean < ApplicationRecord
   end
 
   def archive!
-    update!(archived_at: Time.current)
+    update!(archived_at: Time.current, finished_at: nil)
+  end
+
+  def finish!
+    update!(
+      archived_at: nil,
+      finished_at: Time.current,
+      opened_on: opened_on || Date.current
+    )
   end
 
   def reopen!
     self.remaining_grams = bag_size_grams if remaining_grams.to_d <= 0
     self.archived_at = nil
+    self.finished_at = nil
     self.opened_on ||= Date.current
     save!
+  end
+
+  def remaining_percent
+    return 0.to_d if bag_size_grams.blank? || bag_size_grams.to_d <= 0
+
+    percent = (remaining_grams.to_d / bag_size_grams.to_d) * 100
+    [ [ percent, 0.to_d ].max, 100.to_d ].min.round
+  end
+
+  def nearly_finished?(threshold_grams = LOW_REMAINING_GRAMS)
+    !stock? && !archived? && remaining_grams.to_d <= threshold_grams.to_d
+  end
+
+  def finished_used_grams
+    return if bag_size_grams.blank? || remaining_grams.blank?
+
+    [ bag_size_grams.to_d - remaining_grams.to_d, 0.to_d ].max
+  end
+
+  def finished_open_days
+    return if finished_at.blank? || opened_on.blank?
+
+    [ (finished_at.to_date - opened_on).to_i, 1 ].max
+  end
+
+  def finished_grams_per_day
+    return if finished_used_grams.blank? || finished_open_days.blank?
+
+    (finished_used_grams / finished_open_days).round(2)
   end
 
   def duplicate_for_new_bag!
