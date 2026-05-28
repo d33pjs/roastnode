@@ -30,9 +30,40 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=bean-card][href=?]", bean_path(bean)
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
+    assert_select "[data-testid=?]", "bean-card-rating-#{bean.id}", text: /4/
     assert_select "[data-testid=?]", "bean-card-remaining-#{bean.id}", "150 g of 250 g"
-    assert_select "[data-testid=?]", "bean-card-progress-#{bean.id}"
+    assert_select "[data-testid=?][data-remaining-state=plenty]", "bean-card-progress-#{bean.id}"
     assert_select "[data-testid^=bean-list-channeling]", count: 0
+  end
+
+  test "index renders low inventory warnings and finished bag statistics" do
+    sign_in_as(users(:one))
+    low = workspaces(:household).beans.create!(
+      name: "Low Bag",
+      roaster_name: "Good Coffee",
+      bag_size_grams: 250,
+      remaining_grams: 14,
+      opened_on: Date.new(2026, 5, 20)
+    )
+    finished = workspaces(:household).beans.create!(
+      name: "Finished Stats Bag",
+      roaster_name: "Good Coffee",
+      bag_size_grams: 250,
+      remaining_grams: 14,
+      opened_on: Date.new(2026, 5, 10),
+      finished_at: Time.zone.local(2026, 5, 23, 9)
+    )
+
+    get beans_path
+
+    assert_response :success
+    assert_select "[data-testid=?][data-remaining-state=low]", "bean-card-progress-#{low.id}"
+    assert_select "[data-testid=?]", "bean-card-low-warning-#{low.id}", text: /Low/
+    assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /236 g/
+    assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /13 days/
+    assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /18[,.]2 g\/day/
+    assert_select "[data-testid=?]", "bean-card-finished-on-#{finished.id}", text: /Finished/
+    assert_select "[data-testid=?]", "bean-card-progress-#{finished.id}", count: 0
   end
 
   test "member can create bean" do
