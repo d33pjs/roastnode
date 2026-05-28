@@ -216,8 +216,8 @@ en:
       grinder_suggestion_basis:
         one: "Based on 1 comparable brew"
         other: "Based on %{count} comparable brews"
+      grinder_suggestion_calibration: "First brew: %{setting} made 1:%{ratio} in %{time}s"
       grinder_suggestion_rating: "Average rating %{rating}/5"
-      grinder_suggestion_result: "Typical nearby result: 1:%{ratio} in %{time}s"
       grinder_tendency: "Grinder tendency"
       grinder_tendency_target: "Target: 1:2.5 in 25-30s"
       harvested: "Harvested"

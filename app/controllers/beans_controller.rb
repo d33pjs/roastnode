@@ -15,8 +15,8 @@ class BeansController < ApplicationController
       start_date: @bean_statistics_start_date,
       end_date: @bean_statistics_end_date
     ).call
+    @grinder_setting_suggestions = load_grinder_setting_suggestions
     @show_grinder_setting_suggestions = show_grinder_setting_suggestions?
-    @grinder_setting_suggestions = @show_grinder_setting_suggestions ? GrinderSettingSuggestion.new(bean: @bean).call : []
   end
 
   def new
@@ -107,7 +107,19 @@ class BeansController < ApplicationController
       nil
     end
 
+    def load_grinder_setting_suggestions
+      return [] unless grinder_setting_suggestions_requested?
+
+      GrinderSettingSuggestion.new(bean: @bean).call
+    end
+
     def show_grinder_setting_suggestions?
+      @grinder_setting_suggestions.any? ||
+        params[:suggest_grinder].present? ||
+        (@bean.duplicated_from_bean_id.blank? && @bean.brews.exists?)
+    end
+
+    def grinder_setting_suggestions_requested?
       params[:suggest_grinder].present? || @bean.duplicated_from_bean_id.blank?
     end
 

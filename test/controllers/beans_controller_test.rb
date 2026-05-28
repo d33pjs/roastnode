@@ -327,7 +327,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Other Workspace Bean/, count: 0
   end
 
-  test "show automatically renders grinder suggestions for non duplicated beans" do
+  test "show waits for a first brew before rendering grinder suggestions" do
     sign_in_as(users(:one))
     bean = beans(:second_open_household)
     grinder = equipment(:household_grinder)
@@ -336,15 +336,32 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(bean)
 
     assert_response :success
+    assert_select "[data-testid=bean-grinder-suggestions]", count: 0
+  end
+
+  test "show automatically renders grinder suggestions from the first brew for non duplicated beans" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    grinder = equipment(:household_grinder)
+    create_suggestion_history(grinder:)
+    create_suggestion_calibration_brew(bean:, grinder:)
+
+    get bean_path(bean)
+
+    assert_response :success
     assert_select "[data-testid=bean-grinder-suggestions]"
     assert_select "[data-testid=bean-grinder-suggestion]", text: /#{grinder.name}/
-    assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/4,75/
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/3,75/
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/3,0/
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /42s/
   end
 
   test "show suppresses automatic grinder suggestions for duplicated beans" do
     sign_in_as(users(:one))
     duplicate = beans(:open_household).duplicate_for_new_bag!
-    create_suggestion_history(grinder: equipment(:household_grinder))
+    grinder = equipment(:household_grinder)
+    create_suggestion_history(grinder:)
+    create_suggestion_calibration_brew(bean: duplicate, grinder:)
 
     get bean_path(duplicate)
 
@@ -358,13 +375,14 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     duplicate = beans(:open_household).duplicate_for_new_bag!
     grinder = equipment(:household_grinder)
     create_suggestion_history(grinder:)
+    create_suggestion_calibration_brew(bean: duplicate, grinder:)
 
     get bean_path(duplicate), params: { suggest_grinder: "1" }
 
     assert_response :success
     assert_select "[data-testid=bean-grinder-suggestions]"
     assert_select "[data-testid=bean-grinder-suggestion]", text: /#{grinder.name}/
-    assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/4,75/
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/3,75/
   end
 
   test "show filters bean analytics by date range" do
@@ -506,8 +524,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     def create_suggestion_history(grinder:)
       workspace = grinder.workspace
       [
-        [ "1/4,75", 18, 45, 28, 5 ],
-        [ "1/5,00", 18, 44, 29, 4 ],
+        [ "1/5,25", 18, 45, 28, 5 ],
+        [ "1/5,50", 18, 44, 29, 4 ],
         [ "a little finer", 18, 45, 28, 5 ]
       ].each do |grind_setting, dose, beverage, total_time, rating|
         workspace.brews.create!(
@@ -525,5 +543,21 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
           rating:
         )
       end
+    end
+
+    def create_suggestion_calibration_brew(bean:, grinder:)
+      grinder.workspace.brews.create!(
+        user: users(:one),
+        bean:,
+        grinder:,
+        machine: equipment(:household_machine),
+        occurred_at: Time.current,
+        bean_weight_grams: 17.9,
+        ground_weight_grams: 17.9,
+        dose_grams: 17.9,
+        beverage_grams: 45.3,
+        total_time_seconds: 42,
+        grind_setting: "1/3,0"
+      )
     end
 end
