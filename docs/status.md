@@ -13,6 +13,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Workspace settings: household name, currency, logo, and banner.
 - Coffee core: rich beans, equipment, espresso brews, inventory adjustments, retention markers, dashboard activity, and required-open-bean espresso logging.
 - Beans: rich metadata, variety information, additive photos, primary photo, crop/download/remove media controls, derived bag statuses (`stock`, `open`, `used_up`, `archived`), edit/reopen/archive-style lifecycle, duplicate-as-new-bag, duplicate-label disambiguation, manual inventory adjustment UI, and danger-zone delete with dependent brew/inventory cleanup.
+- Bean grinder tendencies: bean detail pages can suggest same-grinder espresso grind settings from workspace brew history, using safe auto-detection for Eureka-style `turn/dial` strings and plain numeric settings. Blank, inconsistent, or unknown setting strings are skipped instead of raising errors. New duplicated bags record their source bag, automatic suggestions are suppressed for those bags, and the manual suggestion action remains available.
 - Espresso logging: curated last-brew defaults for bean, grinder, machine, active preparation tools, grind setting, brew temperature, and pre-infusion seconds only. Bean weights, dose, yield, total time, first drip, rating, channeling, notes, taste, and photos stay fresh.
 - Brew corrections: edit and delete flows keep bean inventory consistent through correction/reversal helpers.
 - Hero Brew Card: dense screenshot-friendly brew card on dashboard and brew details, with safe user labels, avatar/household/equipment marks, bean photo, ratio, rating, balance, retention, SVG brew chart, first drip, pre-infusion, total time, and vertical temperature label.
@@ -49,6 +50,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Full i18n: complete locale files, German UI, and broader unit preferences beyond the current metric storage and comma-friendly number parsing.
 - Beanconqueror depth: media import, settings, waters, green beans, pressure profiles, graph/device data, duplicate review, and full round-trip export.
 - Analytics depth: interactive ECharts/Stimulus charting, richer correlations/recommendations, equipment event markers inside charts, and materialized summaries for large data sets.
+- Grinder setting formats: add grinder-level configuration for setting notation, starting with explicit choices like free text, auto-detect, Eureka dial, and plain numeric. Keep auto-detection conservative, then let grinder owners choose the parser when their grinder notation differs from common patterns. Future recommendation tuning can add grinder-specific target profiles, pre-infusion handling preferences, and clearer confidence/explanation signals.
 - Maintenance automation: reminders, notification schedules, and recurring service suggestions.
 - Media infrastructure: direct-upload progress, S3-compatible storage hardening, object lifecycle cleanup, and more advanced storage policies.
 - Brew-card sharing: generated image export, public share links, and any social/comment/reaction surface.

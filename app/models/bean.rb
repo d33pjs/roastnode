@@ -8,9 +8,11 @@ class Bean < ApplicationRecord
 
   belongs_to :workspace
   belongs_to :data_import, optional: true
+  belongs_to :duplicated_from_bean, class_name: "Bean", optional: true, inverse_of: :duplicated_bean_bags
 
   has_many :brews, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception
+  has_many :duplicated_bean_bags, class_name: "Bean", foreign_key: :duplicated_from_bean_id, dependent: :nullify, inverse_of: :duplicated_from_bean
   has_many_attached :photos
 
   before_validation :set_default_remaining_grams
@@ -189,7 +191,8 @@ class Bean < ApplicationRecord
         elevation:,
         variety:,
         harvested:,
-        blend_percentage:
+        blend_percentage:,
+        duplicated_from_bean: self
       }
     end
 

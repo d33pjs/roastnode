@@ -32,6 +32,7 @@ class InstanceBackupRestorer
       restore_workspace_invites
       restore_data_imports
       restore_beans
+      restore_bean_duplicate_sources
       restore_equipment
       restore_preparation_tools
       restore_brews
@@ -205,6 +206,17 @@ class InstanceBackupRestorer
           )
           @bean_map[old_id(row)] = bean
           @bean_remaining_grams[old_id(row)] = row["remaining_grams"]
+        end
+      end
+    end
+
+    def restore_bean_duplicate_sources
+      workspace_payloads.each do |workspace_payload|
+        workspace_payload.fetch("beans").each do |row|
+          source_id = row["duplicated_from_bean_id"]
+          next if source_id.blank?
+
+          @bean_map.fetch(old_id(row)).update!(duplicated_from_bean: @bean_map.fetch(source_id))
         end
       end
     end

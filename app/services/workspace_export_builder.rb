@@ -94,6 +94,7 @@ class WorkspaceExportBuilder
           data_import_id: bean.data_import_id,
           import_source: bean.import_source,
           import_source_id: bean.import_source_id,
+          duplicated_from_bean_id: bean.duplicated_from_bean_id,
           raw_import_data: bean.raw_import_data,
           photos: photo_metadata(bean)
         }

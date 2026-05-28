@@ -55,6 +55,9 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       instance_admin: true,
       active_workspace: workspaces(:household)
     )
+    source_bean = beans(:open_household)
+    duplicated_bean = source_bean.duplicate_for_new_bag!
+    duplicated_bean.update!(name: "Restored duplicate bag")
     attachment = attach_photo(beans(:open_household))
     original = {
       users: User.count,
@@ -69,7 +72,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       workspace_id: workspaces(:household).id,
       workspace_name: workspaces(:household).name,
       password_digest: users(:one).password_digest,
-      bean_name: beans(:open_household).name,
+      bean_name: source_bean.name,
+      duplicated_bean_name: duplicated_bean.name,
       photo_filename: attachment.blob.filename.to_s
     }
     archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-28 12:00:00")).call
@@ -80,6 +84,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     restored_user = User.find_by!(email_address: original.fetch(:user_email))
     restored_workspace = Workspace.find_by!(name: original.fetch(:workspace_name))
     restored_bean = Bean.find_by!(name: original.fetch(:bean_name))
+    restored_duplicate_bean = Bean.find_by!(name: original.fetch(:duplicated_bean_name))
 
     assert_equal original.fetch(:users), User.count
     assert_equal original.fetch(:workspaces), Workspace.count
@@ -95,6 +100,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_predicate restored_user, :instance_admin?
     assert_equal restored_workspace, restored_user.active_workspace
     assert_equal original.fetch(:photo_filename), restored_bean.photos.first.filename.to_s
+    assert_equal restored_bean, restored_duplicate_bean.duplicated_from_bean
     assert_equal(
       {
         users: original.fetch(:users),

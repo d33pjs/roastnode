@@ -327,6 +327,46 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Other Workspace Bean/, count: 0
   end
 
+  test "show automatically renders grinder suggestions for non duplicated beans" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    grinder = equipment(:household_grinder)
+    create_suggestion_history(grinder:)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-grinder-suggestions]"
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /#{grinder.name}/
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/4,75/
+  end
+
+  test "show suppresses automatic grinder suggestions for duplicated beans" do
+    sign_in_as(users(:one))
+    duplicate = beans(:open_household).duplicate_for_new_bag!
+    create_suggestion_history(grinder: equipment(:household_grinder))
+
+    get bean_path(duplicate)
+
+    assert_response :success
+    assert_select "[data-testid=bean-grinder-suggestions]", count: 0
+    assert_select "a[href=?]", bean_path(duplicate, suggest_grinder: "1"), text: I18n.t("beans.show.suggest_grinder")
+  end
+
+  test "show renders manual grinder suggestions for duplicated beans" do
+    sign_in_as(users(:one))
+    duplicate = beans(:open_household).duplicate_for_new_bag!
+    grinder = equipment(:household_grinder)
+    create_suggestion_history(grinder:)
+
+    get bean_path(duplicate), params: { suggest_grinder: "1" }
+
+    assert_response :success
+    assert_select "[data-testid=bean-grinder-suggestions]"
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /#{grinder.name}/
+    assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/4,75/
+  end
+
   test "show filters bean analytics by date range" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
@@ -461,5 +501,29 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       assert first_index, "Expected #{first.inspect} to appear in response body"
       assert second_index, "Expected #{second.inspect} to appear in response body"
       assert first_index < second_index, "Expected #{first.inspect} to appear before #{second.inspect}"
+    end
+
+    def create_suggestion_history(grinder:)
+      workspace = grinder.workspace
+      [
+        [ "1/4,75", 18, 45, 28, 5 ],
+        [ "1/5,00", 18, 44, 29, 4 ],
+        [ "a little finer", 18, 45, 28, 5 ]
+      ].each do |grind_setting, dose, beverage, total_time, rating|
+        workspace.brews.create!(
+          user: users(:one),
+          bean: beans(:open_household),
+          grinder:,
+          machine: equipment(:household_machine),
+          occurred_at: Time.current,
+          bean_weight_grams: dose,
+          ground_weight_grams: dose,
+          dose_grams: dose,
+          beverage_grams: beverage,
+          total_time_seconds: total_time,
+          grind_setting:,
+          rating:
+        )
+      end
     end
 end

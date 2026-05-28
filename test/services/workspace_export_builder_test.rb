@@ -37,6 +37,7 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
   end
 
   test "includes relationships needed to reconstruct workspace data" do
+    duplicated = beans(:open_household).duplicate_for_new_bag!
     payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at: Time.current).call
 
     membership = payload[:memberships].find { |row| row[:user_id] == users(:one).id }
@@ -53,6 +54,9 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
 
     event_link = payload[:equipment_event_items].find { |row| row[:equipment_event_id] == equipment_events(:grinder_cleaning).id }
     assert_equal equipment(:household_grinder).id, event_link[:equipment_id]
+
+    duplicate_payload = payload[:beans].find { |row| row[:id] == duplicated.id }
+    assert_equal beans(:open_household).id, duplicate_payload[:duplicated_from_bean_id]
   end
 
   test "includes import batches and per-record import metadata" do

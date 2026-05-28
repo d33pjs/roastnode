@@ -15,6 +15,8 @@ class BeansController < ApplicationController
       start_date: @bean_statistics_start_date,
       end_date: @bean_statistics_end_date
     ).call
+    @show_grinder_setting_suggestions = show_grinder_setting_suggestions?
+    @grinder_setting_suggestions = @show_grinder_setting_suggestions ? GrinderSettingSuggestion.new(bean: @bean).call : []
   end
 
   def new
@@ -103,6 +105,10 @@ class BeansController < ApplicationController
       Date.iso8601(value)
     rescue ArgumentError
       nil
+    end
+
+    def show_grinder_setting_suggestions?
+      params[:suggest_grinder].present? || @bean.duplicated_from_bean_id.blank?
     end
 
     def extract_bag_status(attributes)

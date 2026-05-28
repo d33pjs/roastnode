@@ -174,6 +174,7 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal duplicate.bag_size_grams, duplicate.remaining_grams
     assert_nil duplicate.archived_at
     assert_equal bean.roaster_name, duplicate.roaster_name
+    assert_equal bean, duplicate.duplicated_from_bean
     assert_equal bean.photos.first.blob, duplicate.photos.first.blob
     assert_equal bean.primary_photo_attachment.blob, duplicate.primary_photo_attachment.blob
   end

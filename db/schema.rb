@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_28_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_28_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -51,6 +51,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_100000) do
     t.datetime "created_at", null: false
     t.bigint "data_import_id"
     t.boolean "decaffeinated", default: false, null: false
+    t.bigint "duplicated_from_bean_id"
     t.string "elevation"
     t.string "farm"
     t.string "farmer"
@@ -81,6 +82,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_100000) do
     t.string "variety"
     t.bigint "workspace_id", null: false
     t.index ["data_import_id"], name: "index_beans_on_data_import_id"
+    t.index ["duplicated_from_bean_id"], name: "index_beans_on_duplicated_from_bean_id"
     t.index ["primary_photo_attachment_id"], name: "index_beans_on_primary_photo_attachment_id"
     t.index ["workspace_id", "archived_at"], name: "index_beans_on_workspace_id_and_archived_at"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_beans_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
@@ -341,6 +343,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_100000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "beans", "beans", column: "duplicated_from_bean_id"
   add_foreign_key "beans", "data_imports"
   add_foreign_key "beans", "workspaces"
   add_foreign_key "brew_preparation_tools", "brews"
