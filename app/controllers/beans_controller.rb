@@ -1,6 +1,6 @@
 class BeansController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create edit update close reopen duplicate destroy]
-  before_action :set_bean, only: %i[show edit update close reopen duplicate destroy]
+  before_action :authorize_workspace_write!, only: %i[new create edit update finish close reopen duplicate destroy]
+  before_action :set_bean, only: %i[show edit update finish close reopen duplicate destroy]
 
   def index
     @beans = current_workspace.beans
@@ -59,6 +59,11 @@ class BeansController < ApplicationController
   def close
     @bean.archive!
     redirect_to @bean, notice: t(".closed")
+  end
+
+  def finish
+    @bean.finish!
+    redirect_to @bean, notice: t(".finished")
   end
 
   def reopen

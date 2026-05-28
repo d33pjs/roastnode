@@ -111,6 +111,8 @@ en:
       duplicated: "Bean bag duplicated."
     destroy:
       destroyed: "Bean and brew history deleted."
+    finish:
+      finished: "Bean bag marked finished."
     edit:
       back: "Back to bean"
       eyebrow: "Bean bag"

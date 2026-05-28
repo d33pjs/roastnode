@@ -265,6 +265,35 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal bean.bag_size_grams, bean.remaining_grams
   end
 
+  test "writer can finish archive and reopen bean" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update!(remaining_grams: 14)
+
+    patch finish_bean_path(bean)
+    assert_redirected_to bean_path(bean)
+    bean.reload
+    assert_equal "finished", bean.bag_status
+    assert_not_nil bean.finished_at
+    assert_nil bean.archived_at
+    assert_equal 14.to_d, bean.remaining_grams
+
+    patch close_bean_path(bean)
+    assert_redirected_to bean_path(bean)
+    bean.reload
+    assert_equal "archived", bean.bag_status
+    assert_nil bean.finished_at
+    assert_not_nil bean.archived_at
+
+    patch reopen_bean_path(bean)
+    assert_redirected_to bean_path(bean)
+    bean.reload
+    assert_equal "open", bean.bag_status
+    assert_nil bean.finished_at
+    assert_nil bean.archived_at
+    assert_equal 14.to_d, bean.remaining_grams
+  end
+
   test "writer can duplicate bean with photos" do
     sign_in_as(users(:one))
     source = beans(:open_household)
@@ -468,7 +497,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "viewer cannot edit close reopen duplicate or delete bean" do
+  test "viewer cannot edit finish close reopen duplicate or delete bean" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -489,6 +518,11 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_changes -> { bean.reload.archived_at } do
       patch close_bean_path(bean)
+    end
+    assert_redirected_to root_path
+
+    assert_no_changes -> { bean.reload.finished_at } do
+      patch finish_bean_path(bean)
     end
     assert_redirected_to root_path
 
