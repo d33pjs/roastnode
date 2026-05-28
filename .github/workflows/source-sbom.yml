@@ -1,0 +1,64 @@
+name: Source SBOM
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  attestations: write
+  contents: read
+  id-token: write
+  artifact-metadata: write
+
+jobs:
+  source-sbom:
+    name: Generate and upload source SBOM
+    if: ${{ github.server_url == 'https://github.com' }}
+    runs-on: ubuntu-latest
+
+    env:
+      EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
+      EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
+      EXODOS_INVENTORYROOT_ID: ${{ vars.EXODOS_INVENTORYROOT_ID }}
+      SOURCE_ARCHIVE: roastnode-source-${{ github.sha }}.tar.gz
+      SOURCE_SBOM: roastnode-source-${{ github.sha }}.spdx.json
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Create source archive
+        run: git archive --format=tar.gz --output "$SOURCE_ARCHIVE" HEAD
+
+      - name: Generate source SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: spdx-json
+          output-file: ${{ env.SOURCE_SBOM }}
+          artifact-name: ${{ env.SOURCE_SBOM }}
+
+      - name: Attest source SBOM
+        uses: actions/attest@v4
+        with:
+          subject-path: ${{ env.SOURCE_ARCHIVE }}
+          sbom-path: ${{ env.SOURCE_SBOM }}
+
+      - name: Upload source SBOM to exodos.io
+        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_ID != '' }}
+        run: |
+          set -euo pipefail
+
+          api_url="${EXODOS_API_URL:-https://api.exodos.io}"
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_ID}\",\"tags\":[\"roastnode\",\"source\",\"main\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source\",\"unique\":true}]}" \
+            -F "file=@${SOURCE_SBOM};type=application/json"
+
+      - name: Explain skipped exodos.io upload
+        if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_ID == '' }}
+        run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_ID is not configured."

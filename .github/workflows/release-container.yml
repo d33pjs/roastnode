@@ -1,0 +1,179 @@
+name: Release Container
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing release tag to build, for example v0.1.0
+        required: true
+        type: string
+
+permissions:
+  actions: read
+  attestations: write
+  contents: write
+  id-token: write
+  packages: write
+  artifact-metadata: write
+
+env:
+  REGISTRY: ghcr.io
+  RELEASE_TAG: ${{ github.event.release.tag_name || inputs.release_tag }}
+
+jobs:
+  publish:
+    name: Build, sign, and publish GHCR image
+    if: ${{ github.server_url == 'https://github.com' }}
+    runs-on: ubuntu-latest
+
+    env:
+      CONTAINER_SBOM: roastnode-container-${{ github.event.release.tag_name || inputs.release_tag }}.spdx.json
+      EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
+      EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
+      EXODOS_INVENTORYROOT_ID: ${{ vars.EXODOS_INVENTORYROOT_ID }}
+      IMAGE_DIGEST_FILE: roastnode-image-${{ github.event.release.tag_name || inputs.release_tag }}.txt
+
+    steps:
+      - name: Validate release tag
+        run: |
+          set -euo pipefail
+
+          if ! echo "$RELEASE_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$'; then
+            echo "::error::Release tag must look like vX.Y.Z or vX.Y.Z-rc.1."
+            exit 1
+          fi
+
+      - name: Checkout release tag
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Read source commit
+        id: source
+        run: |
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$(git rev-parse --short=12 HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare image reference
+        id: image
+        run: echo "ref=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ steps.image.outputs.ref }}
+          tags: |
+            type=raw,value=${{ env.RELEASE_TAG }}
+            type=semver,pattern={{version}},value=${{ env.RELEASE_TAG }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.RELEASE_TAG }}
+            type=raw,value=latest,enable=${{ !contains(env.RELEASE_TAG, '-') }}
+            type=raw,value=sha-${{ steps.source.outputs.short_sha }}
+          labels: |
+            org.opencontainers.image.title=Roastnode
+            org.opencontainers.image.description=Rails-first self-hostable coffee tracking app for private household workspaces
+            org.opencontainers.image.licenses=AGPL-3.0-only
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          annotations: ${{ steps.meta.outputs.annotations }}
+          provenance: mode=max
+          sbom: true
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.1.0
+
+      - name: Sign image digest
+        env:
+          COSIGN_YES: "true"
+          IMAGE_REF: ${{ steps.image.outputs.ref }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: cosign sign "${IMAGE_REF}@${IMAGE_DIGEST}"
+
+      - name: Generate container SBOM
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.image.outputs.ref }}@${{ steps.build.outputs.digest }}
+          format: spdx-json
+          output-file: ${{ env.CONTAINER_SBOM }}
+          artifact-name: ${{ env.CONTAINER_SBOM }}
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ steps.image.outputs.ref }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          push-to-registry: true
+
+      - name: Attest container SBOM
+        uses: actions/attest@v4
+        with:
+          subject-name: ${{ steps.image.outputs.ref }}
+          subject-digest: ${{ steps.build.outputs.digest }}
+          sbom-path: ${{ env.CONTAINER_SBOM }}
+          push-to-registry: true
+
+      - name: Write image digest asset
+        env:
+          IMAGE_REF: ${{ steps.image.outputs.ref }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          set -euo pipefail
+
+          {
+            echo "image=${IMAGE_REF}@${IMAGE_DIGEST}"
+            echo "digest=${IMAGE_DIGEST}"
+            echo "release_tag=${RELEASE_TAG}"
+            echo "source_sha=${SOURCE_SHA}"
+            echo
+            echo "tags:"
+            printf '%s\n' "${TAGS}"
+          } > "$IMAGE_DIGEST_FILE"
+
+      - name: Attach SBOM and digest to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$RELEASE_TAG" "$CONTAINER_SBOM" "$IMAGE_DIGEST_FILE" --clobber
+
+      - name: Upload container SBOM to exodos.io
+        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_ID != '' }}
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          api_url="${EXODOS_API_URL:-https://api.exodos.io}"
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_ID}\",\"tags\":[\"roastnode\",\"container\",\"${RELEASE_TAG}\",\"sha-${SOURCE_SHA}\",{\"name\":\"latest-container\",\"unique\":true}]}" \
+            -F "file=@${CONTAINER_SBOM};type=application/json"
+
+      - name: Explain skipped exodos.io upload
+        if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_ID == '' }}
+        run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_ID is not configured."

@@ -1,11 +1,19 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
+  pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   scan_ruby:
     runs-on: ubuntu-latest
+    if: ${{ github.server_url == 'https://github.com' }}
 
     steps:
       - name: Checkout code
@@ -24,6 +32,7 @@ jobs:
       
   scan_js:
     runs-on: ubuntu-latest
+    if: ${{ github.server_url == 'https://github.com' }}
 
     steps:
       - name: Checkout code
@@ -39,6 +48,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    if: ${{ github.server_url == 'https://github.com' }}
     env:
       RUBOCOP_CACHE_ROOT: tmp/rubocop
     steps:
@@ -65,10 +75,11 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
+    if: ${{ github.server_url == 'https://github.com' }}
 
     services:
       postgres:
-        image: postgres
+        image: postgres:17.5
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -104,10 +115,11 @@ jobs:
 
   system-test:
     runs-on: ubuntu-latest
+    if: ${{ github.server_url == 'https://github.com' }}
 
     services:
       postgres:
-        image: postgres
+        image: postgres:17.5
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

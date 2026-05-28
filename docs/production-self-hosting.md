@@ -64,7 +64,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   web:
-    image: roastnode:latest
+    image: ghcr.io/OWNER/roastnode@sha256:REPLACE_WITH_RELEASE_DIGEST
     depends_on:
       - postgres
     environment:
@@ -81,7 +81,7 @@ services:
       - roastnode_storage:/rails/storage
 
   jobs:
-    image: roastnode:latest
+    image: ghcr.io/OWNER/roastnode@sha256:REPLACE_WITH_RELEASE_DIGEST
     command: bin/jobs
     depends_on:
       - postgres
@@ -104,10 +104,11 @@ Put a TLS reverse proxy in front of `web`. Keep the app bound to localhost or a 
 
 ## First Deploy
 
-Build and boot the production image with real secrets:
+Pull and boot the production image with real secrets. Prefer the immutable digest from the GitHub Release asset over mutable tags:
 
 ```bash
-docker build -t roastnode:latest .
+export ROASTNODE_IMAGE="ghcr.io/OWNER/roastnode@sha256:REPLACE_WITH_RELEASE_DIGEST"
+docker pull "$ROASTNODE_IMAGE"
 docker compose up -d postgres
 docker compose run --rm web bin/rails db:prepare
 docker compose up -d web jobs
@@ -191,9 +192,28 @@ curl -fsS http://127.0.0.1:3001/up
 For each production upgrade:
 
 1. Validate the most recent full archive.
-2. Build or pull the new image.
-3. Run `bin/rails db:prepare`.
-4. Start `web` and `jobs`.
-5. Check `/up`.
-6. Confirm a backup profile can enqueue and complete.
-7. Record the app version, backup file path, checksum, and restore-drill date in your host operations notes.
+2. Read the release asset `roastnode-image-vX.Y.Z.txt` and copy the immutable image digest.
+3. Optionally verify the image signature and GitHub attestations before pulling:
+
+   ```bash
+   IMAGE="ghcr.io/OWNER/roastnode@sha256:REPLACE_WITH_RELEASE_DIGEST"
+   REPO="OWNER/roastnode"
+   TAG="vX.Y.Z"
+
+   cosign verify \
+     --certificate-identity "https://github.com/${REPO}/.github/workflows/release-container.yml@refs/tags/${TAG}" \
+     --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+     "${IMAGE}"
+
+   gh attestation verify "oci://${IMAGE}" -R "${REPO}"
+   ```
+
+4. Update the `web` and `jobs` image reference to the new digest.
+5. Pull the new image.
+6. Run `bin/rails db:prepare`.
+7. Start `web` and `jobs`.
+8. Check `/up`.
+9. Confirm a backup profile can enqueue and complete.
+10. Record the app version, image digest, backup file path, checksum, and restore-drill date in your host operations notes.
+
+See `docs/releasing.md` for maintainer-side release automation, SBOM upload, signatures, and attestations.
