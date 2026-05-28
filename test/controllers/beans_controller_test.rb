@@ -379,8 +379,12 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(bean)
 
     assert_response :success
+    assert_select "[data-testid=bean-remaining-card]", text: /131 g from 250 g bag size/
+    assert_select "[data-testid=bean-detail-progress][data-remaining-state=plenty]"
+    assert_select "h2", text: I18n.t("beans.show.bag_size"), count: 0
+    assert_select "[data-testid=bean-detail-brew-count]", "2"
     assert_select "h2", I18n.t("beans.show.analytics")
-    assert_select "[data-testid=bean-brew-count]", "2"
+    assert_select "[data-testid=bean-brew-count]", count: 0
     assert_select "[data-testid=bean-consumed]", "37 g"
     assert_select "[data-testid=bean-channeling-rate]", "50%"
     assert_select "[data-testid=bean-channeling-count]", text: /1 of 2/
@@ -390,6 +394,38 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "h3", I18n.t("beans.show.retention_markers")
     assert_select "[data-testid=bean-grind-setting-distribution]", text: /10/
     assert_select "body", text: /Other Workspace Bean/, count: 0
+  end
+
+  test "show keeps bean analytics all time without date filters" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 20, 9, 30, 0),
+      bean_weight_grams: 20,
+      ground_weight_grams: 20.4,
+      dose_grams: 20,
+      beverage_grams: 50,
+      total_time_seconds: 32,
+      grind_setting: "10",
+      taste_balance: "bitter",
+      channeling: true,
+      rating: 3
+    )
+
+    get bean_path(bean), params: { start_date: "2026-05-26", end_date: "2026-05-26" }
+
+    assert_response :success
+    assert_select "input[data-testid=bean-statistics-start-date]", count: 0
+    assert_select "input[data-testid=bean-statistics-end-date]", count: 0
+    assert_select "[data-testid=bean-detail-brew-count]", "2"
+    assert_select "[data-testid=bean-consumed]", "38 g"
+    assert_select "[data-testid=bean-channeling-rate]", "50%"
+    assert_select "[data-testid=bean-channeling-count]", text: /1 of 2/
   end
 
   test "show always renders grinder tendency with no-first-brew empty state" do
@@ -472,38 +508,6 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-grinder-suggestion]", text: /1\/3,75/
   end
 
-  test "show filters bean analytics by date range" do
-    sign_in_as(users(:one))
-    bean = beans(:open_household)
-    brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0))
-    bean.brews.create!(
-      workspace: bean.workspace,
-      user: users(:one),
-      grinder: equipment(:household_grinder),
-      machine: equipment(:household_machine),
-      occurred_at: Time.zone.local(2026, 5, 20, 9, 30, 0),
-      bean_weight_grams: 20,
-      ground_weight_grams: 20.4,
-      dose_grams: 20,
-      beverage_grams: 50,
-      total_time_seconds: 32,
-      grind_setting: "10",
-      taste_balance: "bitter",
-      channeling: true,
-      rating: 3
-    )
-
-    get bean_path(bean), params: { start_date: "2026-05-26", end_date: "2026-05-26" }
-
-    assert_response :success
-    assert_select "input[data-testid=bean-statistics-start-date][value='2026-05-26']"
-    assert_select "input[data-testid=bean-statistics-end-date][value='2026-05-26']"
-    assert_select "[data-testid=bean-brew-count]", "1"
-    assert_select "[data-testid=bean-consumed]", "18 g"
-    assert_select "[data-testid=bean-channeling-rate]", "0%"
-    assert_select "[data-testid=bean-channeling-count]", text: /0 of 1/
-  end
-
   test "show renders danger zone for writers" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
@@ -512,11 +516,33 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", new_bean_inventory_adjustment_path(bean), text: I18n.t("beans.show.adjust_inventory")
+    assert_select "form[data-testid=bean-finish-form][action=?]", finish_bean_path(bean)
+    assert_select "form[data-testid=bean-finish-form] input[name=_method][value=patch]"
+    assert_select "[data-testid=bean-issues-zone]"
+    assert_select "[data-testid=bean-issues-zone] form[action=?]", close_bean_path(bean)
+    assert_select "[data-testid=bean-issues-zone]", text: /best before/i
     assert_select "[data-testid=bean-danger-zone]"
     assert_select "form[action=?][method=post]", bean_path(bean)
     assert_select "input[name=_method][value=delete]"
     assert_select "button", text: I18n.t("beans.show.delete")
+    assert_select "[data-testid=bean-danger-zone]", text: I18n.t("beans.show.close"), count: 0
     assert_select "[data-turbo-confirm=?]", I18n.t("beans.show.delete_confirmation", count: bean.brews.count)
+  end
+
+  test "finished beans render finished status and reopen action" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    patch finish_bean_path(bean)
+    assert_redirected_to bean_path(bean)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-status-card]", text: /Finished/
+    assert_select "body", text: /Translation missing/, count: 0
+    assert_select "form[action=?]", reopen_bean_path(bean)
+    assert_select "form[data-testid=bean-finish-form]", count: 0
   end
 
   test "writer can delete bean with brew history" do

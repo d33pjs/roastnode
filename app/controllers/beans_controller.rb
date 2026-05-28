@@ -9,12 +9,7 @@ class BeansController < ApplicationController
   end
 
   def show
-    @bean_statistics_start_date, @bean_statistics_end_date = bean_statistics_date_range
-    @bean_statistics = BeanStatistics.new(
-      bean: @bean,
-      start_date: @bean_statistics_start_date,
-      end_date: @bean_statistics_end_date
-    ).call
+    @bean_statistics = BeanStatistics.new(bean: @bean).call
     @grinder_tendency_first_brew = @bean.brews.includes(:grinder).order(:occurred_at, :created_at).first
     @grinder_setting_suggestions = load_grinder_setting_suggestions
   end
@@ -91,25 +86,6 @@ class BeansController < ApplicationController
 
     def set_bean
       @bean = current_workspace.beans.find(params[:id])
-    end
-
-    def bean_statistics_date_range
-      start_date = parse_bean_statistics_date(params[:start_date])
-      end_date = parse_bean_statistics_date(params[:end_date])
-
-      if start_date.present? && end_date.present? && start_date > end_date
-        [ end_date, start_date ]
-      else
-        [ start_date, end_date ]
-      end
-    end
-
-    def parse_bean_statistics_date(value)
-      return nil if value.blank?
-
-      Date.iso8601(value)
-    rescue ArgumentError
-      nil
     end
 
     def load_grinder_setting_suggestions
