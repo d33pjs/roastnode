@@ -7,6 +7,8 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
   test "readable export includes instance data without live secrets" do
     user = users(:one)
     user.update!(display_name: "Jens", instance_admin: true)
+    finished_at = Time.zone.parse("2026-05-24 18:30:00")
+    beans(:open_household).update!(remaining_grams: 14, finished_at:)
     attach_named_photo(user, :avatar, filename: "avatar.jpg")
     attach_named_photo(workspaces(:household), :logo, filename: "household-logo.jpg")
     invite = workspace_invites(:member_invite)
@@ -18,6 +20,9 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     assert_equal [ workspaces(:household).id, workspaces(:other_household).id ].sort,
       payload.fetch(:workspaces).map { |workspace| workspace.fetch(:workspace).fetch(:id) }.sort
     assert_equal user.email_address, payload.fetch(:users).find { |row| row.fetch(:id) == user.id }.fetch(:email_address)
+    bean_payload = payload.fetch(:workspaces).find { |workspace| workspace.fetch(:workspace).fetch(:id) == workspaces(:household).id }.fetch(:beans).find { |bean| bean.fetch(:id) == beans(:open_household).id }
+    assert_equal "finished", bean_payload.fetch(:status)
+    assert_equal finished_at.iso8601, bean_payload.fetch(:finished_at)
     assert_match(%r{media/users/#{user.id}/avatar/}, json)
     assert_match(%r{media/workspaces/#{workspaces(:household).id}/logo/}, json)
     assert_no_match(/password_digest/i, json)

@@ -56,6 +56,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       active_workspace: workspaces(:household)
     )
     source_bean = beans(:open_household)
+    source_bean_finished_at = Time.zone.parse("2026-05-24 18:30:00")
+    source_bean.update!(remaining_grams: 14, finished_at: source_bean_finished_at)
     duplicated_bean = source_bean.duplicate_for_new_bag!
     duplicated_bean.update!(name: "Restored duplicate bag")
     attachment = attach_photo(beans(:open_household))
@@ -73,6 +75,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       workspace_name: workspaces(:household).name,
       password_digest: users(:one).password_digest,
       bean_name: source_bean.name,
+      bean_finished_at: source_bean_finished_at,
       duplicated_bean_name: duplicated_bean.name,
       photo_filename: attachment.blob.filename.to_s
     }
@@ -99,6 +102,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal "Restore Admin", restored_user.display_name
     assert_predicate restored_user, :instance_admin?
     assert_equal restored_workspace, restored_user.active_workspace
+    assert_equal original.fetch(:bean_finished_at).to_i, restored_bean.finished_at.to_i
+    assert_equal "finished", restored_bean.bag_status
     assert_equal original.fetch(:photo_filename), restored_bean.photos.first.filename.to_s
     assert_equal restored_bean, restored_duplicate_bean.duplicated_from_bean
     assert_equal(

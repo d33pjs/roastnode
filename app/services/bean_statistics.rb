@@ -39,7 +39,10 @@ class BeanStatistics
         brew_count: brews.size,
         total_bean_weight_grams: brews.sum(&:bean_weight_grams),
         remaining_percent: remaining_percent,
-        open_age_days: open_age_days
+        open_age_days: open_age_days,
+        finished_used_grams: bean.finished_used_grams,
+        finished_open_days: bean.finished_open_days,
+        finished_grams_per_day: bean.finished_grams_per_day
       }
     end
 
@@ -63,7 +66,8 @@ class BeanStatistics
     def distributions
       {
         taste_balance: count_by_present_value(:taste_balance),
-        retention_marker: count_by_present_value(:retention_marker)
+        retention_marker: count_by_present_value(:retention_marker),
+        grind_setting: count_by_present_value(:grind_setting)
       }
     end
 

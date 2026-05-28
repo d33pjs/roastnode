@@ -181,6 +181,7 @@ class InstanceBackupRestorer
             bag_size_grams: row["bag_size_grams"],
             remaining_grams: row["remaining_grams"],
             opened_on: date(row["opened_on"]),
+            finished_at: time(row["finished_at"]),
             archived_at: time(row["archived_at"]),
             blend_type: row["blend_type"],
             decaffeinated: row["decaffeinated"],

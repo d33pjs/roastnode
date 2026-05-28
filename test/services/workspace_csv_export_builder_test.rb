@@ -3,12 +3,16 @@ require "csv"
 
 class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
   test "exports beans as workspace-scoped csv rows" do
+    finished_at = Time.zone.parse("2026-05-24 18:30:00")
+    beans(:open_household).update!(remaining_grams: 14, finished_at:)
+
     csv = WorkspaceCsvExportBuilder.new(workspaces(:household)).beans_csv
     rows = CSV.parse(csv, headers: true)
 
     assert_includes rows.headers, "id"
     assert_includes rows.headers, "name"
     assert_includes rows.headers, "remaining_grams"
+    assert_includes rows.headers, "finished_at"
     assert_includes rows.headers, "purchase_price"
 
     bean_ids = rows.map { |row| row.fetch("id").to_i }
@@ -18,7 +22,8 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     exported = rows.find { |row| row.fetch("id").to_i == beans(:open_household).id }
     assert_equal beans(:open_household).name, exported.fetch("name")
     assert_equal beans(:open_household).remaining_grams.to_s("F"), exported.fetch("remaining_grams")
-    assert_equal "open", exported.fetch("status")
+    assert_equal "finished", exported.fetch("status")
+    assert_equal finished_at.iso8601, exported.fetch("finished_at")
 
     archived = rows.find { |row| row.fetch("id").to_i == beans(:archived_household).id }
     assert_equal "archived", archived.fetch("status")

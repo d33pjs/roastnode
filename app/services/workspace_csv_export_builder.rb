@@ -2,7 +2,7 @@ require "csv"
 
 class WorkspaceCsvExportBuilder
   BEAN_COLUMNS = %w[
-    id name roaster_name status remaining_grams bag_size_grams opened_on archived_at
+    id name roaster_name status remaining_grams bag_size_grams opened_on finished_at archived_at
     roast_date roast_type roast_degree blend_type decaffeinated country region farm farmer
     elevation variety process harvested blend_percentage tasting_notes rating purchase_source
     purchase_url purchased_on purchase_price notes created_at updated_at
@@ -49,7 +49,7 @@ class WorkspaceCsvExportBuilder
       when "purchase_price" then money(bean.purchase_price_cents)
       when "remaining_grams", "bag_size_grams", "roast_degree" then decimal(bean.public_send(column))
       when "opened_on", "roast_date", "purchased_on" then date(bean.public_send(column))
-      when "archived_at", "created_at", "updated_at" then timestamp(bean.public_send(column))
+      when "finished_at", "archived_at", "created_at", "updated_at" then timestamp(bean.public_send(column))
       else bean.public_send(column)
       end
     end

@@ -71,6 +71,7 @@ class WorkspaceExportBuilder
           bag_size_grams: decimal(bean.bag_size_grams),
           remaining_grams: decimal(bean.remaining_grams),
           opened_on: date(bean.opened_on),
+          finished_at: timestamp(bean.finished_at),
           archived_at: timestamp(bean.archived_at),
           blend_type: bean.blend_type,
           decaffeinated: bean.decaffeinated,

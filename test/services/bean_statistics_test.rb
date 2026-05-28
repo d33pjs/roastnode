@@ -97,4 +97,46 @@ class BeanStatisticsTest < ActiveSupport::TestCase
       assert_equal [ "12" ], statistics[:recent_brews].map(&:grind_setting)
     end
   end
+
+  test "adds finished bag totals and grind setting distribution" do
+    bean = workspaces(:household).beans.create!(
+      name: "Finished Stats",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.new(2026, 5, 10)
+    )
+    grinder = equipment(:household_grinder)
+    machine = equipment(:household_machine)
+
+    create_brew(bean:, grinder:, machine:, grind_setting: "10")
+    create_brew(bean:, grinder:, machine:, grind_setting: "10")
+    create_brew(bean:, grinder:, machine:, grind_setting: "1/3,0")
+    create_brew(bean:, grinder:, machine:, grind_setting: "")
+    bean.update!(remaining_grams: 14, finished_at: Time.zone.local(2026, 5, 23, 9))
+
+    statistics = BeanStatistics.new(bean:).call
+
+    assert_equal 236.to_d, statistics[:totals][:finished_used_grams]
+    assert_equal 13, statistics[:totals][:finished_open_days]
+    assert_equal BigDecimal("18.15"), statistics[:totals][:finished_grams_per_day]
+    assert_equal({ "10" => 2, "1/3,0" => 1 }, statistics[:distributions][:grind_setting])
+  end
+
+  private
+    def create_brew(bean:, grinder:, machine:, grind_setting:)
+      bean.workspace.brews.create!(
+        workspace: bean.workspace,
+        user: users(:one),
+        bean:,
+        grinder:,
+        machine:,
+        occurred_at: Time.zone.local(2026, 5, 24, 9, 30, 0),
+        bean_weight_grams: 18,
+        ground_weight_grams: 18,
+        dose_grams: 18,
+        beverage_grams: 45,
+        total_time_seconds: 28,
+        grind_setting:
+      )
+    end
 end

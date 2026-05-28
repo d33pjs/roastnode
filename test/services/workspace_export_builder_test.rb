@@ -5,6 +5,8 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     generated_at = Time.zone.parse("2026-05-26 10:15:00")
     bean_photo = attach_photo(beans(:open_household))
     tool_photo = attach_photo(preparation_tools(:wdt))
+    finished_at = Time.zone.parse("2026-05-24 18:30:00")
+    beans(:open_household).update!(remaining_grams: 14, finished_at:)
 
     payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at:).call
 
@@ -26,7 +28,8 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_not_includes equipment_ids, equipment(:other_workspace_grinder).id
 
     bean_payload = payload[:beans].find { |bean| bean[:id] == beans(:open_household).id }
-    assert_equal "open", bean_payload[:status]
+    assert_equal "finished", bean_payload[:status]
+    assert_equal finished_at.iso8601, bean_payload[:finished_at]
     assert_equal bean_photo.id, bean_payload[:photos].first[:attachment_id]
     assert_equal "photo.jpg", bean_payload[:photos].first[:filename]
     assert_not bean_payload[:photos].first.key?(:url)
