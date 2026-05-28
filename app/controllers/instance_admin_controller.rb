@@ -10,6 +10,7 @@ class InstanceAdminController < ApplicationController
       equipment: Equipment.count
     }
     @health_checks = InstanceHealthSnapshot.new.checks
+    @operations_snapshot = InstanceOperationsSnapshot.new
     @user_rows = InstanceUserSnapshot.new.rows
     @backup_profiles = InstanceBackupProfile.includes(:instance_backup_runs).order(:backup_kind, :id)
     @backup_runs = InstanceBackupRun.includes(:instance_backup_profile).order(created_at: :desc).limit(8)

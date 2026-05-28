@@ -23,6 +23,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Private media: app photos are served through `MediaAttachmentsController`, with active-workspace checks, private thumbnail variants, view/download/crop/primary/remove controls, and related photo groups.
 - Active-workspace export: owner-only structured JSON, beans CSV, brews CSV, and media ZIP with manifest for workspace-owned media.
 - Instance backups: instance-admin-only backup profiles can be activated/configured in the app, scheduled through Solid Queue, run manually, tracked with run history/error metadata, retained by profile policy, written as either full media ZIP archives or readable all-households JSON, validated, and restored into an empty server through Rails tasks with ID remapping and media integrity checks.
+- Instance admin operations: read-only backup coverage/status, Solid Queue job counts, failed-job/failure surfacing, worker visibility, and workspace export availability with redacted operational errors.
 - Beanconqueror import: conservative JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed.
 - Production self-hosting guide: deployment assumptions, environment/secrets handling, storage volume guidance, Docker Compose shape, backup validation, empty-server restore drills, and upgrade checks.
@@ -39,7 +40,6 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 ## Still Missing For v1
 
-- Operational admin depth: background job visibility, failed-job surfacing, backup/export status, and safe health checks beyond the current read-only instance dashboard.
 - Workspace administration polish: workspace deletion, ownership transfer, richer member management, and any public/private registration settings chosen for private installs.
 
 ## Later Versions / v2+
@@ -57,7 +57,6 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 ## Good Next Slices
 
-- Instance admin operations: backup status, job status, and failure visibility.
 - Workspace administration polish: deletion, ownership transfer, and richer member management.
 
 ## Source Files

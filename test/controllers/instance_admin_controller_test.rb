@@ -58,6 +58,39 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=instance-admin-health-rails]", text: /#{Rails.version}/
   end
 
+  test "shows operations status and redacted failures to instance admins" do
+    admin = users(:one)
+    admin.update!(instance_admin: true)
+    sign_in_as(admin)
+    profile = InstanceBackupProfile.create!(
+      name: "Readable backup",
+      backup_kind: "readable_json",
+      enabled: true,
+      schedule: "daily",
+      storage_path: "tmp/test-instance-backups",
+      retention_count: 7
+    )
+    failed_run = profile.instance_backup_runs.create!(
+      backup_kind: profile.backup_kind,
+      status: "failed",
+      error_message: "RuntimeError: disk write failed password=super-secret",
+      started_at: 10.minutes.ago,
+      finished_at: 9.minutes.ago
+    )
+
+    get "/instance_admin"
+
+    assert_response :success
+    assert_select "h2", I18n.t("instance_admin.index.operations")
+    assert_select "[data-testid=instance-admin-operations-queue]", text: /#{I18n.t("instance_admin.index.operation_labels.background_jobs")}/
+    assert_select "[data-testid=instance-admin-operations-backups]", text: /#{I18n.t("instance_admin.index.operation_labels.backups")}/
+    assert_select "[data-testid=instance-admin-operations-export]", text: /#{I18n.t("instance_admin.index.operation_labels.workspace_exports")}/
+    assert_select "[data-testid=instance-admin-backup-failure-#{failed_run.id}]", text: /RuntimeError/
+    assert_select "[data-testid=instance-admin-backup-failure-#{failed_run.id}]", text: /\[REDACTED\]/
+    assert_no_match(/super-secret/, response.body)
+    assert_no_match(/password_digest|session|invite token/i, response.body)
+  end
+
   test "shows read-only account rows to instance admins" do
     admin = users(:one)
     admin.update!(display_name: "Jens", instance_admin: true)
