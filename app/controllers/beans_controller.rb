@@ -15,8 +15,8 @@ class BeansController < ApplicationController
       start_date: @bean_statistics_start_date,
       end_date: @bean_statistics_end_date
     ).call
+    @grinder_tendency_first_brew = @bean.brews.includes(:grinder).order(:occurred_at, :created_at).first
     @grinder_setting_suggestions = load_grinder_setting_suggestions
-    @show_grinder_setting_suggestions = show_grinder_setting_suggestions?
   end
 
   def new
@@ -116,12 +116,6 @@ class BeansController < ApplicationController
       return [] unless grinder_setting_suggestions_requested?
 
       GrinderSettingSuggestion.new(bean: @bean).call
-    end
-
-    def show_grinder_setting_suggestions?
-      @grinder_setting_suggestions.any? ||
-        params[:suggest_grinder].present? ||
-        (@bean.duplicated_from_bean_id.blank? && @bean.brews.exists?)
     end
 
     def grinder_setting_suggestions_requested?

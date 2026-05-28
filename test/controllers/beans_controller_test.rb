@@ -313,11 +313,15 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
   test "show renders private photos through scoped media route" do
     sign_in_as(users(:one))
-    attachment = attach_photo(beans(:open_household))
+    bean = beans(:open_household)
+    attachment = attach_photo(bean)
+    bean.set_primary_photo!(attachment)
 
-    get bean_path(beans(:open_household))
+    get bean_path(bean)
 
     assert_response :success
+    assert_select "a[href='#bean-photos'] img[data-testid=bean-header-photo][src=?]", media_attachment_path(attachment, variant: :thumbnail)
+    assert_select "section#bean-photos"
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
@@ -353,10 +357,11 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-recent-brews] a[href=?]", brew_path(brew), text: /10/
     assert_select "h3", I18n.t("beans.show.taste_balance")
     assert_select "h3", I18n.t("beans.show.retention_markers")
+    assert_select "[data-testid=bean-grind-setting-distribution]", text: /10/
     assert_select "body", text: /Other Workspace Bean/, count: 0
   end
 
-  test "show waits for a first brew before rendering grinder suggestions" do
+  test "show always renders grinder tendency with no-first-brew empty state" do
     sign_in_as(users(:one))
     bean = beans(:second_open_household)
     grinder = equipment(:household_grinder)
@@ -365,7 +370,25 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(bean)
 
     assert_response :success
-    assert_select "[data-testid=bean-grinder-suggestions]", count: 0
+    assert_select "[data-testid=bean-grinder-suggestions]"
+    assert_select "[data-testid=bean-grinder-suggestions-empty]", text: /Log the first brew/
+    assert_select "a", text: I18n.t("beans.show.suggest_grinder"), count: 0
+  end
+
+  test "show renders first brew calibration facts without enough history" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    grinder = equipment(:household_grinder)
+    create_suggestion_calibration_brew(bean:, grinder:)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-grinder-suggestions]"
+    assert_select "[data-testid=bean-grinder-calibration]", text: /1\/3,0/
+    assert_select "[data-testid=bean-grinder-calibration]", text: /1:2[,.]53/
+    assert_select "[data-testid=bean-grinder-calibration]", text: /42s/
+    assert_select "[data-testid=bean-grinder-suggestions-empty]", text: /Not enough comparable/
   end
 
   test "show automatically renders grinder suggestions from the first brew for non duplicated beans" do
@@ -385,7 +408,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-grinder-suggestion]", text: /42s/
   end
 
-  test "show suppresses automatic grinder suggestions for duplicated beans" do
+  test "show suppresses automatic grinder calculation for duplicated beans" do
     sign_in_as(users(:one))
     duplicate = beans(:open_household).duplicate_for_new_bag!
     grinder = equipment(:household_grinder)
@@ -395,8 +418,12 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(duplicate)
 
     assert_response :success
-    assert_select "[data-testid=bean-grinder-suggestions]", count: 0
-    assert_select "a[href=?]", bean_path(duplicate, suggest_grinder: "1"), text: I18n.t("beans.show.suggest_grinder")
+    assert_select "[data-testid=bean-grinder-suggestions]"
+    assert_select "[data-testid=bean-grinder-suggestion]", count: 0
+    assert_select "[data-testid=bean-grinder-suggestions-empty]", text: /Automatic calculation is skipped/
+    assert_select "a[data-testid=bean-grinder-manual-suggest][href=?]", bean_path(duplicate, suggest_grinder: "1")
+    assert_select "body", text: /1\/3,75/, count: 0
+    assert_select "a", text: I18n.t("beans.show.suggest_grinder"), count: 0
   end
 
   test "show renders manual grinder suggestions for duplicated beans" do

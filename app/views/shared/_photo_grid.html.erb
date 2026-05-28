@@ -1,5 +1,7 @@
 <% if record.photos.attached? %>
-  <section class="<%= section_class %>">
+  <% section_attributes = { class: section_class } %>
+  <% section_attributes[:id] = local_assigns[:section_id] if local_assigns[:section_id].present? %>
+  <%= tag.section(**section_attributes) do %>
     <h2 class="<%= title_class %>"><%= title %></h2>
     <div class="mt-3 grid gap-3 sm:grid-cols-3">
       <% primary_photo = record.primary_photo_attachment %>
@@ -40,5 +42,5 @@
         </figure>
       <% end %>
     </div>
-  </section>
+  <% end %>
 <% end %>
