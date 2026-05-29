@@ -122,7 +122,7 @@ jobs:
           format: spdx-json
           output-file: ${{ env.CONTAINER_SPDX_SBOM }}
           artifact-name: ${{ env.CONTAINER_SPDX_SBOM }}
-          upload-artifact-retention: 2
+          upload-artifact: false
 
       - name: Generate container CDX SBOM Syft
         uses: anchore/sbom-action@v0
@@ -131,7 +131,7 @@ jobs:
           format: cyclonedx-json
           output-file: ${{ env.CONTAINER_CDX_SBOM }}
           artifact-name: ${{ env.CONTAINER_CDX_SBOM }}
-          upload-artifact-retention: 2
+          upload-artifact: false
 
       - name: Attest build provenance
         uses: actions/attest@v4
@@ -147,7 +147,6 @@ jobs:
         with:
           subject-name: ${{ steps.image.outputs.ref }}
           subject-digest: ${{ steps.build.outputs.digest }}
-          #sbom-path: ${{ env.CONTAINER_SDPX_SBOM }} # CDX and SPDX should work, https://github.com/actions/attest
           sbom-path: ${{ env.CONTAINER_CDX_SBOM }}
           push-to-registry: true
 
@@ -177,7 +176,7 @@ jobs:
       - name: Attach SBOM and digest to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$RELEASE_TAG" "$CONTAINER_CDX_SBOM" "$IMAGE_DIGEST_FILE" --clobber
+        run: gh release upload "$RELEASE_TAG" "$CONTAINER_SPDX_SBOM" "$CONTAINER_CDX_SBOM" "$IMAGE_DIGEST_FILE" --clobber
 
       - name: Upload container CycloneDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_CDX_ID != '' }}
@@ -197,7 +196,7 @@ jobs:
         if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_CDX_ID == '' }}
         run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_CDX_ID is not configured."
 
-      - name: Upload container SDPX SBOM to exodos.io
+      - name: Upload container SPDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_SPDX_ID != '' }}
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
@@ -212,5 +211,5 @@ jobs:
             -F "file=@${CONTAINER_SPDX_SBOM};type=application/json"
 
       - name: Explain skipped exodos.io upload
-        if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_SDPX_ID == '' }}
-        run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_CDX_ID is not configured."
+        if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_SPDX_ID == '' }}
+        run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_SPDX_ID is not configured."

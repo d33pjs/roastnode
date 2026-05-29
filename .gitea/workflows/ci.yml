@@ -30,9 +30,9 @@ jobs:
       RAILS_ENV: test
       DATABASE_URL: postgres://postgres:postgres@postgres:5432
       RUBOCOP_CACHE_ROOT: tmp/rubocop
-      SOURCE_SYFT_SPDX_SBOM: roastnode-source-${{ github.event.release.tag_name || inputs.release_tag }}.syft.spdx.json
-      SOURCE_SYFT_CDX_SBOM: roastnode-source-${{ github.event.release.tag_name || inputs.release_tag }}.syft.cdx.json
-      SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.event.release.tag_name || inputs.release_tag }}.cdx.json
+      SOURCE_SYFT_SPDX_SBOM: roastnode-source-${{ github.sha }}.syft.spdx.json
+      SOURCE_SYFT_CDX_SBOM: roastnode-source-${{ github.sha }}.syft.cdx.json
+      SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
@@ -66,65 +66,65 @@ jobs:
       - name: Run Rails tests
         run: bin/rails db:test:prepare test
 
-      - name: Generate container SPDX SBOM Syft
+      - name: Generate source Syft SPDX SBOM
         uses: anchore/sbom-action@v0
         with:
           format: spdx-json
           output-file: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
           artifact-name: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
-          upload-artifact-retention: 2
+          upload-artifact: false
 
-      - name: upload source SPDX sbom to exodos.io
+      - name: Upload source Syft SPDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_SYFT_SPDX_ID != '' }}
         run: |
           set -euo pipefail
 
           api_url="${EXODOS_API_URL:-https://api.exodos.io}"
-          curl -fss -x post "${api_url}/api/v1/boms/inventory/bom/upload" \
-            -h "x-api-key: ${EXODOS_API_TOKEN}" \
-            -h "accept: application/json" \
-            -f "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_SYFT_SPDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"syft\"}" \
-            -f "file=@${SOURCE_SYFT_SPDX_SBOM};type=application/json"
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_SYFT_SPDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"syft\",\"spdx\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-syft-spdx\",\"unique\":true}]}" \
+            -F "file=@${SOURCE_SYFT_SPDX_SBOM};type=application/json"
 
-      - name: Generate container CDX SBOM Syft
+      - name: Generate source Syft CycloneDX SBOM
         uses: anchore/sbom-action@v0
         with:
           format: cyclonedx-json
           output-file: ${{ env.SOURCE_SYFT_CDX_SBOM }}
           artifact-name: ${{ env.SOURCE_SYFT_CDX_SBOM }}
-          upload-artifact-retention: 2
+          upload-artifact: false
 
-      - name: upload source CycloneDX sbom to exodos.io
+      - name: Upload source Syft CycloneDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_SYFT_CDX_ID != '' }}
         run: |
           set -euo pipefail
 
           api_url="${EXODOS_API_URL:-https://api.exodos.io}"
-          curl -fss -x post "${api_url}/api/v1/boms/inventory/bom/upload" \
-            -h "x-api-key: ${EXODOS_API_TOKEN}" \
-            -h "accept: application/json" \
-            -f "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_SYFT_CDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"syft\"}" \
-            -f "file=@${SOURCE_SYFT_CDX_SBOM};type=application/json"
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_SYFT_CDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"syft\",\"cyclonedx\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-syft-cyclonedx\",\"unique\":true}]}" \
+            -F "file=@${SOURCE_SYFT_CDX_SBOM};type=application/json"
 
       # Generate SBOM via cdxgen
       - name: Download cdxgen Open Source Binary
         run: |
           mkdir -p $HOME/.local/bin
           curl -sSfL https://github.com/CycloneDX/cdxgen/releases/latest/download/cdxgen-linux-amd64 -o $HOME/.local/bin/cdxgen
+          chmod +x $HOME/.local/bin/cdxgen
           echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Generate SBOM via cdxgen binary
         run: cdxgen -o ${SOURCE_CDX_CDX_SBOM}
 
-      - name: upload container sbom to exodos.io
-        if: ${{ env.EXODOS_API_URL != '' && env.EXODOS_INVENTORYROOT_CDX_CDX_ID != '' }}
+      - name: Upload source cdxgen CycloneDX SBOM to exodos.io
+        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_CDX_CDX_ID != '' }}
         run: |
           set -euo pipefail
 
           api_url="${EXODOS_API_URL:-https://api.exodos.io}"
-          curl -fss -x post "${api_url}/api/v1/boms/inventory/bom/upload" \
-            -h "x-api-key: ${EXODOS_API_TOKEN}" \
-            -h "accept: application/json" \
-            -f "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_CDX_CDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"cdxgen\"}" \
-            -f "file=@${SOURCE_CDX_CDX_SBOM};type=application/json"
-
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_CDX_CDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"cdxgen\",\"cyclonedx\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-cdxgen-cyclonedx\",\"unique\":true}]}" \
+            -F "file=@${SOURCE_CDX_CDX_SBOM};type=application/json"

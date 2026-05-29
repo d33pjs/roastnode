@@ -40,6 +40,7 @@ jobs:
           format: spdx-json
           output-file: ${{ env.SOURCE_SBOM }}
           artifact-name: ${{ env.SOURCE_SBOM }}
+          upload-artifact: false
 
       - name: Attest source SBOM
         uses: actions/attest@v4
