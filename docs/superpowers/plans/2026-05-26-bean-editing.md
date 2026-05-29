@@ -116,4 +116,4 @@
   - Run: `env PARALLEL_WORKERS=1 bin/rails test`
   - Run: `env RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop`
   - Run: `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`
-  - Run host smoke check for `miniknubbel.internal:3001`.
+  - Run host smoke check for `localhost:3001`.

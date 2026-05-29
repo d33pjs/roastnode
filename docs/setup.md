@@ -28,7 +28,11 @@ Start Rails on all interfaces when testing from another host on the network:
 bin/rails server -p 3001 -b 0.0.0.0
 ```
 
-Development host authorization allows `miniknubbel.internal`.
+For named LAN hosts, set a comma-separated allowlist before starting Rails:
+
+```bash
+ROASTNODE_DEV_HOSTS=coffee-box.local bin/rails server -p 3001 -b 0.0.0.0
+```
 
 ## First Setup
 

@@ -3,6 +3,7 @@
 /.env.*
 !/.env.example
 /.superpowers/
+/.kamal/secrets
 /log/
 /node_modules/
 /storage/

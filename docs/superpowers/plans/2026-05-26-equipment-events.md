@@ -85,5 +85,5 @@
 - [ ] Run `env PARALLEL_WORKERS=1 bin/rails test`.
 - [ ] Run `env RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop`.
 - [ ] Run `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`.
-- [ ] Smoke the running app on `http://miniknubbel.internal:3001`.
+- [ ] Smoke the running app on `http://localhost:3001`.
 - [ ] Commit docs and any final fixes with `git commit -m "Document equipment events"`.

@@ -63,7 +63,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 
 ## Source Files
 
-- Original product context: `/Users/d33pjs/Documents/Codex/2026-05-24/grill-me-i-want-to-have/CONTEXT.md`
+- Original product context: private planning notes outside this repository.
 - Repository-wide agent rules: `AGENTS.md`
 - Backup system note: `docs/backup-system.md`
 - Production self-hosting guide: `docs/production-self-hosting.md`

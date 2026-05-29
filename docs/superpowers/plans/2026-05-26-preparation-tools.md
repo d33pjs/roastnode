@@ -49,5 +49,5 @@
 - [ ] Run `env PARALLEL_WORKERS=1 bin/rails test`.
 - [ ] Run `env RUBOCOP_CACHE_ROOT=tmp/rubocop_cache bin/rubocop`.
 - [ ] Run `bundle exec brakeman --quiet --no-pager --exit-on-warn --exit-on-error`.
-- [ ] Confirm `http://miniknubbel.internal:3001` returns 200.
+- [ ] Confirm `http://localhost:3001` returns 200.
 - [ ] Commit docs with `git commit -m "Document preparation tools"`.

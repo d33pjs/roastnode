@@ -15,8 +15,10 @@ Rails.application.configure do
   # Enable server timing.
   config.server_timing = true
 
-  # Allow LAN access through the local machine hostname while keeping Rails host authorization enabled.
-  config.hosts << "miniknubbel.internal"
+  # Allow optional LAN hostnames while keeping Rails host authorization enabled.
+  ENV.fetch("ROASTNODE_DEV_HOSTS", "").split(",").map(&:strip).reject(&:blank?).each do |host|
+    config.hosts << host
+  end
 
   # Enable/disable Action Controller caching. By default Action Controller caching is disabled.
   # Run rails dev:cache to toggle Action Controller caching.

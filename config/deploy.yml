@@ -36,7 +36,8 @@ registry:
   # password:
   #   - KAMAL_REGISTRY_PASSWORD
 
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
+# Inject ENV variables into containers (secrets come from local .kamal/secrets,
+# copied from .kamal/secrets.example).
 env:
   secret:
     - RAILS_MASTER_KEY
@@ -94,7 +95,7 @@ builder:
 # ssh:
 #   user: app
 
-# Use accessory services (secrets come from .kamal/secrets).
+# Use accessory services (secrets come from local .kamal/secrets).
 # accessories:
 #   db:
 #     image: mysql:8.0
