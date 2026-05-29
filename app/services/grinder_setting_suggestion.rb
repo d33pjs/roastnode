@@ -21,7 +21,7 @@ class GrinderSettingSuggestion
     end
 
     if raw.match?(/\A-?\d+(?:[,.]\d+)?\z/)
-      return ParsedSetting.new(raw:, format: :plain_numeric, coordinate: decimal(raw))
+      ParsedSetting.new(raw:, format: :plain_numeric, coordinate: decimal(raw))
     end
   end
 

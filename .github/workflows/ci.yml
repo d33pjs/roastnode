@@ -145,7 +145,17 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Detect system tests
+        id: system_tests
+        run: |
+          if [ -d test/system ] && find test/system -name '*_test.rb' -print -quit | grep -q .; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run System Tests
+        if: steps.system_tests.outputs.present == 'true'
         env:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
@@ -153,9 +163,13 @@ jobs:
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test:system
 
+      - name: Skip System Tests
+        if: steps.system_tests.outputs.present != 'true'
+        run: echo "No system tests are checked in yet; skipping bin/rails test:system."
+
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4
-        if: failure()
+        if: failure() && steps.system_tests.outputs.present == 'true'
         with:
           name: screenshots
           path: ${{ github.workspace }}/tmp/screenshots

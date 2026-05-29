@@ -43,9 +43,14 @@ jobs:
 
       - name: Attest source SBOM
         uses: actions/attest@v4
+        if: ${{ github.event.repository.visibility == 'public' }}
         with:
           subject-path: ${{ env.SOURCE_ARCHIVE }}
           sbom-path: ${{ env.SOURCE_SBOM }}
+
+      - name: Explain skipped source attestation
+        if: ${{ github.event.repository.visibility != 'public' }}
+        run: echo "Skipping GitHub artifact attestation until the repository is public."
 
       - name: Upload source SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_ID != '' }}

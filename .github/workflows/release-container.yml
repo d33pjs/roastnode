@@ -123,6 +123,7 @@ jobs:
 
       - name: Attest build provenance
         uses: actions/attest@v4
+        if: ${{ github.event.repository.visibility == 'public' }}
         with:
           subject-name: ${{ steps.image.outputs.ref }}
           subject-digest: ${{ steps.build.outputs.digest }}
@@ -130,11 +131,16 @@ jobs:
 
       - name: Attest container SBOM
         uses: actions/attest@v4
+        if: ${{ github.event.repository.visibility == 'public' }}
         with:
           subject-name: ${{ steps.image.outputs.ref }}
           subject-digest: ${{ steps.build.outputs.digest }}
           sbom-path: ${{ env.CONTAINER_SBOM }}
           push-to-registry: true
+
+      - name: Explain skipped attestations
+        if: ${{ github.event.repository.visibility != 'public' }}
+        run: echo "Skipping GitHub artifact attestations until the repository is public."
 
       - name: Write image digest asset
         env:
