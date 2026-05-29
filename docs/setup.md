@@ -117,4 +117,9 @@ If Bundler warns that your home directory is not writable inside a sandboxed too
 
 ## Production
 
-For production deployment, backup verification, restore drills, storage volumes, and Docker Compose shape, see `docs/production-self-hosting.md`.
+For production deployment, backup verification, restore drills, storage volumes, and the Ansible-friendly Compose bundle, see `docs/production-self-hosting.md`.
+
+Production examples live under `deploy/`:
+
+- `deploy/compose.production.yml`
+- `deploy/production.env.example`

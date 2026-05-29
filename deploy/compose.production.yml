@@ -1,0 +1,50 @@
+name: roastnode
+
+x-roastnode-app: &roastnode-app
+  image: ${ROASTNODE_IMAGE:?Set ROASTNODE_IMAGE to the immutable release digest}
+  restart: unless-stopped
+  env_file:
+    - ${ROASTNODE_ENV_FILE:-.env}
+  environment:
+    RAILS_ENV: production
+    POSTGRES_HOST: ${POSTGRES_HOST:-postgres}
+    POSTGRES_PORT: ${POSTGRES_PORT:-5432}
+    POSTGRES_USER: ${POSTGRES_USER:-roastnode}
+    POSTGRES_DB: ${POSTGRES_DB:-roastnode_production}
+    ROASTNODE_DATABASE_PASSWORD: ${ROASTNODE_DATABASE_PASSWORD:?Set ROASTNODE_DATABASE_PASSWORD}
+  depends_on:
+    postgres:
+      condition: service_healthy
+  volumes:
+    - roastnode_storage:/rails/storage
+    - ${ROASTNODE_CERTS_PATH:-./certs}:/rails/certs:ro
+
+services:
+  postgres:
+    image: ${POSTGRES_IMAGE:-postgres:17.5}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-roastnode}
+      POSTGRES_PASSWORD: ${ROASTNODE_DATABASE_PASSWORD:?Set ROASTNODE_DATABASE_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-roastnode_production}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-roastnode} -d ${POSTGRES_DB:-roastnode_production}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    <<: *roastnode-app
+    command: ${ROASTNODE_WEB_COMMAND:-./bin/thrust ./bin/rails server}
+    ports:
+      - "${ROASTNODE_BIND_ADDRESS:-127.0.0.1}:${ROASTNODE_WEB_PORT:-3001}:${ROASTNODE_CONTAINER_PORT:-80}"
+
+  jobs:
+    <<: *roastnode-app
+    command: bin/jobs
+
+volumes:
+  postgres_data:
+  roastnode_storage:

@@ -2,6 +2,10 @@
 # are invoked here are part of Puma's configuration DSL. For more information
 # about methods provided by the DSL, see https://puma.io/puma/Puma/DSL.html.
 #
+require_relative "../lib/roastnode/runtime_settings"
+
+runtime_settings = Roastnode::RuntimeSettings.new
+
 # Puma starts a configurable number of processes (workers) and each process
 # serves each request in a thread from an internal thread pool.
 #
@@ -28,8 +32,15 @@
 threads_count = ENV.fetch("RAILS_MAX_THREADS", 3)
 threads threads_count, threads_count
 
-# Specifies the `port` that Puma will listen on to receive requests; default is 3000.
-port ENV.fetch("PORT", 3000)
+# Specifies the listener that Puma will use. Default deployments keep Puma on
+# plain HTTP behind Thruster. Direct Puma HTTPS is only for proxy-to-app TLS.
+if runtime_settings.puma_ssl?
+  ssl_bind runtime_settings.puma_bind_host, runtime_settings.puma_port,
+    cert: runtime_settings.puma_ssl_cert_path,
+    key: runtime_settings.puma_ssl_key_path
+else
+  port runtime_settings.puma_port
+end
 
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart

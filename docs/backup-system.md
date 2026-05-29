@@ -54,7 +54,7 @@ Restore verification covers:
 
 ## Open Design Decisions
 
-- whether the default `storage/instance_backups` location and retention count of 7 should change for production installs
+- whether production installs should keep the env-configurable default `storage/instance_backups` location and retention count of 7, or use host-specific defaults
 - whether backup files are encrypted by the app or by the host environment
 - whether offsite upload is built in v1 or documented as host-level setup
 - whether restore should remain task-only or gain a carefully audited UI later

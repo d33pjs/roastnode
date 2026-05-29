@@ -1,6 +1,16 @@
 require "test_helper"
 
 class InstanceBackupProfileTest < ActiveSupport::TestCase
+  test "reads backup defaults from environment" do
+    with_env(
+      "ROASTNODE_BACKUP_STORAGE_PATH" => "storage/nightly",
+      "ROASTNODE_BACKUP_RETENTION_COUNT" => "14"
+    ) do
+      assert_equal "storage/nightly", InstanceBackupProfile.default_storage_path
+      assert_equal 14, InstanceBackupProfile.default_retention_count
+    end
+  end
+
   test "validates backup kind schedule and retention" do
     profile = InstanceBackupProfile.new(
       name: "Nightly backup",
@@ -48,4 +58,15 @@ class InstanceBackupProfileTest < ActiveSupport::TestCase
     assert_not disabled.due_for_enqueue?(Time.current)
     assert_not manual.due_for_enqueue?(Time.current)
   end
+
+  private
+    def with_env(values)
+      previous_values = values.to_h { |key, _value| [ key, ENV[key] ] }
+      values.each { |key, value| ENV[key] = value }
+      yield
+    ensure
+      previous_values.each do |key, value|
+        value.nil? ? ENV.delete(key) : ENV[key] = value
+      end
+    end
 end

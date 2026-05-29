@@ -192,8 +192,8 @@
                     name: InstanceBackupProfile.default_name_for(backup_kind),
                     enabled: true,
                     schedule: backup_kind == "readable_json" ? "weekly" : "daily",
-                    storage_path: InstanceBackupProfile::DEFAULT_STORAGE_PATH,
-                    retention_count: 7
+                    storage_path: InstanceBackupProfile.default_storage_path,
+                    retention_count: InstanceBackupProfile.default_retention_count
                   ),
                   url: instance_admin_backup_profiles_path,
                   class: "mt-4" do |form| %>

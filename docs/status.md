@@ -1,6 +1,6 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-05-28
+Last reviewed: 2026-05-30
 
 This is the compact status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done, intentionally deferred, or next.
 
@@ -27,7 +27,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - Instance admin operations: read-only backup coverage/status, Solid Queue job counts, failed-job/failure surfacing, worker visibility, and workspace export availability with redacted operational errors.
 - Beanconqueror import: conservative JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, all-time bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed.
-- Production self-hosting guide: deployment assumptions, environment/secrets handling, storage volume guidance, Docker Compose shape, backup validation, empty-server restore drills, and upgrade checks.
+- Production self-hosting guide: deployment assumptions, environment/secrets handling, storage volume guidance, Ansible-friendly Compose/env examples, digest-based image upgrades, backup validation, empty-server restore drills, and upgrade checks.
 - Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, mobile-friendly back links, cross-links between domain records, optional demo data, and documentation for each shipped slice.
 
 ## Changed From The Initial Idea

@@ -6,9 +6,10 @@ Roastnode v1 is a private household app. Production installs should optimize for
 
 - Run the Rails app from the production `Dockerfile` or an equivalent Ruby 3.3.7 host.
 - Run PostgreSQL 17 or another PostgreSQL version supported by Rails 8.1.
-- Terminate TLS at a reverse proxy or a Kamal proxy in front of the Rails container.
+- Deploy the first release with Docker Compose, normally rendered and invoked by Ansible.
+- Terminate public TLS at a reverse proxy such as Nginx Proxy Manager, Traefik, Caddy, or another host-managed proxy.
 - Keep Active Storage on a durable mounted volume unless you explicitly configure object storage in `config/storage.yml`.
-- Run Solid Queue in production. The default Kamal config sets `SOLID_QUEUE_IN_PUMA=true` for a single-server install; split job processing into `bin/jobs` when the install grows beyond one host.
+- Run Solid Queue in production. The release Compose stack runs a dedicated `jobs` service, so `SOLID_QUEUE_IN_PUMA=false` is the default.
 
 The repository `compose.yaml` is intentionally a local-development database file. Do not treat its default credentials or database name as production defaults.
 
@@ -20,16 +21,19 @@ Set these outside git:
 - `SECRET_KEY_BASE`: Rails session and signing secret if not supplied through credentials.
 - `ROASTNODE_DATABASE_PASSWORD`: PostgreSQL password used by `config/database.yml` in production.
 - `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_HOST`, and `POSTGRES_PORT`: database connection details when they differ from defaults.
+- SMTP credentials if password reset mail is enabled.
 
 Recommended production clear env:
 
 ```bash
 RAILS_ENV=production
 RAILS_LOG_LEVEL=info
-SOLID_QUEUE_IN_PUMA=true
+SOLID_QUEUE_IN_PUMA=false
+ROASTNODE_HOST=coffee.example.com
+ROASTNODE_PROTOCOL=https
 ```
 
-If you enable outbound password reset mail, configure SMTP through encrypted Rails credentials or host-level secrets. Do not put SMTP passwords, database passwords, backup files, `config/master.key`, or generated `.env` files into git.
+If you enable outbound password reset mail, configure SMTP through host-level secrets or the rendered env file. Do not put SMTP passwords, database passwords, backup files, `config/master.key`, or generated `.env` files into git.
 
 ## Storage Volumes
 
@@ -39,7 +43,7 @@ Preserve these across deploys and host restarts:
 - `/rails/storage` when using local Active Storage.
 - Backup storage path, defaulting to `storage/instance_backups` inside the Rails app volume.
 
-With the current Kamal config, the app volume is:
+With the release Compose stack, the app volume is:
 
 ```yaml
 volumes:
@@ -48,67 +52,83 @@ volumes:
 
 If you run backups to the default path, the backup files live under that same mounted storage volume. Keep a host-level copy or offsite sync of this volume; an in-app backup stored only on the same disk is not disaster recovery by itself.
 
-## Docker Compose Shape
+## Docker Compose Bundle
 
-For a single-host Compose install, use separate services for `web`, `jobs`, and `postgres`, and mount persistent volumes for database and Rails storage. A production Compose file should look like this shape, with real image tags and real secrets supplied by your host:
+The production examples live in:
 
-```yaml
-services:
-  postgres:
-    image: postgres:17.5
-    environment:
-      POSTGRES_USER: roastnode
-      POSTGRES_PASSWORD: ${ROASTNODE_DATABASE_PASSWORD}
-      POSTGRES_DB: roastnode_production
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+- `deploy/compose.production.yml`: `postgres`, `web`, and `jobs` services.
+- `deploy/production.env.example`: documented operator-facing environment variables.
 
-  web:
-    image: ghcr.io/OWNER/roastnode@sha256:REPLACE_WITH_RELEASE_DIGEST
-    depends_on:
-      - postgres
-    environment:
-      RAILS_ENV: production
-      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
-      ROASTNODE_DATABASE_PASSWORD: ${ROASTNODE_DATABASE_PASSWORD}
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: roastnode_production
-      POSTGRES_USER: roastnode
-      SOLID_QUEUE_IN_PUMA: "false"
-    ports:
-      - "127.0.0.1:3001:80"
-    volumes:
-      - roastnode_storage:/rails/storage
+Ansible should render the env file on the host and keep it out of git. A typical host layout is:
 
-  jobs:
-    image: ghcr.io/OWNER/roastnode@sha256:REPLACE_WITH_RELEASE_DIGEST
-    command: bin/jobs
-    depends_on:
-      - postgres
-    environment:
-      RAILS_ENV: production
-      RAILS_MASTER_KEY: ${RAILS_MASTER_KEY}
-      ROASTNODE_DATABASE_PASSWORD: ${ROASTNODE_DATABASE_PASSWORD}
-      POSTGRES_HOST: postgres
-      POSTGRES_DB: roastnode_production
-      POSTGRES_USER: roastnode
-    volumes:
-      - roastnode_storage:/rails/storage
-
-volumes:
-  postgres_data:
-  roastnode_storage:
+```text
+/opt/roastnode/compose.yml
+/opt/roastnode/.env
+/opt/roastnode/certs/
 ```
 
-Put a TLS reverse proxy in front of `web`. Keep the app bound to localhost or a private Docker network unless the reverse proxy is the intended public entry point.
+Copy `deploy/compose.production.yml` to `compose.yml`, render `deploy/production.env.example` to `.env`, and set `ROASTNODE_IMAGE` to the immutable release digest from the GitHub Release asset. The Compose file uses separate durable volumes for PostgreSQL and `/rails/storage`.
+
+Keep the app bound to localhost or a private Docker network unless the reverse proxy is the intended public entry point.
+
+## HTTP And TLS Modes
+
+Default mode is plain HTTP inside the host or Docker network:
+
+```text
+reverse proxy or private network -> Thruster HTTP -> Puma
+```
+
+Use this for the normal Ansible + Compose setup. Thruster listens on container port `80`, forwards to Puma, and provides HTTP/2, public asset caching, compression, and X-Sendfile support.
+
+For direct public exposure without another reverse proxy, let Thruster manage ACME certificates:
+
+```env
+THRUSTER_TLS_DOMAIN=coffee.example.com
+THRUSTER_STORAGE_PATH=/rails/storage/thruster
+```
+
+For encrypted reverse-proxy-to-app traffic with self-signed or private-CA certificates, bypass Thruster and run Puma HTTPS directly:
+
+```env
+ROASTNODE_CERTS_PATH=/opt/roastnode/certs
+ROASTNODE_WEB_COMMAND=./bin/rails server
+ROASTNODE_CONTAINER_PORT=3443
+PORT=3443
+PUMA_SSL_CERT_PATH=/rails/certs/roastnode.crt
+PUMA_SSL_KEY_PATH=/rails/certs/roastnode.key
+```
+
+That mode changes the chain to:
+
+```text
+reverse proxy -> Puma HTTPS
+```
+
+Use direct Puma HTTPS only when you specifically need encrypted proxy-to-app traffic. Enabling Puma TLS behind Thruster would encrypt the wrong hop and would not protect the reverse proxy's connection to the app container.
+
+## Environment Settings
+
+The production env example documents the supported settings. Important groups:
+
+- Image: `ROASTNODE_IMAGE`, plus optional `POSTGRES_IMAGE`.
+- Rails secrets: `RAILS_MASTER_KEY`, optional `SECRET_KEY_BASE`.
+- Database: `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `ROASTNODE_DATABASE_PASSWORD`.
+- URLs and host authorization: `ROASTNODE_HOST`, `ROASTNODE_PROTOCOL`, optional `ROASTNODE_PORT`, `ROASTNODE_ALLOWED_HOSTS`.
+- SSL headers and redirects: `RAILS_ASSUME_SSL`, `RAILS_FORCE_SSL`.
+- SMTP: `SMTP_ENABLED`, `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_USER_NAME`, `SMTP_PASSWORD`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO`, `SMTP_OPENSSL_VERIFY_MODE`, `SMTP_RAISE_DELIVERY_ERRORS`.
+- Jobs and concurrency: `SOLID_QUEUE_IN_PUMA`, `RAILS_MAX_THREADS`, `WEB_CONCURRENCY`.
+- Backup defaults: `ROASTNODE_BACKUP_STORAGE_PATH`, `ROASTNODE_BACKUP_RETENTION_COUNT`.
+- Thruster: `THRUSTER_TLS_DOMAIN`, `THRUSTER_STORAGE_PATH`, `THRUSTER_GZIP_COMPRESSION_DISABLE_ON_AUTH`.
+- Direct Puma HTTPS: `ROASTNODE_WEB_COMMAND`, `ROASTNODE_CONTAINER_PORT`, `PORT`, `PUMA_SSL_CERT_PATH`, `PUMA_SSL_KEY_PATH`, `PUMA_BIND_HOST`.
 
 ## First Deploy
 
 Pull and boot the production image with real secrets. Prefer the immutable digest from the GitHub Release asset over mutable tags:
 
 ```bash
-export ROASTNODE_IMAGE="ghcr.io/OWNER/roastnode@sha256:REPLACE_WITH_RELEASE_DIGEST"
-docker pull "$ROASTNODE_IMAGE"
+cd /opt/roastnode
+docker compose pull
 docker compose up -d postgres
 docker compose run --rm web bin/rails db:prepare
 docker compose up -d web jobs
@@ -208,7 +228,7 @@ For each production upgrade:
    gh attestation verify "oci://${IMAGE}" -R "${REPO}"
    ```
 
-4. Update the `web` and `jobs` image reference to the new digest.
+4. Update `ROASTNODE_IMAGE` in the rendered `.env` file to the new digest.
 5. Pull the new image.
 6. Run `bin/rails db:prepare`.
 7. Start `web` and `jobs`.

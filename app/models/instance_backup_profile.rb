@@ -1,3 +1,5 @@
+require "roastnode/runtime_settings"
+
 class InstanceBackupProfile < ApplicationRecord
   BACKUP_KINDS = %w[full_archive readable_json].freeze
   SCHEDULES = %w[manual daily weekly].freeze
@@ -18,6 +20,14 @@ class InstanceBackupProfile < ApplicationRecord
 
   def self.default_name_for(backup_kind)
     DEFAULT_NAMES.fetch(backup_kind, "Instance backup")
+  end
+
+  def self.default_storage_path
+    Roastnode::RuntimeSettings.new.backup_storage_path
+  end
+
+  def self.default_retention_count
+    Roastnode::RuntimeSettings.new.backup_retention_count
   end
 
   def due_for_enqueue?(now = Time.current)
