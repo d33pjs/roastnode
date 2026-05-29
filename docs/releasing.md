@@ -4,8 +4,9 @@ Roastnode is developed on the private Gitea origin and mirrored to GitHub. GitHu
 
 ## Workflow Split
 
-- Gitea runs `.gitea/workflows/ci.yml` for normal Rails checks only.
-- GitHub runs `.github/workflows/ci.yml`, `.github/workflows/source-sbom.yml`, and `.github/workflows/release-container.yml`.
+- Gitea runs `.gitea/workflows/ci.yml` for normal Rails checks.
+- GitHub runs `.github/workflows/source-sbom.yml` and `.github/workflows/release-container.yml` for release supply-chain artifacts only.
+- GitHub does not run duplicate Rails CI. The source SBOM and release workflows are separate from CI because they need GitHub Releases, GHCR, OIDC, Sigstore, and GitHub artifact attestations.
 - GitHub workflows include a `github.server_url == 'https://github.com'` guard so a Gitea runner that notices `.github/workflows` does not try to publish images or upload SBOMs.
 - Gitea push mirroring syncs commits, branches, and tags. Create GitHub Release objects on GitHub.
 
@@ -41,7 +42,7 @@ If exodos.io settings are missing, the workflow keeps the SBOM artifact but skip
 
 ## Release Steps
 
-1. Make sure `main` is green on Gitea and GitHub.
+1. Make sure `main` is green on Gitea.
 2. Choose a semver tag such as `v0.1.0`.
 3. Tag the exact commit you want to release:
 
