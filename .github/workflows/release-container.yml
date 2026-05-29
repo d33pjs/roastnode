@@ -30,10 +30,12 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CONTAINER_SBOM: roastnode-container-${{ github.event.release.tag_name || inputs.release_tag }}.spdx.json
+      CONTAINER_SPDX_SBOM: roastnode-container-${{ github.event.release.tag_name || inputs.release_tag }}.spdx.json
+      CONTAINER_CDX_SBOM: roastnode-container-${{ github.event.release.tag_name || inputs.release_tag }}.cdx.json
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
-      EXODOS_INVENTORYROOT_ID: ${{ vars.EXODOS_INVENTORYROOT_ID }}
+      EXODOS_INVENTORYROOT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SPDX_ID }}
+      EXODOS_INVENTORYROOT_CDX_ID: ${{ vars.EXODOS_INVENTORYROOT_CDX_ID }}
       IMAGE_DIGEST_FILE: roastnode-image-${{ github.event.release.tag_name || inputs.release_tag }}.txt
 
     steps:
@@ -113,13 +115,23 @@ jobs:
           IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
         run: cosign sign "${IMAGE_REF}@${IMAGE_DIGEST}"
 
-      - name: Generate container SBOM
+      - name: Generate container SPDX SBOM Syft
         uses: anchore/sbom-action@v0
         with:
           image: ${{ steps.image.outputs.ref }}@${{ steps.build.outputs.digest }}
           format: spdx-json
-          output-file: ${{ env.CONTAINER_SBOM }}
-          artifact-name: ${{ env.CONTAINER_SBOM }}
+          output-file: ${{ env.CONTAINER_SPDX_SBOM }}
+          artifact-name: ${{ env.CONTAINER_SPDX_SBOM }}
+          upload-artifact-retention: 2
+
+      - name: Generate container CDX SBOM Syft
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ steps.image.outputs.ref }}@${{ steps.build.outputs.digest }}
+          format: cyclonedx-json
+          output-file: ${{ env.CONTAINER_CDX_SBOM }}
+          artifact-name: ${{ env.CONTAINER_CDX_SBOM }}
+          upload-artifact-retention: 2
 
       - name: Attest build provenance
         uses: actions/attest@v4
@@ -135,7 +147,8 @@ jobs:
         with:
           subject-name: ${{ steps.image.outputs.ref }}
           subject-digest: ${{ steps.build.outputs.digest }}
-          sbom-path: ${{ env.CONTAINER_SBOM }}
+          #sbom-path: ${{ env.CONTAINER_SDPX_SBOM }} # CDX and SPDX should work, https://github.com/actions/attest
+          sbom-path: ${{ env.CONTAINER_CDX_SBOM }}
           push-to-registry: true
 
       - name: Explain skipped attestations
@@ -164,10 +177,10 @@ jobs:
       - name: Attach SBOM and digest to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "$RELEASE_TAG" "$CONTAINER_SBOM" "$IMAGE_DIGEST_FILE" --clobber
+        run: gh release upload "$RELEASE_TAG" "$CONTAINER_CDX_SBOM" "$IMAGE_DIGEST_FILE" --clobber
 
-      - name: Upload container SBOM to exodos.io
-        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_ID != '' }}
+      - name: Upload container CycloneDX SBOM to exodos.io
+        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_CDX_ID != '' }}
         env:
           SOURCE_SHA: ${{ steps.source.outputs.sha }}
         run: |
@@ -177,9 +190,27 @@ jobs:
           curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
             -H "X-API-Key: ${EXODOS_API_TOKEN}" \
             -H "accept: application/json" \
-            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_ID}\",\"tags\":[\"roastnode\",\"container\",\"${RELEASE_TAG}\",\"sha-${SOURCE_SHA}\",{\"name\":\"latest-container\",\"unique\":true}]}" \
-            -F "file=@${CONTAINER_SBOM};type=application/json"
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_CDX_ID}\",\"tags\":[\"roastnode\",\"container\",\"${RELEASE_TAG}\",\"sha-${SOURCE_SHA}\",{\"name\":\"latest-container\",\"unique\":true}]}" \
+            -F "file=@${CONTAINER_CDX_SBOM};type=application/json"
 
       - name: Explain skipped exodos.io upload
-        if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_ID == '' }}
-        run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_ID is not configured."
+        if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_CDX_ID == '' }}
+        run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_CDX_ID is not configured."
+
+      - name: Upload container SDPX SBOM to exodos.io
+        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_SPDX_ID != '' }}
+        env:
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          api_url="${EXODOS_API_URL:-https://api.exodos.io}"
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_SPDX_ID}\",\"tags\":[\"roastnode\",\"container\",\"${RELEASE_TAG}\",\"sha-${SOURCE_SHA}\",{\"name\":\"latest-container\",\"unique\":true}]}" \
+            -F "file=@${CONTAINER_SPDX_SBOM};type=application/json"
+
+      - name: Explain skipped exodos.io upload
+        if: ${{ env.EXODOS_API_TOKEN == '' || env.EXODOS_INVENTORYROOT_SDPX_ID == '' }}
+        run: echo "Skipping exodos.io upload because EXODOS_API_TOKEN or EXODOS_INVENTORYROOT_CDX_ID is not configured."
