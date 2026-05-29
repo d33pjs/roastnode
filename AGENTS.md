@@ -1,63 +1,59 @@
 # Roastnode Agent Guide
 
-Roastnode is a private, self-hostable coffee tracking app for shared household workspaces. Treat the workspace as the ownership and authorization boundary.
+Roastnode is a private, self-hostable coffee tracking app for shared household workspaces. Treat `Workspace` as the ownership and authorization boundary.
+
+This file is the short operating guide for coding agents. Durable product decisions live in `docs/`; keep this file compact and link to the relevant docs instead of copying slice-level detail here.
+
+## Start Here
+
+- Read `docs/README.md` for the documentation map.
+- Read `docs/status.md` for what is built, what changed, and what remains open.
+- Read the specific docs for the area you are touching before editing code.
+- Update docs when a decision affects setup, architecture, data ownership, security, or deployment.
 
 ## Current Direction
 
 - Build a Rails monolith with Hotwire, Turbo, Stimulus, Tailwind CSS, PostgreSQL, Active Storage, and Solid Queue.
 - Prefer Rails-native, boring security patterns over custom cleverness.
 - Store measurements in canonical metric units: grams, seconds, Celsius.
-- Decimal measurement inputs should accept both `18.2` and German-style `18,2`, including common unit suffixes like `g`, `°C`, `€`, and `EUR`. Use comma-friendly text inputs with `inputmode="decimal"` for decimal measurements instead of HTML `number` inputs, and normalize submitted decimal params through `LocalizedNumberParser`. Display formatting for numbers and timestamps comes from `User#number_format` and `User#time_format`; workspace currency remains the currency code source.
-- Treat `Workspace` as the ownership boundary for domain data. Beans, equipment, brews, inventory, photos, and statistics should belong to a workspace unless a future ADR explicitly says otherwise.
-- Treat `User#instance_admin` as an application-level hosting/admin flag, separate from workspace roles. Instance-wide routes must use `authorize_instance_admin!` and must not leak passwords, sessions, invite tokens, signed media URLs, or infrastructure secrets. Keep `InstanceHealthSnapshot` checks read-only and safe for normal page loads.
-- Treat the instance backup system as v1 operational scope, separate from active-workspace export. It must be instance-admin-only, activated/configured inside the app, scheduled through Solid Queue, and able to produce both a full reconstructable archive and a readable all-households JSON export.
-- Keep documentation in `docs/` current as decisions land.
+- Keep data private by default. Do not leak passwords, sessions, invite tokens, signed media URLs, raw private media URLs, environment variables, or infrastructure secrets.
+- Keep recipes deferred until a dedicated recipes slice is explicitly chosen.
 
 ## Working Rules
 
 - Do not create a nested `roastnode/` app directory. The Rails app lives at the repository root.
 - Keep current solo development on `main`. Do not create separate Git branches or worktrees unless the user explicitly asks to re-enable branching for a specific task.
-- Commit often! Use descriptive and best-practice commit messages. Important: Remember especially commit your work after finishing a request!
+- Commit often with descriptive commit messages, especially after finishing a request.
 - Protect user changes. Do not revert unrelated local edits.
-- Scope early implementation to foundation, authentication, workspaces, memberships, and private household flows.
 - Use `current_workspace`, `current_membership`, and `current_workspace_policy` from `ApplicationController` instead of ad hoc workspace lookups in controllers.
-- Add tests for authorization and workspace isolation whenever adding workspace-scoped behavior.
-- Owners and admins can manage workspace settings and invite links. Workspace settings are singleton active-workspace routes and should not accept workspace IDs. Members can write normal workspace data. Viewers are read-only.
-- General product UI should use `User#display_label` instead of `email_address`. Keep email addresses on account/admin surfaces such as Profile, member lists, invites, exports, and the instance-admin account list.
-- Users can upload an avatar and public banner from Profile. The avatar may appear on screenshot-friendly brew cards next to the safe display label. Keep both files behind `MediaAttachmentsController`; "public banner" is product intent, not unauthenticated media delivery.
-- Invite links support private invite-only account creation. This is not public registration: account creation must require an acceptable invite token, and email-bound invites must only be accepted by matching normalized email addresses. Blank-email invites remain "anyone with the link" invites.
-- Espresso brew logging requires an open bean. Default to the current user's last active brewed bean, then the first open bean. Redirect to bean creation when no open bean exists. Copy only curated setup fields from the user's last brew: bean, grinder, machine, active preparation tools, grind setting, brew temperature, and pre-infusion seconds. Keep bean weight, ground-out weight, dose, beverage yield, total time, first drip, rating, notes, channeling, and taste fresh.
-- The new espresso form autofocuses `User#default_brew_focus_field` and hides fields listed in `User#hidden_brew_field_names`. Keep the supported focus list narrow and intentional; do not include rating, channeling, taste balance, or photos unless the product direction changes. Hideable fields are broader, but the bean selector and bean-in weight must remain visible because they are required for inventory.
-- The new espresso form uses browser-local draft recovery through the `brew-draft` Stimulus controller. Draft keys must stay scoped to the current workspace and user, and file/photo inputs must not be stored.
-- `root_path` is the user's preferred landing screen and may redirect to the espresso form. Use `dashboard_path` for explicit dashboard/back-to-dashboard navigation.
-- Brew corrections must use `Brew#update_with_inventory_correction!` and `Brew#destroy_with_inventory_reversal!` so bean inventory and brew inventory adjustments stay consistent.
-- Beans support rich metadata, edit/archive/reopen/duplicate workflows, additive package photos, and a destructive danger-zone delete. `Bean#bag_status` is derived from lifecycle fields: `stock` for unopened owned bags, `open` for brewable bags, `used_up` for zero remaining beans, and `archived` for bags intentionally removed from normal workflows. Duplicate bags should reset remaining grams to bag size, use the current date as opened date, clear archived state, and reuse existing photo blobs. Bean deletion must go through `Bean#destroy_with_history!` so the bean, its brews, and its inventory movements are removed in one transaction.
-- Manual bean inventory corrections use `InventoryAdjustment#save_with_inventory_update` with `reason = "manual"` so the adjustment record and bean remaining amount change together. Positive deltas add beans, negative deltas remove beans, and remaining inventory clamps at zero.
-- Espresso logging must disambiguate only duplicate open bean labels by appending the opened date.
-- Brew detail pages and the dashboard use the shared dense Hero Brew Card partial. Show `dose_grams` as Dose, show calculated brew ratio instead of duplicating beverage in the top metrics, show grinder retention from bean-in minus ground-out, render ratio time as smaller secondary text, render rating and balance as separate compact metric cards, keep the bean primary photo to the right of the bean name block, mark first drip in the chart when present, use a vertical right-edge temperature label, and display preparation tools from `BrewPreparationTool#tool_name` snapshots. Show grinder and machine primary photos only as tiny marks in the bottom equipment pills. Do not expose `email_address` on screenshot-friendly brew cards; use `User#display_label`, which falls back to `unknown username`. Keep full log fields such as channeling, notes, bean-in weight, and ground-out weight below the hero card on the brew detail page.
-- Brew detail pages should cross-link beans, grinder/machine equipment, and preparation tools below the hero card where the target exists. Keep the Hero Brew Card partial itself free of internal links, because dashboard cards wrap the whole hero card in the one brew-detail link. Use the shared `shared/back_link` partial for old "Back to..." links so mobile users get a real tap target.
-- Preparation tools are method-scoped checklist records, not equipment. Brews snapshot selected preparation tool names and preselect active tools from the user's last brew. Preparation tools support detail/edit screens, additive photos, primary-photo/crop/remove media controls, manual position ordering, archive/reopen lifecycle, danger-zone deletion, and query-backed detail analytics through `PreparationToolStatistics`. Preparation tool deletion must go through `PreparationTool#destroy_with_history!` so brew snapshots remain readable with their stored tool names.
-- Recipes are deliberately deferred. Do not introduce recipe tables, recipe snapshots, or recipe-based defaults in Coffee Core work.
-- Beanconqueror import is currently a conservative JSON subset. Preserve raw import data, use source UUIDs for duplicate handling, map supported rich bean metadata, skip unsupported records with warnings, and do not import media bytes yet.
-- Workspace analytics live in `WorkspaceStatistics`; keep aggregation workspace-scoped and query-backed until data volume justifies summaries. Manual date ranges and relative timeframe shortcuts apply to brew-derived metrics, while open bean counts, known bean spend, and bean breakdowns stay current inventory/catalog views. The `all_time` timeframe should expand to the active workspace's full brew history.
-- Bean detail analytics live in `BeanStatistics`; keep them scoped through the active workspace bean and query-backed until data volume justifies summaries. Bean detail date range filters apply to brew-derived analytics, while remaining percentage and open age stay current bag facts. Bean list rows show primary photos and remaining amount as `remaining of bag size`; keep channeling on the bean detail page, not the bean list.
-- Equipment detail analytics live in `EquipmentStatistics`; keep them scoped through the active workspace equipment record and query-backed until data volume justifies summaries. Equipment date range filters apply to brew-derived usage analytics, while service counters and maintenance event distributions stay current equipment-history views.
-- Preparation tool detail analytics live in `PreparationToolStatistics`; keep them scoped through the active workspace preparation tool and based on brew snapshots/associations. Preparation tool date range filters apply to brew-derived analytics, while active status, method, and position stay current tool facts.
-- Equipment supports edit/archive/reopen/delete workflows and additive photos. Equipment list rows show primary photos through private media routes. Archived equipment must be excluded from new brew and new equipment-event selection, but existing brew correction forms should retain the selected historical grinder/machine. Equipment deletion must go through `Equipment#destroy_with_history!` so brew history survives with cleared grinder/machine references.
-- Equipment events are first-class workspace records. Use them for grinder and machine maintenance history instead of burying maintenance in equipment notes. A single equipment event can have multiple `event_types`; writers can edit/delete events, and updates replace the selected event types and affected equipment links while preserving/additively attaching photos.
-- Photos are private workspace data attached through Active Storage. Render app photos through `media_attachment_path(attachment)`, or `media_attachment_path(attachment, variant: :thumbnail)` for in-page previews. Download them through `download_media_attachment_path(attachment)`, crop them through `crop_media_attachment_path(attachment)`, mark primary photos through `primary_media_attachment_path(attachment)`, and remove them through `MediaAttachmentsController#destroy` so active-workspace and write-policy checks stay centralized; do not use raw Active Storage blob/proxy/variant URLs in app views. Cropping is browser-canvas based and sends a normal replacement upload to the server. Brew detail pages include read-only related photo groups for the selected bean, equipment, and preparation tools.
-- Workspace media ZIP export is owner-only through `WorkspaceMediaArchiveBuilder`. It includes workspace logo/banner plus workspace-owned record photos with a manifest and the normal JSON export payload. It deliberately excludes user avatars/public banners until there is a separate account-data export decision.
-- Workspace settings include the household logo and banner. The household logo is a small identity mark on Hero Brew Cards. Workspace identity images are visible only for the active workspace and editable only by owners/admins.
-- Typography uses self-hosted Elms Sans from `app/assets/fonts/elmssans/` under the SIL Open Font License 1.1. Do not add runtime Google Fonts references; keep the vendored `OFL.txt` with the font files.
-- Branding assets live in `app/assets/images/brand/`. Use the shared brand partials with `logo_wordmark_transparent.png` and `logo_mark_transparent.png` for visible UI; the `*_transparent_bg.png` source files currently contain baked checkerboards, so avoid them until they are replaced by true alpha-transparent exports.
-- Workspace export is owner-only and uses the active workspace. Keep the JSON export structured for reconstruction, and keep beans/brews CSV exports flat for spreadsheet use. Omit sessions/passwords/invite tokens, and do not include signed media URLs or raw photo bytes in the JSON.
-- Instance backups intentionally cross workspace boundaries but only for instance admins. A full backup must include every household/workspace, users and memberships needed for restore, all coffee records, import metadata, inventory history, and all media files, including account media, in a format that can be re-imported into an empty new server. The readable JSON backup should contain all household/workspace data and stable media references while keeping media bytes in files. Never include password digests, sessions, invite tokens, signed URLs, environment variables, or infrastructure secrets in backup payloads.
-- Optional demo data is loaded explicitly with `bin/rails roastnode:demo:load`. Keep it idempotent and guarded against accidental production credentials.
-- Dashboard recent activity should include brews, equipment events, and manual inventory adjustments. Do not show automatic brew inventory adjustments as separate timeline entries.
+- Add authorization and workspace-isolation tests whenever adding workspace-scoped behavior.
+- Owners and admins manage workspace settings and invite links. Members can write normal workspace data. Viewers are read-only.
+- Workspace settings are singleton active-workspace routes and should not accept workspace IDs.
 
-## Local Development Intent
+## Product Docs By Area
 
-- Web server: prefer host port `3001`.
-- PostgreSQL: prefer host port `5433` because another local project already owns `5432`.
+- Workspace ownership, roles, invites, and active-workspace routing: `docs/workspace-core.md`
+- Workspace settings, logo/banner, and currency: `docs/workspace-settings.md`
+- Account labels, email placement, avatars, and public banners: `docs/account-privacy.md`
+- Decimal parsing, comma-friendly measurement inputs, and user number/time formats: `docs/formatting.md`
+- Espresso logging, bean/equipment basics, inventory, last-brew defaults, and recipe deferral: `docs/coffee-core.md`
+- Brew form focus and hidden-field preferences: `docs/brew-form-preferences.md`
+- Browser-local espresso draft recovery: `docs/brew-draft-recovery.md`
+- Brew corrections and inventory-safe update/delete helpers: `docs/brew-corrections.md`
+- Bean lifecycle, deletion, inventory corrections, analytics, and Beanconqueror import: `docs/coffee-core.md`, `docs/bean-danger-zone.md`, `docs/inventory-adjustments.md`, `docs/bean-analytics.md`, `docs/beanconqueror-import.md`
+- Hero Brew Card, brew detail cross-links, and mobile back-link behavior: `docs/brew-card.md`, `docs/navigation.md`
+- Equipment, equipment events, and preparation tools: `docs/equipment-lifecycle.md`, `docs/equipment-events.md`, `docs/preparation-tools.md`
+- Workspace analytics: `docs/statistics.md`
+- Private media, thumbnails, crop/primary/remove routes, and media authorization: `docs/private-media.md`
+- Workspace export and media ZIPs: `docs/workspace-export.md`
+- Instance admin and instance backups: `docs/instance-admin.md`, `docs/backup-system.md`
+- Demo data: `docs/demo-data.md`
+- Typography and branding assets: `docs/typography.md`, `docs/branding.md`
+- Local setup, ports, Docker Compose, and production notes: `docs/setup.md`, `docs/production-self-hosting.md`
+
+## Local Development
+
+- Prefer host port `3001` for the web server.
+- Prefer host port `5433` for PostgreSQL because another local project owns `5432`.
 - Docker Compose should run alongside other local projects without taking common host ports unnecessarily.
-- The current Compose image is `postgres:17.5`, chosen because it is already available locally and avoids blocking setup on a Docker image pull.
+- The current Compose image is `postgres:17.5`; see `docs/setup.md` for setup commands.

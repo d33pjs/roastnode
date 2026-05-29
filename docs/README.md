@@ -41,3 +41,4 @@ This folder is the durable project memory for humans and AI agents.
 - Add or update docs when a decision affects setup, architecture, data ownership, security, or deployment.
 - Prefer short, linked Markdown files over large catch-all documents.
 - Capture trade-offs and rejected options so future agents do not reopen settled decisions without cause.
+- Keep `AGENTS.md` as a compact operating guide. Move durable product and implementation rules into the relevant docs here, then link to them from `AGENTS.md`.
