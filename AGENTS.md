@@ -5,7 +5,6 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 ## Current Direction
 
 - Build a Rails monolith with Hotwire, Turbo, Stimulus, Tailwind CSS, PostgreSQL, Active Storage, and Solid Queue.
-- Keep v1 private by default. Public and federation features are future work and must not leak household data.
 - Prefer Rails-native, boring security patterns over custom cleverness.
 - Store measurements in canonical metric units: grams, seconds, Celsius.
 - Decimal measurement inputs should accept both `18.2` and German-style `18,2`, including common unit suffixes like `g`, `°C`, `€`, and `EUR`. Use comma-friendly text inputs with `inputmode="decimal"` for decimal measurements instead of HTML `number` inputs, and normalize submitted decimal params through `LocalizedNumberParser`. Display formatting for numbers and timestamps comes from `User#number_format` and `User#time_format`; workspace currency remains the currency code source.
@@ -18,7 +17,7 @@ Roastnode is a private, self-hostable coffee tracking app for shared household w
 
 - Do not create a nested `roastnode/` app directory. The Rails app lives at the repository root.
 - Keep current solo development on `main`. Do not create separate Git branches or worktrees unless the user explicitly asks to re-enable branching for a specific task.
-- Commit often with small, descriptive commits.
+- Commit often! Use descriptive and best-practice commit messages. Important: Remember especially commit your work after finishing a request!
 - Protect user changes. Do not revert unrelated local edits.
 - Scope early implementation to foundation, authentication, workspaces, memberships, and private household flows.
 - Use `current_workspace`, `current_membership`, and `current_workspace_policy` from `ApplicationController` instead of ad hoc workspace lookups in controllers.
