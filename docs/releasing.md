@@ -8,14 +8,16 @@ Roastnode is developed on the private Gitea origin and mirrored to GitHub. GitHu
 - GitHub runs `.github/workflows/source-sbom.yml` and `.github/workflows/release-container.yml` for release supply-chain artifacts only.
 - GitHub does not run duplicate Rails CI. The source SBOM and release workflows are separate from CI because they need GitHub Releases, GHCR, OIDC, Sigstore, and GitHub artifact attestations.
 - GitHub workflows include a `github.server_url == 'https://github.com'` guard so a Gitea runner that notices `.github/workflows` does not try to publish images or upload SBOMs.
-- Gitea push mirroring syncs commits, branches, and tags. Create GitHub Release objects on GitHub.
+- Gitea push mirroring syncs commits, branches, and tags. The release workflow creates or updates GitHub Release objects on GitHub.
 
 ## Required GitHub Settings
 
 Configure these in the mirrored GitHub repository:
 
 - Secret `EXODOS_API_TOKEN`: exodos.io API token.
-- Variable `EXODOS_INVENTORYROOT_ID`: exodos.io inventory root UUID.
+- Variable `EXODOS_INVENTORYROOT_ID`: exodos.io inventory root UUID for source SBOM uploads.
+- Variable `EXODOS_INVENTORYROOT_SPDX_ID`: exodos.io inventory root UUID for SPDX uploads.
+- Variable `EXODOS_INVENTORYROOT_CDX_ID`: exodos.io inventory root UUID for CycloneDX uploads.
 - Optional variable `EXODOS_API_URL`: defaults to `https://api.exodos.io`.
 
 GHCR publishing uses the built-in `GITHUB_TOKEN`. Keyless cosign signing and GitHub artifact attestations use GitHub OIDC, so no cosign private key is required.
@@ -52,16 +54,19 @@ If exodos.io settings are missing, the workflow keeps the SBOM artifact but skip
    ```
 
 4. Confirm Gitea mirrored the tag to GitHub.
-5. Create a GitHub Release from that tag.
-6. The GitHub `Release Container` workflow will:
+5. Run the GitHub `Release Container` workflow manually with `release_tag` set to the tag.
+6. Leave `publish_release` enabled for the normal path. The workflow creates the GitHub Release with generated assets attached before publication. This is required when GitHub release immutability is enabled, because published immutable releases cannot accept new or replacement assets.
+7. The GitHub `Release Container` workflow will:
    - Build `linux/amd64` and `linux/arm64` images.
    - Push the image to GHCR.
    - Apply `vX.Y.Z`, `X.Y.Z`, `X.Y`, `latest` for stable releases, and `sha-<short-commit>` tags.
-   - Generate an SPDX container SBOM.
+   - Generate SPDX and CycloneDX container SBOMs.
    - Attach the SBOM and an image digest file to the GitHub Release.
    - Sign the image digest with keyless cosign.
    - Create GitHub provenance and SBOM attestations.
-   - Upload the container SBOM to exodos.io with tags `roastnode`, `container`, the release tag, the commit SHA, and unique `latest-container`.
+   - Upload the container SBOMs to exodos.io with tags `roastnode`, `container`, the release tag, the commit SHA, and unique `latest-container`.
+
+If you want to inspect the release before publication, create a draft release or run the workflow with `publish_release` disabled, confirm the attached assets, then publish the draft. Do not publish the release before the assets are attached when release immutability is enabled.
 
 ## Verifying a Release
 
