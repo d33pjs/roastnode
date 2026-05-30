@@ -531,8 +531,24 @@ en:
     index:
       eyebrow: "Private coffee infrastructure"
       intro: "Roastnode is the shared household workspace for beans, brews, equipment, inventory, photos, and the coffee data you should not have to ask for twice."
+      setup_first_user: "Set up first account"
       sign_in: "Sign in"
       title: "Roastnode"
+  first_user_setups:
+    already_configured: "First-user setup is already complete."
+    create:
+      created: "First account created."
+    new:
+      email_address: "Email"
+      eyebrow: "First run"
+      intro: "Create the first account for this private Roastnode instance. Household setup comes next."
+      password: "Password"
+      password_confirmation: "Confirm password"
+      submit: "Create first account"
+      title: "Create the first account"
+  sessions:
+    new:
+      setup_first_user: "Set up first account"
   instance_admin:
     backup_profiles:
       create:

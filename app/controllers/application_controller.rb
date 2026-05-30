@@ -6,7 +6,7 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
-  helper_method :current_workspace, :current_membership, :current_workspace_policy
+  helper_method :current_workspace, :current_membership, :current_workspace_policy, :first_user_setup_available?
 
   private
     def normalize_decimal_attributes(attributes, *keys)
@@ -33,6 +33,10 @@ class ApplicationController < ActionController::Base
 
     def current_workspace_policy
       @current_workspace_policy ||= WorkspacePolicy.new(current_membership)
+    end
+
+    def first_user_setup_available?
+      !User.exists?
     end
 
     def authorize_workspace_admin!

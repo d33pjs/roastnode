@@ -9,6 +9,9 @@
       <p class="mt-5 text-lg leading-8 text-stone-700"><%= t(".intro") %></p>
       <div class="mt-8 flex flex-wrap gap-3">
         <%= link_to t(".sign_in"), new_session_path, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+        <% if first_user_setup_available? %>
+          <%= link_to t(".setup_first_user"), new_first_user_setup_path, class: "rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+        <% end %>
       </div>
     </div>
   </section>
