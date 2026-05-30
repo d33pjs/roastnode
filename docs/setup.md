@@ -47,7 +47,7 @@ bin/dev
 
 Open `http://localhost:3001`.
 
-After signing in, users without a workspace are prompted to create a private household workspace. That user becomes the workspace owner and can create invite links. Existing users can accept invite links after signing in, and new users can create an account directly from a valid invite link.
+On a fresh instance with no users, open `http://localhost:3001` and choose first account setup. That creates the initial user account, signs it in, and marks it as the instance admin. The existing household onboarding screen then creates the first private workspace. After that, additional users can join only from valid workspace invite links.
 
 ## Optional Demo Data
 

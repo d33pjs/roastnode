@@ -7,7 +7,7 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 ## Built Now
 
 - Rails 8.1 monolith at the repository root, with PostgreSQL, Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
-- Rails-native authentication, password reset flow, private-by-default app shell, and an instance admin dashboard with safe read-only checks plus backup controls.
+- Rails-native authentication, first-user setup for empty installs, password reset and signed-in password change flows, private-by-default app shell, and an instance admin dashboard with safe read-only checks plus backup controls.
 - Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with private invite-only account creation, memberships page, and workspace-scoped controller patterns.
 - Profile settings: display name, username-style display label, avatar, public banner, preferred landing screen, espresso focus field, hidden espresso fields, number format, and time format.
 - Workspace settings: household name, currency, logo, and banner.
