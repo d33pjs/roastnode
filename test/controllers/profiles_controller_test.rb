@@ -20,6 +20,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name=?]", "user[default_brew_focus_field]"
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "notes"
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "photos"
+    assert_select "a[href=?]", edit_password_change_path, text: I18n.t("profiles.edit.change_password")
     assert_select "a[data-testid=back-link][href=?]", dashboard_path
   end
 

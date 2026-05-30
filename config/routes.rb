@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   resource :session
   resources :passwords, param: :token
   resource :first_user_setup, path: "setup/first_user", only: %i[new create]
+  resource :password_change, only: %i[edit update]
 
   root "home#index"
   get "dashboard" => "home#dashboard", as: :dashboard

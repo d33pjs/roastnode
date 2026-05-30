@@ -790,6 +790,7 @@ en:
       landing_screens:
         dashboard: "Dashboard"
         log_espresso: "Log espresso"
+      change_password: "Change password"
       number_format: "Number format"
       number_formats:
         comma_decimal: "1.234,5"
@@ -808,6 +809,17 @@ en:
       username: "Username"
     update:
       updated: "Profile updated."
+  password_changes:
+    edit:
+      back: "Back to profile"
+      current_password: "Current password"
+      password: "New password"
+      password_confirmation: "Confirm new password"
+      save: "Change password"
+      title: "Change password"
+    update:
+      current_password_invalid: "is not correct"
+      updated: "Password changed."
   statistics:
     index:
       average_brew_cost: "Average brew cost"
