@@ -13,6 +13,18 @@ class WebauthnInitializerTest < ActiveSupport::TestCase
     end
   end
 
+  test "delimiter only production origin is rejected" do
+    with_env("ROASTNODE_WEBAUTHN_ORIGIN" => ", , ") do
+      with_rails_env("production") do
+        error = assert_raises(RuntimeError) do
+          load Rails.root.join("config/initializers/webauthn.rb").to_s
+        end
+
+        assert_equal "ROASTNODE_WEBAUTHN_ORIGIN is required in production", error.message
+      end
+    end
+  end
+
   private
     def with_rails_env(environment)
       original_env = Rails.env
