@@ -127,6 +127,19 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]"
   end
 
+  test "brew form renders taste balance as styled choices" do
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "select[name=?]", "brew[taste_balance]", count: 0
+    assert_select "[data-testid=brew-taste-balance-options]"
+    assert_select "input[type=radio][name=?]", "brew[taste_balance]", count: Brew.taste_balances.size
+    assert_select "input[type=radio][name=?][value=?]", "brew[taste_balance]", "neutral"
+    assert_select ".rn-choice-label", text: "Neutral"
+  end
+
   test "new renders shot-first form sections in approved order" do
     sign_in_as(users(:one))
 
@@ -520,12 +533,11 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-taste-correction]"
     assert_select "form[action=?][method=post]", taste_brew_path(brew)
     assert_select "input[name=_method][value=patch]"
-    assert_select "select[name=?]", "brew[taste_balance]" do |elements|
-      class_name = elements.first["class"]
-      assert_includes class_name, "rounded-2xl"
-      assert_includes class_name, "border-rn-line"
-      assert_includes class_name, "text-rn-ink"
-    end
+    assert_select "select[name=?]", "brew[taste_balance]", count: 0
+    assert_select "[data-testid=brew-taste-balance-options]"
+    assert_select "input[type=radio][name=?]", "brew[taste_balance]", count: Brew.taste_balances.size
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[taste_balance]", brew.taste_balance
+    assert_select ".rn-choice-label", text: brew.taste_balance.humanize
     assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]" do |elements|
       class_name = elements.first["class"]
       assert_includes class_name, "rounded-2xl"

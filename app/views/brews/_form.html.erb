@@ -198,9 +198,9 @@
       <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.taste") %></h2>
       <div class="mt-3 grid gap-3 sm:grid-cols-2">
         <% unless hide_brew_field.call(:taste_balance) %>
-          <div>
+          <div class="sm:col-span-2">
             <%= form.label :taste_balance, t("brews.form.taste"), class: "block text-sm font-bold text-rn-muted" %>
-            <%= form.select :taste_balance, Brew.taste_balances.keys.map { |balance| [ balance.humanize, balance ] }, {}, class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+            <%= render "brews/taste_balance_choices", form: form %>
           </div>
         <% end %>
 

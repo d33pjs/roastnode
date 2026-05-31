@@ -27,9 +27,9 @@
             </div>
           <% end %>
 
-          <div>
+          <div class="sm:col-span-3">
             <%= form.label :taste_balance, t(".taste"), class: taste_correction_label_class %>
-            <%= form.select :taste_balance, Brew.taste_balances.keys.map { |balance| [ balance.humanize, balance ] }, {}, class: taste_correction_input_class %>
+            <%= render "brews/taste_balance_choices", form: form %>
           </div>
 
           <div>
