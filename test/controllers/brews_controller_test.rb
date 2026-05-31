@@ -520,8 +520,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-taste-correction]"
     assert_select "form[action=?][method=post]", taste_brew_path(brew)
     assert_select "input[name=_method][value=patch]"
-    assert_select "select[name=?]", "brew[taste_balance]"
-    assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]"
+    assert_select "select[name=?]", "brew[taste_balance]" do |elements|
+      class_name = elements.first["class"]
+      assert_includes class_name, "rounded-2xl"
+      assert_includes class_name, "border-rn-line"
+      assert_includes class_name, "text-rn-ink"
+    end
+    assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]" do |elements|
+      class_name = elements.first["class"]
+      assert_includes class_name, "rounded-2xl"
+      assert_includes class_name, "border-rn-line"
+      assert_includes class_name, "text-rn-ink"
+    end
     assert_select "input[type=submit][value=?]", I18n.t("brews.show.save_taste")
   end
 

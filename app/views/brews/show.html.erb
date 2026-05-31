@@ -16,26 +16,28 @@
     <%= render "brews/hero_card", brew: @brew, card_class: "mt-5" %>
 
     <% if current_workspace_policy.write? %>
-      <section data-testid="brew-taste-correction" class="mt-6 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <h2 class="text-lg font-semibold text-stone-950"><%= t(".adjust_taste") %></h2>
+      <% taste_correction_label_class = "block text-sm font-bold text-rn-muted" %>
+      <% taste_correction_input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+      <section data-testid="brew-taste-correction" class="mt-6 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+        <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".adjust_taste") %></h2>
         <%= form_with model: @brew, url: taste_brew_path(@brew), method: :patch, class: "mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end" do |form| %>
           <% if @brew.errors.any? %>
-            <div class="rounded-md border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 sm:col-span-3">
+            <div class="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 sm:col-span-3">
               <%= @brew.errors.full_messages.to_sentence %>
             </div>
           <% end %>
 
           <div>
-            <%= form.label :taste_balance, t(".taste"), class: "block text-sm font-bold text-stone-600" %>
-            <%= form.select :taste_balance, Brew.taste_balances.keys.map { |balance| [ balance.humanize, balance ] }, {}, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+            <%= form.label :taste_balance, t(".taste"), class: taste_correction_label_class %>
+            <%= form.select :taste_balance, Brew.taste_balances.keys.map { |balance| [ balance.humanize, balance ] }, {}, class: taste_correction_input_class %>
           </div>
 
           <div>
-            <%= form.label :rating, t(".rating"), class: "block text-sm font-bold text-stone-600" %>
-            <%= form.number_field :rating, min: 1, max: 5, step: 1, inputmode: "numeric", class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+            <%= form.label :rating, t(".rating"), class: taste_correction_label_class %>
+            <%= form.number_field :rating, min: 1, max: 5, step: 1, inputmode: "numeric", class: taste_correction_input_class %>
           </div>
 
-          <%= form.submit t(".save_taste"), class: "rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+          <%= form.submit t(".save_taste"), class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>
         <% end %>
       </section>
     <% end %>
