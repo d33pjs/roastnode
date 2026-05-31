@@ -37,6 +37,18 @@ en:
     rate_limited: "Try again later."
     create:
       failed: "Passkey sign-in failed."
+  passkey_second_factors:
+    rate_limited: "Try again later."
+    create:
+      expired: "Passkey verification expired. Sign in again."
+      failed: "Passkey verification failed."
+    options:
+      expired: "Passkey verification expired. Sign in again."
+    show:
+      expired: "Passkey verification expired. Sign in again."
+      intro: "Use one of your passkeys to finish signing in."
+      title: "Verify passkey"
+      verify: "Verify with passkey"
   passkey_credentials:
     create:
       failed: "Passkey could not be added."

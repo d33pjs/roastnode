@@ -15,6 +15,18 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert cookies[:session_id]
   end
 
+  test "create with valid credentials and passkey second factor redirects without creating session" do
+    user = users(:one)
+    user.update!(passkey_second_factor_enabled: true)
+
+    assert_no_difference -> { user.sessions.count } do
+      post session_path, params: { email_address: user.email_address, password: "password" }
+    end
+
+    assert_redirected_to passkey_second_factor_path
+    assert_nil cookies[:session_id]
+  end
+
   test "create with invalid credentials" do
     post session_path, params: { email_address: @user.email_address, password: "wrong" }
 

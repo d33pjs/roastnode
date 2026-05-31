@@ -3,6 +3,9 @@ Rails.application.routes.draw do
   resource :passkey_session, only: :create, path: "session/passkey" do
     post :options
   end
+  resource :passkey_second_factor, only: %i[show create], path: "session/passkey_second_factor" do
+    post :options
+  end
   resources :passwords, param: :token
   resource :first_user_setup, path: "setup/first_user", only: %i[new create]
   resource :password_change, only: %i[edit update]
