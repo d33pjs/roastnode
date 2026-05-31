@@ -8,7 +8,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 
 - Rails 8.1 monolith at the repository root, with PostgreSQL, Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
 - Rails-native authentication, first-user setup for empty installs, password reset and signed-in password change flows, private-by-default app shell, and an instance admin dashboard with safe read-only checks plus backup controls.
-- Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with private invite-only account creation, member role management/removal, owner-only ownership transfer, owner-only workspace deletion, and workspace-scoped controller patterns.
+- Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with optional email delivery, resend/re-invite for email-bound invites, private invite-only account creation, member role management/removal, owner-only ownership transfer, owner-only workspace deletion, and workspace-scoped controller patterns.
 - Profile settings: display name, username-style display label, avatar, public banner, preferred landing screen, espresso focus field, hidden espresso fields, number format, and time format.
 - Workspace settings: household name, currency, logo, and banner.
 - Coffee core: rich beans, equipment, espresso brews, inventory adjustments, retention markers, dashboard activity, and required-open-bean espresso logging.
@@ -24,7 +24,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Private media: app photos are served through `MediaAttachmentsController`, with active-workspace checks, private thumbnail variants, view/download/crop/primary/remove controls, and related photo groups.
 - Active-workspace export: owner-only structured JSON, beans CSV, brews CSV, and media ZIP with manifest for workspace-owned media.
 - Instance backups: instance-admin-only backup profiles can be activated/configured in the app, scheduled through Solid Queue, run manually, tracked with run history/error metadata, retained by profile policy, written as either full media ZIP archives or readable all-households JSON, validated, and restored into an empty server through Rails tasks with ID remapping and media integrity checks.
-- Instance admin operations: read-only backup coverage/status, Solid Queue job counts, failed-job/failure surfacing, worker visibility, and workspace export availability with redacted operational errors.
+- Instance admin operations: read-only backup coverage/status, SMTP status, recent mail delivery failures, Solid Queue job counts, failed-job/failure surfacing, worker visibility, and workspace export availability with redacted operational errors.
 - Beanconqueror import: conservative JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, all-time bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed.
 - Production self-hosting guide: deployment assumptions, environment/secrets handling, storage volume guidance, Ansible-friendly Compose/env examples, digest-based image upgrades, backup validation, empty-server restore drills, and upgrade checks.

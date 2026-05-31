@@ -30,6 +30,8 @@ Signed-in users can accept an invite directly. People without an account can cre
 
 Invites with `email_address` are email-bound: only a user account with that normalized email address can accept them. Blank-email invites remain "anyone with the link" invites.
 
+Email-bound invites queue an invite email when created. Owners and admins can resend an active email-bound invite or re-invite from a closed email-bound invite, which creates a fresh token with the same email and role. Blank-email invites keep the copyable-link fallback and do not offer send actions.
+
 ## Member Management
 
 Owners can manage admins, members, and viewers from the active workspace members page. Admins can manage members and viewers only. Members and viewers can read the member list but cannot change roles or remove members.

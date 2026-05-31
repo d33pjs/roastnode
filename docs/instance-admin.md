@@ -4,7 +4,7 @@ Roastnode has an instance-level admin surface at `/instance_admin`.
 
 ## Scope
 
-The page is intentionally small. It shows private-install status, read-only health checks, backup profile controls, aggregate counts, and a read-only account list for private hosting. It also reminds admins that optional demo data is loaded explicitly with:
+The page is intentionally small. It shows private-install status, read-only health checks, mail delivery diagnostics, backup profile controls, aggregate counts, and a read-only account list for private hosting. It also reminds admins that optional demo data is loaded explicitly with:
 
 ```sh
 bin/rails roastnode:demo:load
@@ -40,6 +40,12 @@ Controllers that expose instance-wide data should use `authorize_instance_admin!
 - Rails version and environment
 
 These checks are read-only. Keep them safe to run during normal page loads. Do not add checks that enqueue jobs, write files, mutate records, call external services, or expose infrastructure secrets.
+
+## Mail Diagnostics
+
+The operations section shows whether SMTP appears enabled from runtime settings and lists recent mail delivery failures recorded by Solid Queue. This is meant for private operators debugging password reset or invite email delivery.
+
+Mail diagnostics must remain read-only. They may show the mailer job class, queue, failure time, and a short redacted error message. They must not render job arguments, invite tokens, raw email payloads, SMTP passwords, session data, signed media URLs, or environment variables.
 
 ## Account List
 
