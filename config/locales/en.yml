@@ -33,6 +33,11 @@ en:
       european_seconds: "%d.%m.%Y %H:%M:%S"
   authorization:
     denied: "You do not have permission to do that."
+  passkey_sessions:
+    create:
+      failed: "Passkey sign-in failed."
+    options:
+      rate_limited: "Try again later."
   passkey_credentials:
     create:
       failed: "Passkey could not be added."
