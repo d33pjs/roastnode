@@ -18,7 +18,7 @@ Rails.application.routes.draw do
   resources :workspaces, only: [] do
     patch :switch, on: :member
   end
-  resources :memberships, only: :index
+  resources :memberships, only: %i[index update destroy]
   resources :workspace_invites, only: %i[index create show], param: :token do
     post :accept, on: :member
     post :signup, on: :member

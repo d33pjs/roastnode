@@ -868,11 +868,21 @@ en:
       submit: "Create workspace"
       title: "Create your household workspace"
   memberships:
+    destroy:
+      removed: "Member removed."
     index:
       back: "Back to dashboard"
       email: "Email"
       role: "Role"
       title: "Workspace members"
+    update:
+      updated: "Member role updated."
+  workspace_membership_manager:
+    errors:
+      invalid_role: "Choose a supported role."
+      last_owner: "A workspace must keep at least one owner."
+      transfer_self: "Choose another member to transfer ownership."
+      unauthorized: "You cannot manage that member."
   workspace_invites:
     accept:
       accepted: "Joined %{workspace}."
