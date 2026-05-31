@@ -959,6 +959,9 @@ en:
       unavailable_body: "Ask a workspace owner or admin for a fresh invite link."
       unavailable_eyebrow: "Invite unavailable"
       unavailable_title: "This invite is not available"
+  workspace_invites_mailer:
+    invite:
+      subject: "Join %{workspace} on Roastnode"
   workspaces:
     destroy:
       confirmation_mismatch: "Type the workspace name to confirm deletion."

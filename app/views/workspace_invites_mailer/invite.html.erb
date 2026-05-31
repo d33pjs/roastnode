@@ -1,0 +1,10 @@
+<p>
+  You have been invited to join <strong><%= @workspace_invite.workspace.name %></strong> on Roastnode
+  with the <%= @workspace_invite.role.humanize %> role.
+</p>
+
+<p>
+  <%= link_to "Accept this workspace invite", workspace_invite_url(@workspace_invite.token) %>
+</p>
+
+<p>This invite expires on <%= l(@workspace_invite.expires_at, format: :european_seconds) %>.</p>
