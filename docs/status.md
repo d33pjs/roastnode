@@ -2,7 +2,7 @@
 
 Last reviewed: 2026-05-30
 
-This is the compact status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done, intentionally deferred, or next.
+This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
 ## Built Now
 
@@ -39,27 +39,9 @@ This is the compact status ledger for humans and AI agents. It distills the orig
 - The first analytics implementation is server-rendered/query-backed. ECharts/Stimulus interactivity remains optional future work.
 - User public banner is a product concept, but uploaded files remain private behind authenticated media routes.
 
-## Still Missing For v1
+## Private Open Topics
 
-- Workspace administration polish: workspace deletion, ownership transfer, richer member management, and any public/private registration settings chosen for private installs.
-
-## Later Versions / v2+
-
-- Recipes and recipe snapshots: target definitions for espresso and other methods, default preparation tools, target dose/yield/time ranges, and brew-time snapshots.
-- Non-espresso method templates beyond the espresso-first household workflow.
-- Full i18n: complete locale files, German UI, and broader unit preferences beyond the current metric storage and comma-friendly number parsing.
-- Beanconqueror depth: media import, settings, waters, green beans, pressure profiles, graph/device data, duplicate review, and full round-trip export.
-- Analytics depth: interactive ECharts/Stimulus charting, richer correlations/recommendations, equipment event markers inside charts, and materialized summaries for large data sets.
-- Grinder setting formats: add grinder-level configuration for setting notation, starting with explicit choices like free text, auto-detect, Eureka dial, and plain numeric. Keep auto-detection conservative, then let grinder owners choose the parser when their grinder notation differs from common patterns. Future recommendation tuning can add grinder-specific target profiles, pre-infusion handling preferences, and clearer confidence/explanation signals.
-- Maintenance automation: reminders, notification schedules, and recurring service suggestions.
-- Media infrastructure: direct-upload progress, S3-compatible storage hardening, object lifecycle cleanup, and more advanced storage policies.
-- Brew-card sharing: generated image export, public share links, and any social/comment/reaction surface.
-- Public and roaster future: public profiles, public brew sharing, roaster catalog publishing, public/private coffee profile split, roaster workspaces, verification, marketplace checkout, billing/subscriptions, and moderation tools.
-- Federation and wider app surfaces: ActivityPub or other federation for public content only, native mobile apps, offline mode, device/smart-scale integrations, cafe workflows, and full custom form builder.
-
-## Good Next Slices
-
-- Workspace administration polish: deletion, ownership transfer, and richer member management.
+Current roadmap and open-topic notes are intentionally kept out of the public repository.
 
 ## Source Files
 

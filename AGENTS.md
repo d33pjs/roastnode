@@ -7,7 +7,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 ## Start Here
 
 - Read `docs/README.md` for the documentation map.
-- Read `docs/status.md` for what is built, what changed, and what remains open.
+- Read `docs/status.md` for what is built and what changed.
 - Read the specific docs for the area you are touching before editing code.
 - Update docs when a decision affects setup, architecture, data ownership, security, or deployment.
 

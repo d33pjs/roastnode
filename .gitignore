@@ -10,6 +10,9 @@
 /tmp/
 .DS_Store
 
+# Private planning notes for public repositories.
+/docs/open-topics.md
+
 
 # Ignore key files for decrypting credentials and more.
 /config/*.key
