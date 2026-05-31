@@ -57,3 +57,4 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Prefer host port `5433` for PostgreSQL because another local project owns `5432`.
 - Docker Compose should run alongside other local projects without taking common host ports unnecessarily.
 - The current Compose image is `postgres:17.5`; see `docs/setup.md` for setup commands.
+- After finishing user-facing product changes, start the local development server so the user can check the result. Use `bin/rails server -p 3001 -b 0.0.0.0` unless another command is specifically needed.
