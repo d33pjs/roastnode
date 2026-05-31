@@ -1,8 +1,18 @@
-<div data-testid="brew-taste-balance-options" class="rn-choice-grid mt-2">
-  <% Brew.taste_balances.keys.each do |balance| %>
-    <label class="rn-choice">
-      <%= form.radio_button :taste_balance, balance, class: "rn-choice-input" %>
-      <span class="rn-choice-label"><%= balance.humanize %></span>
-    </label>
-  <% end %>
+<% unknown_balance = "unknown" %>
+<% balance_scale = Brew.taste_balances.keys - [ unknown_balance ] %>
+
+<div data-testid="brew-taste-balance-options" class="rn-taste-balance mt-2">
+  <label data-testid="brew-taste-unknown-choice" class="rn-choice rn-choice-unknown">
+    <%= form.radio_button :taste_balance, unknown_balance, class: "rn-choice-input" %>
+    <span class="rn-choice-label rn-choice-label-muted"><%= unknown_balance.humanize %></span>
+  </label>
+
+  <div data-testid="brew-taste-balance-scale" class="rn-balance-scale" aria-label="Taste balance scale">
+    <% balance_scale.each do |balance| %>
+      <label class="rn-choice rn-balance-choice">
+        <%= form.radio_button :taste_balance, balance, class: "rn-choice-input" %>
+        <span class="rn-choice-label rn-balance-label"><%= balance.humanize %></span>
+      </label>
+    <% end %>
+  </div>
 </div>

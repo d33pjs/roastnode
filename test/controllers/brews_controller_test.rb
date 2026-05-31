@@ -136,6 +136,11 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name=?]", "brew[taste_balance]", count: 0
     assert_select "[data-testid=brew-taste-balance-options]"
     assert_select "input[type=radio][name=?]", "brew[taste_balance]", count: Brew.taste_balances.size
+    assert_select "[data-testid=brew-taste-unknown-choice] input[type=radio][name=?][value=?]",
+      "brew[taste_balance]",
+      "unknown"
+    assert_select "[data-testid=brew-taste-balance-scale] input[type=radio][name=?]", "brew[taste_balance]", count: Brew.taste_balances.size - 1
+    assert_select "[data-testid=brew-taste-balance-scale] input[type=radio][value=?]", "unknown", count: 0
     assert_select "input[type=radio][name=?][value=?]", "brew[taste_balance]", "neutral"
     assert_select ".rn-choice-label", text: "Neutral"
   end
@@ -536,6 +541,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name=?]", "brew[taste_balance]", count: 0
     assert_select "[data-testid=brew-taste-balance-options]"
     assert_select "input[type=radio][name=?]", "brew[taste_balance]", count: Brew.taste_balances.size
+    assert_select "[data-testid=brew-taste-unknown-choice] input[type=radio][name=?][value=?]",
+      "brew[taste_balance]",
+      "unknown"
+    assert_select "[data-testid=brew-taste-balance-scale] input[type=radio][name=?]", "brew[taste_balance]", count: Brew.taste_balances.size - 1
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[taste_balance]", brew.taste_balance
     assert_select ".rn-choice-label", text: brew.taste_balance.humanize
     assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]" do |elements|
