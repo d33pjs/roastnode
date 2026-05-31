@@ -205,6 +205,34 @@ jobs:
             printf '%s\n' "${TAGS}"
           } > "$IMAGE_DIGEST_FILE"
 
+      - name: Add image digest to workflow summary
+        env:
+          IMAGE_REF: ${{ steps.image.outputs.ref }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+        run: |
+          set -euo pipefail
+
+          {
+            echo "## Container image"
+            echo
+            echo "Digest-pinned image:"
+            echo
+            echo '```'
+            echo "${IMAGE_REF}@${IMAGE_DIGEST}"
+            echo '```'
+            echo
+            echo "Digest:"
+            echo
+            echo '```'
+            echo "${IMAGE_DIGEST}"
+            echo '```'
+            echo
+            echo "- Release tag: \`${RELEASE_TAG}\`"
+            echo "- Source commit: \`${SOURCE_SHA}\`"
+            echo "- Release asset: \`${IMAGE_DIGEST_FILE}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Attach SBOM and digest to GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
