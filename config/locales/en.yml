@@ -34,10 +34,9 @@ en:
   authorization:
     denied: "You do not have permission to do that."
   passkey_sessions:
+    rate_limited: "Try again later."
     create:
       failed: "Passkey sign-in failed."
-    options:
-      rate_limited: "Try again later."
   passkey_credentials:
     create:
       failed: "Passkey could not be added."

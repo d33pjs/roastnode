@@ -2,7 +2,7 @@ class PasskeySessionsController < ApplicationController
   include PasskeyChallenges
 
   allow_unauthenticated_access only: %i[options create]
-  rate_limit to: 10, within: 3.minutes, only: %i[options create], with: -> { render json: { error: t(".rate_limited") }, status: :too_many_requests }
+  rate_limit to: 10, within: 3.minutes, only: %i[options create], with: -> { render json: { error: t("passkey_sessions.rate_limited") }, status: :too_many_requests }
 
   def options
     challenge, options = Passkeys::Options.authentication_for
@@ -23,12 +23,15 @@ class PasskeySessionsController < ApplicationController
     redirect_url = after_authentication_url
     redirect_url = root_path if redirect_url == root_url
     render json: { redirect_url: }
-  rescue ActiveRecord::RecordNotFound, WebAuthn::Error
+  rescue ActiveRecord::RecordNotFound, ActionController::ParameterMissing, WebAuthn::Error
     render json: { error: t(".failed") }, status: :unprocessable_entity
   end
 
   private
     def credential_params
-      params.require(:credential).permit!.to_h
+      credential = params.require(:credential)
+      raise ActionController::ParameterMissing, :credential unless credential.respond_to?(:permit!)
+
+      credential.permit!.to_h
     end
 end
