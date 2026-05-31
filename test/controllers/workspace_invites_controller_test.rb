@@ -13,6 +13,18 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", workspace_invites_path
   end
 
+  test "active invite revoke action remains reachable in the scrollable invite list" do
+    sign_in_as(users(:one))
+    invite = workspace_invites(:member_invite)
+
+    get workspace_invites_path
+
+    assert_response :success
+    assert_select "div.overflow-x-auto" do
+      assert_select "form[action=?]", revoke_workspace_invite_path(invite.token)
+    end
+  end
+
   test "workspace owner can create invite" do
     sign_in_as(users(:one))
 
