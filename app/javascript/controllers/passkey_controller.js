@@ -12,6 +12,7 @@ export default class extends Controller {
     this.clearError()
 
     try {
+      this.ensurePasskeySupport("create")
       const options = await this.postJson(this.optionsUrlValue, {
         current_password: this.currentPasswordTarget.value
       })
@@ -34,6 +35,7 @@ export default class extends Controller {
     this.clearError()
 
     try {
+      this.ensurePasskeySupport("get")
       const options = await this.postJson(this.optionsUrlValue, {})
       const credential = await navigator.credentials.get({
         publicKey: this.decodeRequestOptions(options)
@@ -62,6 +64,16 @@ export default class extends Controller {
     }
 
     return payload
+  }
+
+  ensurePasskeySupport(operation) {
+    if (window.isSecureContext === false) {
+      throw new Error("Passkeys require HTTPS. For local development, open Roastnode at http://localhost:3001.")
+    }
+
+    if (!window.PublicKeyCredential || !navigator.credentials?.[operation]) {
+      throw new Error("This browser does not support passkeys.")
+    }
   }
 
   jsonHeaders() {

@@ -38,6 +38,8 @@ ROASTNODE_DEV_HOSTS=coffee-box.local bin/rails server -p 3001 -b 0.0.0.0
 
 Passkey development defaults to `http://localhost:3001`, matching the preferred local Rails port. If you use a different local hostname or port, set `ROASTNODE_WEBAUTHN_ORIGIN` before starting Rails.
 
+Browser passkey APIs require a secure context. `http://localhost:3001` works for local development, but an HTTP LAN hostname such as `http://coffee-box.local:3001` will not expose passkeys unless you serve it over HTTPS.
+
 ## First Setup
 
 ```bash
