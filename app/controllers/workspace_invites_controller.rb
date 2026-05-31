@@ -1,8 +1,8 @@
 class WorkspaceInvitesController < ApplicationController
   allow_unauthenticated_access only: %i[show signup]
 
-  before_action :authorize_workspace_admin!, only: %i[index create revoke]
-  before_action :set_workspace_invite, only: :revoke
+  before_action :authorize_workspace_admin!, only: %i[index create revoke resend reinvite]
+  before_action :set_workspace_invite, only: %i[revoke resend reinvite]
 
   def index
     @workspace_invites = current_workspace.workspace_invites.order(created_at: :desc)
@@ -21,9 +21,13 @@ class WorkspaceInvitesController < ApplicationController
   end
 
   def create
-    current_workspace.workspace_invites.create!(workspace_invite_params.merge(created_by: Current.user))
+    @workspace_invite = current_workspace.workspace_invites.create!(workspace_invite_params.merge(created_by: Current.user))
 
-    redirect_to workspace_invites_path, notice: t(".created")
+    unless deliver_invite_later(@workspace_invite)
+      return redirect_to workspace_invites_path, alert: t(".delivery_failed")
+    end
+
+    redirect_to workspace_invites_path, notice: t(@workspace_invite.email_address.present? ? ".created_and_sent" : ".created")
   end
 
   def accept
@@ -71,6 +75,36 @@ class WorkspaceInvitesController < ApplicationController
     redirect_to workspace_invites_path, notice: t(".revoked")
   end
 
+  def resend
+    unless @workspace_invite.email_address.present? && @workspace_invite.acceptable?
+      return redirect_to workspace_invites_path, alert: t(".unavailable")
+    end
+
+    unless deliver_invite_later(@workspace_invite)
+      return redirect_to workspace_invites_path, alert: t(".delivery_failed")
+    end
+
+    redirect_to workspace_invites_path, notice: t(".queued")
+  end
+
+  def reinvite
+    unless @workspace_invite.email_address.present? && !@workspace_invite.acceptable?
+      return redirect_to workspace_invites_path, alert: t(".unavailable")
+    end
+
+    fresh_invite = current_workspace.workspace_invites.create!(
+      email_address: @workspace_invite.email_address,
+      role: @workspace_invite.role,
+      created_by: Current.user
+    )
+
+    unless deliver_invite_later(fresh_invite)
+      return redirect_to workspace_invites_path, alert: t(".delivery_failed")
+    end
+
+    redirect_to workspace_invites_path, notice: t(".queued")
+  end
+
   private
     def set_workspace_invite
       @workspace_invite = current_workspace.workspace_invites.find_by!(token: params[:token])
@@ -87,5 +121,15 @@ class WorkspaceInvitesController < ApplicationController
     def prepare_invite_signup
       @user ||= User.new(email_address: @workspace_invite.email_address)
       session[:return_to_after_authenticating] = workspace_invite_url(@workspace_invite.token) unless authenticated?
+    end
+
+    def deliver_invite_later(workspace_invite)
+      return true if workspace_invite.email_address.blank?
+
+      WorkspaceInvitesMailer.invite(workspace_invite).deliver_later
+      true
+    rescue StandardError => error
+      Rails.logger.warn("Workspace invite mail enqueue failed: #{error.class}: #{error.message}")
+      false
     end
 end

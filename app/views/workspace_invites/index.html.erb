@@ -46,9 +46,17 @@
                 <%= text_field_tag nil, workspace_invite_url(invite.token), readonly: true, class: "w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm text-stone-700" %>
               </td>
               <td class="px-4 py-3">
-                <% if invite.acceptable? %>
-                  <%= button_to t(".revoke"), revoke_workspace_invite_path(invite.token), method: :patch, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-                <% end %>
+                <div class="flex flex-wrap gap-2">
+                  <% if invite.email_address.present? && invite.acceptable? %>
+                    <%= button_to t(".resend"), resend_workspace_invite_path(invite.token), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                  <% elsif invite.email_address.present? %>
+                    <%= button_to t(".reinvite"), reinvite_workspace_invite_path(invite.token), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                  <% end %>
+
+                  <% if invite.acceptable? %>
+                    <%= button_to t(".revoke"), revoke_workspace_invite_path(invite.token), method: :patch, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                  <% end %>
+                </div>
               </td>
             </tr>
           <% end %>

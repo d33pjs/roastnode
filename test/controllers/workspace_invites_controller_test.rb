@@ -16,8 +16,10 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
   test "workspace owner can create invite" do
     sign_in_as(users(:one))
 
-    assert_difference -> { workspaces(:household).workspace_invites.count }, 1 do
-      post workspace_invites_path, params: { workspace_invite: { email_address: "Friend@Example.com", role: "member" } }
+    assert_enqueued_emails 1 do
+      assert_difference -> { workspaces(:household).workspace_invites.count }, 1 do
+        post workspace_invites_path, params: { workspace_invite: { email_address: "Friend@Example.com", role: "member" } }
+      end
     end
 
     invite = workspaces(:household).workspace_invites.order(:created_at).last
@@ -36,6 +38,84 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
       post workspace_invites_path, params: { workspace_invite: { email_address: "friend@example.com", role: "member" } }
     end
 
+    assert_redirected_to root_path
+  end
+
+  test "workspace owner can resend active email-bound invite" do
+    sign_in_as(users(:one))
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "friend@example.com")
+
+    get workspace_invites_path
+    assert_response :success
+    assert_select "form[action=?]", resend_workspace_invite_path(invite.token)
+
+    assert_no_difference -> { workspaces(:household).workspace_invites.count } do
+      assert_enqueued_email_with WorkspaceInvitesMailer, :invite, args: [ invite ] do
+        post resend_workspace_invite_path(invite.token)
+      end
+    end
+
+    assert_redirected_to workspace_invites_path
+  end
+
+  test "workspace owner can re-invite closed email-bound invite with fresh token" do
+    sign_in_as(users(:one))
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "friend@example.com", revoked_at: 1.minute.ago)
+
+    get workspace_invites_path
+    assert_response :success
+    assert_select "form[action=?]", reinvite_workspace_invite_path(invite.token)
+
+    assert_enqueued_emails 1 do
+      assert_difference -> { workspaces(:household).workspace_invites.count }, 1 do
+        post reinvite_workspace_invite_path(invite.token)
+      end
+    end
+
+    fresh_invite = workspaces(:household).workspace_invites.order(:created_at).last
+    assert_redirected_to workspace_invites_path
+    assert_equal "friend@example.com", fresh_invite.email_address
+    assert_equal invite.role, fresh_invite.role
+    assert_not_equal invite.token, fresh_invite.token
+    assert fresh_invite.acceptable?
+  end
+
+  test "blank-email invites keep manual copy fallback without send actions" do
+    sign_in_as(users(:one))
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: nil)
+
+    get workspace_invites_path
+
+    assert_response :success
+    assert_select "input[value=?]", workspace_invite_url(invite.token)
+    assert_select "form[action=?]", resend_workspace_invite_path(invite.token), count: 0
+    assert_select "form[action=?]", reinvite_workspace_invite_path(invite.token), count: 0
+  end
+
+  test "workspace member cannot resend or re-invite" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    invite = workspace_invites(:member_invite)
+    invite.update!(email_address: "friend@example.com")
+
+    assert_no_enqueued_emails do
+      assert_no_difference -> { workspaces(:household).workspace_invites.count } do
+        post resend_workspace_invite_path(invite.token)
+      end
+    end
+    assert_redirected_to root_path
+
+    invite.update!(revoked_at: 1.minute.ago)
+
+    assert_no_enqueued_emails do
+      assert_no_difference -> { workspaces(:household).workspace_invites.count } do
+        post reinvite_workspace_invite_path(invite.token)
+      end
+    end
     assert_redirected_to root_path
   end
 

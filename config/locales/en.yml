@@ -921,6 +921,8 @@ en:
       unavailable: "This invite is not available."
     create:
       created: "Invite created."
+      created_and_sent: "Invite created and email queued."
+      delivery_failed: "Invite created, but the email could not be queued."
     index:
       actions: "Actions"
       active: "Active"
@@ -933,11 +935,21 @@ en:
       email_placeholder: "friend@example.com"
       invite_url: "Invite URL"
       new_invite: "New invite"
+      reinvite: "Re-invite"
+      resend: "Resend"
       role: "Role"
       role_label: "Role"
       revoke: "Revoke"
       status: "Status"
       title: "Workspace invites"
+    reinvite:
+      delivery_failed: "Fresh invite created, but the email could not be queued."
+      queued: "Fresh invite email queued."
+      unavailable: "This invite cannot be re-invited."
+    resend:
+      delivery_failed: "Invite email could not be queued."
+      queued: "Invite email queued."
+      unavailable: "This invite cannot be resent."
     revoke:
       revoked: "Invite revoked."
     signup:
