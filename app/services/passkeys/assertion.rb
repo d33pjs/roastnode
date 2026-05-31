@@ -12,7 +12,8 @@ module Passkeys
       webauthn_credential.verify(
         @challenge,
         public_key: credential.public_key,
-        sign_count: credential.sign_count
+        sign_count: credential.sign_count,
+        user_verification: true
       )
       credential.update!(
         sign_count: webauthn_credential.sign_count,

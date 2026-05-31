@@ -32,7 +32,7 @@ module PasskeyChallenges
       return unless user_id && created_at
       return clear_pending_passkey_user if Time.iso8601(created_at) < PASSKEY_CHALLENGE_TTL.ago
 
-      User.find_by(id: user_id)
+      User.find_by(id: user_id) || clear_pending_passkey_user
     rescue ArgumentError
       clear_pending_passkey_user
     end

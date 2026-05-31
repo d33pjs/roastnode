@@ -9,7 +9,7 @@ module Passkeys
 
     def save!
       webauthn_credential = WebAuthn::Credential.from_create(@credential_params)
-      webauthn_credential.verify(@challenge)
+      webauthn_credential.verify(@challenge, user_verification: true)
 
       @user.passkey_credentials.create!(
         external_id: webauthn_credential.id,
