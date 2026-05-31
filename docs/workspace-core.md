@@ -30,9 +30,17 @@ Signed-in users can accept an invite directly. People without an account can cre
 
 Invites with `email_address` are email-bound: only a user account with that normalized email address can accept them. Blank-email invites remain "anyone with the link" invites.
 
+## Member Management
+
+Owners can manage admins, members, and viewers from the active workspace members page. Admins can manage members and viewers only. Members and viewers can read the member list but cannot change roles or remove members.
+
+Ownership transfer is owner-only. The selected member becomes owner and the previous owner becomes admin. Normal member-management actions must preserve at least one owner.
+
+Removing a member clears that user's active workspace if it pointed at the removed workspace.
+
 ## Settings
 
-Owners and admins can edit the active workspace through `/workspace/edit`. The settings route is singleton and scoped through `current_workspace`; do not add a workspace ID to that flow unless multi-workspace admin requirements change.
+Owners and admins can edit the active workspace through `/workspace/edit`. Owners also see the workspace deletion danger zone there. The settings route is singleton and scoped through `current_workspace`; do not add a workspace ID to that flow unless multi-workspace admin requirements change.
 
 ## Implementation Notes
 
@@ -41,5 +49,6 @@ Owners and admins can edit the active workspace through `/workspace/edit`. The s
 - `root_path` is the user's preferred landing screen. Use `dashboard_path` for explicit "Back to dashboard" links.
 - Add authorization and isolation tests for every workspace-scoped controller.
 - Workspace settings should continue to use `authorize_workspace_admin!`.
+- Workspace deletion should remain owner-only and must clear stale `active_workspace_id` values before destroying the workspace.
 - Exports should use `current_workspace` as their scope and avoid accepting workspace IDs from params.
 - Keep copy and docs clear that v1 is private; public profiles, federation, and roaster-facing workflows are future work.
