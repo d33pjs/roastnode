@@ -32,10 +32,28 @@ class PasskeyChallengesTest < ActiveSupport::TestCase
     end
   end
 
-  test "challenge consumption enforces user scope" do
+  test "scoped challenge consumption returns challenge for matching user" do
+    @controller.send(:store_passkey_challenge, :second_factor, "scoped-challenge", user_id: users(:one).id)
+
+    assert_equal "scoped-challenge", @controller.send(:consume_passkey_challenge, :second_factor, user_id: users(:one).id)
+  end
+
+  test "scoped challenge consumption rejects wrong user" do
     @controller.send(:store_passkey_challenge, :second_factor, "scoped-challenge", user_id: users(:one).id)
 
     assert_nil @controller.send(:consume_passkey_challenge, :second_factor, user_id: users(:two).id)
+  end
+
+  test "scoped challenge consumption rejects omitted user" do
+    @controller.send(:store_passkey_challenge, :second_factor, "scoped-challenge", user_id: users(:one).id)
+
+    assert_nil @controller.send(:consume_passkey_challenge, :second_factor)
+  end
+
+  test "unscoped challenge consumption rejects supplied user" do
+    @controller.send(:store_passkey_challenge, :login, "unscoped-challenge")
+
+    assert_nil @controller.send(:consume_passkey_challenge, :login, user_id: users(:one).id)
   end
 
   test "pending passkey user expires and clears session keys" do
@@ -53,6 +71,15 @@ class PasskeyChallengesTest < ActiveSupport::TestCase
   test "pending passkey user clears when user row no longer exists" do
     @controller.session[:pending_passkey_user_id] = User.maximum(:id).to_i + 100
     @controller.session[:pending_passkey_user_created_at] = Time.current.iso8601
+
+    assert_nil @controller.send(:pending_passkey_user)
+    assert_nil @controller.session[:pending_passkey_user_id]
+    assert_nil @controller.session[:pending_passkey_user_created_at]
+  end
+
+  test "pending passkey user clears on invalid timestamp type" do
+    @controller.session[:pending_passkey_user_id] = users(:one).id
+    @controller.session[:pending_passkey_user_created_at] = Object.new
 
     assert_nil @controller.send(:pending_passkey_user)
     assert_nil @controller.session[:pending_passkey_user_id]

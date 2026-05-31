@@ -16,7 +16,7 @@ module PasskeyChallenges
       payload = session.delete(passkey_challenge_key(kind))
       return unless payload
       return if passkey_challenge_expired?(payload)
-      return if user_id.present? && payload["user_id"].to_i != user_id.to_i
+      return unless passkey_challenge_user_matches?(payload, user_id)
 
       payload["challenge"]
     end
@@ -33,7 +33,7 @@ module PasskeyChallenges
       return clear_pending_passkey_user if Time.iso8601(created_at) < PASSKEY_CHALLENGE_TTL.ago
 
       User.find_by(id: user_id) || clear_pending_passkey_user
-    rescue ArgumentError
+    rescue ArgumentError, TypeError
       clear_pending_passkey_user
     end
 
@@ -51,5 +51,13 @@ module PasskeyChallenges
       Time.iso8601(payload.fetch("created_at")) < PASSKEY_CHALLENGE_TTL.ago
     rescue ArgumentError, KeyError
       true
+    end
+
+    def passkey_challenge_user_matches?(payload, user_id)
+      stored_user_id = payload["user_id"]
+      return true if stored_user_id.blank? && user_id.blank?
+      return false if stored_user_id.blank? || user_id.blank?
+
+      stored_user_id.to_i == user_id.to_i
     end
 end
