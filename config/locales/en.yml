@@ -928,6 +928,9 @@ en:
       unavailable_eyebrow: "Invite unavailable"
       unavailable_title: "This invite is not available"
   workspaces:
+    destroy:
+      confirmation_mismatch: "Type the workspace name to confirm deletion."
+      destroyed: "Workspace deleted."
     edit:
       back: "Back to dashboard"
       banner: "Household banner"
@@ -938,6 +941,8 @@ en:
       title: "Workspace settings"
     switch:
       switched: "Switched to %{name}."
+    transfer_ownership:
+      transferred: "Workspace ownership transferred."
     show:
       actions:
         add_bean: "Add bean"

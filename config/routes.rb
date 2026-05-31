@@ -13,7 +13,9 @@ Rails.application.routes.draw do
     end
   end
   resource :profile, only: %i[edit update]
-  resource :workspace, only: %i[edit update]
+  resource :workspace, only: %i[edit update destroy] do
+    patch :transfer_ownership
+  end
   resource :workspace_onboarding, only: %i[new create]
   resources :workspaces, only: [] do
     patch :switch, on: :member

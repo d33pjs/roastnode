@@ -23,4 +23,17 @@ class Workspace < ApplicationRecord
 
   validates :name, presence: true
   validates :default_currency, presence: true
+
+  def destroy_with_history!
+    transaction do
+      User.where(active_workspace_id: id).update_all(active_workspace_id: nil)
+      beans.find_each(&:destroy_with_history!)
+      equipment.find_each(&:destroy_with_history!)
+      preparation_tools.find_each(&:destroy_with_history!)
+      equipment_events.destroy_all
+      inventory_adjustments.destroy_all
+      brews.destroy_all
+      destroy!
+    end
+  end
 end

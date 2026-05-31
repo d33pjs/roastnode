@@ -117,4 +117,67 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
     assert_not_equal workspaces(:other_household), user.reload.active_workspace
   end
+
+  test "owner can transfer ownership to another member" do
+    sign_in_as(users(:one))
+
+    patch transfer_ownership_workspace_path, params: { membership_id: memberships(:member).id }
+
+    assert_redirected_to memberships_path
+    assert_equal "admin", memberships(:owner).reload.role
+    assert_equal "owner", memberships(:member).reload.role
+  end
+
+  test "admin cannot transfer ownership" do
+    workspace = workspaces(:household)
+    admin = User.create!(email_address: "transfer-admin@example.com", password: "password")
+    admin_membership = Membership.create!(workspace:, user: admin, role: "admin")
+    admin.update!(active_workspace: workspace)
+    sign_in_as(admin)
+
+    patch transfer_ownership_workspace_path, params: { membership_id: memberships(:member).id }
+
+    assert_redirected_to root_path
+    assert_equal "admin", admin_membership.reload.role
+    assert_equal "member", memberships(:member).reload.role
+  end
+
+  test "owner can delete active workspace with exact confirmation" do
+    workspace = workspaces(:household)
+    users(:one).update!(active_workspace: workspace)
+    users(:two).update!(active_workspace: workspace)
+    bean_id = beans(:open_household).id
+    sign_in_as(users(:one))
+
+    delete workspace_path, params: { confirmation: workspace.name }
+
+    assert_redirected_to root_path
+    assert_not Workspace.exists?(workspace.id)
+    assert_not Bean.exists?(bean_id)
+    assert_nil users(:one).reload.active_workspace
+    assert_nil users(:two).reload.active_workspace
+  end
+
+  test "workspace deletion requires exact confirmation" do
+    workspace = workspaces(:household)
+    sign_in_as(users(:one))
+
+    delete workspace_path, params: { confirmation: "wrong name" }
+
+    assert_redirected_to edit_workspace_path
+    assert Workspace.exists?(workspace.id)
+  end
+
+  test "admin cannot delete workspace" do
+    workspace = workspaces(:household)
+    admin = User.create!(email_address: "delete-admin@example.com", password: "password")
+    Membership.create!(workspace:, user: admin, role: "admin")
+    admin.update!(active_workspace: workspace)
+    sign_in_as(admin)
+
+    delete workspace_path, params: { confirmation: workspace.name }
+
+    assert_redirected_to root_path
+    assert Workspace.exists?(workspace.id)
+  end
 end

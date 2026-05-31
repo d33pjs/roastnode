@@ -7,6 +7,10 @@ class WorkspacePolicy
     membership.present?
   end
 
+  def owner?
+    membership&.owner? || false
+  end
+
   def write?
     membership&.can_write_workspace_data? || false
   end

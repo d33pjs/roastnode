@@ -57,6 +57,12 @@ class ApplicationController < ActionController::Base
       redirect_to root_path, alert: t("authorization.denied")
     end
 
+    def authorize_workspace_owner!
+      return if current_workspace_policy.owner?
+
+      redirect_to root_path, alert: t("authorization.denied")
+    end
+
     def authorize_instance_admin!
       return if Current.user&.instance_admin?
 

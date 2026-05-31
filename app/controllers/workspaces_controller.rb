@@ -1,6 +1,7 @@
 class WorkspacesController < ApplicationController
   before_action :set_workspace, only: :switch
   before_action :authorize_workspace_admin!, only: %i[edit update]
+  before_action :authorize_workspace_owner!, only: %i[transfer_ownership destroy]
 
   def edit
     @workspace = current_workspace
@@ -14,6 +15,34 @@ class WorkspacesController < ApplicationController
     else
       render :edit, status: :unprocessable_entity
     end
+  end
+
+  def transfer_ownership
+    membership = current_workspace.memberships.find(params[:membership_id])
+    result = WorkspaceMembershipManager.new(
+      workspace: current_workspace,
+      actor_membership: current_membership
+    ).transfer_ownership(membership)
+
+    if result.success?
+      redirect_to memberships_path, notice: t(".transferred")
+    else
+      redirect_to memberships_path, alert: t("workspace_membership_manager.errors.#{result.error}")
+    end
+  rescue ActiveRecord::RecordNotFound
+    redirect_to memberships_path, alert: t("authorization.denied")
+  end
+
+  def destroy
+    @workspace = current_workspace
+
+    unless params[:confirmation] == @workspace.name
+      return redirect_to edit_workspace_path, alert: t(".confirmation_mismatch")
+    end
+
+    @workspace.destroy_with_history!
+
+    redirect_to root_path, notice: t(".destroyed")
   end
 
   def switch
