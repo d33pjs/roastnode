@@ -8,6 +8,9 @@ class PasskeyCredential < ApplicationRecord
   validates :sign_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   def display_name
-    nickname.presence || "Passkey added #{created_at.to_date.to_fs(:long)}"
+    return nickname if nickname.present?
+    return "Passkey added #{created_at.to_date.to_fs(:long)}" if created_at.present?
+
+    "Passkey"
   end
 end

@@ -36,4 +36,10 @@ class PasskeyCredentialTest < ActiveSupport::TestCase
 
     assert_nil credential.nickname
   end
+
+  test "display name is nil safe before persistence" do
+    credential = PasskeyCredential.new
+
+    assert_equal "Passkey", credential.display_name
+  end
 end

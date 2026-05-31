@@ -1,7 +1,9 @@
-origin = ENV.fetch("ROASTNODE_WEBAUTHN_ORIGIN") do
+origin = ENV["ROASTNODE_WEBAUTHN_ORIGIN"].presence
+
+if origin.blank?
   raise "ROASTNODE_WEBAUTHN_ORIGIN is required in production" if Rails.env.production?
 
-  "http://localhost:3001"
+  origin = "http://localhost:3001"
 end
 
 WebAuthn.configure do |config|
