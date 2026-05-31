@@ -62,6 +62,14 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     admin = users(:one)
     admin.update!(instance_admin: true)
     sign_in_as(admin)
+    summary = Data.define(:key, :status, :value, :detail)
+    mail_failure = Data.define(:id, :class_name, :queue_name, :failed_at, :error_message).new(
+      id: 987,
+      class_name: "ActionMailer::MailDeliveryJob",
+      queue_name: "mailers",
+      failed_at: 7.minutes.ago,
+      error_message: "Net::SMTPAuthenticationError: password=[REDACTED] token=[REDACTED]"
+    )
     profile = InstanceBackupProfile.create!(
       name: "Readable backup",
       backup_kind: "readable_json",
@@ -77,17 +85,51 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
       started_at: 10.minutes.ago,
       finished_at: 9.minutes.ago
     )
+    backup_failure = Data.define(:id, :profile_name, :backup_kind, :failed_at, :error_message).new(
+      id: failed_run.id,
+      profile_name: profile.name,
+      backup_kind: profile.backup_kind,
+      failed_at: failed_run.finished_at,
+      error_message: "RuntimeError: disk write failed password=[REDACTED]"
+    )
+    operations_snapshot = Object.new
+    operations_snapshot.define_singleton_method(:queue_status) do
+      summary.new(:background_jobs, :ok, I18n.t("instance_admin.index.operation_pending_jobs", count: 0), "0 failed / 0 blocked.")
+    end
+    operations_snapshot.define_singleton_method(:mail_status) do
+      summary.new(:mail_delivery, :attention, "SMTP disabled", "SMTP is disabled.")
+    end
+    operations_snapshot.define_singleton_method(:backup_status) do
+      summary.new(:backups, :attention, "1/2 enabled", "1 failed run needs attention.")
+    end
+    operations_snapshot.define_singleton_method(:export_status) do
+      summary.new(:workspace_exports, :ok, "Owner-run", "Exports are available.")
+    end
+    operations_snapshot.define_singleton_method(:queue_counts) { [] }
+    operations_snapshot.define_singleton_method(:failed_jobs) { [] }
+    operations_snapshot.define_singleton_method(:mail_failures) { [ mail_failure ] }
+    operations_snapshot.define_singleton_method(:backup_profile_rows) { [] }
+    operations_snapshot.define_singleton_method(:backup_failures) { [ backup_failure ] }
 
-    get "/instance_admin"
+    original_operations_snapshot_new = InstanceOperationsSnapshot.method(:new)
+    InstanceOperationsSnapshot.define_singleton_method(:new) { operations_snapshot }
+    begin
+      get "/instance_admin"
+    ensure
+      InstanceOperationsSnapshot.define_singleton_method(:new, &original_operations_snapshot_new)
+    end
 
     assert_response :success
     assert_select "h2", I18n.t("instance_admin.index.operations")
     assert_select "[data-testid=instance-admin-operations-queue]", text: /#{I18n.t("instance_admin.index.operation_labels.background_jobs")}/
+    assert_select "[data-testid=instance-admin-operations-mail]", text: /#{I18n.t("instance_admin.index.operation_labels.mail_delivery")}/
+    assert_select "[data-testid=instance-admin-mail-failure-#{mail_failure.id}]", text: /Net::SMTPAuthenticationError/
+    assert_select "[data-testid=instance-admin-mail-failure-#{mail_failure.id}]", text: /\[REDACTED\]/
     assert_select "[data-testid=instance-admin-operations-backups]", text: /#{I18n.t("instance_admin.index.operation_labels.backups")}/
     assert_select "[data-testid=instance-admin-operations-export]", text: /#{I18n.t("instance_admin.index.operation_labels.workspace_exports")}/
     assert_select "[data-testid=instance-admin-backup-failure-#{failed_run.id}]", text: /RuntimeError/
     assert_select "[data-testid=instance-admin-backup-failure-#{failed_run.id}]", text: /\[REDACTED\]/
-    assert_no_match(/super-secret/, response.body)
+    assert_no_match(/super-secret|abc123/, response.body)
     assert_no_match(/password_digest|session|invite token/i, response.body)
   end
 

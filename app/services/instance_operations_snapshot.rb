@@ -1,11 +1,15 @@
+require "roastnode/runtime_settings"
+
 class InstanceOperationsSnapshot
   Summary = Data.define(:key, :status, :value, :detail)
   FailedJobRow = Data.define(:id, :class_name, :queue_name, :failed_at, :error_message)
+  MailFailureRow = Data.define(:id, :class_name, :queue_name, :failed_at, :error_message)
   BackupProfileRow = Data.define(:id, :name, :backup_kind, :enabled, :schedule, :latest_status, :latest_at, :last_success_at)
   BackupFailureRow = Data.define(:id, :profile_name, :backup_kind, :failed_at, :error_message)
 
-  def initialize(queue_reader: SolidQueueReader.new)
+  def initialize(queue_reader: SolidQueueReader.new, runtime_settings: Roastnode::RuntimeSettings.new)
     @queue_reader = queue_reader
+    @runtime_settings = runtime_settings
   end
 
   def queue_status
@@ -56,6 +60,36 @@ class InstanceOperationsSnapshot
         error_message: safe_error_message(failure.error_message)
       )
     end
+  end
+
+  def mail_status
+    smtp_settings = runtime_settings.smtp_settings
+    status = smtp_settings ? :ok : :attention
+
+    Summary.new(
+      key: :mail_delivery,
+      status:,
+      value: smtp_settings ? I18n.t("instance_admin.index.operation_mail_enabled") : I18n.t("instance_admin.index.operation_mail_disabled"),
+      detail: smtp_settings ? I18n.t("instance_admin.index.operation_mail_enabled_detail", address: smtp_settings.fetch(:address)) : I18n.t("instance_admin.index.operation_mail_disabled_detail")
+    )
+  end
+
+  def mail_failures(limit: 5)
+    return [] unless queue_reader.available?
+
+    @mail_failures_by_limit ||= {}
+    @mail_failures_by_limit[limit] ||= queue_reader.recent_failures(limit: limit * 5)
+      .select { |failure| mail_failure?(failure) }
+      .first(limit)
+      .map do |failure|
+        MailFailureRow.new(
+          id: failure.id,
+          class_name: failure.class_name,
+          queue_name: failure.queue_name,
+          failed_at: failure.failed_at,
+          error_message: safe_error_message(failure.error_message)
+        )
+      end
   end
 
   def backup_status
@@ -118,7 +152,7 @@ class InstanceOperationsSnapshot
   end
 
   private
-    attr_reader :queue_reader
+    attr_reader :queue_reader, :runtime_settings
 
     def unavailable_queue_status
       Summary.new(
@@ -164,6 +198,14 @@ class InstanceOperationsSnapshot
       message.to_s
         .gsub(/((?:access_)?token|password|secret|session)([\w-]*)?(\s*[:=]\s*)[^\s&]+/i, "\\1\\2\\3[REDACTED]")
         .truncate(220)
+    end
+
+    def mail_failure?(failure)
+      class_name = failure.class_name.to_s
+      error_message = failure.error_message.to_s
+
+      class_name.match?(/Mailer|MailDeliveryJob/) ||
+        error_message.match?(/ActionMailer|Mail::|Net::SMTP|SMTP/i)
     end
 
     class SolidQueueReader

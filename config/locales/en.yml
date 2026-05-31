@@ -658,7 +658,12 @@ en:
       operation_labels:
         background_jobs: "Background jobs"
         backups: "Backup status"
+        mail_delivery: "Mail delivery"
         workspace_exports: "Workspace exports"
+      operation_mail_disabled: "SMTP disabled"
+      operation_mail_disabled_detail: "SMTP is not enabled; password reset and invite emails will not be delivered."
+      operation_mail_enabled: "SMTP enabled"
+      operation_mail_enabled_detail: "Configured for %{address}."
       operation_pending_jobs:
         one: "1 pending"
         other: "%{count} pending"
@@ -683,6 +688,10 @@ en:
       rails_detail: "Rails %{version} / %{environment}"
       recent_backup_failures: "Recent backup failures"
       recent_failed_jobs: "Recent failed jobs"
+      recent_mail_failures: "Recent mail failures"
+      mail_failure_class: "Job"
+      mail_failure_error: "Error"
+      mail_failure_queue: "Queue"
       backup_profile_status: "Backup profile status"
       retention_count: "Files to keep"
       run_backup: "Run now"

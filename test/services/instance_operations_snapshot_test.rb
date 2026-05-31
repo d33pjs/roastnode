@@ -113,4 +113,57 @@ class InstanceOperationsSnapshotTest < ActiveSupport::TestCase
     assert_includes failure.error_message, "[REDACTED]"
     assert_no_match(/super-secret/, failure.error_message)
   end
+
+  test "reports smtp status and redacted mail failures" do
+    reader = FakeQueueReader.new(
+      available: true,
+      counts: {
+        ready_jobs: 0,
+        scheduled_jobs: 0,
+        claimed_jobs: 0,
+        blocked_jobs: 0,
+        failed_jobs: 2,
+        worker_processes: 1
+      },
+      failed_jobs: [
+        FailedJob.new(
+          id: 21,
+          class_name: "ActionMailer::MailDeliveryJob",
+          queue_name: "mailers",
+          failed_at: Time.zone.parse("2026-05-31 09:15:00"),
+          error_message: "Net::SMTPAuthenticationError: bad credentials password=super-secret token=abc123"
+        ),
+        FailedJob.new(
+          id: 22,
+          class_name: "InstanceBackupJob",
+          queue_name: "background",
+          failed_at: Time.zone.parse("2026-05-31 09:16:00"),
+          error_message: "RuntimeError: disk full"
+        )
+      ]
+    )
+    enabled_settings = Roastnode::RuntimeSettings.new(
+      "SMTP_ENABLED" => "true",
+      "SMTP_ADDRESS" => "smtp.example.test"
+    )
+
+    snapshot = InstanceOperationsSnapshot.new(queue_reader: reader, runtime_settings: enabled_settings)
+
+    assert_equal :ok, snapshot.mail_status.status
+    assert_match(/smtp.example.test/, snapshot.mail_status.detail)
+
+    mail_failure = snapshot.mail_failures.first
+    assert_equal 1, snapshot.mail_failures.length
+    assert_equal 21, mail_failure.id
+    assert_equal "ActionMailer::MailDeliveryJob", mail_failure.class_name
+    assert_includes mail_failure.error_message, "[REDACTED]"
+    assert_no_match(/super-secret|abc123/, mail_failure.error_message)
+
+    disabled_snapshot = InstanceOperationsSnapshot.new(
+      queue_reader: reader,
+      runtime_settings: Roastnode::RuntimeSettings.new({})
+    )
+
+    assert_equal :attention, disabled_snapshot.mail_status.status
+  end
 end
