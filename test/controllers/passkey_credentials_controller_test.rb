@@ -52,6 +52,127 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Phone", credential.nickname
   end
 
+  test "create without a registration challenge does not create a passkey credential" do
+    user = users(:one)
+    sign_in_as(user)
+    fake_credential = FakeCreatedCredential.new(
+      id: "new-passkey-id",
+      public_key: "new-public-key",
+      sign_count: 4
+    )
+
+    assert_no_difference -> { user.passkey_credentials.count } do
+      stub_webauthn_credential(:from_create, fake_credential) do
+        post passkey_credentials_path, params: {
+          nickname: "Phone",
+          credential: { id: "new-passkey-id" }
+        }, as: :json
+      end
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "create with another user's registration challenge does not create a passkey credential" do
+    user = users(:two)
+    sign_in_as(users(:one))
+    fake_options = fake_options(payload: { "challenge" => "registration-challenge" })
+    fake_credential = FakeCreatedCredential.new(
+      id: "new-passkey-id",
+      public_key: "new-public-key",
+      sign_count: 4
+    )
+
+    stub_webauthn_credential(:options_for_create, fake_options) do
+      post options_passkey_credentials_path, params: { current_password: "password" }, as: :json
+    end
+
+    sign_in_as(user)
+
+    assert_no_difference -> { user.passkey_credentials.count } do
+      stub_webauthn_credential(:from_create, fake_credential) do
+        post passkey_credentials_path, params: {
+          nickname: "Phone",
+          credential: { id: "new-passkey-id" }
+        }, as: :json
+      end
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "create with an expired registration challenge does not create a passkey credential" do
+    user = users(:one)
+    sign_in_as(user)
+    fake_options = fake_options(payload: { "challenge" => "registration-challenge" })
+    fake_credential = FakeCreatedCredential.new(
+      id: "new-passkey-id",
+      public_key: "new-public-key",
+      sign_count: 4
+    )
+
+    travel_to 11.minutes.ago do
+      stub_webauthn_credential(:options_for_create, fake_options) do
+        post options_passkey_credentials_path, params: { current_password: "password" }, as: :json
+      end
+    end
+
+    assert_no_difference -> { user.passkey_credentials.count } do
+      stub_webauthn_credential(:from_create, fake_credential) do
+        post passkey_credentials_path, params: {
+          nickname: "Phone",
+          credential: { id: "new-passkey-id" }
+        }, as: :json
+      end
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "failed WebAuthn registration consumes the challenge and cannot be retried" do
+    user = users(:one)
+    sign_in_as(user)
+    fake_options = fake_options(payload: { "challenge" => "registration-challenge" })
+    failing_credential = FakeCreatedCredential.new(
+      id: "new-passkey-id",
+      public_key: "new-public-key",
+      sign_count: 4
+    )
+    verified_credential = FakeCreatedCredential.new(
+      id: "new-passkey-id",
+      public_key: "new-public-key",
+      sign_count: 4
+    )
+
+    failing_credential.define_singleton_method(:verify) do |*, **|
+      raise WebAuthn::Error, "verification failed"
+    end
+
+    stub_webauthn_credential(:options_for_create, fake_options) do
+      post options_passkey_credentials_path, params: { current_password: "password" }, as: :json
+    end
+
+    assert_no_difference -> { user.passkey_credentials.count } do
+      stub_webauthn_credential(:from_create, failing_credential) do
+        post passkey_credentials_path, params: {
+          nickname: "Phone",
+          credential: { id: "new-passkey-id" }
+        }, as: :json
+      end
+    end
+    assert_response :unprocessable_entity
+
+    assert_no_difference -> { user.passkey_credentials.count } do
+      stub_webauthn_credential(:from_create, verified_credential) do
+        post passkey_credentials_path, params: {
+          nickname: "Phone",
+          credential: { id: "new-passkey-id" }
+        }, as: :json
+      end
+    end
+    assert_response :unprocessable_entity
+  end
+
   test "renames own passkey" do
     sign_in_as(users(:one))
     credential = passkey_credentials(:one_touch_id)
@@ -70,6 +191,18 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to edit_profile_path
     assert_equal "MacBook Touch ID", credential.reload.nickname
+  end
+
+  test "does not delete another user's passkey" do
+    sign_in_as(users(:two))
+    credential = passkey_credentials(:one_touch_id)
+
+    assert_no_difference -> { PasskeyCredential.count } do
+      delete passkey_credential_path(credential), params: { current_password: "password" }
+    end
+
+    assert_redirected_to edit_profile_path
+    assert PasskeyCredential.exists?(credential.id)
   end
 
   test "enabling second factor requires a passkey and current password" do
@@ -112,6 +245,22 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     assert_not user.reload.passkey_second_factor_enabled?
   end
 
+  test "second factor with wrong current password does not change the flag" do
+    user = users(:one)
+    user.update!(passkey_second_factor_enabled: true)
+    sign_in_as(user)
+
+    patch second_factor_passkey_credentials_path, params: {
+      user: {
+        passkey_second_factor_enabled: "0",
+        current_password: "wrong"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert user.reload.passkey_second_factor_enabled?
+  end
+
   test "deleting last passkey disables second factor with current password" do
     user = users(:one)
     user.update!(passkey_second_factor_enabled: true)
@@ -124,5 +273,35 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to edit_profile_path
     assert_not user.reload.passkey_second_factor_enabled?
+  end
+
+  test "deleting last passkey with wrong current password does not delete or disable second factor" do
+    user = users(:one)
+    user.update!(passkey_second_factor_enabled: true)
+    sign_in_as(user)
+    credential = passkey_credentials(:one_touch_id)
+
+    assert_no_difference -> { user.passkey_credentials.count } do
+      delete passkey_credential_path(credential), params: { current_password: "wrong" }
+    end
+
+    assert_redirected_to edit_profile_path
+    assert user.reload.passkey_second_factor_enabled?
+    assert PasskeyCredential.exists?(credential.id)
+  end
+
+  test "deleting last passkey with missing current password does not delete or disable second factor" do
+    user = users(:one)
+    user.update!(passkey_second_factor_enabled: true)
+    sign_in_as(user)
+    credential = passkey_credentials(:one_touch_id)
+
+    assert_no_difference -> { user.passkey_credentials.count } do
+      delete passkey_credential_path(credential)
+    end
+
+    assert_redirected_to edit_profile_path
+    assert user.reload.passkey_second_factor_enabled?
+    assert PasskeyCredential.exists?(credential.id)
   end
 end
