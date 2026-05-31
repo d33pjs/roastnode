@@ -12,17 +12,66 @@
           <tr>
             <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".email") %></th>
             <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".role") %></th>
+            <% if current_workspace_policy.manage? %>
+              <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".actions") %></th>
+            <% end %>
           </tr>
         </thead>
         <tbody class="divide-y divide-stone-100">
           <% @memberships.each do |membership| %>
+            <% can_owner_manage = current_workspace_policy.owner? && !membership.owner? %>
+            <% can_admin_manage = current_membership.admin? && (membership.member? || membership.viewer?) %>
+            <% can_manage_membership = can_owner_manage || can_admin_manage %>
+            <% role_options = current_workspace_policy.owner? ? %w[admin member viewer] : %w[member viewer] %>
+
             <tr>
               <td class="px-4 py-3 text-sm text-stone-900"><%= membership.user.email_address %></td>
-              <td class="px-4 py-3 text-sm text-stone-700"><%= membership.role.humanize %></td>
+              <td class="px-4 py-3 text-sm text-stone-700">
+                <% if can_manage_membership %>
+                  <%= form_with model: membership, url: membership_path(membership), method: :patch, class: "flex flex-wrap items-center gap-2" do |form| %>
+                    <%= form.select :role, role_options.map { |role| [ role.humanize, role ] }, {}, class: "rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+                    <%= form.submit t(".update_role"), class: "rounded-md bg-stone-950 px-3 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
+                  <% end %>
+                <% else %>
+                  <%= membership.role.humanize %>
+                <% end %>
+              </td>
+              <% if current_workspace_policy.manage? %>
+                <td class="px-4 py-3 text-sm text-stone-700">
+                  <% if can_manage_membership %>
+                    <%= button_to t(".remove"),
+                      membership_path(membership),
+                      method: :delete,
+                      form: { data: { turbo_confirm: t(".remove_confirmation", user: membership.user.email_address) } },
+                      class: "rounded-md border border-red-200 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>
+                  <% else %>
+                    <span class="text-stone-500"><%= t(".not_manageable") %></span>
+                  <% end %>
+                </td>
+              <% end %>
             </tr>
           <% end %>
         </tbody>
       </table>
     </div>
+
+    <% if current_workspace_policy.owner? && @transfer_memberships.any? %>
+      <div class="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-6">
+        <h2 class="text-xl font-semibold text-stone-950"><%= t(".transfer_title") %></h2>
+        <p class="mt-2 text-sm text-stone-700"><%= t(".transfer_body") %></p>
+        <%= form_with url: transfer_ownership_workspace_path, method: :patch, class: "mt-4 flex flex-wrap items-end gap-3" do |form| %>
+          <div>
+            <%= form.label :membership_id, t(".transfer_member"), class: "block text-sm font-medium text-stone-700" %>
+            <%= form.select :membership_id,
+              @transfer_memberships.map { |membership| [ "#{membership.user.email_address} (#{membership.role.humanize})", membership.id ] },
+              {},
+              class: "mt-1 rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+          </div>
+          <%= form.submit t(".transfer_submit"),
+            data: { turbo_confirm: t(".transfer_confirmation") },
+            class: "rounded-md bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800" %>
+        <% end %>
+      </div>
+    <% end %>
   </section>
 </main>

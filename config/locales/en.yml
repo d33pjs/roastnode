@@ -871,10 +871,20 @@ en:
     destroy:
       removed: "Member removed."
     index:
+      actions: "Actions"
       back: "Back to dashboard"
       email: "Email"
+      not_manageable: "No actions"
+      remove: "Remove"
+      remove_confirmation: "Remove %{user} from this workspace?"
       role: "Role"
       title: "Workspace members"
+      transfer_body: "Transfer ownership to another member. Your role will become admin."
+      transfer_confirmation: "Transfer ownership of this workspace?"
+      transfer_member: "New owner"
+      transfer_submit: "Transfer ownership"
+      transfer_title: "Transfer ownership"
+      update_role: "Update role"
     update:
       updated: "Member role updated."
   workspace_membership_manager:
@@ -934,7 +944,12 @@ en:
     edit:
       back: "Back to dashboard"
       banner: "Household banner"
+      confirmation_label: "Type %{name} to confirm"
+      danger_body: "Deleting %{name} removes the workspace and its beans, brews, equipment, invites, imports, exports, and media references. This cannot be undone."
+      danger_title: "Delete workspace"
       default_currency: "Default currency"
+      delete_confirmation: "Delete this workspace and its data?"
+      delete_workspace: "Delete workspace"
       logo: "Household logo"
       name: "Household name"
       save: "Save workspace"

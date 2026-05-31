@@ -180,4 +180,28 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
     assert Workspace.exists?(workspace.id)
   end
+
+  test "owner sees workspace deletion danger zone" do
+    sign_in_as(users(:one))
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "form[action=?][method=post]", workspace_path
+    assert_select "input[name=_method][value=delete]"
+    assert_select "input[name=confirmation]"
+  end
+
+  test "admin does not see workspace deletion danger zone" do
+    workspace = workspaces(:household)
+    admin = User.create!(email_address: "danger-admin@example.com", password: "password")
+    Membership.create!(workspace:, user: admin, role: "admin")
+    admin.update!(active_workspace: workspace)
+    sign_in_as(admin)
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "input[name=confirmation]", count: 0
+  end
 end

@@ -86,4 +86,29 @@ class MembershipsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to memberships_path
     assert Membership.exists?(memberships(:other_owner).id)
   end
+
+  test "owner sees member management controls and transfer form" do
+    sign_in_as(users(:one))
+
+    get memberships_path
+
+    assert_response :success
+    assert_select "form[action=?][method=post]", membership_path(memberships(:member))
+    assert_select "input[name=_method][value=patch]"
+    assert_select "form[action=?][method=post]", transfer_ownership_workspace_path
+    assert_select "form[action=?][method=post]", membership_path(memberships(:member))
+    assert_select "input[name=_method][value=delete]"
+  end
+
+  test "viewer does not see member management controls" do
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    sign_in_as(users(:two))
+
+    get memberships_path
+
+    assert_response :success
+    assert_select "form[action=?]", membership_path(memberships(:owner)), count: 0
+    assert_select "form[action=?]", transfer_ownership_workspace_path, count: 0
+  end
 end

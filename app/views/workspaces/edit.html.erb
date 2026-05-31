@@ -43,5 +43,21 @@
         <%= form.submit t(".save"), class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
       <% end %>
     </div>
+
+    <% if current_workspace_policy.owner? %>
+      <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-6 shadow-sm">
+        <h2 class="text-xl font-semibold text-red-950"><%= t(".danger_title") %></h2>
+        <p class="mt-2 text-sm text-red-800"><%= t(".danger_body", name: @workspace.name) %></p>
+        <%= form_with url: workspace_path, method: :delete, class: "mt-4 space-y-3" do |form| %>
+          <div>
+            <%= form.label :confirmation, t(".confirmation_label", name: @workspace.name), class: "block text-sm font-medium text-red-950" %>
+            <%= form.text_field :confirmation, required: true, class: "mt-1 w-full rounded-md border border-red-300 px-3 py-2 text-stone-950 shadow-sm focus:border-red-700 focus:outline-none" %>
+          </div>
+          <%= form.submit t(".delete_workspace"),
+            data: { turbo_confirm: t(".delete_confirmation") },
+            class: "rounded-md bg-red-700 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-red-800" %>
+        <% end %>
+      </div>
+    <% end %>
   </section>
 </main>
