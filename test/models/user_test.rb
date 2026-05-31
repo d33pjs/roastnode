@@ -83,4 +83,24 @@ class UserTest < ActiveSupport::TestCase
 
     assert_equal %w[notes rating], user.hidden_brew_field_names
   end
+
+  test "generates stable webauthn user id on demand" do
+    user = users(:one)
+    assert_nil user.webauthn_user_id
+
+    generated_id = user.ensure_webauthn_user_id!
+
+    assert generated_id.present?
+    assert_equal generated_id, user.reload.webauthn_user_id
+    assert_equal generated_id, user.ensure_webauthn_user_id!
+  end
+
+  test "passkey second factor requires at least one passkey" do
+    user = users(:two)
+
+    user.passkey_second_factor_enabled = true
+
+    assert_not user.valid?
+    assert_includes user.errors[:passkey_second_factor_enabled], "requires at least one passkey"
+  end
 end

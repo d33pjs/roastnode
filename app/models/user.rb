@@ -34,6 +34,7 @@ class User < ApplicationRecord
 
   has_secure_password
   has_many :sessions, dependent: :destroy
+  has_many :passkey_credentials, dependent: :destroy
   has_many :memberships, dependent: :destroy
   has_many :workspaces, through: :memberships
   has_many :created_workspace_invites, class_name: "WorkspaceInvite", foreign_key: :created_by_id, dependent: :destroy,
@@ -60,6 +61,7 @@ class User < ApplicationRecord
   validates :time_format, inclusion: { in: TIME_FORMATS }
   validates :default_brew_focus_field, inclusion: { in: DEFAULT_BREW_FOCUS_FIELDS }
   validate :hidden_brew_field_names_supported
+  validate :passkey_second_factor_requires_passkey
 
   def default_landing_log_espresso?
     default_landing_screen == "log_espresso"
@@ -95,11 +97,25 @@ class User < ApplicationRecord
     self.active_workspace = workspace
   end
 
+  def ensure_webauthn_user_id!
+    return webauthn_user_id if webauthn_user_id.present?
+
+    update!(webauthn_user_id: WebAuthn.generate_user_id)
+    webauthn_user_id
+  end
+
   private
     def hidden_brew_field_names_supported
       unsupported_fields = hidden_brew_field_names - HIDEABLE_BREW_FIELDS
       return if unsupported_fields.empty?
 
       errors.add(:hidden_brew_field_names, "contains unsupported fields")
+    end
+
+    def passkey_second_factor_requires_passkey
+      return unless passkey_second_factor_enabled?
+      return if passkey_credentials.exists?
+
+      errors.add(:passkey_second_factor_enabled, "requires at least one passkey")
     end
 end

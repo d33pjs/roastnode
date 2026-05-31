@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_28_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_213000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -268,6 +268,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_120000) do
     t.index ["workspace_id"], name: "index_memberships_on_workspace_id"
   end
 
+  create_table "passkey_credentials", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.datetime "last_used_at"
+    t.string "nickname"
+    t.text "public_key", null: false
+    t.bigint "sign_count", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["external_id"], name: "index_passkey_credentials_on_external_id", unique: true
+    t.index ["user_id"], name: "index_passkey_credentials_on_user_id"
+  end
+
   create_table "preparation_tools", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.string "brew_method", default: "espresso", null: false
@@ -309,12 +322,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_120000) do
     t.jsonb "hidden_brew_field_names", default: [], null: false
     t.boolean "instance_admin", default: false, null: false
     t.string "number_format", default: "comma_decimal", null: false
+    t.boolean "passkey_second_factor_enabled", default: false, null: false
     t.string "password_digest", null: false
     t.string "theme", default: "light", null: false
     t.string "time_format", default: "european_24h_seconds", null: false
     t.datetime "updated_at", null: false
+    t.string "webauthn_user_id"
     t.index ["active_workspace_id"], name: "index_users_on_active_workspace_id"
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["webauthn_user_id"], name: "index_users_on_webauthn_user_id", unique: true
   end
 
   create_table "workspace_invites", force: :cascade do |t|
@@ -371,6 +387,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_120000) do
   add_foreign_key "inventory_adjustments", "workspaces"
   add_foreign_key "memberships", "users"
   add_foreign_key "memberships", "workspaces"
+  add_foreign_key "passkey_credentials", "users"
   add_foreign_key "preparation_tools", "data_imports"
   add_foreign_key "preparation_tools", "workspaces"
   add_foreign_key "sessions", "users"
