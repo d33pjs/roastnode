@@ -89,6 +89,44 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[brew_temperature_celsius]"
   end
 
+  test "new wires one way ground out to dose sync when both fields render" do
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "form[data-controller~=?]", "brew-dose-sync"
+    assert_select "input[name=?][data-brew-dose-sync-target=?][data-action=?]",
+      "brew[ground_weight_grams]",
+      "groundWeight",
+      "input->brew-dose-sync#groundWeightChanged"
+    assert_select "input[name=?][data-brew-dose-sync-target=?][data-action=?]",
+      "brew[dose_grams]",
+      "dose",
+      "input->brew-dose-sync#doseChanged"
+  end
+
+  test "new skips dose sync when dose is hidden" do
+    users(:one).update!(hidden_brew_field_names: %w[dose_grams])
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "form[data-controller~=?]", "brew-dose-sync", count: 0
+    assert_select "input[name=?]", "brew[ground_weight_grams]"
+    assert_select "input[name=?]", "brew[dose_grams]", count: 0
+  end
+
+  test "brew form rating input is constrained to one through five" do
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]"
+  end
+
   test "new renders shot-first form sections in approved order" do
     sign_in_as(users(:one))
 
@@ -470,6 +508,72 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", edit_brew_path(brews(:morning_espresso)), text: I18n.t("brews.show.edit")
     assert_select "form[action=?]", brew_path(brews(:morning_espresso))
+  end
+
+  test "writer sees explicit taste correction form on brew detail" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-taste-correction]"
+    assert_select "form[action=?][method=post]", taste_brew_path(brew)
+    assert_select "input[name=_method][value=patch]"
+    assert_select "select[name=?]", "brew[taste_balance]"
+    assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]"
+    assert_select "input[type=submit][value=?]", I18n.t("brews.show.save_taste")
+  end
+
+  test "writer can update only brew taste fields from detail page" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    original_weight = brew.bean_weight_grams
+    original_adjustment = brew.inventory_adjustment.delta_grams
+
+    patch taste_brew_path(brew), params: {
+      brew: {
+        taste_balance: "bitter",
+        rating: "5",
+        bean_weight_grams: "30",
+        notes: "Ignored from taste correction"
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    brew.reload
+    assert_equal "bitter", brew.taste_balance
+    assert_equal 5, brew.rating
+    assert_equal original_weight, brew.bean_weight_grams
+    assert_not_equal "Ignored from taste correction", brew.notes
+    assert_equal original_adjustment, brew.inventory_adjustment.reload.delta_grams
+  end
+
+  test "invalid taste correction re-renders brew detail" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    patch taste_brew_path(brew), params: { brew: { taste_balance: "neutral", rating: "6" } }
+
+    assert_response :unprocessable_entity
+    assert_select "[data-testid=brew-taste-correction]"
+    assert_equal brews(:morning_espresso).rating, brew.reload.rating
+  end
+
+  test "viewer cannot see or submit taste correction" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    brew = brews(:morning_espresso)
+
+    get brew_path(brew)
+    assert_response :success
+    assert_select "[data-testid=brew-taste-correction]", count: 0
+
+    patch taste_brew_path(brew), params: { brew: { rating: "5", taste_balance: "bitter" } }
+    assert_redirected_to root_path
+    assert_not_equal 5, brew.reload.rating
   end
 
   test "writer can edit brew" do

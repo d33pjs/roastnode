@@ -21,6 +21,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - User landing preference for opening Roastnode directly on the espresso form.
 - User espresso form focus preference for fast daily logging.
 - Browser-local unsaved draft recovery for new espresso logs.
+- One-way ground-out to dose prefill while logging espresso.
 - Dashboard actions, open beans, compact status, and recent activity.
 
 ## Explicitly Deferred
@@ -70,6 +71,12 @@ Fresh fields:
 - notes
 - channeling
 - taste balance
+
+## Espresso Form Helpers
+
+When Ground out and Dose are both visible, typing Ground out copies that value into Dose until the user manually edits Dose. Dose never writes back to Ground out.
+
+Brew ratings are optional, but when present they must be whole numbers from 1 through 5.
 
 ## Inventory Rules
 

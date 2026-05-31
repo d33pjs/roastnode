@@ -62,6 +62,20 @@ class BrewTest < ActiveSupport::TestCase
     assert_includes brew.errors[:bean], "must belong to the workspace"
   end
 
+  test "rating accepts blank and one through five only" do
+    brew = brews(:morning_espresso)
+
+    [ nil, 1, 2, 3, 4, 5 ].each do |rating|
+      brew.rating = rating
+      assert brew.valid?, "expected rating #{rating.inspect} to be valid"
+    end
+
+    [ 0, 6, 2.5, "bad" ].each do |rating|
+      brew.rating = rating
+      assert_not brew.valid?, "expected rating #{rating.inspect} to be invalid"
+    end
+  end
+
   test "updating brew weight adjusts inventory by delta" do
     brew = brews(:morning_espresso)
     bean = beans(:open_household)

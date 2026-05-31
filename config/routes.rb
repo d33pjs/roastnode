@@ -42,7 +42,9 @@ Rails.application.routes.draw do
     patch :archive, on: :member
     patch :reopen, on: :member
   end
-  resources :brews, only: %i[new create show edit update destroy]
+  resources :brews, only: %i[new create show edit update destroy] do
+    patch :taste, on: :member
+  end
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
     match :crop, on: :member, via: %i[get patch]

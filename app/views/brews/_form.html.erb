@@ -7,6 +7,10 @@
   <% form_data[:controller] = "brew-draft" %>
   <% form_data[:brew_draft_storage_key_value] = draft_storage_key %>
 <% end %>
+<% dose_sync_enabled = !hide_brew_field.call(:ground_weight_grams) && !hide_brew_field.call(:dose_grams) %>
+<% if dose_sync_enabled %>
+  <% form_data[:controller] = [form_data[:controller], "brew-dose-sync"].compact.join(" ") %>
+<% end %>
 
 <%= form_with model: brew, class: "mt-8 grid gap-5", data: form_data do |form| %>
   <% if brew.errors.any? %>
@@ -56,14 +60,14 @@
       <% unless hide_brew_field.call(:ground_weight_grams) %>
         <div>
           <%= form.label :ground_weight_grams, t("brews.form.ground_weight"), class: "block text-sm font-bold text-rn-muted" %>
-          <%= form.text_field :ground_weight_grams, inputmode: "decimal", autofocus: autofocus_field == "ground_weight_grams", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+          <%= form.text_field :ground_weight_grams, inputmode: "decimal", autofocus: autofocus_field == "ground_weight_grams", data: (dose_sync_enabled ? { brew_dose_sync_target: "groundWeight", action: "input->brew-dose-sync#groundWeightChanged" } : {}), class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
         </div>
       <% end %>
 
       <% unless hide_brew_field.call(:dose_grams) %>
         <div>
           <%= form.label :dose_grams, t("brews.form.dose"), class: "block text-sm font-bold text-rn-muted" %>
-          <%= form.text_field :dose_grams, inputmode: "decimal", autofocus: autofocus_field == "dose_grams", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+          <%= form.text_field :dose_grams, inputmode: "decimal", autofocus: autofocus_field == "dose_grams", data: (dose_sync_enabled ? { brew_dose_sync_target: "dose", action: "input->brew-dose-sync#doseChanged" } : {}), class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
         </div>
       <% end %>
 
@@ -203,7 +207,7 @@
         <% unless hide_brew_field.call(:rating) %>
           <div>
             <%= form.label :rating, t("brews.form.rating"), class: "block text-sm font-bold text-rn-muted" %>
-            <%= form.number_field :rating, min: 0, max: 5, inputmode: "numeric", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+            <%= form.number_field :rating, min: 1, max: 5, step: 1, inputmode: "numeric", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
           </div>
         <% end %>
       </div>

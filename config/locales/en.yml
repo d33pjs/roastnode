@@ -353,7 +353,10 @@ en:
       total_time: "Total time (s)"
     update:
       updated: "Brew corrected."
+    taste:
+      updated: "Taste updated."
     show:
+      adjust_taste: "Adjust taste"
       back: "Back to dashboard"
       balance: "Balance: %{balance}"
       balance_label: "Balance"
@@ -390,6 +393,7 @@ en:
       related_photos: "Related photos"
       related_tool_photos: "Preparation tool photos"
       retention: "Retention"
+      save_taste: "Save taste"
       taste: "Taste"
       temperature: "Temperature"
       temperature_label: "Temperature %{temperature}"

@@ -44,7 +44,7 @@ class Brew < ApplicationRecord
   validates :brew_temperature_celsius, numericality: { greater_than: 0 }, allow_nil: true
   validates :total_time_seconds, :preinfusion_seconds, :first_drip_seconds,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :rating, numericality: { only_integer: true, in: 0..5 }, allow_nil: true
+  validates :rating, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
   validate :bean_belongs_to_workspace
   validate :equipment_belongs_to_workspace

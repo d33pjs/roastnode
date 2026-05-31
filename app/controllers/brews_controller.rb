@@ -1,6 +1,6 @@
 class BrewsController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create edit update destroy]
-  before_action :set_brew, only: %i[show edit update destroy]
+  before_action :authorize_workspace_write!, only: %i[new create edit update taste destroy]
+  before_action :set_brew, only: %i[show edit update taste destroy]
 
   def show
   end
@@ -56,6 +56,14 @@ class BrewsController < ApplicationController
     redirect_to @brew, notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
     render :edit, status: :unprocessable_entity
+  end
+
+  def taste
+    if @brew.update(taste_brew_params)
+      redirect_to @brew, notice: t(".updated")
+    else
+      render :show, status: :unprocessable_entity
+    end
   end
 
   def destroy
@@ -171,6 +179,10 @@ class BrewsController < ApplicationController
         :notes,
         { preparation_tool_ids: [], photos: [] }
       ]), *DECIMAL_BREW_FIELDS)
+    end
+
+    def taste_brew_params
+      params.expect(brew: [ :taste_balance, :rating ])
     end
 
     def brew_draft_storage_key
