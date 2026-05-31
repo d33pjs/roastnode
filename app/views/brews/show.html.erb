@@ -34,7 +34,7 @@
 
           <div>
             <%= form.label :rating, t(".rating"), class: taste_correction_label_class %>
-            <%= form.number_field :rating, min: 1, max: 5, step: 1, inputmode: "numeric", class: taste_correction_input_class %>
+            <%= render "brews/rating_choices", form: form %>
           </div>
 
           <%= form.submit t(".save_taste"), class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>

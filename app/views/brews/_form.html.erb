@@ -207,7 +207,7 @@
         <% unless hide_brew_field.call(:rating) %>
           <div>
             <%= form.label :rating, t("brews.form.rating"), class: "block text-sm font-bold text-rn-muted" %>
-            <%= form.number_field :rating, min: 1, max: 5, step: 1, inputmode: "numeric", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+            <%= render "brews/rating_choices", form: form %>
           </div>
         <% end %>
       </div>

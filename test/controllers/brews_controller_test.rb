@@ -29,7 +29,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "28", count: 0
     assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "5"
     assert_select "input[name=?][value=?]", "brew[first_drip_seconds]", "8", count: 0
-    assert_select "input[name=?][value=?]", "brew[rating]", "4", count: 0
+    assert_select "input[name=?][value=?][checked]", "brew[rating]", "4", count: 0
     assert_select "textarea[name=?]", "brew[notes]", text: ""
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:puck_screen).id.to_s
@@ -118,13 +118,19 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "brew[dose_grams]", count: 0
   end
 
-  test "brew form rating input is constrained to one through five" do
+  test "brew form renders rating as constrained choices" do
     sign_in_as(users(:one))
 
     get new_brew_path
 
     assert_response :success
-    assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]"
+    assert_select "input[type=number][name=?]", "brew[rating]", count: 0
+    assert_select "[data-testid=brew-rating-options]"
+    assert_select "input[type=radio][name=?]", "brew[rating]", count: 6
+    assert_select "input[type=radio][name=?][value=''][checked]", "brew[rating]"
+    (1..5).each do |rating|
+      assert_select "input[type=radio][name=?][value=?]", "brew[rating]", rating.to_s
+    end
   end
 
   test "brew form renders taste balance as styled choices" do
@@ -547,12 +553,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-taste-balance-scale] input[type=radio][name=?]", "brew[taste_balance]", count: Brew.taste_balances.size - 1
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[taste_balance]", brew.taste_balance
     assert_select ".rn-choice-label", text: brew.taste_balance.humanize
-    assert_select "input[name=?][min=1][max=5][step=1]", "brew[rating]" do |elements|
-      class_name = elements.first["class"]
-      assert_includes class_name, "rounded-2xl"
-      assert_includes class_name, "border-rn-line"
-      assert_includes class_name, "text-rn-ink"
-    end
+    assert_select "input[type=number][name=?]", "brew[rating]", count: 0
+    assert_select "[data-testid=brew-rating-options]"
+    assert_select "input[type=radio][name=?]", "brew[rating]", count: 6
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[rating]", brew.rating.to_s
     assert_select "input[type=submit][value=?]", I18n.t("brews.show.save_taste")
   end
 
