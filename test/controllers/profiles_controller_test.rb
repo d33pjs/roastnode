@@ -37,6 +37,18 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=profile-public-banner-preview][src=?]", media_attachment_path(banner, variant: :thumbnail)
   end
 
+  test "profile shows passkey account security controls" do
+    sign_in_as(users(:one))
+
+    get edit_profile_path
+
+    assert_response :success
+    assert_select "h2", I18n.t("profiles.passkeys.title")
+    assert_select "[data-controller=?]", "passkey"
+    assert_select "form[action=?]", second_factor_passkey_credentials_path
+    assert_select "form[action=?]", passkey_credential_path(passkey_credentials(:one_touch_id))
+  end
+
   test "signed-in user can update display name and form preferences" do
     user = users(:one)
     sign_in_as(user)

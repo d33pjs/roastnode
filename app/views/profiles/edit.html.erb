@@ -96,6 +96,8 @@
 
         <%= form.submit t(".save"), class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
       <% end %>
+
+      <%= render "profiles/passkeys", user: @user %>
     </div>
   </section>
 </main>

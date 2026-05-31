@@ -15,6 +15,17 @@
 
   <h1 class="font-bold text-4xl">Sign in</h1>
 
+  <div
+    class="my-5"
+    data-controller="passkey"
+    data-passkey-options-url-value="<%= options_passkey_session_path %>"
+    data-passkey-submit-url-value="<%= passkey_session_path %>">
+    <button type="button" data-action="passkey#authenticate" class="w-full rounded-md border border-stone-300 px-3.5 py-2.5 text-center font-medium text-stone-900 hover:bg-stone-100">
+      <%= t(".sign_in_with_passkey") %>
+    </button>
+    <p class="mt-2 hidden text-sm text-red-600" data-passkey-target="error"></p>
+  </div>
+
   <%= form_with url: session_url, class: "contents" do |form| %>
     <div class="my-5">
       <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>

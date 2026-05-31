@@ -602,6 +602,7 @@ en:
   sessions:
     new:
       setup_first_user: "Set up first account"
+      sign_in_with_passkey: "Sign in with passkey"
   instance_admin:
     backup_profiles:
       create:
@@ -869,6 +870,18 @@ en:
       title: "Profile"
       public_banner: "Public banner"
       username: "Username"
+    passkeys:
+      add: "Add passkey"
+      added: "Added %{date}"
+      current_password: "Current password"
+      delete: "Delete passkey"
+      intro: "Passkeys let this browser or device sign you in after local verification."
+      last_used: "Last used %{time}"
+      nickname: "Passkey name"
+      rename: "Rename"
+      require_after_password: "Require passkey after password sign-in"
+      save_second_factor: "Save passkey security"
+      title: "Passkeys"
     update:
       updated: "Profile updated."
   password_changes:
