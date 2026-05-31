@@ -7,7 +7,7 @@ module Passkeys
     end
 
     def verify!
-      webauthn_credential = WebAuthn::Credential.from_get(@credential_params)
+      webauthn_credential = webauthn_credential_from_params
       credential = find_credential!(webauthn_credential.id)
       webauthn_credential.verify(
         @challenge,
@@ -23,6 +23,12 @@ module Passkeys
     end
 
     private
+      def webauthn_credential_from_params
+        WebAuthn::Credential.from_get(@credential_params)
+      rescue NoMethodError => error
+        raise WebAuthn::Error, error.message
+      end
+
       def find_credential!(external_id)
         scope = @user ? @user.passkey_credentials : PasskeyCredential.all
         scope.find_by!(external_id:)
