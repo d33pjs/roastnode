@@ -135,6 +135,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       Bean.delete_all
       DataImport.delete_all
       Membership.delete_all
+      PasskeyCredential.delete_all
       User.update_all(active_workspace_id: nil)
       Workspace.delete_all
       User.delete_all

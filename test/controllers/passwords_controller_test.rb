@@ -49,6 +49,21 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_notice "Password has been reset"
   end
 
+  test "password reset disables passkey second factor and preserves passkeys" do
+    user = users(:one)
+    user.update!(passkey_second_factor_enabled: true)
+    passkey_count = user.passkey_credentials.count
+
+    put password_path(user.password_reset_token), params: {
+      password: "new-password",
+      password_confirmation: "new-password"
+    }
+
+    assert_redirected_to new_session_path
+    assert_not user.reload.passkey_second_factor_enabled?
+    assert_equal passkey_count, user.passkey_credentials.count
+  end
+
   test "update with non matching passwords" do
     token = @user.password_reset_token
     assert_no_changes -> { @user.reload.password_digest } do

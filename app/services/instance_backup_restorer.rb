@@ -66,6 +66,7 @@ class InstanceBackupRestorer
         EquipmentEvent,
         EquipmentEventItem,
         InventoryAdjustment,
+        PasskeyCredential,
         ActiveStorage::Attachment,
         ActiveStorage::Blob
       ].none?(&:exists?)

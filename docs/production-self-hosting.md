@@ -35,6 +35,12 @@ ROASTNODE_PROTOCOL=https
 
 If you enable outbound password reset mail, configure SMTP through host-level secrets or the rendered env file. Do not put SMTP passwords, database passwords, backup files, `config/master.key`, or generated `.env` files into git.
 
+### Passkey Origin
+
+Set `ROASTNODE_WEBAUTHN_ORIGIN` to the public HTTPS origin users open in their browser, for example `https://coffee.example.com`. Set `ROASTNODE_WEBAUTHN_RP_ID` only when you intentionally want credentials scoped to a parent domain such as `example.com`.
+
+Passkeys are bound to the WebAuthn origin/RP ID. Changing the public hostname or RP ID can make existing passkeys unusable, so treat these values as stable production identity settings.
+
 ## Storage Volumes
 
 Preserve these across deploys and host restarts:

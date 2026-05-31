@@ -34,6 +34,10 @@ For named LAN hosts, set a comma-separated allowlist before starting Rails:
 ROASTNODE_DEV_HOSTS=coffee-box.local bin/rails server -p 3001 -b 0.0.0.0
 ```
 
+### Local Passkey Origin
+
+Passkey development defaults to `http://localhost:3001`, matching the preferred local Rails port. If you use a different local hostname or port, set `ROASTNODE_WEBAUTHN_ORIGIN` before starting Rails.
+
 ## First Setup
 
 ```bash

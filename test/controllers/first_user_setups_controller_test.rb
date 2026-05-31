@@ -96,6 +96,7 @@ class FirstUserSetupsControllerTest < ActionDispatch::IntegrationTest
           DataImport,
           WorkspaceInvite,
           Membership,
+          PasskeyCredential,
           Session,
           Workspace,
           User

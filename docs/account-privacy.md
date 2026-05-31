@@ -21,3 +21,7 @@ Users can upload an avatar and a public banner from the Profile page. The avatar
 The Profile page shows the signed-in user's email as a read-only account detail. Workspace member lists, invite management, exports, and the instance-admin account list may still use email addresses where account identity is the point of the screen.
 
 When adding a new surface, ask whether it is a coffee/product surface or an account/admin surface. Coffee/product surfaces should prefer display labels.
+
+## Passkeys
+
+Passkey controls belong in Profile because they are account-security UI. They may show the signed-in user's email address as account context, but coffee/product pages should continue to use `User#display_label`.
