@@ -1,4 +1,5 @@
 <% if record.photos.attached? %>
+  <% actions_allowed = local_assigns.fetch(:actions_allowed, current_workspace_policy.write?) %>
   <% section_attributes = { class: section_class } %>
   <% section_attributes[:id] = local_assigns[:section_id] if local_assigns[:section_id].present? %>
   <%= tag.section(**section_attributes) do %>
@@ -19,21 +20,21 @@
             <%= link_to t(".download"),
               download_media_attachment_path(photo),
               class: "rounded-md border border-stone-200 px-3 py-1.5 text-xs font-bold text-stone-800 hover:bg-stone-50" %>
-            <% if current_workspace_policy.write? %>
+            <% if actions_allowed %>
               <%= link_to t(".crop"),
                 crop_media_attachment_path(photo),
                 class: "rounded-md border border-stone-200 px-3 py-1.5 text-xs font-bold text-stone-800 hover:bg-stone-50" %>
             <% end %>
             <% if photo == primary_photo %>
               <span class="rounded-md bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-900"><%= t(".primary") %></span>
-            <% elsif current_workspace_policy.write? %>
+            <% elsif actions_allowed %>
               <%= button_to t(".make_primary"),
                 primary_media_attachment_path(photo),
                 method: :patch,
                 class: "rounded-md border border-stone-200 px-3 py-1.5 text-xs font-bold text-stone-800 hover:bg-stone-50" %>
             <% end %>
           </figcaption>
-          <% if current_workspace_policy.write? %>
+          <% if actions_allowed %>
             <%= button_to t(".delete"),
               media_attachment_path(photo),
               method: :delete,

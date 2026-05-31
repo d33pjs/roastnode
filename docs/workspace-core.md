@@ -15,7 +15,7 @@ Workspace Core is the first real Roastnode product slice after Rails foundation 
 
 - `owner`: full workspace control.
 - `admin`: can manage members and invites.
-- `member`: can write normal workspace data.
+- `member`: can write normal workspace data such as beans, brews, inventory corrections, and maintenance logs, but cannot manage household settings, invites, exports, imports, or gear records.
 - `viewer`: read-only access.
 
 Use `WorkspacePolicy` for role checks. Controllers should prefer the helper methods exposed by `ApplicationController`: `current_workspace`, `current_membership`, and `current_workspace_policy`.
@@ -26,7 +26,7 @@ Workspace export is owner-only in the current slice. Admins can manage invites a
 
 Owners and admins can open the workspace dashboard and use **Invites** to create links for the `admin`, `member`, or `viewer` roles. Invite links can be revoked and expire automatically.
 
-Signed-in users can accept an invite directly. People without an account can create one from a valid invite page, join the invited workspace in the same flow, and start a session. This is still private invite-only signup, not public registration.
+Signed-in users can accept an invite directly. People without an account can create one from a valid invite page, optionally set a username/display label while choosing their password, join the invited workspace in the same flow, and start a session. This is still private invite-only signup, not public registration.
 
 Invites with `email_address` are email-bound: only a user account with that normalized email address can accept them. Blank-email invites remain "anyone with the link" invites.
 

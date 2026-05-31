@@ -980,6 +980,7 @@ en:
       unavailable_body: "Ask a workspace owner or admin for a fresh invite link."
       unavailable_eyebrow: "Invite unavailable"
       unavailable_title: "This invite is not available"
+      username_label: "Username (optional)"
   workspace_invites_mailer:
     invite:
       subject: "Join %{workspace} on Roastnode"

@@ -9,9 +9,13 @@
 
       <% if current_workspace_policy.write? %>
         <div class="flex flex-wrap gap-2">
-          <%= link_to t(".log_maintenance"), new_equipment_event_path, class: "shrink-0 rounded-2xl bg-[var(--rn-accent-strong)] px-3.5 py-2.5 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90 sm:px-4 sm:py-3" %>
-          <%= link_to t(".new_equipment"), new_equipment_path, class: "shrink-0 rounded-2xl border border-rn-line bg-rn-surface px-3.5 py-2.5 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)] sm:px-4 sm:py-3" %>
-          <%= link_to t(".new_tool"), new_preparation_tool_path, class: "shrink-0 rounded-2xl border border-rn-line bg-rn-surface px-3.5 py-2.5 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)] sm:px-4 sm:py-3" %>
+          <% if current_workspace_policy.write? %>
+            <%= link_to t(".log_maintenance"), new_equipment_event_path, class: "shrink-0 rounded-2xl bg-[var(--rn-accent-strong)] px-3.5 py-2.5 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90 sm:px-4 sm:py-3" %>
+          <% end %>
+          <% if current_workspace_policy.manage? %>
+            <%= link_to t(".new_equipment"), new_equipment_path, class: "shrink-0 rounded-2xl border border-rn-line bg-rn-surface px-3.5 py-2.5 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)] sm:px-4 sm:py-3" %>
+            <%= link_to t(".new_tool"), new_preparation_tool_path, class: "shrink-0 rounded-2xl border border-rn-line bg-rn-surface px-3.5 py-2.5 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)] sm:px-4 sm:py-3" %>
+          <% end %>
         </div>
       <% end %>
     </header>

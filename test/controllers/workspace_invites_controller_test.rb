@@ -158,9 +158,10 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", I18n.t("workspace_invites.show.title", workspace: invite.workspace.name)
     assert_select "form[action=?]", signup_workspace_invite_path(invite.token)
+    assert_select "input[name=?]", "user[display_name]"
   end
 
-  test "invite signup creates account accepts invite and starts session" do
+  test "invite signup creates account with optional username accepts invite and starts session" do
     invite = workspace_invites(:member_invite)
     invite.update!(email_address: "Friend@Example.com")
 
@@ -169,6 +170,7 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
         post signup_workspace_invite_path(invite.token), params: {
           user: {
             email_address: "friend@example.com",
+            display_name: "Friendly Barista",
             password: "password",
             password_confirmation: "password"
           }
@@ -178,6 +180,7 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
 
     user = User.find_by!(email_address: "friend@example.com")
     assert_redirected_to root_path
+    assert_equal "Friendly Barista", user.display_name
     assert_equal workspaces(:household), user.active_workspace
     assert_equal "member", user.membership_for(workspaces(:household)).role
     assert_equal user, invite.reload.accepted_by

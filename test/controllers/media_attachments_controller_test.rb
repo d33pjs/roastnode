@@ -263,6 +263,33 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("authorization.denied"), flash[:alert]
   end
 
+  test "member cannot manage equipment photo attachments" do
+    users(:two).update!(active_workspace: workspaces(:household))
+    sign_in_as(users(:two))
+    equipment = equipment(:household_grinder)
+    attachment = attach_photo(equipment)
+
+    get equipment_path(equipment)
+    assert_response :success
+    assert_select "a[href=?]", media_attachment_path(attachment), text: I18n.t("shared.photo_grid.view")
+    assert_select "a[href=?]", download_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.download")
+    assert_select "a[href=?]", crop_media_attachment_path(attachment), count: 0
+    assert_select "form[action='#{primary_media_attachment_path(attachment)}']", count: 0
+    assert_select "form[action='#{media_attachment_path(attachment)}']", count: 0
+
+    get crop_media_attachment_path(attachment)
+    assert_redirected_to root_path
+
+    patch primary_media_attachment_path(attachment)
+    assert_redirected_to root_path
+    assert_nil equipment.reload.primary_photo_attachment_id
+
+    assert_no_difference -> { equipment.photos.attachments.reload.count } do
+      delete media_attachment_path(attachment)
+    end
+    assert_redirected_to root_path
+  end
+
   test "writer cannot remove another workspace attachment" do
     sign_in_as(users(:one))
     attachment = attach_photo(beans(:other_workspace_open))

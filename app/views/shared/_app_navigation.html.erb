@@ -1,3 +1,5 @@
+<% settings_navigation_visible = current_workspace_policy.manage? || current_workspace_policy.export? %>
+
 <nav data-testid="app-navigation" class="rn-app-nav border-b border-rn-line bg-rn-surface px-4 py-3 shadow-sm sm:px-6">
   <div class="mx-auto max-w-6xl">
     <div class="flex items-center justify-between gap-3">
@@ -33,20 +35,22 @@
           </div>
         </details>
 
-        <details data-testid="app-nav-settings" class="relative">
-          <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.settings") %></summary>
-          <div class="rn-nav-menu-panel absolute right-0 top-11 z-50 min-w-60">
-            <% if current_workspace_policy.manage? %>
-              <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-nav-sub-link" %>
-            <% end %>
-            <% if current_workspace_policy.export? %>
-              <%= link_to t("shared.app_navigation.export"), workspace_export_path, class: "rn-nav-sub-link" %>
-              <%= link_to t("shared.app_navigation.export_beans"), workspace_export_beans_path, class: "rn-nav-sub-link" %>
-              <%= link_to t("shared.app_navigation.export_brews"), workspace_export_brews_path, class: "rn-nav-sub-link" %>
-              <%= link_to t("shared.app_navigation.export_media"), workspace_export_media_path, class: "rn-nav-sub-link" %>
-            <% end %>
-          </div>
-        </details>
+        <% if settings_navigation_visible %>
+          <details data-testid="app-nav-settings" class="relative">
+            <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.settings") %></summary>
+            <div class="rn-nav-menu-panel absolute right-0 top-11 z-50 min-w-60">
+              <% if current_workspace_policy.manage? %>
+                <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-nav-sub-link" %>
+              <% end %>
+              <% if current_workspace_policy.export? %>
+                <%= link_to t("shared.app_navigation.export"), workspace_export_path, class: "rn-nav-sub-link" %>
+                <%= link_to t("shared.app_navigation.export_beans"), workspace_export_beans_path, class: "rn-nav-sub-link" %>
+                <%= link_to t("shared.app_navigation.export_brews"), workspace_export_brews_path, class: "rn-nav-sub-link" %>
+                <%= link_to t("shared.app_navigation.export_media"), workspace_export_media_path, class: "rn-nav-sub-link" %>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
 
         <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-nav-sign-out" %>
       </div>
@@ -80,18 +84,20 @@
               <% end %>
             </div>
 
-            <div data-testid="app-nav-settings" class="rn-nav-group">
-              <p class="rn-nav-group-title"><%= t("shared.app_navigation.settings") %></p>
-              <% if current_workspace_policy.manage? %>
-                <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-nav-sub-link" %>
-              <% end %>
-              <% if current_workspace_policy.export? %>
-                <%= link_to t("shared.app_navigation.export"), workspace_export_path, class: "rn-nav-sub-link" %>
-                <%= link_to t("shared.app_navigation.export_beans"), workspace_export_beans_path, class: "rn-nav-sub-link" %>
-                <%= link_to t("shared.app_navigation.export_brews"), workspace_export_brews_path, class: "rn-nav-sub-link" %>
-                <%= link_to t("shared.app_navigation.export_media"), workspace_export_media_path, class: "rn-nav-sub-link" %>
-              <% end %>
-            </div>
+            <% if settings_navigation_visible %>
+              <div data-testid="app-nav-settings" class="rn-nav-group">
+                <p class="rn-nav-group-title"><%= t("shared.app_navigation.settings") %></p>
+                <% if current_workspace_policy.manage? %>
+                  <%= link_to t("shared.app_navigation.import"), new_beanconqueror_import_path, class: "rn-nav-sub-link" %>
+                <% end %>
+                <% if current_workspace_policy.export? %>
+                  <%= link_to t("shared.app_navigation.export"), workspace_export_path, class: "rn-nav-sub-link" %>
+                  <%= link_to t("shared.app_navigation.export_beans"), workspace_export_beans_path, class: "rn-nav-sub-link" %>
+                  <%= link_to t("shared.app_navigation.export_brews"), workspace_export_brews_path, class: "rn-nav-sub-link" %>
+                  <%= link_to t("shared.app_navigation.export_media"), workspace_export_media_path, class: "rn-nav-sub-link" %>
+                <% end %>
+              </div>
+            <% end %>
 
             <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-nav-sign-out w-full text-left" %>
           </div>

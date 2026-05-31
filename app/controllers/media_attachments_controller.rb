@@ -147,6 +147,8 @@ class MediaAttachmentsController < ApplicationController
         record.id == Current.user&.id
       when Workspace
         record.id == current_workspace&.id && current_workspace_policy.manage?
+      when Equipment, PreparationTool
+        current_workspace_policy.manage?
       else
         current_workspace_policy.write?
       end
@@ -171,6 +173,8 @@ class MediaAttachmentsController < ApplicationController
         brew_path(record)
       when Equipment
         equipment_path(record)
+      when PreparationTool
+        preparation_tool_path(record)
       when EquipmentEvent
         equipment_event_path(record)
       when User

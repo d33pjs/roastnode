@@ -110,10 +110,11 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
   end
 
-  test "member can create preparation tool" do
-    user = users(:two)
-    user.update!(active_workspace: workspaces(:household))
-    sign_in_as(user)
+  test "admin can create preparation tool" do
+    admin = User.create!(email_address: "tool-admin@example.com", password: "password")
+    Membership.create!(workspace: workspaces(:household), user: admin, role: :admin)
+    admin.update!(active_workspace: workspaces(:household))
+    sign_in_as(admin)
 
     assert_difference -> { workspaces(:household).preparation_tools.count }, 1 do
       post preparation_tools_path, params: {
@@ -131,6 +132,44 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Paper filter", tool.name
     assert_equal 1, tool.photos.count
     assert_equal 30, tool.position
+  end
+
+  test "member can view preparation tools but cannot manage them" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    tool = preparation_tools(:wdt)
+
+    get preparation_tools_path
+    assert_response :success
+    assert_select "a[href=?]", new_preparation_tool_path, count: 0
+
+    get preparation_tool_path(tool)
+    assert_response :success
+    assert_select "h1", tool.name
+    assert_select "a[href=?]", edit_preparation_tool_path(tool), count: 0
+    assert_select "form[action=?]", archive_preparation_tool_path(tool), count: 0
+    assert_select "[data-testid=preparation-tool-danger-zone]", count: 0
+
+    assert_no_difference -> { workspaces(:household).preparation_tools.count } do
+      post preparation_tools_path, params: { preparation_tool: { name: "Nope", brew_method: "espresso" } }
+    end
+    assert_redirected_to root_path
+
+    get edit_preparation_tool_path(tool)
+    assert_redirected_to root_path
+
+    patch preparation_tool_path(tool), params: { preparation_tool: { name: "Nope", brew_method: "espresso" } }
+    assert_redirected_to root_path
+    assert_not_equal "Nope", tool.reload.name
+
+    patch archive_preparation_tool_path(tool)
+    assert_redirected_to root_path
+    assert tool.reload.active?
+
+    delete preparation_tool_path(tool)
+    assert_redirected_to root_path
+    assert PreparationTool.exists?(tool.id)
   end
 
   test "edit renders current photos and update adds photos" do

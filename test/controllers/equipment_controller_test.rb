@@ -28,10 +28,11 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=equipment-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
   end
 
-  test "member can create equipment" do
-    user = users(:two)
-    user.update!(active_workspace: workspaces(:household))
-    sign_in_as(user)
+  test "admin can create equipment" do
+    admin = User.create!(email_address: "gear-admin@example.com", password: "password")
+    Membership.create!(workspace: workspaces(:household), user: admin, role: :admin)
+    admin.update!(active_workspace: workspaces(:household))
+    sign_in_as(admin)
 
     assert_difference -> { workspaces(:household).equipment.count }, 1 do
       post equipment_index_path, params: {
@@ -103,6 +104,44 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to root_path
+  end
+
+  test "member can view equipment but cannot manage it" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    equipment = equipment(:household_grinder)
+
+    get equipment_index_path
+    assert_response :success
+    assert_select "a[href=?]", new_equipment_path, count: 0
+
+    get equipment_path(equipment)
+    assert_response :success
+    assert_select "h1", equipment.name
+    assert_select "a[href=?]", edit_equipment_path(equipment), count: 0
+    assert_select "form[action=?]", archive_equipment_path(equipment), count: 0
+    assert_select "[data-testid=equipment-danger-zone]", count: 0
+
+    assert_no_difference -> { workspaces(:household).equipment.count } do
+      post equipment_index_path, params: { equipment: { name: "Nope", kind: "machine" } }
+    end
+    assert_redirected_to root_path
+
+    get edit_equipment_path(equipment)
+    assert_redirected_to root_path
+
+    patch equipment_path(equipment), params: { equipment: { name: "Nope", kind: "grinder" } }
+    assert_redirected_to root_path
+    assert_not_equal "Nope", equipment.reload.name
+
+    patch archive_equipment_path(equipment)
+    assert_redirected_to root_path
+    assert_not equipment.reload.archived?
+
+    delete equipment_path(equipment)
+    assert_redirected_to root_path
+    assert Equipment.exists?(equipment.id)
   end
 
   test "show lists active workspace equipment activity" do

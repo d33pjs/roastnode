@@ -36,6 +36,11 @@
             </div>
 
             <div>
+              <%= form.label :display_name, t(".username_label"), class: "block text-sm font-medium text-stone-700" %>
+              <%= form.text_field :display_name, autocomplete: "nickname", class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+            </div>
+
+            <div>
               <%= form.label :password, t(".password_label"), class: "block text-sm font-medium text-stone-700" %>
               <%= form.password_field :password, required: true, autocomplete: "new-password", maxlength: 72, class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
             </div>

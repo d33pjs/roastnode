@@ -7,7 +7,7 @@
         <p class="mt-1 text-sm font-semibold text-rn-muted"><%= current_workspace.name %></p>
       </div>
 
-      <% if current_workspace_policy.write? %>
+      <% if current_workspace_policy.manage? %>
         <%= link_to t(".new"), new_equipment_path, class: "shrink-0 rounded-2xl bg-[var(--rn-accent-strong)] px-3.5 py-2.5 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90 sm:px-4 sm:py-3" %>
       <% end %>
     </header>

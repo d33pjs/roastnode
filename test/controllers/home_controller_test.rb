@@ -118,6 +118,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", workspace_export_media_path, count: 0
     assert_select "a[href=?]", edit_workspace_path, count: 0
     assert_select "a[href='/instance_admin']", count: 0
+    assert_select "[data-testid=app-nav-settings]", count: 0
   end
 
   test "workspace dashboard shows overview and recent activity without duplicate command strips" do

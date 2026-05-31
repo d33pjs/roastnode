@@ -115,7 +115,7 @@ class WorkspaceInvitesController < ApplicationController
     end
 
     def invite_signup_params
-      params.expect(user: [ :email_address, :password, :password_confirmation ])
+      params.expect(user: [ :email_address, :display_name, :password, :password_confirmation ])
     end
 
     def prepare_invite_signup

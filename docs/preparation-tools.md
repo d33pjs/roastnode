@@ -6,11 +6,11 @@ Preparation Tools are reusable workspace checklist items for brew preparation. T
 
 - Workspace-scoped preparation tools.
 - Espresso method support.
-- Tool index, detail, creation, and edit screens.
+- Tool index and detail screens for all workspace members with read access.
+- Owner/admin-only creation and edit screens.
 - Optional preparation tool photos on create and edit.
-- Primary photo selection, private viewing/download, cropping, and removal through the shared media flow.
-- Archive and reopen lifecycle.
-- Destructive danger-zone delete that keeps brew snapshots readable.
+- Owner/admin-only primary photo selection, cropping, removal, archive/reopen, and destructive danger-zone delete.
+- Private viewing/download of preparation tool photos for workspace members with read access.
 - Manual sort position for checklist ordering.
 - Detail analytics for usage count, total coffee ground, average rating/yield/time, channeling rate, taste balance, retention markers, best brews, and recent brews.
 - Optional date range filters for brew-derived tool analytics.
@@ -38,6 +38,10 @@ The snapshot keeps old brew history readable if a tool is renamed later.
 ## Analytics
 
 Preparation tool analytics are scoped through the active workspace tool. Date range filters are inclusive and apply to brew-derived values: usage count, total coffee ground, averages, channeling, taste balance, retention markers, best brews, and recent brews. Tool lifecycle fields such as active status, method, and position remain current tool facts.
+
+## Authorization
+
+Owners and admins manage preparation tool records and photos. Members can view tools and use active tools while logging brews, but cannot add, edit, archive, reopen, delete, or manage photos for preparation tools. Viewers are read-only.
 
 ## Delete
 

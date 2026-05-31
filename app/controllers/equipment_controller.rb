@@ -1,5 +1,5 @@
 class EquipmentController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create edit update archive reopen destroy]
+  before_action :authorize_workspace_admin!, only: %i[new create edit update archive reopen destroy]
   before_action :set_equipment, only: %i[show edit update archive reopen destroy]
 
   def index

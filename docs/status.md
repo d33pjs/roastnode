@@ -8,7 +8,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 
 - Rails 8.1 monolith at the repository root, with PostgreSQL, Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
 - Rails-native authentication, first-user setup for empty installs, password reset and signed-in password change flows, private-by-default app shell, and an instance admin dashboard with safe read-only checks plus backup controls.
-- Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with optional email delivery, resend/re-invite for email-bound invites, private invite-only account creation, member role management/removal, owner-only ownership transfer, owner-only workspace deletion, and workspace-scoped controller patterns.
+- Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with optional email delivery and optional username capture during invite signup, resend/re-invite for email-bound invites, private invite-only account creation, member role management/removal, owner-only ownership transfer, owner-only workspace deletion, and workspace-scoped controller patterns.
 - Profile settings: display name, username-style display label, avatar, public banner, preferred landing screen, espresso focus field, hidden espresso fields, number format, and time format.
 - Workspace settings: household name, currency, logo, and banner.
 - Coffee core: rich beans, equipment, espresso brews, inventory adjustments, retention markers, dashboard activity, and required-open-bean espresso logging.
@@ -18,8 +18,8 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Brew corrections: edit and delete flows keep bean inventory consistent through correction/reversal helpers, while saved taste balance and rating can be adjusted from brew detail with an explicit save.
 - Hero Brew Card: dense screenshot-friendly brew card on dashboard and brew details, with safe user labels, avatar/household/equipment marks, bean photo, ratio, rating, balance, retention, SVG brew chart, first drip, pre-infusion, total time, and vertical temperature label.
 - Brew detail pages: full log details below the card plus related bean/equipment/preparation-tool photos and cross-links.
-- Preparation tools: method-scoped checklist records with ordering, archive/reopen, edit/delete, additive photos, primary/crop/download/remove media, brew snapshots, and detail analytics.
-- Equipment: edit/archive/reopen/delete lifecycle, additive photos, primary/crop/download/remove media, list photos, detail analytics, and historical brew safety when equipment is deleted.
+- Preparation tools: method-scoped checklist records with ordering, owner/admin-only lifecycle and media management, member-visible tool use in brew logging, brew snapshots, and detail analytics.
+- Equipment: owner/admin-only edit/archive/reopen/delete lifecycle and media management, member-visible gear details, list photos, detail analytics, and historical brew safety when equipment is deleted.
 - Equipment events: first-class maintenance logs with multiple event types, multiple affected equipment records, photos, edit/delete, Gear overview logging entry point, equipment detail history, and dashboard activity.
 - Private media: app photos are served through `MediaAttachmentsController`, with active-workspace checks, private thumbnail variants, view/download/crop/primary/remove controls, and related photo groups.
 - Active-workspace export: owner-only structured JSON, beans CSV, brews CSV, and media ZIP with manifest for workspace-owned media.

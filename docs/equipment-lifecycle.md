@@ -4,7 +4,9 @@ Equipment now has the same basic lifecycle shape as bean bags, but with "archive
 
 ## Editing And Photos
 
-Owners, admins, and members can edit equipment from the equipment detail page. Editing supports additive photos: newly uploaded files are attached without replacing existing equipment photos. Existing photos are shown on the edit page and still use the shared private media route.
+Owners and admins can create, edit, archive, reopen, delete, and manage photos for equipment from the equipment detail page. Members can view equipment and its history, but they cannot add or change equipment records or equipment photos.
+
+Editing supports additive photos: newly uploaded files are attached without replacing existing equipment photos. Existing photos are shown on the edit page and still use the shared private media route.
 
 The equipment index shows each item's primary photo when one is selected, falling back to an initial badge when no photo exists.
 
