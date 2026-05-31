@@ -44,6 +44,24 @@ module PasskeyChallenges
       nil
     end
 
+    def webauthn_credential_params
+      credential = params.require(:credential)
+      raise ActionController::ParameterMissing, :credential unless credential.respond_to?(:permit)
+
+      credential.permit(
+        :id,
+        :rawId,
+        :type,
+        response: %i[
+          attestationObject
+          authenticatorData
+          clientDataJSON
+          signature
+          userHandle
+        ]
+      ).to_h
+    end
+
     def passkey_challenge_key(kind)
       "passkey_#{kind}_challenge"
     end

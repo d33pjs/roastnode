@@ -16,7 +16,7 @@ class PasskeySessionsController < ApplicationController
 
     credential = Passkeys::Assertion.new(
       challenge:,
-      credential_params: credential_params
+      credential_params: webauthn_credential_params
     ).verify!
 
     start_new_session_for(credential.user)
@@ -27,11 +27,4 @@ class PasskeySessionsController < ApplicationController
     render json: { error: t(".failed") }, status: :unprocessable_entity
   end
 
-  private
-    def credential_params
-      credential = params.require(:credential)
-      raise ActionController::ParameterMissing, :credential unless credential.respond_to?(:permit!)
-
-      credential.permit!.to_h
-    end
 end

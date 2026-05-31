@@ -18,7 +18,7 @@ class PasskeyCredentialsController < ApplicationController
     credential = Passkeys::Registration.new(
       user: Current.user,
       challenge:,
-      credential_params: credential_params,
+      credential_params: webauthn_credential_params,
       nickname: params[:nickname]
     ).save!
     render json: { redirect_url: edit_profile_path, id: credential.id }, status: :created
@@ -65,10 +65,6 @@ class PasskeyCredentialsController < ApplicationController
   end
 
   private
-    def credential_params
-      params.require(:credential).permit!.to_h
-    end
-
     def passkey_credential_params
       params.require(:passkey_credential).permit(:nickname)
     end

@@ -26,7 +26,7 @@ class PasskeySecondFactorsController < ApplicationController
 
     Passkeys::Assertion.new(
       challenge:,
-      credential_params: credential_params,
+      credential_params: webauthn_credential_params,
       user:
     ).verify!
 
@@ -39,12 +39,4 @@ class PasskeySecondFactorsController < ApplicationController
     clear_pending_passkey_user
     render json: { error: t(".failed") }, status: :unprocessable_entity
   end
-
-  private
-    def credential_params
-      credential = params.require(:credential)
-      raise ActionController::ParameterMissing, :credential unless credential.respond_to?(:permit!)
-
-      credential.permit!.to_h
-    end
 end

@@ -16,7 +16,7 @@ class MembershipsController < ApplicationController
   end
 
   def update
-    result = membership_manager.update_role(@membership, membership_params[:role])
+    result = membership_manager.update_role(@membership, membership_role)
     redirect_to memberships_path, flash_for(result, success_key: ".updated")
   end
 
@@ -49,8 +49,8 @@ class MembershipsController < ApplicationController
       )
     end
 
-    def membership_params
-      params.require(:membership).permit(:role)
+    def membership_role
+      params.require(:membership)[:role]
     end
 
     def flash_for(result, success_key:)
