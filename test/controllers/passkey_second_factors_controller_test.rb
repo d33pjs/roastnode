@@ -42,7 +42,7 @@ class PasskeySecondFactorsControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference -> { user.sessions.count }, 1 do
       stub_webauthn_credential(:from_get, fake_assertion) do
-        post passkey_second_factor_path, params: { credential: { id: credential.external_id } }, as: :json
+        post passkey_second_factor_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
       end
     end
 
@@ -88,7 +88,7 @@ class PasskeySecondFactorsControllerTest < ActionDispatch::IntegrationTest
     end
 
     stub_webauthn_credential(:from_get, fake_assertion) do
-      post passkey_second_factor_path, params: { credential: { id: other_credential.external_id } }, as: :json
+      post passkey_second_factor_path, params: { credential: passkey_assertion_params(id: other_credential.external_id) }, as: :json
     end
 
     assert_response :unprocessable_entity
@@ -172,6 +172,33 @@ class PasskeySecondFactorsControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_difference -> { user.sessions.count } do
       post passkey_second_factor_path, params: { credential: { id: credential.external_id } }, as: :json
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil cookies[:session_id]
+    assert_equal "Passkey verification failed.", response.parsed_body.fetch("error")
+  end
+
+  test "clearing pending login clears stale second factor challenge" do
+    credential = passkey_credentials(:one_touch_id)
+    user = credential.user
+    user.update!(passkey_second_factor_enabled: true)
+    fake_options = fake_options(payload: { "challenge" => "second-factor-challenge" })
+    fake_assertion = FakeAssertedCredential.new(id: credential.external_id, sign_count: 8)
+
+    post session_path, params: { email_address: user.email_address, password: "password" }
+
+    stub_webauthn_credential(:options_for_get, fake_options) do
+      post options_passkey_second_factor_path, as: :json
+    end
+
+    delete session_path
+    post session_path, params: { email_address: user.email_address, password: "password" }
+
+    assert_no_difference -> { user.sessions.count } do
+      stub_webauthn_credential(:from_get, fake_assertion) do
+        post passkey_second_factor_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
+      end
     end
 
     assert_response :unprocessable_entity

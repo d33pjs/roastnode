@@ -1,7 +1,7 @@
 class SessionsController < ApplicationController
   include PasskeyChallenges
 
-  allow_unauthenticated_access only: %i[ new create ]
+  allow_unauthenticated_access only: %i[ new create destroy ]
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_session_path, alert: "Try again later." }
 
   def new
@@ -22,7 +22,8 @@ class SessionsController < ApplicationController
   end
 
   def destroy
-    terminate_session
+    resume_session
+    terminate_session if Current.session
     clear_pending_passkey_user
     redirect_to new_session_path, status: :see_other
   end

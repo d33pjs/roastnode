@@ -40,6 +40,7 @@ module PasskeyChallenges
     def clear_pending_passkey_user
       session.delete(:pending_passkey_user_id)
       session.delete(:pending_passkey_user_created_at)
+      session.delete(passkey_challenge_key(:second_factor))
       nil
     end
 

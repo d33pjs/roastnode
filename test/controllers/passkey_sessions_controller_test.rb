@@ -28,7 +28,7 @@ class PasskeySessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference -> { credential.user.sessions.count }, 1 do
       stub_webauthn_credential(:from_get, fake_assertion) do
-        post passkey_session_path, params: { credential: { id: credential.external_id } }, as: :json
+        post passkey_session_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
       end
     end
 
@@ -48,7 +48,7 @@ class PasskeySessionsControllerTest < ActionDispatch::IntegrationTest
     end
 
     stub_webauthn_credential(:from_get, fake_assertion) do
-      post passkey_session_path, params: { credential: { id: "unknown-credential" } }, as: :json
+      post passkey_session_path, params: { credential: passkey_assertion_params(id: "unknown-credential") }, as: :json
     end
 
     assert_response :unprocessable_entity
@@ -68,7 +68,7 @@ class PasskeySessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_difference -> { credential.user.sessions.count } do
       stub_webauthn_credential(:from_get, failing_assertion) do
-        post passkey_session_path, params: { credential: { id: credential.external_id } }, as: :json
+        post passkey_session_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
       end
 
       assert_response :unprocessable_entity
@@ -76,7 +76,7 @@ class PasskeySessionsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "Passkey sign-in failed.", response.parsed_body.fetch("error")
 
       stub_webauthn_credential(:from_get, valid_assertion) do
-        post passkey_session_path, params: { credential: { id: credential.external_id } }, as: :json
+        post passkey_session_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
       end
     end
 
@@ -91,7 +91,7 @@ class PasskeySessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_difference -> { credential.user.sessions.count } do
       stub_webauthn_credential(:from_get, fake_assertion) do
-        post passkey_session_path, params: { credential: { id: credential.external_id } }, as: :json
+        post passkey_session_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
       end
     end
 

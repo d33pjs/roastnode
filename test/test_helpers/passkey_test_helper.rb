@@ -29,6 +29,20 @@ module PasskeyTestHelper
     FakeOptions.new(challenge:, payload:)
   end
 
+  def passkey_assertion_params(id: "credential-one")
+    {
+      "id" => id,
+      "rawId" => id,
+      "type" => "public-key",
+      "response" => {
+        "clientDataJSON" => "client-data-json",
+        "authenticatorData" => "authenticator-data",
+        "signature" => "signature",
+        "userHandle" => nil
+      }
+    }
+  end
+
   def stub_webauthn_credential(method_name, replacement)
     original = WebAuthn::Credential.method(method_name)
 

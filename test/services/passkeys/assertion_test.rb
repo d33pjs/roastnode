@@ -9,7 +9,7 @@ class Passkeys::AssertionTest < ActiveSupport::TestCase
       stub_webauthn_credential(:from_get, asserted) do
         verified = Passkeys::Assertion.new(
           challenge: "assertion-challenge",
-          credential_params: { "id" => credential.external_id },
+          credential_params: passkey_assertion_params(id: credential.external_id),
           user: users(:one)
         ).verify!
 
@@ -28,7 +28,7 @@ class Passkeys::AssertionTest < ActiveSupport::TestCase
       assert_raises(ActiveRecord::RecordNotFound) do
         Passkeys::Assertion.new(
           challenge: "assertion-challenge",
-          credential_params: { "id" => credential.external_id },
+          credential_params: passkey_assertion_params(id: credential.external_id),
           user: users(:two)
         ).verify!
       end
@@ -44,7 +44,33 @@ class Passkeys::AssertionTest < ActiveSupport::TestCase
       assert_raises(WebAuthn::SignCountVerificationError) do
         Passkeys::Assertion.new(
           challenge: "assertion-challenge",
-          credential_params: { "id" => credential.external_id },
+          credential_params: passkey_assertion_params(id: credential.external_id),
+          user: users(:one)
+        ).verify!
+      end
+    end
+  end
+
+  test "raises webauthn error before from_get for malformed payload" do
+    error = assert_raises(WebAuthn::Error) do
+      Passkeys::Assertion.new(
+        challenge: "assertion-challenge",
+        credential_params: { "id" => passkey_credentials(:one_touch_id).external_id },
+        user: users(:one)
+      ).verify!
+    end
+
+    assert_equal "Malformed passkey assertion.", error.message
+  end
+
+  test "does not swallow internal no method errors from from_get" do
+    credential = passkey_credentials(:one_touch_id)
+
+    stub_webauthn_credential(:from_get, ->(*) { raise NoMethodError, "internal failure" }) do
+      assert_raises(NoMethodError) do
+        Passkeys::Assertion.new(
+          challenge: "assertion-challenge",
+          credential_params: passkey_assertion_params(id: credential.external_id),
           user: users(:one)
         ).verify!
       end
