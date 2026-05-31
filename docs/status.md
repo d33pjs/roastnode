@@ -20,7 +20,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Brew detail pages: full log details below the card plus related bean/equipment/preparation-tool photos and cross-links.
 - Preparation tools: method-scoped checklist records with ordering, archive/reopen, edit/delete, additive photos, primary/crop/download/remove media, brew snapshots, and detail analytics.
 - Equipment: edit/archive/reopen/delete lifecycle, additive photos, primary/crop/download/remove media, list photos, detail analytics, and historical brew safety when equipment is deleted.
-- Equipment events: first-class maintenance logs with multiple event types, multiple affected equipment records, photos, edit/delete, equipment detail history, and dashboard activity.
+- Equipment events: first-class maintenance logs with multiple event types, multiple affected equipment records, photos, edit/delete, Gear overview logging entry point, equipment detail history, and dashboard activity.
 - Private media: app photos are served through `MediaAttachmentsController`, with active-workspace checks, private thumbnail variants, view/download/crop/primary/remove controls, and related photo groups.
 - Active-workspace export: owner-only structured JSON, beans CSV, brews CSV, and media ZIP with manifest for workspace-owned media.
 - Instance backups: instance-admin-only backup profiles can be activated/configured in the app, scheduled through Solid Queue, run manually, tracked with run history/error metadata, retained by profile policy, written as either full media ZIP archives or readable all-households JSON, validated, and restored into an empty server through Rails tasks with ID remapping and media integrity checks.

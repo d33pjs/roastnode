@@ -26,6 +26,7 @@ Rails.application.routes.draw do
     post :signup, on: :member
     patch :revoke, on: :member
   end
+  get "gear" => "gear#index", as: :gear
   resources :beans, only: %i[index new create show edit update destroy] do
     patch :finish, on: :member
     patch :close, on: :member

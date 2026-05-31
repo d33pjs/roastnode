@@ -16,13 +16,7 @@
         <%= link_to t("shared.app_navigation.beans"), beans_path, data: { testid: "app-nav-beans" }, class: "rn-nav-link" %>
         <%= link_to t("shared.app_navigation.statistics"), statistics_path, data: { testid: "app-nav-statistics" }, class: "rn-nav-link" %>
 
-        <details data-testid="app-nav-gear" class="relative">
-          <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.gear") %></summary>
-          <div class="rn-nav-menu-panel absolute right-0 top-11 z-50 min-w-56">
-            <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-nav-sub-link" %>
-            <%= link_to t("shared.app_navigation.preparation_tools"), preparation_tools_path, class: "rn-nav-sub-link" %>
-          </div>
-        </details>
+        <%= link_to t("shared.app_navigation.gear"), gear_path, data: { testid: "app-nav-gear" }, class: "rn-nav-link" %>
 
         <details data-testid="app-nav-account" class="relative">
           <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.account") %></summary>
@@ -69,13 +63,8 @@
             <div class="grid gap-1">
               <%= link_to t("shared.app_navigation.dashboard"), dashboard_path, data: { testid: "app-nav-dashboard" }, class: "rn-nav-sub-link" %>
               <%= link_to t("shared.app_navigation.beans"), beans_path, data: { testid: "app-nav-beans" }, class: "rn-nav-sub-link" %>
+              <%= link_to t("shared.app_navigation.gear"), gear_path, data: { testid: "app-nav-gear" }, class: "rn-nav-sub-link" %>
               <%= link_to t("shared.app_navigation.statistics"), statistics_path, data: { testid: "app-nav-statistics" }, class: "rn-nav-sub-link" %>
-            </div>
-
-            <div data-testid="app-nav-gear" class="rn-nav-group">
-              <p class="rn-nav-group-title"><%= t("shared.app_navigation.gear") %></p>
-              <%= link_to t("shared.app_navigation.equipment"), equipment_index_path, class: "rn-nav-sub-link" %>
-              <%= link_to t("shared.app_navigation.preparation_tools"), preparation_tools_path, class: "rn-nav-sub-link" %>
             </div>
 
             <div data-testid="app-nav-account" class="rn-nav-group">

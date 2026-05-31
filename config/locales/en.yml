@@ -480,7 +480,6 @@ en:
       end_date: "End date"
       grams_since_service: "Grams since service"
       last_service: "Last service"
-      log_event: "Log event"
       maintenance_markers: "Maintenance markers"
       never: "Never"
       no_brews: "No brews yet."
@@ -515,7 +514,7 @@ en:
       occurred_at: "Occurred at"
       photos: "Photos"
     new:
-      back: "Back to dashboard"
+      back: "Back to gear"
       create: "Save event"
       title: "Log equipment event"
     show:
@@ -532,6 +531,24 @@ en:
       photos: "Photos"
     update:
       updated: "Equipment event updated."
+  gear:
+    index:
+      active: "Active"
+      archived: "Archived"
+      back: "Back to dashboard"
+      equipment: "Equipment"
+      inactive: "Inactive"
+      log_maintenance: "Log maintenance"
+      new_equipment: "Add equipment"
+      new_tool: "Add tool"
+      no_equipment: "No equipment yet."
+      no_tools: "No tools yet."
+      open_equipment: "Open equipment"
+      open_tools: "Open tools"
+      position: "Position %{position}"
+      title: "Gear"
+      tools: "Tools"
+      unknown: "Unknown"
   home:
     index:
       eyebrow: "Private coffee infrastructure"

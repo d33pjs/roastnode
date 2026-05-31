@@ -9,6 +9,7 @@ Equipment Events records maintenance and service history for workspace equipment
 - Multiple event types per event, so one maintenance session can record actions like grinder cleaning and machine backflush together.
 - Event logging, editing, and deletion by owners, admins, and members.
 - Viewer read-only access.
+- New event logging is launched from the Gear overview page, not from individual equipment detail pages.
 - Equipment detail pages with recent events, recent brews, usage analytics, maintenance marker distribution, and service counters.
 - Archived equipment is hidden from new event logging while remaining visible in historical event detail pages.
 - Existing affected archived equipment remains available when editing an old event.

@@ -125,6 +125,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", edit_equipment_path(equipment), text: I18n.t("equipment.show.edit")
+    assert_select "a[href=?]", new_equipment_event_path, count: 0
     assert_select "form[action=?]", archive_equipment_path(equipment)
     assert_select "[data-testid=equipment-danger-zone]"
     assert_select "form[action=?]", equipment_path(equipment)
