@@ -33,6 +33,21 @@ en:
       european_seconds: "%d.%m.%Y %H:%M:%S"
   authorization:
     denied: "You do not have permission to do that."
+  passkey_credentials:
+    create:
+      failed: "Passkey could not be added."
+    destroy:
+      current_password_invalid: "Current password is not correct."
+      deleted: "Passkey deleted."
+      not_found: "Passkey not found."
+    options:
+      current_password_invalid: "Current password is not correct."
+    second_factor:
+      current_password_invalid: "Current password is not correct."
+      updated: "Passkey security updated."
+    update:
+      not_found: "Passkey not found."
+      renamed: "Passkey renamed."
   media_attachments:
     crop:
       back: "Back"

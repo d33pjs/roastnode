@@ -3,6 +3,10 @@ Rails.application.routes.draw do
   resources :passwords, param: :token
   resource :first_user_setup, path: "setup/first_user", only: %i[new create]
   resource :password_change, only: %i[edit update]
+  resources :passkey_credentials, only: %i[create update destroy] do
+    post :options, on: :collection
+    patch :second_factor, on: :collection
+  end
 
   root "home#index"
   get "dashboard" => "home#dashboard", as: :dashboard
