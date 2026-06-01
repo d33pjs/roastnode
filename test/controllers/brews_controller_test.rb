@@ -420,8 +420,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-ratio-main]", "1:2,47"
     assert_select "[data-testid=brew-ratio-time]", "in 31s"
     assert_select "[data-testid=brew-grind]", "12"
-    assert_select "[data-testid=brew-retention-label] .sm\\:hidden", "Ret."
-    assert_select "[data-testid=brew-retention-label] .hidden.sm\\:inline", "Retention"
+    assert_select "[data-testid=brew-retention-label] .sm\\:hidden", "Retention"
+    assert_select "[data-testid=brew-retention-label] .hidden.sm\\:inline", "Ret."
     assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0,4 g"
     assert_select "[data-testid=brew-rating-card] [data-testid=brew-rating][aria-label=?]", "Rating 4 of 5 beans" do
       assert_select ".rating-bean--filled", 4

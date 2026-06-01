@@ -35,7 +35,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 
 - Use `BrewPreparationTool#tool_name` for displayed tools, not current `PreparationTool#name`.
 - The card shows `dose_grams` as Dose. `bean_weight_grams` remains inventory input and is not the main card dose.
-- The metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and shortens the retention label to `Ret.`.
+- The metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and can show the full retention label; the tighter desktop six-column row shortens it to `Ret.`.
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
 - Keep cross-links in the full brew details below the hero card, not inside the hero card partial.

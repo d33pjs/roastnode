@@ -66,7 +66,7 @@
           <p data-testid="brew-grind" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
         </div>
         <div data-testid="brew-retention-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p data-testid="brew-retention-label" class="text-[0.62rem] font-bold uppercase leading-tight text-stone-300 sm:text-xs"><span class="sm:hidden">Ret.</span><span class="hidden sm:inline"><%= t("brews.show.retention") %></span></p>
+          <p data-testid="brew-retention-label" class="text-[0.62rem] font-bold uppercase leading-tight text-stone-300 sm:text-xs"><span class="sm:hidden"><%= t("brews.show.retention") %></span><span class="hidden sm:inline">Ret.</span></p>
           <p data-testid="brew-retention" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_retention_grams(brew) %></p>
         </div>
         <div data-testid="brew-rating-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
