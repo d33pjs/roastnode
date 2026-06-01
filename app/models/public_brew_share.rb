@@ -12,6 +12,9 @@ class PublicBrewShare < ApplicationRecord
   validates :token, presence: true, uniqueness: true
   validate :brew_belongs_to_workspace
 
+  validates :brew_id, uniqueness: true
+  validates :password, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_blank: true
+
   def password_protected?
     password_digest.present?
   end

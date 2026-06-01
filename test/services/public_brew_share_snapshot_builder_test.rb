@@ -66,9 +66,22 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_includes attachment_ids, bean_photo.id
     assert_includes attachment_ids, grinder_photo.id
     assert_not_includes attachment_ids, unselected_photo.id
+    assert_no_internal_ids(snapshot)
   end
 
   private
+    def assert_no_internal_ids(value)
+      case value
+      when Hash
+        value.each do |key, nested|
+          assert key.to_s.end_with?("attachment_id") || !key.to_s.end_with?("id"), "expected #{key.inspect} to stay out of the public snapshot"
+          assert_no_internal_ids(nested)
+        end
+      when Array
+        value.each { |nested| assert_no_internal_ids(nested) }
+      end
+    end
+
     def collect_attachment_ids(value)
       case value
       when Hash

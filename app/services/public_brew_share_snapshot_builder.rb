@@ -42,7 +42,6 @@ class PublicBrewShareSnapshotBuilder
 
     def brew_payload
       {
-        "id" => brew.id,
         "occurred_at" => brew.occurred_at&.iso8601,
         "method" => brew.method,
         "public_note" => brew.public_note,
@@ -66,7 +65,6 @@ class PublicBrewShareSnapshotBuilder
     def bean_payload
       bean = brew.bean
       {
-        "id" => bean.id,
         "name" => bean.name,
         "display_name" => bean.display_name,
         "roaster_name" => bean.roaster_name,
@@ -89,7 +87,6 @@ class PublicBrewShareSnapshotBuilder
       return unless equipment
 
       {
-        "id" => equipment.id,
         "role" => role,
         "name" => equipment.name,
         "kind" => equipment.kind,
@@ -105,7 +102,6 @@ class PublicBrewShareSnapshotBuilder
       brew.brew_preparation_tools.includes(:preparation_tool).order(:position).map do |snapshot|
         tool = snapshot.preparation_tool
         {
-          "snapshot_id" => snapshot.id,
           "name" => snapshot.tool_name,
           "brew_method" => snapshot.brew_method,
           "position" => snapshot.position,
@@ -133,8 +129,6 @@ class PublicBrewShareSnapshotBuilder
         record.photos.attachments.select { |attachment| selected_photo_attachment_ids.include?(attachment.id) }.map do |attachment|
           {
             "attachment_id" => attachment.id,
-            "record_type" => record.class.name,
-            "record_id" => record.id
           }
         end
       end

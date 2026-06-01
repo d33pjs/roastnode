@@ -31,6 +31,38 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     assert_not share.authenticate_password("wrong")
   end
 
+  test "password cannot exceed bcrypt limit" do
+    share = PublicBrewShare.new(
+      workspace: workspaces(:household),
+      brew: brews(:morning_espresso),
+      created_by: users(:one),
+      updated_by: users(:one),
+      password: "x" * 73
+    )
+
+    assert_not share.valid?
+    assert_includes share.errors[:password], "is too long (maximum is 72 characters)"
+  end
+
+  test "only one public share can exist for a brew" do
+    brew = brews(:morning_espresso)
+    PublicBrewShare.create!(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one)
+    )
+    duplicate = PublicBrewShare.new(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one)
+    )
+
+    assert_not duplicate.valid?
+    assert_includes duplicate.errors[:brew_id], "has already been taken"
+  end
+
   test "writer can manage own brew share but not another writer brew share" do
     users(:two).update!(active_workspace: workspaces(:household))
     share = PublicBrewShare.create!(
