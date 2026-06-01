@@ -1084,6 +1084,32 @@ en:
       unavailable_eyebrow: "Invite unavailable"
       unavailable_title: "This invite is not available"
       username_label: "Username (optional)"
+  household_invites:
+    accept:
+      accepted: "Created %{workspace}."
+      unavailable: "This household invite is not available."
+    signup:
+      created: "Account created. Created %{workspace}."
+      email_mismatch: "does not match this invite"
+    show:
+      accept: "Create household"
+      body: "This invite creates a new household for %{email}."
+      create_account: "Create account and household"
+      dashboard: "Go to dashboard"
+      email_bound: "This invite is for %{email}."
+      email_label: "Email"
+      eyebrow: "Household invite"
+      household_name_label: "Household name"
+      household_name_placeholder: "Morning Flat"
+      password_confirmation_label: "Confirm password"
+      password_label: "Password"
+      sign_in: "Already have an account? Sign in"
+      signup_error: "Could not create your account and household."
+      title: "Create your household"
+      unavailable_body: "Ask an instance admin for a fresh household invite link."
+      unavailable_eyebrow: "Invite unavailable"
+      unavailable_title: "This household invite is not available"
+      username_label: "Username (optional)"
   household_invites_mailer:
     invite:
       subject: "Create your Roastnode household"

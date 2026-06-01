@@ -1,0 +1,94 @@
+<main class="min-h-screen bg-stone-50">
+  <section class="mx-auto flex min-h-screen max-w-3xl items-center px-6 py-10">
+    <div class="w-full rounded-lg border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
+      <% if @household_invite %>
+        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".eyebrow") %></p>
+        <h1 class="mt-2 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+        <p class="mt-3 text-stone-700"><%= t(".body", email: @household_invite.email_address) %></p>
+        <p class="mt-2 text-sm text-stone-600"><%= t(".email_bound", email: @household_invite.email_address) %></p>
+
+        <% if alert = flash[:alert] %>
+          <p class="mt-5 rounded-md bg-red-50 px-3 py-2 text-sm font-medium text-red-700" id="alert"><%= alert %></p>
+        <% end %>
+
+        <% if authenticated? %>
+          <%= form_with model: @workspace, url: accept_household_invite_path(@household_invite.token), class: "mt-6 space-y-4" do |form| %>
+            <% if @workspace.errors.any? %>
+              <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p class="font-semibold"><%= t(".signup_error") %></p>
+                <ul class="mt-2 list-disc pl-5">
+                  <% @workspace.errors.full_messages.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div>
+              <%= form.label :name, t(".household_name_label"), class: "block text-sm font-medium text-stone-700" %>
+              <%= form.text_field :name, required: true, placeholder: t(".household_name_placeholder"), class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <%= form.submit t(".accept"), class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+              <%= link_to t(".dashboard"), dashboard_path, class: "text-sm font-semibold text-stone-700 underline hover:no-underline" %>
+            </div>
+          <% end %>
+        <% else %>
+          <%= form_with model: @user, url: signup_household_invite_path(@household_invite.token), class: "mt-6 space-y-4" do |form| %>
+            <% signup_errors = @user.errors.full_messages + @workspace.errors.full_messages %>
+            <% if signup_errors.any? %>
+              <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p class="font-semibold"><%= t(".signup_error") %></p>
+                <ul class="mt-2 list-disc pl-5">
+                  <% signup_errors.each do |message| %>
+                    <li><%= message %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+
+            <div>
+              <%= form.label :email_address, t(".email_label"), class: "block text-sm font-medium text-stone-700" %>
+              <%= form.email_field :email_address, required: true, autocomplete: "username", readonly: true, class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none read-only:bg-stone-100" %>
+            </div>
+
+            <div>
+              <%= form.label :display_name, t(".username_label"), class: "block text-sm font-medium text-stone-700" %>
+              <%= form.text_field :display_name, autocomplete: "nickname", class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+            </div>
+
+            <%= fields_for :workspace, @workspace do |workspace_form| %>
+              <div>
+                <%= workspace_form.label :name, t(".household_name_label"), class: "block text-sm font-medium text-stone-700" %>
+                <%= workspace_form.text_field :name, required: true, placeholder: t(".household_name_placeholder"), class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+              </div>
+            <% end %>
+
+            <div>
+              <%= form.label :password, t(".password_label"), class: "block text-sm font-medium text-stone-700" %>
+              <%= form.password_field :password, required: true, autocomplete: "new-password", maxlength: 72, class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+            </div>
+
+            <div>
+              <%= form.label :password_confirmation, t(".password_confirmation_label"), class: "block text-sm font-medium text-stone-700" %>
+              <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", maxlength: 72, class: "mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+            </div>
+
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <%= form.submit t(".create_account"), class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+              <%= link_to t(".sign_in"), new_session_path, class: "text-sm font-semibold text-stone-700 underline hover:no-underline" %>
+            </div>
+          <% end %>
+        <% end %>
+      <% else %>
+        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".unavailable_eyebrow") %></p>
+        <h1 class="mt-2 text-3xl font-bold text-stone-950"><%= t(".unavailable_title") %></h1>
+        <p class="mt-3 text-stone-700"><%= t(".unavailable_body") %></p>
+        <div class="mt-6">
+          <%= link_to t(".dashboard"), dashboard_path, class: "inline-flex rounded-md border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+</main>
