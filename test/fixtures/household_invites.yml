@@ -1,0 +1,19 @@
+active_household_invite:
+  created_by: one
+  token: household-token
+  email_address: new-owner@example.com
+  expires_at: <%= 3.days.from_now %>
+  revoked_at:
+  accepted_at:
+  accepted_by:
+  workspace:
+
+expired_household_invite:
+  created_by: one
+  token: expired-household-token
+  email_address: expired-owner@example.com
+  expires_at: <%= 1.day.ago %>
+  revoked_at:
+  accepted_at:
+  accepted_by:
+  workspace:

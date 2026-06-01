@@ -41,6 +41,10 @@ class User < ApplicationRecord
     inverse_of: :created_by
   has_many :accepted_workspace_invites, class_name: "WorkspaceInvite", foreign_key: :accepted_by_id, dependent: :nullify,
     inverse_of: :accepted_by
+  has_many :created_household_invites, class_name: "HouseholdInvite", foreign_key: :created_by_id, dependent: :destroy,
+    inverse_of: :created_by
+  has_many :accepted_household_invites, class_name: "HouseholdInvite", foreign_key: :accepted_by_id, dependent: :nullify,
+    inverse_of: :accepted_by
   has_many :data_imports, dependent: :restrict_with_exception
   has_many :brews, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception

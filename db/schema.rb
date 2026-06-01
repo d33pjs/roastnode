@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_31_213000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -208,6 +208,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_213000) do
     t.index ["workspace_id"], name: "index_equipment_events_on_workspace_id"
   end
 
+  create_table "household_invites", force: :cascade do |t|
+    t.datetime "accepted_at"
+    t.bigint "accepted_by_id"
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "email_address", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "revoked_at"
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id"
+    t.index ["accepted_by_id"], name: "index_household_invites_on_accepted_by_id"
+    t.index ["created_by_id"], name: "index_household_invites_on_created_by_id"
+    t.index ["email_address"], name: "index_household_invites_on_email_address"
+    t.index ["token"], name: "index_household_invites_on_token", unique: true
+    t.index ["workspace_id"], name: "index_household_invites_on_workspace_id"
+  end
+
   create_table "instance_backup_profiles", force: :cascade do |t|
     t.string "backup_kind", null: false
     t.datetime "created_at", null: false
@@ -380,6 +398,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_213000) do
   add_foreign_key "equipment_event_items", "equipment_events"
   add_foreign_key "equipment_events", "users"
   add_foreign_key "equipment_events", "workspaces"
+  add_foreign_key "household_invites", "users", column: "accepted_by_id"
+  add_foreign_key "household_invites", "users", column: "created_by_id"
+  add_foreign_key "household_invites", "workspaces"
   add_foreign_key "instance_backup_runs", "instance_backup_profiles"
   add_foreign_key "inventory_adjustments", "beans"
   add_foreign_key "inventory_adjustments", "brews"
