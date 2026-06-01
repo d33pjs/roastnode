@@ -1,6 +1,6 @@
 <% settings_navigation_visible = current_workspace_policy.manage? || current_workspace_policy.export? %>
 
-<nav data-testid="app-navigation" class="rn-app-nav border-b border-rn-line bg-rn-surface px-4 py-3 shadow-sm sm:px-6">
+<nav data-controller="app-nav" data-action="click@window->app-nav#closeFromOutside keydown@window->app-nav#closeFromKeyboard" data-testid="app-navigation" class="rn-app-nav border-b border-rn-line bg-rn-surface px-4 py-3 shadow-sm sm:px-6">
   <div class="mx-auto max-w-6xl">
     <div class="flex items-center justify-between gap-3">
       <%= link_to dashboard_path, class: "flex min-w-0 shrink items-center" do %>
@@ -19,7 +19,7 @@
 
         <%= link_to t("shared.app_navigation.gear"), gear_path, data: { testid: "app-nav-gear" }, class: "rn-nav-link" %>
 
-        <details data-testid="app-nav-account" class="relative">
+        <details data-app-nav-target="menu" data-action="toggle->app-nav#closeOtherMenus" data-testid="app-nav-account" class="relative">
           <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.account") %></summary>
           <div class="rn-nav-menu-panel absolute right-0 top-11 z-50 min-w-60">
             <%= link_to t("shared.app_navigation.profile"), edit_profile_path, class: "rn-nav-sub-link" %>
@@ -35,7 +35,7 @@
         </details>
 
         <% if settings_navigation_visible %>
-          <details data-testid="app-nav-settings" class="relative">
+          <details data-app-nav-target="menu" data-action="toggle->app-nav#closeOtherMenus" data-testid="app-nav-settings" class="relative">
             <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.settings") %></summary>
             <div class="rn-nav-menu-panel absolute right-0 top-11 z-50 min-w-60">
               <% if current_workspace_policy.manage? %>
@@ -59,7 +59,7 @@
           <%= link_to t("shared.app_navigation.log"), new_brew_path, data: { testid: "app-nav-log" }, class: "rn-nav-link rn-nav-link-primary" %>
         <% end %>
 
-        <details data-testid="app-mobile-menu" class="relative">
+        <details data-app-nav-target="menu" data-action="toggle->app-nav#closeOtherMenus" data-testid="app-mobile-menu" class="relative">
           <summary class="rn-nav-link cursor-pointer list-none"><%= t("shared.app_navigation.menu") %></summary>
 
           <div class="rn-nav-menu-panel absolute right-0 top-12 z-50 grid w-72 max-w-[calc(100vw-2rem)] gap-3">

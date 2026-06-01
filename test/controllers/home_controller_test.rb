@@ -21,7 +21,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "html.theme-dark"
-    assert_select "[data-testid=app-navigation]"
+    assert_select "[data-testid=app-navigation][data-controller=?]", "app-nav"
     assert_select "[data-testid=app-navigation] img[data-testid=brand-wordmark][alt=?][src*=?]",
       "Roastnode",
       "logo_wordmark_transparent"
@@ -38,8 +38,12 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=app-nav-beans][href=?]", beans_path
     assert_select "a[data-testid=app-nav-statistics][href=?]", statistics_path
     assert_select "a[data-testid=app-nav-gear][href=?]", gear_path
-    assert_select "[data-testid=app-nav-account]"
-    assert_select "[data-testid=app-nav-settings]"
+    assert_select "details[data-testid=app-nav-account][data-app-nav-target=?][data-action*=?]",
+      "menu",
+      "toggle->app-nav#closeOtherMenus"
+    assert_select "details[data-testid=app-nav-settings][data-app-nav-target=?][data-action*=?]",
+      "menu",
+      "toggle->app-nav#closeOtherMenus"
     assert_select "a[href=?]", equipment_index_path, text: I18n.t("shared.app_navigation.equipment"), count: 0
     assert_select "a[href=?]", preparation_tools_path, text: I18n.t("shared.app_navigation.preparation_tools"), count: 0
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("shared.app_navigation.profile")
