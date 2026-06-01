@@ -57,5 +57,5 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Prefer host port `5433` for PostgreSQL because another local project owns `5432`.
 - Docker Compose should run alongside other local projects without taking common host ports unnecessarily.
 - The current Compose image is `postgres:17.5`; see `docs/setup.md` for setup commands.
-- After finishing user-facing product changes, start the local development server so the user can check the result. Use `bin/rails server -p 3001 -b 0.0.0.0` unless another command is specifically needed. Make sure, other clients on the network can reach the server via DNS!
+- After finishing user-facing product changes, start the local development server so the user can check the result. Use `bin/dev` unless another command is specifically needed. Make sure other clients on the network can reach the server via DNS.
 - When asked to push a git tag, summarize the changes for a public changelog from the last tag and let User approve it. Then create the tag with the approved changelog. Check afterwards if the sync between gitea and github worked and let the user know, when the tag is on github as well.
