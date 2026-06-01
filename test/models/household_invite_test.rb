@@ -22,8 +22,26 @@ class HouseholdInviteTest < ActiveSupport::TestCase
   end
 
   test "active invite is acceptable only before it is closed" do
-    assert household_invites(:active_household_invite).acceptable?
+    active_invite = household_invites(:active_household_invite)
+
+    assert active_invite.acceptable?
     assert_not household_invites(:expired_household_invite).acceptable?
+
+    active_invite.update!(revoked_at: Time.current)
+    assert_not active_invite.acceptable?
+
+    accepted_invite = household_invites(:active_household_invite)
+    accepted_invite.update!(revoked_at: nil, accepted_at: Time.current)
+    assert_not accepted_invite.acceptable?
+  end
+
+  test "revoking invite closes it" do
+    invite = household_invites(:active_household_invite)
+
+    invite.revoke!
+
+    assert invite.revoked_at.present?
+    assert_not invite.acceptable?
   end
 
   test "invite is acceptable only for matching normalized email" do
@@ -68,5 +86,39 @@ class HouseholdInviteTest < ActiveSupport::TestCase
     end
 
     assert_nil invite.reload.accepted_at
+  end
+
+  test "accepting stale invite copy does not create another household" do
+    first_copy = household_invites(:active_household_invite)
+    stale_copy = HouseholdInvite.find(first_copy.id)
+    user = User.create!(email_address: first_copy.email_address, password: "password")
+
+    first_copy.accept!(user, workspace: Workspace.new(name: "Morning Flat"))
+
+    assert_no_difference -> { Workspace.count } do
+      assert_no_difference -> { Membership.owner.count } do
+        assert_raises ActiveRecord::RecordInvalid do
+          stale_copy.accept!(user, workspace: Workspace.new(name: "Second Flat"))
+        end
+      end
+    end
+
+    assert_equal "Morning Flat", first_copy.reload.workspace.name
+  end
+
+  test "accepting invite rejects persisted workspace without creating membership or changing invite" do
+    invite = household_invites(:active_household_invite)
+    user = User.create!(email_address: invite.email_address, password: "password")
+    existing_workspace = workspaces(:other_household)
+
+    assert_no_difference -> { Membership.count } do
+      assert_raises ActiveRecord::RecordInvalid do
+        invite.accept!(user, workspace: existing_workspace)
+      end
+    end
+
+    assert_nil invite.reload.accepted_at
+    assert_nil invite.workspace
+    assert_nil user.reload.active_workspace
   end
 end

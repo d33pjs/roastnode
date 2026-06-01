@@ -21,12 +21,17 @@ class HouseholdInvite < ApplicationRecord
   end
 
   def accept!(user, workspace:)
-    unless acceptable_for?(user)
-      errors.add(:base, "is not available for this email")
-      raise ActiveRecord::RecordInvalid, self
-    end
+    with_lock do
+      unless acceptable_for?(user)
+        errors.add(:base, "is not available for this email")
+        raise ActiveRecord::RecordInvalid, self
+      end
 
-    transaction do
+      unless workspace.new_record?
+        errors.add(:workspace, "must be new")
+        raise ActiveRecord::RecordInvalid, self
+      end
+
       workspace.kind = :household
       workspace.default_currency = "EUR"
       workspace.save!
