@@ -6,7 +6,7 @@ Roastnode uses email addresses for authentication, invites, password resets, and
 
 Use `User#display_label` for casual product UI:
 
-- dashboard signed-in identity
+- app navigation sign-out identity
 - brew hero cards
 - brew and equipment-event bylines
 
@@ -19,6 +19,8 @@ Users can upload an avatar and a public banner from the Profile page. The avatar
 ## Email Placement
 
 The Profile page shows the signed-in user's email as a read-only account detail. Workspace member lists, invite management, exports, and the instance-admin account list may still use email addresses where account identity is the point of the screen.
+
+The Profile page also shows the user's active household role as read-only account context. Screenshot-oriented dashboard pages should not repeat the signed-in label or role line.
 
 When adding a new surface, ask whether it is a coffee/product surface or an account/admin surface. Coffee/product surfaces should prefer display labels.
 

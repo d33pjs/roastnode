@@ -4,16 +4,16 @@
   <section data-testid="dashboard-shell" class="rn-shell max-w-6xl py-6 sm:px-6 lg:py-10">
     <header class="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-start">
       <div>
-        <%= link_to root_path, class: "mb-6 inline-block" do %>
-          <%= render "shared/brand_wordmark",
-            container_class: "block h-12 w-72 max-w-full sm:h-14 sm:w-80",
-            image_class: "h-full w-full object-contain object-left" %>
-        <% end %>
-
         <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".eyebrow") %></p>
-        <h1 class="mt-2 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= current_workspace.name %></h1>
-        <p class="mt-3 text-sm font-semibold text-rn-muted"><%= t(".signed_in_as", user: Current.user.display_label) %></p>
-        <p class="mt-1 text-sm text-rn-muted"><%= t(".role", role: current_membership.role.humanize) %></p>
+        <div data-testid="dashboard-workspace-heading" class="mt-2 flex min-w-0 items-center gap-4">
+          <% if current_workspace.logo.attached? %>
+            <%= image_tag media_attachment_path(current_workspace.logo.attachment, variant: :thumbnail),
+              alt: "",
+              data: { testid: "dashboard-workspace-logo" },
+              class: "h-16 w-16 shrink-0 rounded-2xl border border-rn-line object-cover sm:h-20 sm:w-20" %>
+          <% end %>
+          <h1 class="min-w-0 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= current_workspace.name %></h1>
+        </div>
       </div>
 
     </header>

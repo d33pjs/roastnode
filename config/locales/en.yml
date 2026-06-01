@@ -103,7 +103,7 @@ en:
       preparation_tools: "Tools"
       profile: "Profile"
       settings: "Settings"
-      sign_out: "Logout"
+      sign_out: "Logout %{user}"
       statistics: "Stats"
       workspace_settings: "Household settings"
     photo_grid:
@@ -870,6 +870,8 @@ en:
       title: "Profile"
       public_banner: "Public banner"
       username: "Username"
+      workspace_role: "Household role"
+      workspace_role_value: "%{role}"
     passkeys:
       add: "Add passkey"
       added: "Added %{date}"

@@ -3,11 +3,10 @@
 <nav data-testid="app-navigation" class="rn-app-nav border-b border-rn-line bg-rn-surface px-4 py-3 shadow-sm sm:px-6">
   <div class="mx-auto max-w-6xl">
     <div class="flex items-center justify-between gap-3">
-      <%= link_to dashboard_path, class: "flex min-w-0 items-center gap-3 text-sm font-extrabold text-rn-ink" do %>
-        <%= render "shared/brand_mark",
-          container_class: "block h-8 w-8 shrink-0",
-          image_class: "h-full w-full object-contain" %>
-        <span class="truncate"><%= current_workspace.name %></span>
+      <%= link_to dashboard_path, class: "flex min-w-0 shrink items-center" do %>
+        <%= render "shared/brand_wordmark",
+          container_class: "block h-8 w-36 max-w-[45vw] shrink-0 sm:h-9 sm:w-44",
+          image_class: "h-full w-full object-contain object-left" %>
       <% end %>
 
       <div data-testid="app-desktop-navigation" class="hidden items-center gap-1 md:flex">
@@ -52,7 +51,7 @@
           </details>
         <% end %>
 
-        <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-nav-sign-out" %>
+        <%= button_to t("shared.app_navigation.sign_out", user: Current.user.display_label), session_path, method: :delete, class: "rn-nav-sign-out max-w-40 truncate" %>
       </div>
 
       <div data-testid="app-mobile-actions" class="ml-auto flex shrink-0 items-center gap-2 md:hidden">
@@ -99,7 +98,7 @@
               </div>
             <% end %>
 
-            <%= button_to t("shared.app_navigation.sign_out"), session_path, method: :delete, class: "rn-nav-sign-out w-full text-left" %>
+            <%= button_to t("shared.app_navigation.sign_out", user: Current.user.display_label), session_path, method: :delete, class: "rn-nav-sign-out w-full truncate text-left" %>
           </div>
         </details>
       </div>

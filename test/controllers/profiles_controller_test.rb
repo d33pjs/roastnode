@@ -9,6 +9,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=profile-email]", user.email_address
+    assert_select "[data-testid=profile-workspace-role]", I18n.t("profiles.edit.workspace_role_value", role: memberships(:owner).role.humanize)
     assert_select "input[name=?]", "user[display_name]"
     assert_select "input[name=?]", "user[email_address]", count: 0
     assert_select "input[type=file][name=?]", "user[avatar]"

@@ -22,6 +22,10 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "html.theme-dark"
     assert_select "[data-testid=app-navigation]"
+    assert_select "[data-testid=app-navigation] img[data-testid=brand-wordmark][alt=?][src*=?]",
+      "Roastnode",
+      "logo_wordmark_transparent"
+    assert_select "[data-testid=app-navigation] img[data-testid=brand-mark]", count: 0
     assert_select "[data-testid=app-mobile-actions].md\\:hidden" do
       assert_select "a[data-testid=app-nav-log][href=?]", new_brew_path
       assert_select "[data-testid=app-mobile-menu]"
@@ -43,6 +47,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", workspace_export_path, text: I18n.t("shared.app_navigation.export")
     assert_select "a[href=?]", new_beanconqueror_import_path, text: I18n.t("shared.app_navigation.import")
     assert_select "form[action=?][method=post]", session_path
+    assert_select "form[action=?][method=post]", session_path, text: /#{Regexp.escape(user.display_label)}/
     assert_no_match(/fixed inset-x-3 bottom-3/, response.body)
     assert_no_match user.email_address, response.body
   end
@@ -60,7 +65,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=app-navigation]"
     assert_select "[data-testid=app-mobile-navigation]", count: 0
     assert_select "[data-testid=app-desktop-navigation]"
-    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label)
+    assert_select "[data-testid=dashboard-shell] img[data-testid=brand-wordmark]", count: 0
+    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label), count: 0
+    assert_select "p", text: I18n.t("workspaces.show.role", role: memberships(:owner).role.humanize), count: 0
     assert_no_match user.email_address, response.body
     assert_select "a[href=?]", edit_profile_path, text: I18n.t("shared.app_navigation.profile")
     assert_select "a[href=?]", edit_workspace_path, text: I18n.t("shared.app_navigation.workspace_settings")
@@ -75,7 +82,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label)
+    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label), count: 0
     assert_no_match user.email_address, response.body
   end
 
@@ -159,6 +166,24 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-recent-activity]"
     assert_select "[data-testid=workspace-mobile-menu]", count: 0
     assert_select "[data-testid=workspace-desktop-menu]", count: 0
+  end
+
+  test "workspace dashboard header uses household logo without repeated app identity" do
+    workspace = workspaces(:household)
+    logo = attach_named_photo(workspace, :logo, filename: "household-logo.jpg")
+    user = users(:one)
+    user.update!(display_name: "Jens")
+    sign_in_as(user)
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=dashboard-shell] img[data-testid=brand-wordmark]", count: 0
+    assert_select "[data-testid=dashboard-workspace-heading] img[data-testid=dashboard-workspace-logo][src=?]",
+      media_attachment_path(logo, variant: :thumbnail)
+    assert_select "[data-testid=dashboard-workspace-heading] h1", workspace.name
+    assert_select "p", text: I18n.t("workspaces.show.signed_in_as", user: user.display_label), count: 0
+    assert_select "p", text: I18n.t("workspaces.show.role", role: memberships(:owner).role.humanize), count: 0
   end
 
   test "workspace dashboard shows manual inventory adjustments in recent activity" do

@@ -14,5 +14,7 @@ Roastnode keeps application brand art under `app/assets/images/brand/`.
 
 - Render the wordmark through `app/views/shared/_brand_wordmark.html.erb` so the source art is consistently cropped into a clean header logo.
 - Render compact marks through `app/views/shared/_brand_mark.html.erb` when a small square badge is needed.
+- The signed-in app navigation uses the wordmark only. Do not pair the navbar app mark with the active household name.
+- The dashboard header is household-branded: it shows the household logo beside the workspace name when a logo is available, and it does not repeat the app wordmark.
 - Browser and app icons are resolved with `asset_path` in `app/views/layouts/application.html.erb` and `app/views/pwa/manifest.json.erb`; do not add new runtime external logo references.
 - The legacy `public/icon.png` and `public/icon.svg` files are not used by the current layout.
