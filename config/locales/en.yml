@@ -633,6 +633,20 @@ en:
         queued: "Backup run queued."
       update:
         updated: "Backup profile updated."
+    household_invites:
+      create:
+        created_and_sent: "Household invite created and email queued."
+        delivery_failed: "Household invite created, but the email could not be queued."
+      reinvite:
+        delivery_failed: "Fresh household invite created, but the email could not be queued."
+        queued: "Fresh household invite email queued."
+        unavailable: "This household invite cannot be re-invited."
+      resend:
+        delivery_failed: "Household invite email could not be queued."
+        queued: "Household invite email queued."
+        unavailable: "This household invite cannot be resent."
+      revoke:
+        revoked: "Household invite revoked."
     index:
       back: "Back to dashboard"
       activate_backup: "Activate"
@@ -673,8 +687,19 @@ en:
         rails: "Rails"
         storage: "Storage"
         storage_usage: "Storage usage"
+      create_household_invite: "Send household invite"
       account_role: "Account role"
       enabled: "Enabled"
+      household_invite_actions: "Actions"
+      household_invite_active: "Active"
+      household_invite_any_workspace: "Creates separate household"
+      household_invite_closed: "Closed"
+      household_invite_email: "Email"
+      household_invite_email_placeholder: "new-owner@example.com"
+      household_invite_status: "Status"
+      household_invite_url: "Invite URL"
+      household_invites: "Household invites"
+      household_invites_intro: "Invite someone to create their own separate household on this private instance."
       instance_admin_badge: "Instance admin"
       instance_mode: "Instance mode"
       intro: "A small owner-only control surface for private hosting, safety checks, and future maintenance tools."
@@ -743,6 +768,9 @@ en:
       recent_backup_failures: "Recent backup failures"
       recent_failed_jobs: "Recent failed jobs"
       recent_mail_failures: "Recent mail failures"
+      reinvite_household: "Re-invite"
+      resend_household_invite: "Resend"
+      revoke_household_invite: "Revoke"
       mail_failure_class: "Job"
       mail_failure_error: "Error"
       mail_failure_queue: "Queue"

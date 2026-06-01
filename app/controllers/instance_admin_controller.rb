@@ -12,6 +12,8 @@ class InstanceAdminController < ApplicationController
     @health_checks = InstanceHealthSnapshot.new.checks
     @operations_snapshot = InstanceOperationsSnapshot.new
     @user_rows = InstanceUserSnapshot.new.rows
+    @household_invite = HouseholdInvite.new
+    @household_invites = HouseholdInvite.includes(:created_by, :accepted_by, :workspace).order(created_at: :desc).limit(25)
     @backup_profiles = InstanceBackupProfile.includes(:instance_backup_runs).order(:backup_kind, :id)
     @backup_runs = InstanceBackupRun.includes(:instance_backup_profile).order(created_at: :desc).limit(8)
   end

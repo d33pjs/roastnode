@@ -29,6 +29,60 @@
       </div>
     </section>
 
+    <section data-testid="instance-admin-household-invites" class="border-b border-stone-200 py-8">
+      <h2 class="text-xl font-bold text-stone-950"><%= t(".household_invites") %></h2>
+      <p class="mt-2 max-w-3xl text-sm text-stone-600"><%= t(".household_invites_intro") %></p>
+
+      <%= form_with model: @household_invite, url: instance_admin_household_invites_path, class: "mt-4 grid gap-4 md:grid-cols-[1fr_auto]" do |form| %>
+        <div>
+          <%= form.label :email_address, t(".household_invite_email"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.email_field :email_address, required: true, placeholder: t(".household_invite_email_placeholder"), class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+        </div>
+        <div class="flex items-end">
+          <%= form.submit t(".create_household_invite"), class: "w-full rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800 md:w-auto" %>
+        </div>
+      <% end %>
+
+      <% if @household_invites.any? %>
+        <div class="mt-6 overflow-x-auto rounded-lg border border-stone-200 bg-white shadow-sm">
+          <table class="min-w-full divide-y divide-stone-200">
+            <thead class="bg-stone-100">
+              <tr>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".household_invite_email") %></th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".household_invite_status") %></th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".household_invite_url") %></th>
+                <th class="px-4 py-3 text-left text-sm font-semibold text-stone-700"><%= t(".household_invite_actions") %></th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+              <% @household_invites.each do |invite| %>
+                <tr data-testid="instance-admin-household-invite-<%= invite.id %>">
+                  <td class="px-4 py-3">
+                    <p class="text-sm font-semibold text-stone-950"><%= invite.email_address %></p>
+                    <p class="text-xs text-stone-600"><%= invite.workspace&.name || t(".household_invite_any_workspace") %></p>
+                  </td>
+                  <td class="px-4 py-3 text-sm text-stone-700"><%= invite.acceptable? ? t(".household_invite_active") : t(".household_invite_closed") %></td>
+                  <td class="px-4 py-3">
+                    <%= text_field_tag nil, household_invite_url(invite.token), readonly: true, class: "w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm text-stone-700" %>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex flex-wrap gap-2">
+                      <% if invite.acceptable? %>
+                        <%= button_to t(".resend_household_invite"), resend_instance_admin_household_invite_path(invite.token), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                        <%= button_to t(".revoke_household_invite"), revoke_instance_admin_household_invite_path(invite.token), method: :patch, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                      <% else %>
+                        <%= button_to t(".reinvite_household"), reinvite_instance_admin_household_invite_path(invite.token), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                      <% end %>
+                    </div>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+    </section>
+
     <section class="border-b border-stone-200 py-8">
       <h2 class="text-xl font-bold text-stone-950"><%= t(".health") %></h2>
       <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">

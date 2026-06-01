@@ -133,6 +133,24 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/password_digest|session|invite token/i, response.body)
   end
 
+  test "shows household invite management to instance admins" do
+    admin = users(:one)
+    admin.update!(instance_admin: true)
+    sign_in_as(admin)
+    invite = household_invites(:active_household_invite)
+
+    get "/instance_admin"
+
+    assert_response :success
+    assert_select "[data-testid=instance-admin-household-invites]" do
+      assert_select "form[action=?]", instance_admin_household_invites_path
+      assert_select "input[name=?][type=email]", "household_invite[email_address]"
+      assert_select "input[value=?]", household_invite_url(invite.token)
+      assert_select "form[action=?]", resend_instance_admin_household_invite_path(invite.token)
+      assert_select "form[action=?]", revoke_instance_admin_household_invite_path(invite.token)
+    end
+  end
+
   test "shows read-only account rows to instance admins" do
     admin = users(:one)
     admin.update!(display_name: "Jens", instance_admin: true)
