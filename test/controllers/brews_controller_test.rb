@@ -700,6 +700,85 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
+  test "index shows workspace brews newest first in compact view by default" do
+    older = brews(:morning_espresso)
+    older.update!(occurred_at: Time.zone.local(2026, 5, 30, 8, 0, 0))
+    newest = workspaces(:household).brews.create!(
+      user: users(:one),
+      bean: beans(:second_open_household),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 6, 1, 9, 0, 0),
+      bean_weight_grams: 19,
+      dose_grams: 18.5,
+      beverage_grams: 46,
+      total_time_seconds: 30,
+      grind_setting: "13",
+      taste_balance: "neutral",
+      rating: 5
+    )
+
+    sign_in_as(users(:one))
+    get brews_path
+
+    assert_response :success
+    assert_select "h1", I18n.t("brews.index.title")
+    assert_select "[data-testid=brew-history-compact-card]", count: 2
+    assert_select "[data-testid=brew-history-hero-card]", count: 0
+    assert_select "a[href=?]", brew_path(newest), text: /#{newest.bean.name}/
+    assert_select "a[href=?]", brew_path(older), text: /#{older.bean.name}/
+    assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
+    assert_appears_before newest.bean.name, older.bean.name
+  end
+
+  test "index can render hero cards" do
+    sign_in_as(users(:one))
+
+    get brews_path, params: { view: "hero" }
+
+    assert_response :success
+    assert_select "[data-testid=brew-history-hero-card]", count: 1
+    assert_select "[data-testid=brew-history-compact-card]", count: 0
+    assert_select "[data-testid=brew-history-hero-card] a[href=?]", brew_path(brews(:morning_espresso))
+  end
+
+  test "index paginates brews and preserves selected view" do
+    workspace = workspaces(:household)
+    21.times do |index|
+      workspace.brews.create!(
+        user: users(:one),
+        bean: beans(:second_open_household),
+        occurred_at: Time.zone.local(2026, 6, 1, 12, 0, 0) - index.minutes,
+        bean_weight_grams: 18,
+        dose_grams: 18,
+        beverage_grams: 45
+      )
+    end
+    sign_in_as(users(:one))
+
+    get brews_path, params: { view: "hero" }
+
+    assert_response :success
+    assert_select "[data-testid=history-next-page][href=?]", brews_path(view: "hero", page: 2)
+
+    get brews_path, params: { view: "hero", page: 2 }
+
+    assert_response :success
+    assert_select "[data-testid=history-previous-page][href=?]", brews_path(view: "hero", page: 1)
+  end
+
+  test "viewer can read brew history" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    get brews_path
+
+    assert_response :success
+    assert_select "h1", I18n.t("brews.index.title")
+  end
+
   private
     def assert_appears_before(first, second)
       first_index = response.body.index(first)

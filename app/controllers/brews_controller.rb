@@ -2,6 +2,15 @@ class BrewsController < ApplicationController
   before_action :authorize_workspace_write!, only: %i[new create edit update taste destroy]
   before_action :set_brew, only: %i[show edit update taste destroy]
 
+  def index
+    @brew_history_view = params[:view] == "hero" ? "hero" : "compact"
+    brews = current_workspace
+      .brews
+      .includes(:bean, :user, :grinder, :machine, brew_preparation_tools: :preparation_tool)
+      .order(occurred_at: :desc, created_at: :desc)
+    @brew_history = HistoryPaginator.new(brews, page: params[:page])
+  end
+
   def show
   end
 

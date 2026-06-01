@@ -1,0 +1,20 @@
+<% preserved_params = local_assigns.fetch(:params, {}) %>
+<% if paginator.previous_page || paginator.next_page %>
+  <nav class="mt-6 flex items-center justify-between gap-3" aria-label="Pagination">
+    <% if paginator.previous_page %>
+      <%= link_to t("shared.history_pagination.previous"),
+        url_for(preserved_params.merge(page: paginator.previous_page)),
+        data: { testid: "history-previous-page" },
+        class: "rounded-lg border border-rn-line bg-rn-surface px-4 py-2 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+    <% else %>
+      <span></span>
+    <% end %>
+
+    <% if paginator.next_page %>
+      <%= link_to t("shared.history_pagination.next"),
+        url_for(preserved_params.merge(page: paginator.next_page)),
+        data: { testid: "history-next-page" },
+        class: "ml-auto rounded-lg bg-[var(--rn-accent-strong)] px-4 py-2 text-sm font-extrabold text-[#f8faf6] hover:opacity-90" %>
+    <% end %>
+  </nav>
+<% end %>

@@ -116,6 +116,9 @@ en:
     related_photo_group:
       download: "Download"
       view: "View"
+    history_pagination:
+      next: "Next"
+      previous: "Previous"
   beanconqueror_imports:
     create:
       created: "Beanconqueror import processed."
@@ -328,6 +331,14 @@ en:
       photos: "Current photos"
       title: "Edit espresso"
       update: "Save correction"
+    index:
+      back: "Back to dashboard"
+      compact_view: "Compact"
+      empty: "No brews yet."
+      hero_view: "Hero cards"
+      next_page: "Next"
+      previous_page: "Previous"
+      title: "Brews"
     form:
       bean: "Bean"
       bean_weight: "Bean in (g)"

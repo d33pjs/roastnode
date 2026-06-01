@@ -55,7 +55,7 @@ Rails.application.routes.draw do
     patch :archive, on: :member
     patch :reopen, on: :member
   end
-  resources :brews, only: %i[new create show edit update destroy] do
+  resources :brews, only: %i[index new create show edit update destroy] do
     patch :taste, on: :member
   end
   get "statistics" => "statistics#index", as: :statistics

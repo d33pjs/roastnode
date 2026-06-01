@@ -1,0 +1,46 @@
+<main class="rn-page">
+  <%= render "brews/hero_card_styles" %>
+
+  <section class="rn-shell max-w-5xl py-6 sm:px-6 lg:py-10">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
+        <h1 class="mt-4 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= t(".title") %></h1>
+      </div>
+
+      <div class="inline-flex rounded-xl border border-rn-line bg-rn-surface p-1 shadow-sm">
+        <%= link_to t(".compact_view"),
+          brews_path,
+          class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@brew_history_view == "compact" ? "bg-[var(--rn-coffee)] text-[#fff8e8]" : "text-rn-muted hover:text-rn-ink"}" %>
+        <%= link_to t(".hero_view"),
+          brews_path(view: "hero"),
+          class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@brew_history_view == "hero" ? "bg-[var(--rn-coffee)] text-[#fff8e8]" : "text-rn-muted hover:text-rn-ink"}" %>
+      </div>
+    </div>
+
+    <% if @brew_history.any? %>
+      <% history_params = @brew_history_view == "hero" ? { view: "hero" } : {} %>
+
+      <div class="mt-6 grid gap-4">
+        <% @brew_history.records.each do |brew| %>
+          <% if @brew_history_view == "hero" %>
+            <div data-testid="brew-history-hero-card">
+              <%= link_to brew_path(brew), class: "block" do %>
+                <%= render "brews/hero_card",
+                  brew: brew,
+                  compact: true,
+                  chart_id: "brew-history-shot-fill-#{brew.id}" %>
+              <% end %>
+            </div>
+          <% else %>
+            <%= render "brews/compact_card", brew: brew %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <%= render "shared/history_pagination", paginator: @brew_history, params: history_params %>
+    <% else %>
+      <p class="mt-6 rounded-2xl border border-rn-line bg-rn-surface p-5 text-sm font-semibold text-rn-muted"><%= t(".empty") %></p>
+    <% end %>
+  </section>
+</main>
