@@ -52,6 +52,25 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert user.sessions.exists?
   end
 
+  test "successful invite signup clears stored authentication return target" do
+    invite = household_invites(:active_household_invite)
+
+    get household_invite_path(invite.token)
+    assert_equal household_invite_url(invite.token), request.session[:return_to_after_authenticating]
+
+    post signup_household_invite_path(invite.token), params: {
+      user: {
+        email_address: invite.email_address,
+        password: "password",
+        password_confirmation: "password"
+      },
+      workspace: { name: "New Household" }
+    }
+
+    assert_redirected_to root_path
+    assert_nil request.session[:return_to_after_authenticating]
+  end
+
   test "invite signup rejects mismatched email without creating household" do
     invite = household_invites(:active_household_invite)
 
@@ -69,6 +88,28 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
+    assert_nil invite.reload.accepted_at
+  end
+
+  test "signed-in mismatched user cannot use signup endpoint directly" do
+    invite = household_invites(:active_household_invite)
+    user = User.create!(email_address: "other-owner@example.com", password: "password")
+    sign_in_as(user)
+
+    assert_no_difference -> { User.count } do
+      assert_no_difference -> { Workspace.count } do
+        post signup_household_invite_path(invite.token), params: {
+          user: {
+            email_address: invite.email_address,
+            password: "password",
+            password_confirmation: "password"
+          },
+          workspace: { name: "Hijacked Household" }
+        }
+      end
+    end
+
+    assert_redirected_to household_invite_path(invite.token)
     assert_nil invite.reload.accepted_at
   end
 
@@ -91,6 +132,24 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_nil invite.reload.accepted_at
+  end
+
+  test "invite signup renders invite-level errors" do
+    invite = household_invites(:active_household_invite)
+
+    with_household_invite_accept_failure("is no longer available") do
+      post signup_household_invite_path(invite.token), params: {
+        user: {
+          email_address: invite.email_address,
+          password: "password",
+          password_confirmation: "password"
+        },
+        workspace: { name: "Stale Household" }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "li", "is no longer available"
   end
 
   test "signed-in matching user can accept invite and create separate household" do
@@ -128,4 +187,18 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to household_invite_path(invite.token)
     assert_nil invite.reload.accepted_at
   end
+
+  private
+    def with_household_invite_accept_failure(message)
+      original_accept = HouseholdInvite.instance_method(:accept!)
+
+      HouseholdInvite.define_method(:accept!) do |*_args, **_kwargs|
+        errors.add(:base, message)
+        raise ActiveRecord::RecordInvalid, self
+      end
+
+      yield
+    ensure
+      HouseholdInvite.define_method(:accept!, original_accept)
+    end
 end

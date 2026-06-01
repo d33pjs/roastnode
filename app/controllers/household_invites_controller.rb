@@ -35,6 +35,10 @@ class HouseholdInvitesController < ApplicationController
       return redirect_to household_invite_path(params[:token]), alert: t("household_invites.accept.unavailable")
     end
 
+    if authenticated?
+      return redirect_to household_invite_path(@household_invite.token), alert: t("household_invites.accept.unavailable")
+    end
+
     @user = User.new(invite_signup_params)
     @workspace = Workspace.new(workspace_params)
 
@@ -48,6 +52,7 @@ class HouseholdInvitesController < ApplicationController
       @household_invite.accept!(@user, workspace: @workspace)
     end
 
+    session.delete(:return_to_after_authenticating)
     start_new_session_for(@user)
     redirect_to root_path, notice: t(".created", workspace: @workspace.name)
   rescue ActiveRecord::RecordInvalid

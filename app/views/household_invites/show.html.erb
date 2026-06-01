@@ -13,11 +13,12 @@
 
         <% if authenticated? %>
           <%= form_with model: @workspace, url: accept_household_invite_path(@household_invite.token), class: "mt-6 space-y-4" do |form| %>
-            <% if @workspace.errors.any? %>
+            <% accept_errors = @workspace.errors.full_messages + @household_invite.errors.full_messages %>
+            <% if accept_errors.any? %>
               <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
                 <p class="font-semibold"><%= t(".signup_error") %></p>
                 <ul class="mt-2 list-disc pl-5">
-                  <% @workspace.errors.full_messages.each do |message| %>
+                  <% accept_errors.each do |message| %>
                     <li><%= message %></li>
                   <% end %>
                 </ul>
@@ -36,7 +37,7 @@
           <% end %>
         <% else %>
           <%= form_with model: @user, url: signup_household_invite_path(@household_invite.token), class: "mt-6 space-y-4" do |form| %>
-            <% signup_errors = @user.errors.full_messages + @workspace.errors.full_messages %>
+            <% signup_errors = @user.errors.full_messages + @workspace.errors.full_messages + @household_invite.errors.full_messages %>
             <% if signup_errors.any? %>
               <div class="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
                 <p class="font-semibold"><%= t(".signup_error") %></p>
