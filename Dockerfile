@@ -51,8 +51,10 @@ COPY . .
 # -j 1 disable parallel compilation to avoid a QEMU bug: https://github.com/rails/bootsnap/issues/495
 RUN bundle exec bootsnap precompile -j 1 app/ lib/
 
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+# Precompiling assets for production without requiring secret RAILS_MASTER_KEY.
+# WebAuthn still requires a real production origin at runtime; this placeholder
+# exists only so Rails can boot during the image build.
+RUN SECRET_KEY_BASE_DUMMY=1 ROASTNODE_WEBAUTHN_ORIGIN=https://build.roastnode.invalid ./bin/rails assets:precompile
 
 
 
