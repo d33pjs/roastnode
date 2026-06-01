@@ -125,6 +125,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       ActiveStorage::Blob.delete_all
       Session.delete_all
       WorkspaceInvite.delete_all
+      HouseholdInvite.delete_all
       InventoryAdjustment.delete_all
       BrewPreparationTool.delete_all
       EquipmentEventItem.delete_all
