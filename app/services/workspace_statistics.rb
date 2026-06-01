@@ -1,5 +1,5 @@
 class WorkspaceStatistics
-  RECENT_DAYS = 14
+  RECENT_DAYS = 7
 
   def self.default_start_date
     (RECENT_DAYS - 1).days.ago.to_date
@@ -44,11 +44,13 @@ class WorkspaceStatistics
 
     def totals
       priced_costs = known_brew_costs
+      known_spends = known_bean_spend_cents
       {
         total_brews: brews.size,
         total_bean_weight_grams: brews.sum(&:bean_weight_grams),
         open_beans: beans.count(&:open?),
-        known_spend_cents: beans.filter_map(&:purchase_price_cents).sum,
+        known_spend_cents: known_spends.sum,
+        known_spend_bean_count: known_spends.size,
         average_known_brew_cost_cents: average_cost_cents(priced_costs),
         priced_brew_count: priced_costs.size
       }
@@ -100,6 +102,10 @@ class WorkspaceStatistics
 
         brew.bean_weight_grams * bean.purchase_price_cents / bean.bag_size_grams
       end
+    end
+
+    def known_bean_spend_cents
+      beans.filter_map(&:purchase_price_cents)
     end
 
     def average_cost_cents(costs)

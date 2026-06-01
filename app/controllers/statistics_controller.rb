@@ -1,4 +1,5 @@
 class StatisticsController < ApplicationController
+  DEFAULT_TIMEFRAME = "last_7_days"
   TIMEFRAMES = %w[
     last_7_days
     last_30_days
@@ -8,7 +9,7 @@ class StatisticsController < ApplicationController
   ].freeze
 
   def index
-    @statistics_timeframe = params[:timeframe].presence_in(TIMEFRAMES)
+    @statistics_timeframe = statistics_timeframe
     @statistics_timeframe_options = TIMEFRAMES
     @statistics_start_date, @statistics_end_date = statistics_date_range
     @statistics = WorkspaceStatistics.new(
@@ -19,6 +20,14 @@ class StatisticsController < ApplicationController
   end
 
   private
+    def statistics_timeframe
+      params[:timeframe].presence_in(TIMEFRAMES) || (manual_date_filter? ? nil : DEFAULT_TIMEFRAME)
+    end
+
+    def manual_date_filter?
+      params[:start_date].present? || params[:end_date].present?
+    end
+
     def statistics_date_range
       return timeframe_date_range(@statistics_timeframe) if @statistics_timeframe.present?
 

@@ -33,13 +33,14 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 
 ## Date Range Rules
 
-- The workspace statistics page defaults to the most recent 14 days.
+- The workspace statistics page defaults to the most recent 7 days and marks the "7 days" quick range active when no manual range is supplied.
 - `start_date` and `end_date` are inclusive and can be supplied as `YYYY-MM-DD` query parameters.
 - `timeframe` can be one of `last_7_days`, `last_30_days`, `last_90_days`, `this_year`, or `all_time`.
 - Timeframe shortcuts take precedence over manual date query parameters.
 - `all_time` starts at the active workspace's first brew and ends at today or the latest brew date, whichever is later. If there are no brews, it uses today for both ends.
 - Brew-derived metrics follow the selected range: total brews, beans ground, average brew cost, leaders, channeling, retention, taste balance, and day bars.
 - Current bean inventory/catalog metrics stay unfiltered: open bean count, known bean spend, and bean breakdowns by roaster/origin/process.
+- Empty current-inventory cards explain when there are no open beans or no recorded bean costs. Average brew cost explains when there is no cost data for brews in the selected time range.
 - Links from statistics to brew history do not preserve the selected analytics date range; they always open all-time brew history.
 
 ## Agent Notes

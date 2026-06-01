@@ -52,15 +52,29 @@
       </div>
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".open_beans") %></p>
-        <p data-testid="open-beans" class="mt-2 text-3xl font-bold text-stone-950"><%= @statistics[:totals][:open_beans] %></p>
+        <% if @statistics[:totals][:open_beans].positive? %>
+          <p data-testid="open-beans" class="mt-2 text-3xl font-bold text-stone-950"><%= @statistics[:totals][:open_beans] %></p>
+        <% else %>
+          <p data-testid="open-beans" class="mt-2 text-base font-semibold text-stone-700"><%= t(".no_open_beans") %></p>
+        <% end %>
+        <p class="mt-1 text-sm text-stone-600"><%= t(".current_inventory_note") %></p>
       </div>
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".known_spend") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_money(@statistics[:totals][:known_spend_cents]) %></p>
+        <% if @statistics[:totals][:known_spend_bean_count].positive? %>
+          <p data-testid="known-spend" class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_money(@statistics[:totals][:known_spend_cents]) %></p>
+        <% else %>
+          <p data-testid="known-spend" class="mt-2 text-base font-semibold text-stone-700"><%= t(".no_known_spend") %></p>
+        <% end %>
+        <p class="mt-1 text-sm text-stone-600"><%= t(".current_inventory_note") %></p>
       </div>
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".average_brew_cost") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_money(@statistics[:totals][:average_known_brew_cost_cents]) %></p>
+        <% if @statistics[:totals][:priced_brew_count].positive? %>
+          <p data-testid="average-brew-cost" class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_money(@statistics[:totals][:average_known_brew_cost_cents]) %></p>
+        <% else %>
+          <p data-testid="average-brew-cost" class="mt-2 text-base font-semibold text-stone-700"><%= t(".no_average_brew_cost") %></p>
+        <% end %>
       </div>
       <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
         <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".channeling_rate") %></p>
