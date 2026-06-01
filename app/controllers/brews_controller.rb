@@ -20,6 +20,7 @@ class BrewsController < ApplicationController
     @autofocus_field = nil
     @draft_storage_key = nil
     @hidden_brew_fields = []
+    prepare_record_links(@brew)
   end
 
   def new
@@ -31,6 +32,7 @@ class BrewsController < ApplicationController
     end
 
     @brew = current_workspace.brews.new(default_attributes)
+    prepare_record_links(@brew)
     @autofocus_field = Current.user.default_brew_focus_field
     @draft_storage_key = brew_draft_storage_key
     @hidden_brew_fields = Current.user.hidden_brew_field_names
@@ -50,6 +52,7 @@ class BrewsController < ApplicationController
     if save_brew_with_preparation_tools
       redirect_to @brew, notice: t(".created")
     else
+      prepare_record_links(@brew)
       render :new, status: :unprocessable_entity
     end
   end
@@ -64,6 +67,7 @@ class BrewsController < ApplicationController
     @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
     redirect_to @brew, notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
+    prepare_record_links(@brew)
     render :edit, status: :unprocessable_entity
   end
 
@@ -173,7 +177,7 @@ class BrewsController < ApplicationController
     end
 
     def brew_params
-      normalize_decimal_attributes(params.expect(brew: [
+      attributes = normalize_decimal_attributes(params.expect(brew: [
         :bean_id,
         :grinder_id,
         :machine_id,
@@ -191,12 +195,31 @@ class BrewsController < ApplicationController
         :taste_balance,
         :rating,
         :notes,
-        { preparation_tool_ids: [], photos: [] }
+        :public_note,
+        {
+          preparation_tool_ids: [],
+          photos: [],
+          record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
+        }
       ]), *DECIMAL_BREW_FIELDS)
+      reject_blank_record_link_attributes(attributes)
     end
 
     def taste_brew_params
       params.expect(brew: [ :taste_balance, :rating ])
+    end
+
+    def prepare_record_links(record)
+      blank_rows = 3 - record.record_links.reject(&:marked_for_destruction?).size
+      record.build_blank_record_links(blank_rows) if blank_rows.positive?
+    end
+
+    def reject_blank_record_link_attributes(attributes)
+      attributes[:record_links_attributes]&.delete_if do |_index, link_attributes|
+        link_attributes[:label].blank? && link_attributes["label"].blank? &&
+          link_attributes[:url].blank? && link_attributes["url"].blank?
+      end
+      attributes
     end
 
     def brew_draft_storage_key

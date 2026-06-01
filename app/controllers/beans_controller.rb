@@ -16,9 +16,11 @@ class BeansController < ApplicationController
 
   def new
     @bean = current_workspace.beans.new(opened_on: Date.current)
+    prepare_record_links(@bean)
   end
 
   def edit
+    prepare_record_links(@bean)
   end
 
   def create
@@ -32,6 +34,7 @@ class BeansController < ApplicationController
       @bean.photos.attach(photos) if photos.any?
       redirect_to @bean, notice: t(".created")
     else
+      prepare_record_links(@bean)
       render :new, status: :unprocessable_entity
     end
   end
@@ -47,6 +50,7 @@ class BeansController < ApplicationController
       @bean.photos.attach(photos) if photos.any?
       redirect_to @bean, notice: t(".updated")
     else
+      prepare_record_links(@bean)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -103,7 +107,7 @@ class BeansController < ApplicationController
     end
 
     def bean_params
-      normalize_decimal_attributes(params.expect(bean: [
+      attributes = normalize_decimal_attributes(params.expect(bean: [
         :name,
         :roaster_name,
         :origin,
@@ -133,7 +137,25 @@ class BeansController < ApplicationController
         :variety,
         :harvested,
         :blend_percentage,
-        { photos: [] }
+        :public_note,
+        {
+          photos: [],
+          record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
+        }
       ]), *DECIMAL_BEAN_FIELDS)
+      reject_blank_record_link_attributes(attributes)
+    end
+
+    def prepare_record_links(record)
+      blank_rows = 3 - record.record_links.reject(&:marked_for_destruction?).size
+      record.build_blank_record_links(blank_rows) if blank_rows.positive?
+    end
+
+    def reject_blank_record_link_attributes(attributes)
+      attributes[:record_links_attributes]&.delete_if do |_index, link_attributes|
+        link_attributes[:label].blank? && link_attributes["label"].blank? &&
+          link_attributes[:url].blank? && link_attributes["url"].blank?
+      end
+      attributes
     end
 end

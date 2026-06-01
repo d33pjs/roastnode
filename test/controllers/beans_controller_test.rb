@@ -248,6 +248,40 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1490, bean.purchase_price_cents
   end
 
+  test "writer can edit bean public note and public links" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    get edit_bean_path(bean)
+
+    assert_response :success
+    assert_select "textarea[name=?]", "bean[public_note]"
+    assert_select "[data-testid=record-links-fields]"
+
+    patch bean_path(bean), params: {
+      bean: {
+        name: bean.name,
+        bag_size_grams: bean.bag_size_grams.to_s,
+        remaining_grams: bean.remaining_grams.to_s,
+        bag_status: bean.bag_status,
+        public_note: "Public bean note.",
+        record_links_attributes: {
+          "0" => {
+            label: "Buy beans",
+            url: "https://example.com/beans",
+            kind: "affiliate",
+            visibility: "public",
+            position: "10"
+          }
+        }
+      }
+    }
+
+    assert_redirected_to bean_path(bean)
+    assert_equal "Public bean note.", bean.reload.public_note
+    assert_equal "Buy beans", bean.record_links.first.label
+  end
+
   test "writer can update bean lifecycle status" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

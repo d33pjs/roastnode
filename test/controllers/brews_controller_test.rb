@@ -258,6 +258,49 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[data-controller~=?]", "brew-draft", count: 0
   end
 
+  test "brew edit form renders public note and record links" do
+    sign_in_as(users(:one))
+
+    get edit_brew_path(brews(:morning_espresso))
+
+    assert_response :success
+    assert_select "textarea[name=?]", "brew[public_note]"
+    assert_select "[data-testid=record-links-fields]"
+    assert_select "input[name*='[record_links_attributes]'][name$='[label]']"
+    assert_select "input[name*='[record_links_attributes]'][name$='[url]']"
+    assert_select "select[name*='[record_links_attributes]'][name$='[kind]']"
+    assert_select "select[name*='[record_links_attributes]'][name$='[visibility]']"
+  end
+
+  test "writer can update brew public note and public links" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    patch brew_path(brew), params: {
+      brew: {
+        bean_id: brew.bean.id,
+        grinder_id: brew.grinder.id,
+        machine_id: brew.machine.id,
+        bean_weight_grams: brew.bean_weight_grams.to_s,
+        public_note: "Public brew note.",
+        record_links_attributes: {
+          "0" => {
+            label: "Shot writeup",
+            url: "https://example.com/shot",
+            kind: "info",
+            visibility: "public",
+            position: "10"
+          }
+        }
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_equal "Public brew note.", brew.reload.public_note
+    assert_equal "Shot writeup", brew.record_links.first.label
+    assert_equal "public", brew.record_links.first.visibility
+  end
+
   test "new falls back to first open bean when last bean is closed" do
     beans(:open_household).update!(archived_at: Time.current, remaining_grams: 0)
     sign_in_as(users(:one))

@@ -93,6 +93,39 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Single dosing setup.", equipment.notes
   end
 
+  test "admin can edit equipment public note and public links" do
+    sign_in_as(users(:one))
+    equipment = equipment(:household_grinder)
+
+    get edit_equipment_path(equipment)
+
+    assert_response :success
+    assert_select "textarea[name=?]", "equipment[public_note]"
+    assert_select "[data-testid=record-links-fields]"
+
+    patch equipment_path(equipment), params: {
+      equipment: {
+        name: equipment.name,
+        kind: equipment.kind,
+        model: equipment.model,
+        public_note: "Public grinder note.",
+        record_links_attributes: {
+          "0" => {
+            label: "Buy grinder",
+            url: "https://example.com/grinder",
+            kind: "affiliate",
+            visibility: "public",
+            position: "10"
+          }
+        }
+      }
+    }
+
+    assert_redirected_to equipment_path(equipment)
+    assert_equal "Public grinder note.", equipment.reload.public_note
+    assert_equal "Buy grinder", equipment.record_links.first.label
+  end
+
   test "viewer cannot create equipment" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)

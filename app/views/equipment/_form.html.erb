@@ -53,7 +53,20 @@
       <%= form.label :notes, t("equipment.form.notes"), class: label_class %>
       <%= form.text_area :notes, rows: 4, class: input_class %>
     </div>
+
+    <div>
+      <%= form.label :public_note, t("equipment.form.public_note"), class: label_class %>
+      <%= form.text_area :public_note, rows: 4, class: input_class %>
+    </div>
   </section>
+
+  <%= render "shared/record_links_fields",
+    form:,
+    record: equipment,
+    label_class:,
+    input_class:,
+    section_class:,
+    section_title_class: %>
 
   <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-accent-strong)] px-5 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
 <% end %>

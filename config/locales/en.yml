@@ -119,6 +119,21 @@ en:
     history_pagination:
       next: "Next"
       previous: "Previous"
+    record_links:
+      help: "Public links can appear on shared brew pages. Private links stay inside this workspace."
+      kind: "Type"
+      kinds:
+        affiliate: "Affiliate"
+        buy: "Buy"
+        info: "Info"
+      label: "Label"
+      remove: "Remove"
+      title: "Links"
+      url: "URL"
+      visibility: "Visibility"
+      visibilities:
+        private: "Private"
+        public: "Public"
   activity:
     index:
       adjustment: "%{amount}g inventory adjustment for %{bean}"
@@ -184,6 +199,7 @@ en:
       purchase_source: "Buy source"
       purchase_url: "Website"
       purchased_on: "Buy date"
+      public_note: "Public note"
       rating: "Rating"
       region: "Region"
       remaining: "Remaining (g)"
@@ -370,6 +386,7 @@ en:
       photos: "Photos"
       preinfusion: "Preinfusion (s)"
       preparation_tools: "Preparation tools"
+      public_note: "Public note"
       rating: "Rating"
       sections:
         bean: "Bean"
@@ -488,6 +505,7 @@ en:
       name: "Name"
       notes: "Notes"
       photos: "Photos"
+      public_note: "Public note"
       sections:
         identity: "Identity"
         notes: "Notes"
@@ -808,6 +826,7 @@ en:
       notes: "Notes"
       photos: "Photos"
       position: "Sort position"
+      public_note: "Public note"
       sections:
         identity: "Identity"
         notes: "Notes"

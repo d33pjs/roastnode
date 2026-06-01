@@ -20,9 +20,11 @@ class PreparationToolsController < ApplicationController
 
   def new
     @preparation_tool = current_workspace.preparation_tools.new(brew_method: "espresso")
+    prepare_record_links(@preparation_tool)
   end
 
   def edit
+    prepare_record_links(@preparation_tool)
   end
 
   def create
@@ -34,6 +36,7 @@ class PreparationToolsController < ApplicationController
       @preparation_tool.photos.attach(photos) if photos.any?
       redirect_to preparation_tools_path, notice: t(".created")
     else
+      prepare_record_links(@preparation_tool)
       render :new, status: :unprocessable_entity
     end
   end
@@ -46,6 +49,7 @@ class PreparationToolsController < ApplicationController
       @preparation_tool.photos.attach(photos) if photos.any?
       redirect_to @preparation_tool, notice: t(".updated")
     else
+      prepare_record_links(@preparation_tool)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -90,6 +94,30 @@ class PreparationToolsController < ApplicationController
     end
 
     def preparation_tool_params
-      params.expect(preparation_tool: [ :name, :brew_method, :notes, :position, { photos: [] } ])
+      attributes = params.expect(preparation_tool: [
+        :name,
+        :brew_method,
+        :notes,
+        :position,
+        :public_note,
+        {
+          photos: [],
+          record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
+        }
+      ])
+      reject_blank_record_link_attributes(attributes)
+    end
+
+    def prepare_record_links(record)
+      blank_rows = 3 - record.record_links.reject(&:marked_for_destruction?).size
+      record.build_blank_record_links(blank_rows) if blank_rows.positive?
+    end
+
+    def reject_blank_record_link_attributes(attributes)
+      attributes[:record_links_attributes]&.delete_if do |_index, link_attributes|
+        link_attributes[:label].blank? && link_attributes["label"].blank? &&
+          link_attributes[:url].blank? && link_attributes["url"].blank?
+      end
+      attributes
     end
 end

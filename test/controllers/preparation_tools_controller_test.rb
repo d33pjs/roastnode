@@ -203,6 +203,39 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 12, tool.position
   end
 
+  test "admin can edit preparation tool public note and public links" do
+    sign_in_as(users(:one))
+    tool = preparation_tools(:wdt)
+
+    get edit_preparation_tool_path(tool)
+
+    assert_response :success
+    assert_select "textarea[name=?]", "preparation_tool[public_note]"
+    assert_select "[data-testid=record-links-fields]"
+
+    patch preparation_tool_path(tool), params: {
+      preparation_tool: {
+        name: tool.name,
+        brew_method: tool.brew_method,
+        position: tool.position,
+        public_note: "Public WDT note.",
+        record_links_attributes: {
+          "0" => {
+            label: "Tool info",
+            url: "https://example.com/wdt",
+            kind: "info",
+            visibility: "public",
+            position: "10"
+          }
+        }
+      }
+    }
+
+    assert_redirected_to preparation_tool_path(tool)
+    assert_equal "Public WDT note.", tool.reload.public_note
+    assert_equal "Tool info", tool.record_links.first.label
+  end
+
   test "archive and reopen preparation tool" do
     sign_in_as(users(:one))
     tool = preparation_tools(:wdt)

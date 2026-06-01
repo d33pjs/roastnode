@@ -1,0 +1,49 @@
+<% label_class = local_assigns.fetch(:label_class, "block text-sm font-extrabold text-rn-muted") %>
+<% input_class = local_assigns.fetch(:input_class, "mt-1 w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none") %>
+<% section_class = local_assigns.fetch(:section_class, "grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5") %>
+<% section_title_class = local_assigns.fetch(:section_title_class, "text-lg font-black text-rn-ink") %>
+
+<section data-testid="record-links-fields" class="<%= section_class %>">
+  <div>
+    <h2 class="<%= section_title_class %>"><%= t("shared.record_links.title") %></h2>
+    <p class="mt-1 text-sm font-semibold text-rn-muted"><%= t("shared.record_links.help") %></p>
+  </div>
+
+  <div class="grid gap-3">
+    <%= form.fields_for :record_links do |link_form| %>
+      <div class="grid gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 sm:grid-cols-[1fr_1.4fr_0.8fr_0.8fr_auto] sm:items-end">
+        <%= link_form.hidden_field :id if link_form.object.persisted? %>
+        <%= link_form.hidden_field :position, value: link_form.object.position.presence || link_form.index.to_i * 10 %>
+
+        <div>
+          <%= link_form.label :label, t("shared.record_links.label"), class: label_class %>
+          <%= link_form.text_field :label, class: input_class %>
+        </div>
+
+        <div>
+          <%= link_form.label :url, t("shared.record_links.url"), class: label_class %>
+          <%= link_form.url_field :url, class: input_class %>
+        </div>
+
+        <div>
+          <%= link_form.label :kind, t("shared.record_links.kind"), class: label_class %>
+          <%= link_form.select :kind, RecordLink::KINDS.map { |kind| [ t("shared.record_links.kinds.#{kind}"), kind ] }, {}, class: input_class %>
+        </div>
+
+        <div>
+          <%= link_form.label :visibility, t("shared.record_links.visibility"), class: label_class %>
+          <%= link_form.select :visibility, RecordLink::VISIBILITIES.map { |visibility| [ t("shared.record_links.visibilities.#{visibility}"), visibility ] }, {}, class: input_class %>
+        </div>
+
+        <% if link_form.object.persisted? %>
+          <label class="flex items-center gap-2 text-sm font-extrabold text-rn-muted sm:pb-2">
+            <%= link_form.check_box :_destroy, class: "h-4 w-4 rounded border-rn-line text-rn-ink" %>
+            <%= t("shared.record_links.remove") %>
+          </label>
+        <% else %>
+          <%= link_form.hidden_field :_destroy, value: "0" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</section>
