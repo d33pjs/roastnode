@@ -16,6 +16,7 @@ Rails.application.routes.draw do
 
   root "home#index"
   get "dashboard" => "home#dashboard", as: :dashboard
+  get "activity" => "activity#index", as: :activity
   get "instance_admin" => "instance_admin#index", as: :instance_admin
   namespace :instance_admin, path: "instance_admin" do
     resources :backup_profiles, only: %i[create update] do

@@ -119,6 +119,17 @@ en:
     history_pagination:
       next: "Next"
       previous: "Previous"
+  activity:
+    index:
+      adjustment: "%{amount} g inventory adjustment for %{bean}"
+      back: "Back to dashboard"
+      brew: "Espresso with %{bean}"
+      empty: "No activity yet."
+      equipment_event: "%{event} for %{equipment}"
+      inventory_type: "Inventory"
+      brew_type: "Brew"
+      equipment_type: "Equipment"
+      title: "Activity"
   beanconqueror_imports:
     create:
       created: "Beanconqueror import processed."

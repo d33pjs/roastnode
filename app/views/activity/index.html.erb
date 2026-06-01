@@ -1,0 +1,35 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-6xl py-6 sm:px-6 lg:py-10">
+    <header class="border-b border-rn-line pb-6">
+      <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
+      <p class="mt-4 text-sm font-extrabold uppercase tracking-[0.08em] text-rn-ink"><%= current_workspace.name %></p>
+      <h1 class="mt-2 text-4xl font-black text-rn-ink"><%= t(".title") %></h1>
+    </header>
+
+    <% if @activity.any? %>
+      <div class="mt-8 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+        <% @activity.records.each do |activity| %>
+          <% if activity.is_a?(Brew) %>
+            <%= link_to brew_path(activity), data: { testid: "activity-card" }, class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
+              <p class="font-extrabold text-rn-ink"><%= t(".brew", bean: activity.bean.name) %></p>
+              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".brew_type") %> | <%= activity.user.display_label %></p>
+            <% end %>
+          <% elsif activity.is_a?(EquipmentEvent) %>
+            <%= link_to equipment_event_path(activity), data: { testid: "activity-card" }, class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
+              <p class="font-extrabold text-rn-ink"><%= t(".equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>
+              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".equipment_type") %> | <%= activity.user.display_label %></p>
+            <% end %>
+          <% else %>
+            <div data-testid="activity-card" class="border-b border-rn-line p-4 last:border-b-0">
+              <p class="font-extrabold text-rn-ink"><%= t(".adjustment", bean: activity.bean.name, amount: profile_number(activity.delta_grams, precision: 1)) %></p>
+              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".inventory_type") %> | <%= activity.user.display_label %></p>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+      <%= render "shared/history_pagination", paginator: @activity, params: request.query_parameters.except("page") %>
+    <% else %>
+      <p class="mt-8 rounded-2xl border border-rn-line bg-rn-surface p-5 text-sm font-semibold text-rn-ink"><%= t(".empty") %></p>
+    <% end %>
+  </section>
+</main>
