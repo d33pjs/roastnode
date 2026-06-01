@@ -6,7 +6,7 @@ class HouseholdInvite < ApplicationRecord
   before_validation :set_token, on: :create
   before_validation :set_expiration, on: :create
 
-  validates :email_address, presence: true
+  validates :email_address, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :token, presence: true, uniqueness: true
   validates :expires_at, presence: true
 

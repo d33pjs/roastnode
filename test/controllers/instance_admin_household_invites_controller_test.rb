@@ -37,6 +37,23 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
     assert_match(/Email address/, flash[:alert])
   end
 
+  test "instance admin cannot create household invite with invalid email" do
+    admin = users(:one)
+    admin.update!(instance_admin: true)
+    sign_in_as(admin)
+
+    assert_no_enqueued_emails do
+      assert_no_difference -> { HouseholdInvite.count } do
+        post instance_admin_household_invites_path, params: {
+          household_invite: { email_address: "not-an-email" }
+        }
+      end
+    end
+
+    assert_redirected_to instance_admin_path
+    assert_match(/Email address is invalid/, flash[:alert])
+  end
+
   test "household invite mail enqueue log messages are redacted and truncated" do
     controller = InstanceAdmin::HouseholdInvitesController.new
     message = "SMTP failed password=super-secret access_token=abc123 session:cookie secret_key_base=sekret #{"x" * 300}"

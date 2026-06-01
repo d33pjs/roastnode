@@ -8,6 +8,13 @@ class HouseholdInviteTest < ActiveSupport::TestCase
     assert_includes invite.errors[:email_address], "can't be blank"
   end
 
+  test "requires email address format" do
+    invite = HouseholdInvite.new(created_by: users(:one), email_address: "not-an-email")
+
+    assert_not invite.valid?
+    assert_includes invite.errors[:email_address], "is invalid"
+  end
+
   test "normalizes email address" do
     invite = HouseholdInvite.create!(created_by: users(:one), email_address: "New.Owner@Example.COM")
 
