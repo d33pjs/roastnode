@@ -71,6 +71,52 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_nil request.session[:return_to_after_authenticating]
   end
 
+  test "invite signup rejects blank household name without creating account or household" do
+    invite = household_invites(:active_household_invite)
+
+    assert_no_difference -> { User.count } do
+      assert_no_difference -> { Workspace.count } do
+        assert_no_difference -> { Membership.owner.count } do
+          post signup_household_invite_path(invite.token), params: {
+            user: {
+              email_address: invite.email_address,
+              password: "password",
+              password_confirmation: "password"
+            },
+            workspace: { name: "" }
+          }
+        end
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil invite.reload.accepted_at
+    assert_nil invite.workspace
+  end
+
+  test "invite signup rejects invalid user data without creating account or household" do
+    invite = household_invites(:active_household_invite)
+
+    assert_no_difference -> { User.count } do
+      assert_no_difference -> { Workspace.count } do
+        assert_no_difference -> { Membership.owner.count } do
+          post signup_household_invite_path(invite.token), params: {
+            user: {
+              email_address: invite.email_address,
+              password: "password",
+              password_confirmation: "different-password"
+            },
+            workspace: { name: "New Household" }
+          }
+        end
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil invite.reload.accepted_at
+    assert_nil invite.workspace
+  end
+
   test "invite signup rejects mismatched email without creating household" do
     invite = household_invites(:active_household_invite)
 
@@ -152,6 +198,60 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "li", "is no longer available"
   end
 
+  test "closed invite tokens display unavailable state" do
+    closed_household_invite_cases.each_value do |invite|
+      get household_invite_path(invite.token)
+
+      assert_response :not_found
+      assert_select "h1", I18n.t("household_invites.show.unavailable_title")
+    end
+  end
+
+  test "closed invite tokens cannot be submitted through signup" do
+    closed_household_invite_cases.each_value do |invite|
+      original_status = household_invite_status(invite)
+
+      assert_no_difference -> { User.count } do
+        assert_no_difference -> { Workspace.count } do
+          assert_no_difference -> { Membership.owner.count } do
+            post signup_household_invite_path(invite.token), params: {
+              user: {
+                email_address: invite.email_address,
+                password: "password",
+                password_confirmation: "password"
+              },
+              workspace: { name: "Closed Household" }
+            }
+          end
+        end
+      end
+
+      assert_redirected_to household_invite_path(invite.token)
+      assert_equal original_status, household_invite_status(invite.reload)
+    end
+  end
+
+  test "closed invite tokens cannot be accepted by signed-in users" do
+    closed_household_invite_cases.each_value do |invite|
+      user = invite.accepted_by || User.create!(email_address: invite.email_address, password: "password")
+      original_status = household_invite_status(invite)
+      sign_in_as(user)
+
+      assert_no_difference -> { User.count } do
+        assert_no_difference -> { Workspace.count } do
+          assert_no_difference -> { Membership.owner.count } do
+            post accept_household_invite_path(invite.token), params: {
+              workspace: { name: "Closed Household" }
+            }
+          end
+        end
+      end
+
+      assert_redirected_to household_invite_path(invite.token)
+      assert_equal original_status, household_invite_status(invite.reload)
+    end
+  end
+
   test "signed-in matching user can accept invite and create separate household" do
     invite = household_invites(:active_household_invite)
     user = User.create!(email_address: invite.email_address, password: "password")
@@ -189,6 +289,26 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def closed_household_invite_cases
+      accepted_user = User.create!(email_address: "accepted-owner@example.com", password: "password")
+      accepted_workspace = Workspace.create!(name: "Accepted Household", kind: :household, default_currency: "EUR")
+      accepted_invite = HouseholdInvite.create!(created_by: users(:one), email_address: accepted_user.email_address)
+      accepted_invite.update!(accepted_by: accepted_user, accepted_at: 1.minute.ago, workspace: accepted_workspace)
+
+      revoked_invite = HouseholdInvite.create!(created_by: users(:one), email_address: "revoked-owner@example.com")
+      revoked_invite.revoke!
+
+      {
+        expired: household_invites(:expired_household_invite),
+        revoked: revoked_invite,
+        accepted: accepted_invite
+      }
+    end
+
+    def household_invite_status(invite)
+      invite.attributes.slice("accepted_at", "accepted_by_id", "revoked_at", "workspace_id")
+    end
+
     def with_household_invite_accept_failure(message)
       original_accept = HouseholdInvite.instance_method(:accept!)
 
