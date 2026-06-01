@@ -1,0 +1,10 @@
+<p>
+  You have been invited to create a new household on Roastnode for
+  <strong><%= @household_invite.email_address %></strong>.
+</p>
+
+<p>
+  <%= link_to "Create your household", household_invite_url(@household_invite.token) %>
+</p>
+
+<p>This invite expires on <%= l(@household_invite.expires_at, format: :european_seconds) %>.</p>

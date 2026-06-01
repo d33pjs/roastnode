@@ -1055,6 +1055,9 @@ en:
       unavailable_eyebrow: "Invite unavailable"
       unavailable_title: "This invite is not available"
       username_label: "Username (optional)"
+  household_invites_mailer:
+    invite:
+      subject: "Create your Roastnode household"
   workspace_invites_mailer:
     invite:
       subject: "Join %{workspace} on Roastnode"

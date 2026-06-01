@@ -22,6 +22,11 @@ Rails.application.routes.draw do
     resources :backup_profiles, only: %i[create update] do
       post :run, on: :member
     end
+    resources :household_invites, only: :create, param: :token do
+      post :resend, on: :member
+      post :reinvite, on: :member
+      patch :revoke, on: :member
+    end
   end
   resource :profile, only: %i[edit update]
   resource :workspace, only: %i[edit update destroy] do
@@ -38,6 +43,10 @@ Rails.application.routes.draw do
     post :reinvite, on: :member
     post :signup, on: :member
     patch :revoke, on: :member
+  end
+  resources :household_invites, only: :show, param: :token do
+    post :accept, on: :member
+    post :signup, on: :member
   end
   get "gear" => "gear#index", as: :gear
   resources :beans, only: %i[index new create show edit update destroy] do
