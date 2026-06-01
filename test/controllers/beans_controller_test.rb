@@ -379,7 +379,9 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(bean)
 
     assert_response :success
-    assert_select "[data-testid=bean-remaining-card]", text: /131 g from 250 g bag size/
+    assert_select "[data-testid=bean-remaining-card]"
+    assert_select "[data-testid=bean-remaining-value]", "131 g"
+    assert_select "[data-testid=bean-remaining-context]", "from 250 g bag size"
     assert_select "[data-testid=bean-detail-progress][data-remaining-state=plenty]"
     assert_select "h2", text: I18n.t("beans.show.bag_size"), count: 0
     assert_select "[data-testid=bean-detail-brew-count]", "2"

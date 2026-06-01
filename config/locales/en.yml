@@ -300,7 +300,7 @@ en:
       rating: "Rating"
       recent_brews: "Recent brews"
       remaining: "Remaining"
-      remaining_from_bag: "%{remaining} from %{total} bag size"
+      remaining_bag_context: "from %{total} bag size"
       remaining_percent: "Remaining"
       region: "Region"
       reopen: "Reopen bag"
