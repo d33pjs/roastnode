@@ -1,5 +1,6 @@
 class Bean < ApplicationRecord
   include HasPrimaryPhoto
+  include HasRecordLinks
 
   ROAST_TYPES = %w[unknown espresso filter omni].freeze
   BLEND_TYPES = %w[unknown single_origin blend].freeze

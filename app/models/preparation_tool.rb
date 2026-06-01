@@ -1,5 +1,6 @@
 class PreparationTool < ApplicationRecord
   include HasPrimaryPhoto
+  include HasRecordLinks
 
   belongs_to :workspace
   belongs_to :data_import, optional: true

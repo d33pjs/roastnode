@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_01_130200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -65,6 +65,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
     t.string "origin"
     t.bigint "primary_photo_attachment_id"
     t.string "process"
+    t.text "public_note"
     t.integer "purchase_price_cents"
     t.string "purchase_source"
     t.string "purchase_url"
@@ -125,6 +126,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
     t.datetime "occurred_at", null: false
     t.integer "preinfusion_seconds"
     t.bigint "primary_photo_attachment_id"
+    t.text "public_note"
     t.integer "rating"
     t.jsonb "raw_import_data", default: {}, null: false
     t.string "retention_marker", default: "unknown", null: false
@@ -170,6 +172,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
     t.string "name", null: false
     t.text "notes"
     t.bigint "primary_photo_attachment_id"
+    t.text "public_note"
     t.jsonb "raw_import_data", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
@@ -310,6 +313,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
     t.text "notes"
     t.integer "position", default: 0, null: false
     t.bigint "primary_photo_attachment_id"
+    t.text "public_note"
     t.jsonb "raw_import_data", default: {}, null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
@@ -319,6 +323,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
     t.index ["workspace_id", "brew_method", "active"], name: "idx_on_workspace_id_brew_method_active_63d2fd7955"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_preparation_tools_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id"], name: "index_preparation_tools_on_workspace_id"
+  end
+
+  create_table "public_brew_shares", force: :cascade do |t|
+    t.bigint "brew_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.boolean "enabled", default: false, null: false
+    t.string "password_digest"
+    t.integer "selected_photo_attachment_ids", default: [], null: false, array: true
+    t.jsonb "snapshot", default: {}, null: false
+    t.string "title"
+    t.string "token", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["brew_id"], name: "index_public_brew_shares_on_brew_id", unique: true
+    t.index ["created_by_id"], name: "index_public_brew_shares_on_created_by_id"
+    t.index ["token"], name: "index_public_brew_shares_on_token", unique: true
+    t.index ["updated_by_id"], name: "index_public_brew_shares_on_updated_by_id"
+    t.index ["workspace_id", "enabled"], name: "index_public_brew_shares_on_workspace_id_and_enabled"
+    t.index ["workspace_id"], name: "index_public_brew_shares_on_workspace_id"
+  end
+
+  create_table "record_links", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "kind", default: "info", null: false
+    t.string "label", null: false
+    t.bigint "linkable_id", null: false
+    t.string "linkable_type", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.string "url", null: false
+    t.string "visibility", default: "private", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["linkable_type", "linkable_id"], name: "index_record_links_on_linkable"
+    t.index ["workspace_id", "linkable_type", "linkable_id", "position"], name: "idx_record_links_workspace_linkable_position"
+    t.index ["workspace_id"], name: "index_record_links_on_workspace_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -411,6 +452,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_120000) do
   add_foreign_key "passkey_credentials", "users"
   add_foreign_key "preparation_tools", "data_imports"
   add_foreign_key "preparation_tools", "workspaces"
+  add_foreign_key "public_brew_shares", "brews"
+  add_foreign_key "public_brew_shares", "users", column: "created_by_id"
+  add_foreign_key "public_brew_shares", "users", column: "updated_by_id"
+  add_foreign_key "public_brew_shares", "workspaces"
+  add_foreign_key "record_links", "workspaces"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "workspaces", column: "active_workspace_id"
   add_foreign_key "workspace_invites", "users", column: "accepted_by_id"

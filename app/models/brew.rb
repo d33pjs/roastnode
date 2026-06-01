@@ -1,5 +1,6 @@
 class Brew < ApplicationRecord
   include HasPrimaryPhoto
+  include HasRecordLinks
 
   RETENTION_TOLERANCE_GRAMS = BigDecimal("0.2")
 
@@ -31,6 +32,7 @@ class Brew < ApplicationRecord
   belongs_to :machine, class_name: "Equipment", optional: true
 
   has_one :inventory_adjustment, dependent: :restrict_with_exception
+  has_one :public_brew_share, dependent: :destroy
   has_many :brew_preparation_tools, dependent: :destroy
   has_many :preparation_tools, through: :brew_preparation_tools
   has_many_attached :photos

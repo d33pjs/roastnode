@@ -1,5 +1,6 @@
 class Equipment < ApplicationRecord
   include HasPrimaryPhoto
+  include HasRecordLinks
 
   enum :kind, {
     grinder: "grinder",
