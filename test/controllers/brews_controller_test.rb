@@ -37,6 +37,23 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
   end
 
+  test "new falls back to household last brew defaults for a user without household brews" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", beans(:open_household).id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[grinder_id]", equipment(:household_grinder).id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[machine_id]", equipment(:household_machine).id.to_s
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", "12"
+    assert_select "input[name=?][value=?]", "brew[brew_temperature_celsius]", "93.0"
+    assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "5"
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
+  end
+
   test "new does not offer archived equipment" do
     archived_grinder = equipment(:household_grinder)
     archived_machine = equipment(:household_machine)

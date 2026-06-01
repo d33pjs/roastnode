@@ -125,7 +125,12 @@ class BrewsController < ApplicationController
     end
 
     def last_brew_for_defaults
-      Current.user.brews.where(workspace: current_workspace).includes(:bean, :grinder, :machine, :preparation_tools).order(occurred_at: :desc, created_at: :desc).first
+      brew_default_scope(Current.user.brews.where(workspace: current_workspace)).first ||
+        brew_default_scope(current_workspace.brews).first
+    end
+
+    def brew_default_scope(scope)
+      scope.includes(:bean, :grinder, :machine, :preparation_tools).order(occurred_at: :desc, created_at: :desc)
     end
 
     def default_brew_bean(last_brew)

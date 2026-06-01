@@ -39,7 +39,7 @@ Espresso logging always requires an open bean.
 
 Default selection order:
 
-1. The current user's most recent brewed bean in the active workspace, if that bean is still open and has remaining inventory.
+1. The current user's most recent brewed bean in the active workspace, or the workspace's most recent brewed bean when the current user has not logged a brew there yet, if that bean is still open and has remaining inventory.
 2. The first other open bean in the workspace, ordered by opened date and then creation date.
 3. If no open bean exists, redirect to bean creation before logging a brew.
 
@@ -47,7 +47,7 @@ Archived or depleted beans are not valid brew choices in this slice.
 
 ## Last-Brew Defaults
 
-The espresso form pre-fills setup fields from the current user's most recent brew in the active workspace.
+The espresso form pre-fills setup fields from the current user's most recent brew in the active workspace. If the current user has not logged a brew in that workspace yet, it falls back to the workspace's most recent brew so new household members start from the shared setup.
 
 Users can hide optional fields from the new espresso form through Profile. Brew edit/correction screens always show the full log.
 
