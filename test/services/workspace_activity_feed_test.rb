@@ -1,6 +1,10 @@
 require "test_helper"
 
 class WorkspaceActivityFeedTest < ActiveSupport::TestCase
+  setup do
+    equipment_events(:machine_backflush).update!(occurred_at: Time.zone.local(2026, 6, 1, 6, 0, 0))
+  end
+
   test "returns workspace activity sorted newest first" do
     workspace = workspaces(:household)
     adjustment = workspace.inventory_adjustments.create!(
