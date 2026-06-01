@@ -22,6 +22,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Bean detail analytics through `BeanStatistics`.
 - Equipment detail analytics through `EquipmentStatistics`.
 - Preparation tool detail analytics through `PreparationToolStatistics`.
+- Statistics links to all-time brew history through a page-level all-brews button and the total-brews card.
 
 ## Cost Rules
 
@@ -39,6 +40,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - `all_time` starts at the active workspace's first brew and ends at today or the latest brew date, whichever is later. If there are no brews, it uses today for both ends.
 - Brew-derived metrics follow the selected range: total brews, beans ground, average brew cost, leaders, channeling, retention, taste balance, and day bars.
 - Current bean inventory/catalog metrics stay unfiltered: open bean count, known bean spend, and bean breakdowns by roaster/origin/process.
+- Links from statistics to brew history do not preserve the selected analytics date range; they always open all-time brew history.
 
 ## Agent Notes
 

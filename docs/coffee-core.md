@@ -15,6 +15,8 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Brew correction flows for edit/delete with inventory adjustment.
 - Inventory adjustment history for brew consumption.
 - Compact screenshot-worthy brew detail cards.
+- Paginated all-time brew history with compact-card and hero-card views.
+- Paginated all-time workspace activity history for brews, manual inventory adjustments, and equipment events.
 - Private workspace statistics and analytics page.
 - Bean detail analytics for brew history, best brews, taste balance, and retention markers.
 - Equipment detail analytics for usage totals, service counters, and maintenance markers.
