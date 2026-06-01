@@ -647,6 +647,7 @@ en:
         unavailable: "This household invite cannot be resent."
       revoke:
         revoked: "Household invite revoked."
+        unavailable: "This household invite cannot be revoked."
     index:
       back: "Back to dashboard"
       activate_backup: "Activate"

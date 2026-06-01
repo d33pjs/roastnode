@@ -138,6 +138,7 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     admin.update!(instance_admin: true)
     sign_in_as(admin)
     invite = household_invites(:active_household_invite)
+    closed_invite = household_invites(:expired_household_invite)
 
     get "/instance_admin"
 
@@ -146,8 +147,21 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
       assert_select "form[action=?]", instance_admin_household_invites_path
       assert_select "input[name=?][type=email]", "household_invite[email_address]"
       assert_select "input[value=?]", household_invite_url(invite.token)
-      assert_select "form[action=?]", resend_instance_admin_household_invite_path(invite.token)
-      assert_select "form[action=?]", revoke_instance_admin_household_invite_path(invite.token)
+      assert_select "form[action=?]", resend_instance_admin_household_invite_path(invite)
+      assert_select "form[action=?]", revoke_instance_admin_household_invite_path(invite)
+
+      admin_action_paths = [
+        resend_instance_admin_household_invite_path(invite),
+        revoke_instance_admin_household_invite_path(invite),
+        reinvite_instance_admin_household_invite_path(closed_invite)
+      ]
+      admin_action_paths.each do |action_path|
+        assert_no_match(/#{Regexp.escape(invite.token)}/, action_path)
+        assert_no_match(/#{Regexp.escape(closed_invite.token)}/, action_path)
+        assert_includes response.body, %(action="#{action_path}")
+      end
+      assert_select "form[action=?]", reinvite_instance_admin_household_invite_path(closed_invite)
+      assert_includes response.body, household_invite_url(invite.token)
     end
   end
 

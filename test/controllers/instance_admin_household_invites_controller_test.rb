@@ -37,6 +37,17 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
     assert_match(/Email address/, flash[:alert])
   end
 
+  test "household invite mail enqueue log messages are redacted and truncated" do
+    controller = InstanceAdmin::HouseholdInvitesController.new
+    message = "SMTP failed password=super-secret access_token=abc123 session:cookie secret_key_base=sekret #{"x" * 300}"
+
+    safe_message = controller.send(:safe_error_message, message)
+
+    assert_includes safe_message, "[REDACTED]"
+    assert_no_match(/super-secret|abc123|cookie|sekret/, safe_message)
+    assert_operator safe_message.length, :<=, 220
+  end
+
   test "regular user cannot create household invite" do
     sign_in_as(users(:one))
 
@@ -55,10 +66,24 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
     sign_in_as(admin)
     invite = household_invites(:active_household_invite)
 
-    patch revoke_instance_admin_household_invite_path(invite.token)
+    patch revoke_instance_admin_household_invite_path(invite)
 
     assert_redirected_to instance_admin_path
     assert invite.reload.revoked_at.present?
+  end
+
+  test "instance admin cannot revoke closed household invite" do
+    admin = users(:one)
+    admin.update!(instance_admin: true)
+    sign_in_as(admin)
+    invite = household_invites(:expired_household_invite)
+
+    assert_no_changes -> { invite.reload.revoked_at } do
+      patch revoke_instance_admin_household_invite_path(invite)
+    end
+
+    assert_redirected_to instance_admin_path
+    assert_equal I18n.t("instance_admin.household_invites.revoke.unavailable"), flash[:alert]
   end
 
   test "instance admin can resend active household invite" do
@@ -69,7 +94,7 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
 
     assert_no_difference -> { HouseholdInvite.count } do
       assert_enqueued_email_with HouseholdInvitesMailer, :invite, args: [ invite ] do
-        post resend_instance_admin_household_invite_path(invite.token)
+        post resend_instance_admin_household_invite_path(invite)
       end
     end
 
@@ -85,7 +110,7 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
 
     assert_enqueued_emails 1 do
       assert_difference -> { HouseholdInvite.count }, 1 do
-        post reinvite_instance_admin_household_invite_path(invite.token)
+        post reinvite_instance_admin_household_invite_path(invite)
       end
     end
 

@@ -22,7 +22,7 @@ Rails.application.routes.draw do
     resources :backup_profiles, only: %i[create update] do
       post :run, on: :member
     end
-    resources :household_invites, only: :create, param: :token do
+    resources :household_invites, only: :create do
       post :resend, on: :member
       post :reinvite, on: :member
       patch :revoke, on: :member

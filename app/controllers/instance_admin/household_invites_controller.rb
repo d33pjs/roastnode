@@ -18,6 +18,10 @@ module InstanceAdmin
     end
 
     def revoke
+      unless @household_invite.acceptable?
+        return redirect_to instance_admin_path, alert: t(".unavailable")
+      end
+
       @household_invite.revoke!
 
       redirect_to instance_admin_path, notice: t(".revoked")
@@ -54,7 +58,7 @@ module InstanceAdmin
 
     private
       def set_household_invite
-        @household_invite = HouseholdInvite.find_by!(token: params[:token])
+        @household_invite = HouseholdInvite.find(params[:id])
       end
 
       def household_invite_params
@@ -65,8 +69,14 @@ module InstanceAdmin
         HouseholdInvitesMailer.invite(household_invite).deliver_later
         true
       rescue StandardError => error
-        Rails.logger.warn("Household invite mail enqueue failed: #{error.class}: #{error.message}")
+        Rails.logger.warn("Household invite mail enqueue failed: #{error.class}: #{safe_error_message(error.message)}")
         false
+      end
+
+      def safe_error_message(message)
+        message.to_s
+          .gsub(/((?:access_)?token|password|secret|session)([\w-]*)?(\s*[:=]\s*)[^\s&]+/i, "\\1\\2\\3[REDACTED]")
+          .truncate(220)
       end
   end
 end

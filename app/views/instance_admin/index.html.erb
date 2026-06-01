@@ -68,10 +68,10 @@
                   <td class="px-4 py-3">
                     <div class="flex flex-wrap gap-2">
                       <% if invite.acceptable? %>
-                        <%= button_to t(".resend_household_invite"), resend_instance_admin_household_invite_path(invite.token), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-                        <%= button_to t(".revoke_household_invite"), revoke_instance_admin_household_invite_path(invite.token), method: :patch, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                        <%= button_to t(".resend_household_invite"), resend_instance_admin_household_invite_path(invite), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                        <%= button_to t(".revoke_household_invite"), revoke_instance_admin_household_invite_path(invite), method: :patch, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
                       <% else %>
-                        <%= button_to t(".reinvite_household"), reinvite_instance_admin_household_invite_path(invite.token), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                        <%= button_to t(".reinvite_household"), reinvite_instance_admin_household_invite_path(invite), method: :post, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
                       <% end %>
                     </div>
                   </td>
