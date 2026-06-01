@@ -12,6 +12,16 @@ bin/rails roastnode:demo:load
 
 Do not put user secrets, password digests, session details, invite tokens, or signed media URLs on this page.
 
+## Household Invites
+
+Instance admins can invite a person by required email address to create their own separate household while public registration remains disabled. These invites are instance-scoped, email-bound, and distinct from workspace member invites.
+
+Accepting a household invite creates a new `Workspace` with the recipient as `owner`. The inviting instance admin is not added as a member of the new household.
+
+Active household invites can be revoked or resent. Closed household invites can be re-invited with a fresh token.
+
+Admin management must not expose household invite tokens in logs, diagnostics, or job error output. The admin household-invite list may show the copyable recipient URL as a manual fallback because that URL is the intended invite link for the recipient.
+
 ## Backups
 
 Instance admins can activate and configure backup profiles from the dashboard. Profiles can produce either a full media ZIP archive or a readable all-households JSON file. Runs are executed by `InstanceBackupJob`, and the production recurring schedule uses `InstanceBackupSchedulerJob` through Solid Queue.
