@@ -21,7 +21,7 @@ Set these outside git:
 - `SECRET_KEY_BASE`: Rails session and signing secret if not supplied through credentials.
 - `ROASTNODE_DATABASE_PASSWORD`: PostgreSQL password used by `config/database.yml` in production.
 - `POSTGRES_USER`, `POSTGRES_DB`, `POSTGRES_HOST`, and `POSTGRES_PORT`: database connection details when they differ from defaults.
-- SMTP credentials if password reset mail is enabled.
+- SMTP credentials and a verified sender address if password reset or invite mail is enabled.
 
 Recommended production clear env:
 
@@ -33,7 +33,7 @@ ROASTNODE_HOST=coffee.example.com
 ROASTNODE_PROTOCOL=https
 ```
 
-If you enable outbound password reset mail, configure SMTP through host-level secrets or the rendered env file. Do not put SMTP passwords, database passwords, backup files, `config/master.key`, or generated `.env` files into git.
+If you enable outbound password reset or invite mail, configure SMTP through host-level secrets or the rendered env file. `SMTP_FROM_ADDRESS` controls the message `From:` header and should use a domain verified with your SMTP provider, such as Resend. When `SMTP_FROM_ADDRESS` is blank, Roastnode falls back to `no-reply@SMTP_DOMAIN`. Do not put SMTP passwords, database passwords, backup files, `config/master.key`, or generated `.env` files into git.
 
 ### Passkey Origin
 
@@ -122,7 +122,7 @@ The production env example documents the supported settings. Important groups:
 - Database: `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USER`, `POSTGRES_DB`, `ROASTNODE_DATABASE_PASSWORD`.
 - URLs and host authorization: `ROASTNODE_HOST`, `ROASTNODE_PROTOCOL`, optional `ROASTNODE_PORT`, `ROASTNODE_ALLOWED_HOSTS`.
 - SSL headers and redirects: `RAILS_ASSUME_SSL`, `RAILS_FORCE_SSL`.
-- SMTP: `SMTP_ENABLED`, `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_USER_NAME`, `SMTP_PASSWORD`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO`, `SMTP_OPENSSL_VERIFY_MODE`, `SMTP_RAISE_DELIVERY_ERRORS`.
+- SMTP: `SMTP_ENABLED`, `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_FROM_ADDRESS`, `SMTP_USER_NAME`, `SMTP_PASSWORD`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO`, `SMTP_OPENSSL_VERIFY_MODE`, `SMTP_RAISE_DELIVERY_ERRORS`.
 - Jobs and concurrency: `SOLID_QUEUE_IN_PUMA`, `RAILS_MAX_THREADS`, `WEB_CONCURRENCY`.
 - Backup defaults: `ROASTNODE_BACKUP_STORAGE_PATH`, `ROASTNODE_BACKUP_RETENTION_COUNT`.
 - Thruster: `THRUSTER_TLS_DOMAIN`, `THRUSTER_STORAGE_PATH`, `THRUSTER_GZIP_COMPRESSION_DISABLE_ON_AUTH`.

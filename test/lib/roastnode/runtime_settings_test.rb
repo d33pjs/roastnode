@@ -51,6 +51,22 @@ class Roastnode::RuntimeSettingsTest < ActiveSupport::TestCase
     )
   end
 
+  test "exposes explicit smtp from address" do
+    settings = Roastnode::RuntimeSettings.new(
+      "SMTP_FROM_ADDRESS" => "Roastnode <invites@coffee.example.test>"
+    )
+
+    assert_equal "Roastnode <invites@coffee.example.test>", settings.mail_from_address
+  end
+
+  test "derives smtp from address from smtp domain when explicit address is missing" do
+    settings = Roastnode::RuntimeSettings.new(
+      "SMTP_DOMAIN" => "coffee.example.test"
+    )
+
+    assert_equal "no-reply@coffee.example.test", settings.mail_from_address
+  end
+
   test "keeps smtp disabled unless explicitly enabled" do
     settings = Roastnode::RuntimeSettings.new(
       "SMTP_ADDRESS" => "smtp.example.test"

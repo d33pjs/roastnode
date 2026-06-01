@@ -1,4 +1,5 @@
 require_relative "boot"
+require_relative "../lib/roastnode/runtime_settings"
 
 require "rails/all"
 
@@ -23,5 +24,6 @@ module Roastnode
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
+    config.x.roastnode.mail_from_address = Roastnode::RuntimeSettings.new.mail_from_address
   end
 end

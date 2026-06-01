@@ -3,6 +3,7 @@ module Roastnode
     TRUE_VALUES = %w[1 true yes on].freeze
     FALSE_VALUES = %w[0 false no off].freeze
     DEFAULT_PUBLIC_HOST = "example.com"
+    DEFAULT_MAIL_FROM_ADDRESS = "from@example.com"
     DEFAULT_BACKUP_STORAGE_PATH = "storage/instance_backups"
     DEFAULT_BACKUP_RETENTION_COUNT = 7
 
@@ -62,6 +63,10 @@ module Roastnode
       boolean("SMTP_RAISE_DELIVERY_ERRORS", default: true)
     end
 
+    def mail_from_address
+      fetch("SMTP_FROM_ADDRESS", default: derived_mail_from_address)
+    end
+
     def puma_ssl?
       !!(puma_ssl_cert_path && puma_ssl_key_path)
     end
@@ -100,6 +105,13 @@ module Roastnode
       def smtp_authentication
         authentication = value("SMTP_AUTHENTICATION")
         authentication&.to_sym
+      end
+
+      def derived_mail_from_address
+        smtp_domain = value("SMTP_DOMAIN")
+        return "no-reply@#{smtp_domain}" if smtp_domain
+
+        DEFAULT_MAIL_FROM_ADDRESS
       end
 
       def value(name)
