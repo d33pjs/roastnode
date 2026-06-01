@@ -153,7 +153,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", equipment(:household_grinder).name
     assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
-    assert_select "p", text: /18 g/
+    assert_select "p", text: /18g/
   end
 
   test "show exposes equipment management and danger zone actions" do
@@ -243,7 +243,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h2", I18n.t("equipment.show.analytics")
     assert_select "[data-testid=equipment-total-brews]", "2"
-    assert_select "[data-testid=equipment-total-ground]", "37 g"
+    assert_select "[data-testid=equipment-total-ground]", "37g"
     assert_select "[data-testid=equipment-brews-since-service]"
     assert_select "[data-testid=equipment-grams-since-service]"
     assert_select "[data-testid=equipment-recent-brews] a[href=?]", brew_path(brew), text: /House Blend/
@@ -277,7 +277,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[data-testid=equipment-statistics-start-date][value='2026-05-26']"
     assert_select "input[data-testid=equipment-statistics-end-date][value='2026-05-26']"
     assert_select "[data-testid=equipment-total-brews]", "1"
-    assert_select "[data-testid=equipment-total-ground]", "18 g"
+    assert_select "[data-testid=equipment-total-ground]", "18g"
     assert_select "[data-testid=equipment-recent-brews] a[href=?]", brew_path(brews(:morning_espresso)), text: /House Blend/
     assert_select "[data-testid=equipment-recent-brews] a[href=?]", brew_path(Brew.order(:created_at).last), count: 0
   end

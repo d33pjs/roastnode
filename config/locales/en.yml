@@ -121,7 +121,7 @@ en:
       previous: "Previous"
   activity:
     index:
-      adjustment: "%{amount} g inventory adjustment for %{bean}"
+      adjustment: "%{amount}g inventory adjustment for %{bean}"
       back: "Back to dashboard"
       brew: "Espresso with %{bean}"
       empty: "No activity yet."
@@ -1091,7 +1091,7 @@ en:
         preparation_tools: "Preparation tools"
         statistics: "Statistics"
       activity:
-        adjustment: "%{amount} g inventory adjustment for %{bean}"
+        adjustment: "%{amount}g inventory adjustment for %{bean}"
         brew: "Espresso with %{bean}"
         equipment_event: "%{event} for %{equipment}"
       eyebrow: "Household workspace"

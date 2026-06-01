@@ -12,7 +12,7 @@ module ApplicationHelper
   def profile_grams(value)
     return t("brews.show.unknown") if value.blank?
 
-    "#{profile_number(value, precision: 1)} g"
+    "#{profile_number(value, precision: 1)}g"
   end
 
   def profile_temperature(value)

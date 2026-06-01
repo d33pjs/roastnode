@@ -31,7 +31,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
     assert_select "[data-testid=?]", "bean-card-rating-#{bean.id}", text: /4/
-    assert_select "[data-testid=?]", "bean-card-remaining-#{bean.id}", "150 g of 250 g"
+    assert_select "[data-testid=?]", "bean-card-remaining-#{bean.id}", "150g of 250g"
     assert_select "[data-testid=?][data-remaining-state=plenty]", "bean-card-progress-#{bean.id}"
     assert_select "[data-testid^=bean-list-channeling]", count: 0
   end
@@ -59,9 +59,9 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=?][data-remaining-state=low]", "bean-card-progress-#{low.id}"
     assert_select "[data-testid=?]", "bean-card-low-warning-#{low.id}", text: /Low/
-    assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /236 g/
+    assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /236g/
     assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /13 days/
-    assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /18[,.]2 g\/day/
+    assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /18[,.]2g\/day/
     assert_select "[data-testid=?]", "bean-card-finished-on-#{finished.id}", text: /Finished/
     assert_select "[data-testid=?]", "bean-card-progress-#{finished.id}", count: 0
   end
@@ -380,17 +380,17 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=bean-remaining-card]"
-    assert_select "[data-testid=bean-remaining-value]", "131 g"
-    assert_select "[data-testid=bean-remaining-context]", "from 250 g bag size"
+    assert_select "[data-testid=bean-remaining-value].leading-8", "131g"
+    assert_select "[data-testid=bean-remaining-context]", "from 250g bag size"
     assert_select "[data-testid=bean-detail-progress][data-remaining-state=plenty]"
     assert_select "h2", text: I18n.t("beans.show.bag_size"), count: 0
     assert_select "[data-testid=bean-detail-brew-count]", "2"
     assert_select "h2", I18n.t("beans.show.analytics")
     assert_select "[data-testid=bean-brew-count]", count: 0
-    assert_select "[data-testid=bean-consumed]", "37 g"
+    assert_select "[data-testid=bean-consumed]", "37g"
     assert_select "[data-testid=bean-channeling-rate]", "50%"
     assert_select "[data-testid=bean-channeling-count]", text: /1 of 2/
-    assert_select "[data-testid=bean-best-brews] a[href=?]", brew_path(brew), text: /45 g/
+    assert_select "[data-testid=bean-best-brews] a[href=?]", brew_path(brew), text: /45g/
     assert_select "[data-testid=bean-recent-brews] a[href=?]", brew_path(brew), text: /10/
     assert_select "h3", I18n.t("beans.show.taste_balance")
     assert_select "h3", I18n.t("beans.show.retention_markers")
@@ -425,7 +425,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[data-testid=bean-statistics-start-date]", count: 0
     assert_select "input[data-testid=bean-statistics-end-date]", count: 0
     assert_select "[data-testid=bean-detail-brew-count]", "2"
-    assert_select "[data-testid=bean-consumed]", "38 g"
+    assert_select "[data-testid=bean-consumed]", "38g"
     assert_select "[data-testid=bean-channeling-rate]", "50%"
     assert_select "[data-testid=bean-channeling-count]", text: /1 of 2/
   end

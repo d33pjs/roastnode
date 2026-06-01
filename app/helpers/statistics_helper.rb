@@ -1,6 +1,6 @@
 module StatisticsHelper
   def statistics_grams(value)
-    "#{profile_number(value || 0, precision: 1)} g"
+    "#{profile_number(value || 0, precision: 1)}g"
   end
 
   def statistics_money(cents)

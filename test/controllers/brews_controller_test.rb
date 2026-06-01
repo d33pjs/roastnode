@@ -432,14 +432,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-byline]", "Logged by Jens"
     assert_select "[data-testid=brew-byline] img[data-testid=brew-user-avatar][src=?]", media_attachment_path(avatar, variant: :thumbnail)
     assert_select "[data-testid=brew-metrics].grid-cols-3"
-    assert_select "[data-testid=brew-dose]", "18,2 g"
+    assert_select "[data-testid=brew-dose]", "18,2g"
     assert_select "[data-testid=brew-beverage]", count: 0
     assert_select "[data-testid=brew-ratio-main]", "1:2,47"
     assert_select "[data-testid=brew-ratio-time]", "in 31s"
     assert_select "[data-testid=brew-grind]", "12"
     assert_select "[data-testid=brew-retention-label] .sm\\:hidden", "Retention"
     assert_select "[data-testid=brew-retention-label] .hidden.sm\\:inline", "Ret."
-    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0,4 g"
+    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0,4g"
     assert_select "[data-testid=brew-rating-card] [data-testid=brew-rating][aria-label=?]", "Rating 4 of 5 beans" do
       assert_select ".rating-bean--filled", 4
       assert_select ".rating-bean--empty", 1
@@ -457,16 +457,16 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-total-time-label]", "31s"
     assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
     assert_select "[data-testid=brew-temperature-callout][transform='translate(536 132) rotate(-90)']"
-    assert_select "[data-testid=brew-axis-max]", "50 g"
+    assert_select "[data-testid=brew-axis-max]", "50g"
     assert_select "[data-testid=brew-grinder-link]", count: 0
     assert_select "[data-testid=brew-machine-link]", count: 0
     assert_select "a[data-testid=brew-tool]", count: 0
     assert_select "[data-testid=brew-tool]", "WDT"
     assert_select "[data-testid=brew-log-details]"
     assert_select "[data-testid=brew-detail-bean] a[href=?]", bean_path(brew.bean), text: brew.bean.display_name
-    assert_select "[data-testid=brew-detail-bean-weight]", "18,6 g"
-    assert_select "[data-testid=brew-detail-ground-weight]", "18,2 g"
-    assert_select "[data-testid=brew-detail-beverage]", "45 g"
+    assert_select "[data-testid=brew-detail-bean-weight]", "18,6g"
+    assert_select "[data-testid=brew-detail-ground-weight]", "18,2g"
+    assert_select "[data-testid=brew-detail-beverage]", "45g"
     assert_select "[data-testid=brew-detail-channeling]", "Yes"
     assert_select "[data-testid=brew-detail-grinder] a[href=?]", equipment_path(brew.grinder), text: brew.grinder.name
     assert_select "[data-testid=brew-detail-machine] a[href=?]", equipment_path(brew.machine), text: brew.machine.name
@@ -495,11 +495,11 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=brew-timestamp]", "05/26/2026 11:22:08 AM"
-    assert_select "[data-testid=brew-dose]", "18.2 g"
+    assert_select "[data-testid=brew-dose]", "18.2g"
     assert_select "[data-testid=brew-ratio-main]", "1:2.47"
-    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0.4 g"
+    assert_select "[data-testid=brew-retention-card] [data-testid=brew-retention]", "0.4g"
     assert_select "[data-testid=brew-temperature-label]", "Temperature 93°C"
-    assert_select "[data-testid=brew-detail-bean-weight]", "18.6 g"
+    assert_select "[data-testid=brew-detail-bean-weight]", "18.6g"
   end
 
   test "hero brew card uses primary bean photo" do

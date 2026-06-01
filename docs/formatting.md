@@ -18,3 +18,5 @@ Users can choose number and timestamp display preferences from Profile:
 - `us_12h_seconds` displays timestamps like `05/26/2026 02:37:04 PM`.
 
 Currency is still owned by the active workspace through `Workspace#default_currency`. Profile number formatting controls the amount display, but it does not perform currency conversion.
+
+Displayed measurement units are compact: grams, seconds, and Celsius render without a space between number and unit, for example `18,2g`, `31s`, and `93°C`.

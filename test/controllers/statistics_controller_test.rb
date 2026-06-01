@@ -13,7 +13,7 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=statistics-all-brews-button][href=?]", brews_path, text: I18n.t("statistics.index.all_brews")
     assert_select "[data-testid=statistics-total-brews-card] a[href=?]", brews_path, text: I18n.t("statistics.index.view_all")
     assert_select "[data-testid=total-brews]", "1"
-    assert_select "[data-testid=total-ground]", "18 g"
+    assert_select "[data-testid=total-ground]", "18g"
     assert_select "[data-testid=open-beans]", "2"
     assert_select "h2", I18n.t("statistics.index.equipment")
     assert_select "p", text: /Niche Zero/
@@ -44,7 +44,7 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[data-testid=statistics-start-date][value='2026-05-21']"
       assert_select "input[data-testid=statistics-end-date][value='2026-05-27']"
       assert_select "[data-testid=total-brews]", "1"
-      assert_select "[data-testid=total-ground]", "18 g"
+      assert_select "[data-testid=total-ground]", "18g"
       assert_select "a[data-testid=statistics-timeframe-last_7_days][aria-current=page]", text: I18n.t("statistics.index.timeframes.last_7_days")
     end
   end
@@ -74,7 +74,7 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[data-testid=statistics-start-date][value='2026-05-26']"
     assert_select "input[data-testid=statistics-end-date][value='2026-05-26']"
     assert_select "[data-testid=total-brews]", "1"
-    assert_select "[data-testid=total-ground]", "18 g"
+    assert_select "[data-testid=total-ground]", "18g"
   end
 
   test "workspace member uses relative timeframe shortcuts" do
@@ -101,7 +101,7 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[data-testid=statistics-start-date][value='2026-05-21']"
       assert_select "input[data-testid=statistics-end-date][value='2026-05-27']"
       assert_select "[data-testid=total-brews]", "1"
-      assert_select "[data-testid=total-ground]", "18 g"
+      assert_select "[data-testid=total-ground]", "18g"
       assert_select "a[href=?]", statistics_path(timeframe: "last_30_days"), text: I18n.t("statistics.index.timeframes.last_30_days")
       assert_select "a[href=?]", statistics_path, text: I18n.t("statistics.index.reset_timerange")
     end
@@ -131,7 +131,7 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
       assert_select "input[data-testid=statistics-start-date][value='2026-05-01']"
       assert_select "input[data-testid=statistics-end-date][value='2026-05-27']"
       assert_select "[data-testid=total-brews]", "2"
-      assert_select "[data-testid=total-ground]", "38 g"
+      assert_select "[data-testid=total-ground]", "38g"
       assert_select "a[data-testid=statistics-timeframe-all_time][aria-current=page]", text: I18n.t("statistics.index.timeframes.all_time")
     end
   end
