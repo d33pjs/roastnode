@@ -1,5 +1,6 @@
 class RecordLink < ApplicationRecord
   KINDS = %w[info buy affiliate].freeze
+  LINKABLE_TYPES = %w[Brew Bean Equipment PreparationTool].freeze
   VISIBILITIES = %w[private public].freeze
 
   belongs_to :workspace
@@ -13,6 +14,7 @@ class RecordLink < ApplicationRecord
   validates :label, presence: true, length: { maximum: 120 }
   validates :url, presence: true
   validates :kind, inclusion: { in: KINDS }
+  validates :linkable_type, inclusion: { in: LINKABLE_TYPES, message: "is not a shareable record" }
   validates :visibility, inclusion: { in: VISIBILITIES }
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate :url_is_http_or_https

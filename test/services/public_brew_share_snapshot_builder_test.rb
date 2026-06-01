@@ -6,7 +6,7 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
   test "builds a public-safe snapshot from selected records" do
     brew = brews(:morning_espresso)
     brew.update!(public_note: "Public brew story.", notes: "Private brew note.")
-    brew.bean.update!(public_note: "Public bean note.", notes: "Private bean note.")
+    brew.bean.update!(public_note: "Public bean note.", notes: "Private bean note.", purchase_source: "Private cellar source.")
     brew.grinder.update!(public_note: "Public grinder note.", notes: "Private grinder note.")
     preparation_tools(:wdt).update!(public_note: "Public WDT note.", notes: "Private WDT note.")
     brew.record_links.create!(
@@ -34,7 +34,7 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
       position: 20
     )
 
-    brew_photo = attach_photo(brew)
+    brew_photo = attach_photo_with_filename(brew, "jens-private-receipt.jpg")
     bean_photo = attach_photo(brew.bean)
     grinder_photo = attach_photo(brew.grinder)
     unselected_photo = attach_photo(brew.bean)
@@ -59,6 +59,8 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_not_includes snapshot.to_json, "Private grinder note"
     assert_not_includes snapshot.to_json, "Private WDT note"
     assert_not_includes snapshot.to_json, "Private receipt"
+    assert_not_includes snapshot.to_json, "Private cellar source"
+    assert_not_includes snapshot.to_json, "jens-private-receipt.jpg"
     attachment_ids = collect_attachment_ids(snapshot)
     assert_includes attachment_ids, brew_photo.id
     assert_includes attachment_ids, bean_photo.id
@@ -78,5 +80,12 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
       else
         []
       end
+    end
+
+    def attach_photo_with_filename(record, filename)
+      File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
+        record.photos.attach(io: file, filename:, content_type: "image/jpeg")
+      end
+      record.photos.attachments.last
     end
 end

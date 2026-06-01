@@ -78,7 +78,6 @@ class PublicBrewShareSnapshotBuilder
         "roast_degree" => decimal_string(bean.roast_degree),
         "tasting_notes" => bean.tasting_notes,
         "public_note" => bean.public_note,
-        "purchase_source" => bean.purchase_source,
         "purchase_price_cents" => bean.purchase_price_cents,
         "photo_attachment_id" => selected_primary_attachment_id(bean),
         "photos" => photo_payloads([ bean ]),
@@ -134,7 +133,6 @@ class PublicBrewShareSnapshotBuilder
         record.photos.attachments.select { |attachment| selected_photo_attachment_ids.include?(attachment.id) }.map do |attachment|
           {
             "attachment_id" => attachment.id,
-            "filename" => attachment.blob.filename.to_s,
             "record_type" => record.class.name,
             "record_id" => record.id
           }

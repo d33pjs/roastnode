@@ -25,7 +25,7 @@ class PublicBrewShare < ApplicationRecord
   end
 
   def public_attachment_ids
-    collect_attachment_ids(snapshot).uniq
+    collect_attachment_ids(snapshot).uniq & allowed_public_attachment_ids
   end
 
   def refresh_snapshot!(title:, selected_photo_attachment_ids:, updated_by:)
@@ -54,6 +54,36 @@ class PublicBrewShare < ApplicationRecord
       return if brew.blank? || workspace.blank? || brew.workspace_id == workspace_id
 
       errors.add(:brew, "must belong to the workspace")
+    end
+
+    def allowed_public_attachment_ids
+      public_identity_attachment_ids + selected_share_record_photo_attachment_ids
+    end
+
+    def public_identity_attachment_ids
+      [
+        workspace&.logo&.attachment&.id,
+        brew&.user&.avatar&.attachment&.id
+      ].compact
+    end
+
+    def selected_share_record_photo_attachment_ids
+      selected_ids = Array(selected_photo_attachment_ids).map(&:to_i)
+      share_record_photo_attachment_ids & selected_ids
+    end
+
+    def share_record_photo_attachment_ids
+      share_photo_records.flat_map { |record| record.photos.attachments.map(&:id) }
+    end
+
+    def share_photo_records
+      [
+        brew,
+        brew&.bean,
+        brew&.grinder,
+        brew&.machine,
+        *Array(brew&.preparation_tools)
+      ].compact
     end
 
     def collect_attachment_ids(value)

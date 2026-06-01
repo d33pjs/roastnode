@@ -1,6 +1,8 @@
 require "test_helper"
 
 class PublicBrewShareTest < ActiveSupport::TestCase
+  include PhotoTestHelper
+
   test "generates token and starts disabled" do
     share = PublicBrewShare.create!(
       workspace: workspaces(:household),
@@ -68,16 +70,35 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     assert_not share.manageable_by?(users(:two))
   end
 
-  test "public attachment ids are collected from nested snapshot values" do
-    share = PublicBrewShare.new(snapshot: {
-      "workspace" => { "logo_attachment_id" => 10 },
-      "user" => { "avatar_attachment_id" => 11 },
-      "photos" => [ { "attachment_id" => 12 } ],
-      "sections" => [
-        { "photo_attachment_id" => 13, "photos" => [ { "attachment_id" => 14 } ] }
-      ]
-    })
+  test "public attachment ids are limited to selected public share records" do
+    brew = brews(:morning_espresso)
+    logo = attach_named_photo(brew.workspace, :logo, filename: "workspace-logo.jpg")
+    avatar = attach_named_photo(brew.user, :avatar, filename: "avatar.jpg")
+    brew_photo = attach_photo(brew)
+    bean_photo = attach_photo(brew.bean)
+    unselected_photo = attach_photo(brew.bean)
+    unrelated_photo = attach_photo(beans(:other_workspace_open))
+    share = PublicBrewShare.create!(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      selected_photo_attachment_ids: [ brew_photo.id, bean_photo.id, unrelated_photo.id ],
+      snapshot: {
+        "workspace" => { "logo_attachment_id" => logo.id },
+        "user" => { "avatar_attachment_id" => avatar.id },
+        "photos" => [
+          { "attachment_id" => brew_photo.id },
+          { "attachment_id" => unselected_photo.id },
+          { "attachment_id" => unrelated_photo.id },
+          { "attachment_id" => 999_999 }
+        ],
+        "sections" => [
+          { "photo_attachment_id" => bean_photo.id }
+        ]
+      }
+    )
 
-    assert_equal [ 10, 11, 12, 13, 14 ], share.public_attachment_ids.sort
+    assert_equal [ avatar.id, bean_photo.id, brew_photo.id, logo.id ].sort, share.public_attachment_ids.sort
   end
 end

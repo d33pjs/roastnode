@@ -29,6 +29,20 @@ class RecordLinkTest < ActiveSupport::TestCase
     assert_includes link.errors[:linkable], "must belong to the workspace"
   end
 
+  test "requires linkable to be a shareable record type" do
+    link = RecordLink.new(
+      workspace: workspaces(:household),
+      linkable: workspaces(:household),
+      label: "Workspace",
+      url: "https://example.com/workspace",
+      kind: "info",
+      visibility: "public"
+    )
+
+    assert_not link.valid?
+    assert_includes link.errors[:linkable_type], "is not a shareable record"
+  end
+
   test "publicly_visible returns only public links in position order" do
     bean = beans(:open_household)
     private_link = bean.record_links.create!(
