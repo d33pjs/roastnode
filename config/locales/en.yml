@@ -921,6 +921,7 @@ en:
       updated: "Password changed."
   statistics:
     index:
+      all_brews: "All brews"
       average_brew_cost: "Average brew cost"
       back: "Back to dashboard"
       beans: "Beans"
@@ -956,6 +957,7 @@ en:
       total_brews: "Total brews"
       total_ground: "Beans ground"
       unknown: "Unknown"
+      view_all: "View all"
   workspace_onboardings:
     create:
       created: "Workspace created."

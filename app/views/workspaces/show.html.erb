@@ -33,7 +33,10 @@
       <section class="mt-8 grid gap-6 lg:grid-cols-2">
         <% if @latest_brew.present? %>
           <div data-testid="dashboard-latest-brew-card">
-            <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".hero.latest") %></h2>
+            <div data-testid="dashboard-latest-brew-heading" class="mb-3 flex items-center justify-between gap-4">
+              <h2 class="text-xl font-black text-rn-ink"><%= t(".hero.latest") %></h2>
+              <%= link_to t(".view_all"), brews_path, class: "text-sm font-bold text-rn-ink hover:underline" %>
+            </div>
             <%= link_to brew_path(@latest_brew), class: "block" do %>
               <%= render "brews/hero_card", brew: @latest_brew, compact: true, chart_id: "latest-brew-shot-fill-#{@latest_brew.id}" %>
             <% end %>
@@ -99,7 +102,10 @@
       </section>
 
       <section data-testid="dashboard-recent-activity">
-        <h2 class="mb-4 text-xl font-black text-rn-ink"><%= t(".recent_activity") %></h2>
+        <div data-testid="dashboard-recent-activity-heading" class="mb-4 flex items-center justify-between gap-4">
+          <h2 class="text-xl font-black text-rn-ink"><%= t(".recent_activity") %></h2>
+          <%= link_to t(".view_all"), activity_path, class: "text-sm font-bold text-rn-ink hover:underline" %>
+        </div>
         <div class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
           <% if @recent_activity.any? %>
             <% @recent_activity.each do |activity| %>

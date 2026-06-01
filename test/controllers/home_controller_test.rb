@@ -145,6 +145,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", bean_path(beans(:other_workspace_open)), count: 0
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
     assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
+    assert_select "[data-testid=dashboard-recent-activity-heading] a[href=?]", activity_path, text: I18n.t("workspaces.show.view_all")
     assert_select "p", text: I18n.t("workspaces.show.activity.adjustment", amount: "-18", bean: beans(:open_household).name), count: 0
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
   end
@@ -249,10 +250,11 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h2", I18n.t("workspaces.show.hero.latest")
     assert_select "h2", I18n.t("workspaces.show.hero.best")
+    assert_select "[data-testid=dashboard-latest-brew-heading] a[href=?]", brews_path, text: I18n.t("workspaces.show.view_all")
     assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", brew_path(latest)
     assert_select "[data-testid=dashboard-latest-best-brew-card] a[href=?]", brew_path(best)
-    assert_select "[data-testid=dashboard-latest-brew-card] a", count: 1
-    assert_select "[data-testid=dashboard-latest-best-brew-card] a", count: 1
+    assert_select "[data-testid=dashboard-latest-brew-card] > a", count: 1
+    assert_select "[data-testid=dashboard-latest-best-brew-card] > a", count: 1
     assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", bean_path(latest.bean), count: 0
     assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", equipment_path(latest.grinder), count: 0
     assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-timestamp]", "26.05.2026 12:00:00"

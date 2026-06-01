@@ -10,6 +10,8 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("statistics.index.title")
+    assert_select "a[data-testid=statistics-all-brews-button][href=?]", brews_path, text: I18n.t("statistics.index.all_brews")
+    assert_select "[data-testid=statistics-total-brews-card] a[href=?]", brews_path, text: I18n.t("statistics.index.view_all")
     assert_select "[data-testid=total-brews]", "1"
     assert_select "[data-testid=total-ground]", "18 g"
     assert_select "[data-testid=open-beans]", "2"
