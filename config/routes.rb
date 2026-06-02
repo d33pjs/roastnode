@@ -69,6 +69,9 @@ Rails.application.routes.draw do
     patch :taste, on: :member
     resource :public_brew_share, only: %i[new create edit update destroy]
   end
+  get "s/:token" => "public_brew_pages#show", as: :public_brew_page
+  post "s/:token/password" => "public_brew_pages#unlock", as: :unlock_public_brew_page
+  get "s/:token/media/:attachment_id" => "public_brew_media#show", as: :public_brew_media
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
     match :crop, on: :member, via: %i[get patch]

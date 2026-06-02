@@ -1,0 +1,104 @@
+<% brew = snapshot.fetch("brew") %>
+<% bean = snapshot.fetch("bean") %>
+<% occurred_at = Time.zone.parse(brew["occurred_at"]) if brew["occurred_at"].present? %>
+
+<article data-testid="public-brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm">
+  <div class="bg-stone-950 p-5">
+    <div class="flex flex-nowrap items-center gap-1 overflow-hidden sm:gap-2">
+      <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200"><%= occurred_at ? l(occurred_at, format: :short) : t("public_brew_pages.show.unknown") %></span>
+      <span class="inline-flex min-w-0 items-center gap-1.5 truncate rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200">
+        <span class="truncate"><%= snapshot.dig("workspace", "name") %></span>
+      </span>
+      <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200"><%= brew["method"].to_s.humanize %></span>
+      <%= render "shared/brand_mark",
+        testid: "public-brew-card-brand-mark",
+        container_class: "ml-auto h-9 w-9 shrink-0 sm:h-12 sm:w-12",
+        image_class: "h-full w-full object-contain drop-shadow-sm" %>
+    </div>
+
+    <div class="mt-4 grid gap-4 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= bean["roaster_name"].presence || t("public_brew_pages.show.unknown") %></p>
+          <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= bean["name"] %></h1>
+          <% descriptor = [ bean["origin"], bean["process"], bean["roast_level"] ].compact_blank.join(" · ") %>
+          <% if descriptor.present? %>
+            <p class="mt-2 text-sm text-stone-300"><%= descriptor %></p>
+          <% end %>
+          <div class="mt-2 flex items-center gap-1.5 text-xs text-stone-400">
+            <% if (avatar_id = snapshot.dig("user", "avatar_attachment_id")).present? %>
+              <%= image_tag public_media_url_for(share, avatar_id, variant: :thumbnail), alt: "", class: "h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+            <% end %>
+            <span><%= t("brews.show.byline", user: snapshot.dig("user", "display_label")) %></span>
+          </div>
+        </div>
+
+        <% if bean["photo_attachment_id"].present? %>
+          <div class="h-16 w-14 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10">
+            <%= image_tag public_media_url_for(share, bean["photo_attachment_id"], variant: :thumbnail), alt: bean["name"], class: "h-full w-full object-cover" %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="grid grid-cols-3 gap-1 sm:grid-cols-6 sm:gap-2">
+        <div class="min-w-0 rounded-md bg-white/10 p-2">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.dose") %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= public_snapshot_grams(brew["dose_grams"]) %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.ratio") %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= public_snapshot_ratio(snapshot) %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.grind_setting") %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew["grind_setting"].presence || t("public_brew_pages.show.unknown") %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.time") %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= public_snapshot_seconds(brew["total_time_seconds"]) %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.rating") %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew["rating"].presence || t("public_brew_pages.show.unknown") %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.temperature") %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-amber-200"><%= public_snapshot_temperature(brew["brew_temperature_celsius"]) %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-stone-50 px-2 py-3 text-stone-950 sm:px-4">
+    <svg class="block h-auto w-full" width="560" height="168" viewBox="0 0 560 168" role="img" aria-label="<%= t("brews.show.yield") %>">
+      <defs>
+        <linearGradient id="public-brew-fill-<%= share.token.parameterize %>" x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stop-color="#0f172a" stop-opacity=".16" />
+          <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
+        </linearGradient>
+      </defs>
+      <line x1="44" y1="130" x2="500" y2="130" stroke="#1c1917" stroke-width="2.5" />
+      <line x1="44" y1="20" x2="44" y2="130" stroke="#1c1917" stroke-width="2.5" />
+      <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" />
+      <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42 L500 130 L44 130 Z" fill="url(#public-brew-fill-<%= share.token.parameterize %>)" />
+      <path d="M44 9 C134 8, 224 8, 314 8 C390 7, 452 8, 500 11" fill="none" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" />
+      <text x="8" y="135" font-size="13" fill="#57534e">0g</text>
+      <text x="6" y="52" font-size="13" fill="#57534e"><%= public_snapshot_grams(brew["beverage_grams"]) %></text>
+      <text x="32" y="157" font-size="13" fill="#57534e">0s</text>
+      <text x="448" y="157" font-size="13" fill="#57534e"><%= public_snapshot_seconds(brew["total_time_seconds"]) %></text>
+      <text x="386" y="65" font-size="14" font-weight="800" fill="#0f172a"><%= public_snapshot_grams(brew["beverage_grams"]) %></text>
+    </svg>
+  </div>
+
+  <div class="bg-stone-900 px-5 py-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <% snapshot.fetch("equipment", []).each do |equipment| %>
+        <%= link_to "#{equipment["role"].humanize}: #{equipment["name"]}", "##{public_product_anchor(equipment["role"], equipment["name"])}", data: { testid: "public-gear-anchor" }, class: "rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100 hover:bg-white/20" %>
+      <% end %>
+
+      <% snapshot.fetch("tools", []).each do |tool| %>
+        <%= link_to tool["name"], "##{public_product_anchor("tool", tool["name"])}", data: { testid: "public-gear-anchor" }, class: "rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200 hover:bg-white/25" %>
+      <% end %>
+    </div>
+  </div>
+</article>

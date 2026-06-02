@@ -1,0 +1,81 @@
+require "test_helper"
+
+class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
+  test "disabled share returns not found" do
+    share = create_share(enabled: false)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :not_found
+  end
+
+  test "enabled share renders public snapshot without authentication" do
+    share = create_share(enabled: true)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-page]"
+    assert_select "[data-testid=public-brew-hero-card]"
+    assert_select "body", text: /Public brew story/
+    assert_select "a[href='https://example.test/shot'][data-testid=public-brew-link]", text: "Shot writeup"
+    assert_select "body", text: /Private brew note/, count: 0
+    assert_select "body", text: /Private shot link/, count: 0
+    assert_select "body", text: /one@example.com/, count: 0
+  end
+
+  test "password protected share shows gate until unlocked" do
+    share = create_share(enabled: true, password: "espresso")
+
+    get public_brew_page_path(share.token)
+    assert_response :success
+    assert_select "form[action=?]", unlock_public_brew_page_path(share.token)
+    assert_select "[data-testid=public-brew-page]", count: 0
+
+    post unlock_public_brew_page_path(share.token), params: { password: "wrong" }
+    assert_response :unprocessable_entity
+    assert_select "body", text: /#{I18n.t("public_brew_pages.unlock.failed")}/
+
+    post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
+    assert_redirected_to public_brew_page_path(share.token)
+
+    get public_brew_page_path(share.token)
+    assert_response :success
+    assert_select "[data-testid=public-brew-page]"
+  end
+
+  private
+    def create_share(enabled:, password: nil)
+      brew = brews(:morning_espresso)
+      brew.update!(public_note: "Public brew story.", notes: "Private brew note.")
+      brew.record_links.destroy_all
+      brew.record_links.create!(
+        label: "Shot writeup",
+        url: "https://example.test/shot",
+        kind: "info",
+        visibility: "public"
+      )
+      brew.record_links.create!(
+        label: "Private shot link",
+        url: "https://example.test/private-shot",
+        kind: "info",
+        visibility: "private"
+      )
+      snapshot = PublicBrewShareSnapshotBuilder.new(
+        brew:,
+        title: "Shared shot",
+        selected_photo_attachment_ids: []
+      ).call
+
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        title: "Shared shot",
+        enabled:,
+        password:,
+        selected_photo_attachment_ids: [],
+        snapshot:
+      )
+    end
+end

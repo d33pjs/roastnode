@@ -501,6 +501,19 @@ en:
       title: "Create public share"
     update:
       updated: "Public share saved."
+  public_brew_pages:
+    password:
+      intro: "Enter the password to view this shared brew."
+      password: "Password"
+      submit: "View brew"
+      title: "Protected brew"
+    show:
+      affiliate: "Affiliate"
+      buy: "Buy"
+      info: "Info"
+      unknown: "Unknown"
+    unlock:
+      failed: "Password is not correct."
   inventory_adjustments:
     create:
       created: "Inventory adjusted."

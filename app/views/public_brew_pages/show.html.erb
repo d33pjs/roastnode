@@ -1,0 +1,56 @@
+<% content_for :hide_app_navigation, true %>
+
+<main data-testid="public-brew-page" class="min-h-screen bg-[#f6f4ef] text-stone-950">
+  <section class="mx-auto max-w-5xl px-5 py-6 sm:px-8">
+    <header class="flex items-center justify-between gap-4 py-4">
+      <div class="flex min-w-0 items-center gap-2 text-xs font-black uppercase text-stone-800">
+        <% if (logo_id = @snapshot.dig("workspace", "logo_attachment_id")).present? %>
+          <%= image_tag public_media_url_for(@share, logo_id, variant: :thumbnail), alt: "", class: "h-8 w-8 rounded-full object-cover" %>
+        <% end %>
+        <span class="truncate"><%= @snapshot.dig("workspace", "name") %></span>
+      </div>
+
+      <div class="flex min-w-0 items-center gap-2 text-sm font-extrabold text-stone-700">
+        <span class="truncate"><%= @snapshot.dig("user", "display_label") %></span>
+        <% if (avatar_id = @snapshot.dig("user", "avatar_attachment_id")).present? %>
+          <%= image_tag public_media_url_for(@share, avatar_id, variant: :thumbnail), alt: "", class: "h-8 w-8 rounded-full object-cover" %>
+        <% end %>
+      </div>
+    </header>
+
+    <%= render "hero_card", share: @share, snapshot: @snapshot %>
+
+    <section class="mx-auto mt-8 max-w-2xl text-center">
+      <h1 class="text-3xl font-black leading-tight"><%= @snapshot["title"] %></h1>
+      <% if @snapshot.dig("brew", "public_note").present? %>
+        <p class="mt-3 whitespace-pre-line text-base font-semibold leading-7 text-stone-700"><%= @snapshot.dig("brew", "public_note") %></p>
+      <% end %>
+
+      <% if @snapshot.dig("brew", "links").present? %>
+        <div class="mt-5 flex flex-wrap justify-center gap-2">
+          <% @snapshot.dig("brew", "links").each do |link| %>
+            <%= link_to public_link_label(link), link["url"], target: "_blank", rel: "noopener", data: { testid: "public-brew-link" }, class: "rounded-full bg-stone-950 px-4 py-2 text-sm font-extrabold text-stone-50 hover:bg-stone-800" %>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+
+    <% if @snapshot.fetch("photos", []).any? %>
+      <section data-testid="public-brew-gallery" class="mt-8 grid gap-3 sm:grid-cols-2">
+        <% @snapshot.fetch("photos", []).each do |photo| %>
+          <%= image_tag public_media_url_for(@share, photo["attachment_id"], variant: :thumbnail), alt: "", class: "h-72 w-full rounded-lg object-cover" %>
+        <% end %>
+      </section>
+    <% end %>
+
+    <%= render "product_section", share: @share, kind: "bean", section: @snapshot["bean"] %>
+
+    <% @snapshot.fetch("equipment", []).each do |section| %>
+      <%= render "product_section", share: @share, kind: section["role"], section: section %>
+    <% end %>
+
+    <% @snapshot.fetch("tools", []).each do |section| %>
+      <%= render "product_section", share: @share, kind: "tool", section: section %>
+    <% end %>
+  </section>
+</main>
