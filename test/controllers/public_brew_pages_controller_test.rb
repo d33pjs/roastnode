@@ -150,6 +150,7 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     request.set_header("action_dispatch.parameter_filter", Rails.application.config.filter_parameters)
 
     assert_equal "/s/[FILTERED]/media/[FILTERED]?token=[FILTERED]", request.filtered_path
+    assert_equal "[FILTERED]", request.parameter_filter.filter(media_id: media_handle).fetch(:media_id)
 
     post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
 
