@@ -1,6 +1,9 @@
 name: Release Container
 
 on:
+  push:
+    tags:
+      - "v*"
   workflow_dispatch:
     inputs:
       release_tag:
@@ -23,7 +26,7 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  RELEASE_TAG: ${{ inputs.release_tag }}
+  RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
 
 jobs:
   publish:
@@ -32,14 +35,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      CONTAINER_SPDX_SBOM: roastnode-container-${{ inputs.release_tag }}.spdx.json
-      CONTAINER_CDX_SBOM: roastnode-container-${{ inputs.release_tag }}.cdx.json
+      CONTAINER_SPDX_SBOM: roastnode-container-${{ inputs.release_tag || github.ref_name }}.spdx.json
+      CONTAINER_CDX_SBOM: roastnode-container-${{ inputs.release_tag || github.ref_name }}.cdx.json
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SPDX_ID }}
       EXODOS_INVENTORYROOT_CDX_ID: ${{ vars.EXODOS_INVENTORYROOT_CDX_ID }}
-      IMAGE_DIGEST_FILE: roastnode-image-${{ inputs.release_tag }}.txt
-      PUBLISH_RELEASE: ${{ inputs.publish_release }}
+      IMAGE_DIGEST_FILE: roastnode-image-${{ inputs.release_tag || github.ref_name }}.txt
+      PUBLISH_RELEASE: ${{ github.event_name == 'push' || inputs.publish_release }}
 
     steps:
       - name: Validate release tag

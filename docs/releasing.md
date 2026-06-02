@@ -54,8 +54,8 @@ If exodos.io settings are missing, the workflow keeps the SBOM artifact but skip
    ```
 
 4. Confirm Gitea mirrored the tag to GitHub.
-5. Run the GitHub `Release Container` workflow manually with `release_tag` set to the tag.
-6. Leave `publish_release` enabled for the normal path. The workflow creates the GitHub Release with generated assets attached before publication. This is required when GitHub release immutability is enabled, because published immutable releases cannot accept new or replacement assets.
+5. Confirm the GitHub `Release Container` workflow starts automatically from the mirrored tag.
+6. The automatic tag run publishes the GitHub Release after attaching generated assets. This is required when GitHub release immutability is enabled, because published immutable releases cannot accept new or replacement assets.
 7. The GitHub `Release Container` workflow will:
    - Build `linux/amd64` and `linux/arm64` images.
    - Push the image to GHCR.
@@ -66,7 +66,7 @@ If exodos.io settings are missing, the workflow keeps the SBOM artifact but skip
    - Create GitHub provenance and SBOM attestations.
    - Upload the container SBOMs to exodos.io with tags `roastnode`, `container`, the release tag, the commit SHA, and unique `latest-container`.
 
-If you want to inspect the release before publication, create a draft release or run the workflow with `publish_release` disabled, confirm the attached assets, then publish the draft. Do not publish the release before the assets are attached when release immutability is enabled.
+If you need to rebuild or inspect a release before publication, run the workflow manually with `release_tag` set to the existing tag. Leave `publish_release` enabled for the normal path, or disable it to keep the GitHub Release as a draft while you inspect the attached assets. Do not publish the release before the assets are attached when release immutability is enabled.
 
 ## Verifying a Release
 
