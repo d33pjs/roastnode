@@ -26,13 +26,17 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Hero Brew Cards render a subtle recipe target ghost from the brew-time snapshot when one exists.
 - Portable recipe JSON export and import using schema `roastnode.recipe`, version `1`.
 - Recipe import creates an unlinked private recipe snapshot and public recipe links only.
+- Public recipe sharing through unlisted token pages with optional password protection.
+- Public recipe pages render the prominent target markers, public guide notes, public source-brew note, and public recipe links from a curated snapshot.
 
 ## Privacy And Ownership
 
 - `Recipe` belongs to `Workspace`; every controller lookup must go through `current_workspace.recipes`.
 - Recipes may reference a `source_brew`, but only from the same workspace.
 - Recipe snapshots copy public-safe context from the source brew. They must not copy private brew notes, private record links, private media URLs, signed Active Storage URLs, invite tokens, emails, equipment costs, or raw attachment IDs.
-- Recipes are private by default. Public recipe sharing must use a separate curated snapshot, not live private records.
+- Recipes are private by default. Public recipe sharing uses `PublicRecipeShare` and a separate curated snapshot, not live private records.
+- Workspace owners/admins can manage any workspace recipe share. Workspace writers can manage only shares for recipes they created. Viewers cannot manage recipe shares.
+- Public recipe pages do not expose recipe media in v1. They must not render raw Active Storage routes, media attachment routes, raw attachment IDs, original filenames, or private media handles.
 
 ## Current Limits
 
@@ -41,7 +45,7 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Targets are exact values, not ranges.
 - Opening a recipe log flow does not overwrite normal last-brew defaults. Recipe targets are an overlay/guide only.
 - Machine-readable brew profile files are deferred.
-- Public recipe sharing, recipe media, comments, reactions, analytics, and public recipe indexes are deferred to later slices.
+- Recipe media, comments, reactions, analytics, and public recipe indexes are deferred to later slices.
 
 ## Agent Notes
 
@@ -50,3 +54,4 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Keep recipe profile data in canonical metric units: grams, seconds, Celsius.
 - Brews logged with a recipe must store both `recipe_id` and a brew-time `recipe_snapshot` so future recipe edits do not rewrite history.
 - Recipe import creates an unlinked recipe snapshot only. Do not auto-create beans, equipment, tools, media, or brews from imported recipe data.
+- Public recipe pages must use curated `PublicRecipeShare` snapshots. Do not read live private recipe/source-brew/bean/equipment/tool records while rendering a public recipe page.

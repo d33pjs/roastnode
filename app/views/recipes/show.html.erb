@@ -12,6 +12,10 @@
           <%= link_to t(".log"), log_recipe_path(@recipe), class: "rounded-2xl bg-[var(--rn-accent-strong)] px-4 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
           <%= link_to t(".edit"), edit_recipe_path(@recipe), class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
           <%= link_to t(".export"), export_recipe_path(@recipe), class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+          <% if current_workspace_policy.manage? || @recipe.created_by_id == Current.user.id %>
+            <% public_share_path = @recipe.public_recipe_share.present? ? edit_recipe_public_recipe_share_path(@recipe) : new_recipe_public_recipe_share_path(@recipe) %>
+            <%= link_to t(".share_publicly"), public_share_path, class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+          <% end %>
         </div>
       <% end %>
     </div>

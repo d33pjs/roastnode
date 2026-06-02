@@ -1,0 +1,39 @@
+<% label_class = "block text-sm font-extrabold text-rn-muted" %>
+<% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+
+<%= form_with model: share, url: recipe_public_recipe_share_path(recipe), method: share.persisted? ? :patch : :post, class: "mt-6 grid gap-5" do |form| %>
+  <% if share.errors.any? %>
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
+      <%= share.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <section class="grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+    <h2 class="text-lg font-black text-rn-ink"><%= t(".settings") %></h2>
+
+    <label class="flex items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink">
+      <%= form.check_box :enabled, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
+      <%= t(".enabled") %>
+    </label>
+
+    <div>
+      <%= form.label :title, t(".title"), class: label_class %>
+      <%= form.text_field :title, class: input_class %>
+    </div>
+
+    <div>
+      <%= form.label :password, t(".password"), class: label_class %>
+      <%= form.password_field :password, autocomplete: "new-password", class: input_class %>
+      <p class="mt-1 text-sm font-semibold text-rn-muted"><%= t(".password_help") %></p>
+    </div>
+
+    <% if share.password_protected? %>
+      <label class="flex items-center gap-3 text-sm font-extrabold text-rn-muted">
+        <%= check_box_tag "public_recipe_share[clear_password]", "1", false, class: "h-4 w-4 rounded border-rn-line text-rn-ink" %>
+        <%= t(".clear_password") %>
+      </label>
+    <% end %>
+  </section>
+
+  <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-accent-strong)] px-5 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
+<% end %>

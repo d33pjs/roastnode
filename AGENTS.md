@@ -27,7 +27,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Protect user changes. Do not revert unrelated local edits.
 - Use `current_workspace`, `current_membership`, and `current_workspace_policy` from `ApplicationController` instead of ad hoc workspace lookups in controllers.
 - Add authorization and workspace-isolation tests whenever adding workspace-scoped behavior.
-- Public brew pages and public media must use curated `PublicBrewShare` snapshots and opaque public media handles. Do not expose private notes, raw media routes, signed Active Storage URLs, raw attachment IDs, original filenames, raw share tokens in logs, or equipment/tool costs.
+- Public brew pages and public media must use curated `PublicBrewShare` snapshots and opaque public media handles. Public recipe pages must use curated `PublicRecipeShare` snapshots and no recipe media in v1. Do not expose private notes, raw media routes, signed Active Storage URLs, raw attachment IDs, original filenames, raw share tokens in logs, or equipment/tool costs.
 - Owners and admins manage workspace settings and invite links. Members can write normal workspace data. Viewers are read-only.
 - Workspace settings are singleton active-workspace routes and should not accept workspace IDs.
 
@@ -38,7 +38,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Account labels, email placement, avatars, and public banners: `docs/account-privacy.md`
 - Decimal parsing, comma-friendly measurement inputs, and user number/time formats: `docs/formatting.md`
 - Espresso logging, bean/equipment basics, inventory, and last-brew defaults: `docs/coffee-core.md`
-- Recipe profiles, exact targets, snapshots, and deferred guided-sharing slices: `docs/recipe-profiles.md`
+- Recipe profiles, exact targets, snapshots, guided logging, and public recipe sharing: `docs/recipe-profiles.md`
 - Brew form focus and hidden-field preferences: `docs/brew-form-preferences.md`
 - Browser-local espresso draft recovery: `docs/brew-draft-recovery.md`
 - Brew corrections and inventory-safe update/delete helpers: `docs/brew-corrections.md`

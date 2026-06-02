@@ -516,6 +516,55 @@ en:
       unknown: "Unknown"
     unlock:
       failed: "Password is not correct."
+  public_recipe_shares:
+    create:
+      created: "Public recipe share saved."
+    destroy:
+      destroyed: "Public recipe share removed."
+    edit:
+      back: "Back to recipe"
+      title: "Edit public recipe share"
+      update: "Save public recipe share"
+    form:
+      clear_password: "Remove password"
+      enabled: "Enable public recipe page"
+      password: "Password"
+      password_help: "Leave blank to keep the current password. Public visitors need this password before seeing the recipe."
+      settings: "Share settings"
+      title: "Share title"
+    new:
+      back: "Back to recipe"
+      create: "Create public recipe share"
+      title: "Create public recipe share"
+    update:
+      updated: "Public recipe share saved."
+  public_recipe_pages:
+    password:
+      intro: "Enter the password to view this shared recipe."
+      password: "Password"
+      submit: "View recipe"
+      title: "Protected recipe"
+    show:
+      bean: "Bean"
+      dose: "Watch dose at %{dose}; bean in %{bean}"
+      dose_label: "Dose"
+      equipment: "Equipment"
+      eyebrow: "Shared recipe"
+      grinder: "Set grinder to %{value}"
+      grinder_label: "Grinder"
+      info: "Info"
+      rating: "Source rating %{value}"
+      source_note: "Source note"
+      stop: "Stop exactly at %{time}; yield %{yield}"
+      stop_label: "Stop point"
+      target_guide: "Key markers"
+      target_title: "Before you pull"
+      temperature: "Temperature %{value}"
+      timing: "Preinfusion %{preinfusion}; first drip %{first_drip}"
+      tool: "Tool"
+      unknown: "Unknown"
+    unlock:
+      failed: "Password is not correct."
   inventory_adjustments:
     create:
       created: "Inventory adjusted."
@@ -906,6 +955,7 @@ en:
       log: "Log with this recipe"
       machine: "Machine"
       rating: "Source rating"
+      share_publicly: "Share publicly"
       source_brew: "Source brew"
       unknown: "Unknown"
     target_guide:

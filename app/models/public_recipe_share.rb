@@ -18,8 +18,38 @@ class PublicRecipeShare < ApplicationRecord
   validates :password, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_blank: true
   validate :recipe_belongs_to_workspace
 
+  def self.find_enabled_by_token!(token)
+    find_by!(token_digest: token_digest_for(token), enabled: true)
+  end
+
   def self.token_digest_for(token)
     Digest::SHA256.hexdigest(token.to_s)
+  end
+
+  def password_protected?
+    password_digest.present?
+  end
+
+  def password_unlock_fingerprint
+    return unless password_protected?
+
+    Digest::SHA256.hexdigest(password_digest)
+  end
+
+  def manageable_by?(user)
+    membership = user&.membership_for(workspace)
+    return false unless membership
+
+    policy = WorkspacePolicy.new(membership)
+    policy.manage? || (policy.write? && recipe.created_by_id == user.id)
+  end
+
+  def refresh_snapshot!(title:, updated_by:)
+    update!(
+      title:,
+      updated_by:,
+      snapshot: PublicRecipeShareSnapshotBuilder.new(recipe:, title:).call
+    )
   end
 
   private

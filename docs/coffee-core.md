@@ -20,6 +20,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Private recipe profiles created from workspace brews, with editable exact espresso targets and prominent target markers.
 - Recipe-guided espresso logging that shows recipe targets without overwriting normal last-brew defaults.
 - Recipe JSON import/export for portable unlinked recipe snapshots.
+- Curated public recipe sharing with optional passwords, target markers, public source notes, and public recipe links. Public recipe pages do not include media in v1.
 - Paginated all-time brew history with compact-card and hero-card views.
 - Paginated all-time workspace activity history for brews, manual inventory adjustments, and equipment events.
 - Private workspace statistics and analytics page.
@@ -33,8 +34,8 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 ## Explicitly Deferred
 
-- Public recipe sharing.
 - Public overview pages for all shared brews.
+- Public overview pages for all shared recipes.
 - Fediverse publishing for brew shares.
 - Advanced media handling beyond current private/public thumbnails, including object storage.
 - Beanconqueror media import and full round-trip compatibility.
@@ -113,5 +114,6 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Use `Bean#destroy_with_history!` for destructive bean deletion; plain `destroy!` is intentionally blocked by dependent brew and inventory guards.
 - Render photos through `media_attachment_path`, never raw Active Storage blob URLs.
 - Public brew pages are the exception to private media routing: they render selected snapshot media through `public_brew_media_path`, never raw Active Storage blob URLs.
+- Public recipe pages use curated `PublicRecipeShare` snapshots and expose no recipe media in v1.
 - Remove photos through `MediaAttachmentsController#destroy` so workspace and write permissions stay centralized.
 - Beanconqueror import is a practical JSON subset, not full feature parity.

@@ -73,10 +73,13 @@ Rails.application.routes.draw do
     get :log, on: :member
     get :export, on: :member
     post :import, on: :collection
+    resource :public_recipe_share, only: %i[new create edit update destroy]
   end
   get "s/:token" => "public_brew_pages#show", as: :public_brew_page
   post "s/:token/password" => "public_brew_pages#unlock", as: :unlock_public_brew_page
   get "s/:token/media/:media_id" => "public_brew_media#show", as: :public_brew_media
+  get "r/:token" => "public_recipe_pages#show", as: :public_recipe_page
+  post "r/:token/password" => "public_recipe_pages#unlock", as: :unlock_public_recipe_page
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
     match :crop, on: :member, via: %i[get patch]

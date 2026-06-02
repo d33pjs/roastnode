@@ -1,0 +1,19 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-4xl py-6 sm:px-6 lg:py-10">
+    <%= render "shared/back_link", label: t(".back"), path: recipe_path(@recipe) %>
+    <div class="mt-5">
+      <h1 class="text-3xl font-extrabold text-rn-ink sm:text-4xl"><%= t(".title") %></h1>
+    </div>
+
+    <% if @share.enabled? %>
+      <div class="mt-5 rounded-2xl border border-rn-line bg-rn-surface p-4 text-sm font-bold text-rn-muted shadow-sm">
+        <%= link_to public_recipe_page_url(@share.token), public_recipe_page_path(@share.token), target: "_blank", rel: "noopener", class: "text-rn-ink underline decoration-rn-line underline-offset-4 hover:decoration-rn-ink" %>
+      </div>
+    <% end %>
+
+    <%= render "form",
+      recipe: @recipe,
+      share: @share,
+      submit_label: t(".update") %>
+  </section>
+</main>
