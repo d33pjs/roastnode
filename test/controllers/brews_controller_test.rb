@@ -89,6 +89,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "brew[rating]", count: 0
     assert_select "input[name=?]", "brew[channeling]", count: 0
     assert_select "textarea[name=?]", "brew[notes]", count: 0
+    assert_select "textarea[name=?]", "brew[public_note]"
     assert_select "input[type=file][name=?]", "brew[photos][]", count: 0
     assert_select "input[name=?]", "brew[bean_weight_grams]"
   end
@@ -270,6 +271,26 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name*='[record_links_attributes]'][name$='[url]']"
     assert_select "select[name*='[record_links_attributes]'][name$='[kind]']"
     assert_select "select[name*='[record_links_attributes]'][name$='[visibility]']"
+    assert_select "select[name*='[record_links_attributes]'][name$='[visibility]'] option[value=private][selected]"
+  end
+
+  test "brew edit form keeps a blank link row after three saved links" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    3.times do |index|
+      brew.record_links.create!(
+        label: "Link #{index}",
+        url: "https://example.com/#{index}",
+        kind: "info",
+        visibility: "private",
+        position: index * 10
+      )
+    end
+
+    get edit_brew_path(brew)
+
+    assert_response :success
+    assert_select "input[name*='[record_links_attributes]'][name$='[label]']", minimum: 4
   end
 
   test "writer can update brew public note and public links" do

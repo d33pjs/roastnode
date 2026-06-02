@@ -73,4 +73,93 @@ class RecordLinkTest < ActiveSupport::TestCase
     assert_equal [ public_first, public_second ], bean.record_links.publicly_visible.to_a
     assert_not_includes bean.record_links.publicly_visible, private_link
   end
+
+  test "blank nested record link row is ignored despite default select values" do
+    bean = beans(:open_household)
+
+    assert_no_difference -> { bean.record_links.count } do
+      bean.update!(
+        record_links_attributes: {
+          "0" => {
+            label: "",
+            url: "",
+            kind: "info",
+            visibility: "private",
+            position: "10",
+            _destroy: "0"
+          }
+        }
+      )
+    end
+  end
+
+  test "nested record links can update and delete existing links" do
+    bean = beans(:open_household)
+    link = bean.record_links.create!(
+      label: "Old label",
+      url: "https://example.com/old",
+      kind: "info",
+      visibility: "private",
+      position: 10
+    )
+    deleted_link = bean.record_links.create!(
+      label: "Delete me",
+      url: "https://example.com/delete",
+      kind: "buy",
+      visibility: "public",
+      position: 20
+    )
+
+    bean.update!(
+      record_links_attributes: {
+        "0" => {
+          id: link.id,
+          label: "Updated label",
+          url: "https://example.com/updated",
+          kind: "affiliate",
+          visibility: "public",
+          position: "30"
+        },
+        "1" => {
+          id: deleted_link.id,
+          _destroy: "1"
+        }
+      }
+    )
+
+    assert_equal "Updated label", link.reload.label
+    assert_equal "affiliate", link.kind
+    assert_equal "public", link.visibility
+    assert_equal 30, link.position
+    assert_not RecordLink.exists?(deleted_link.id)
+  end
+
+  test "blank existing nested link without destroy remains invalid" do
+    bean = beans(:open_household)
+    link = bean.record_links.create!(
+      label: "Keep me",
+      url: "https://example.com/keep",
+      kind: "info",
+      visibility: "private",
+      position: 10
+    )
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      bean.update!(
+        record_links_attributes: {
+          "0" => {
+            id: link.id,
+            label: "",
+            url: "",
+            kind: "info",
+            visibility: "private",
+            position: "10",
+            _destroy: "0"
+          }
+        }
+      )
+    end
+
+    assert_equal "Keep me", link.reload.label
+  end
 end

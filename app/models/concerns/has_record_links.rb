@@ -16,6 +16,18 @@ module HasRecordLinks
   end
 
   def build_blank_record_links(count = 3)
-    count.times { record_links.build(workspace:) }
+    next_position = next_record_link_position
+    count.times do |index|
+      record_links.build(workspace:, position: next_position + (index * 10))
+    end
   end
+
+  def prepare_record_links_for_form(blank_rows: 1)
+    build_blank_record_links(blank_rows)
+  end
+
+  private
+    def next_record_link_position
+      record_links.reject(&:marked_for_destruction?).filter_map(&:position).max.to_i + 10
+    end
 end

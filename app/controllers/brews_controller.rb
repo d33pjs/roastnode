@@ -209,8 +209,7 @@ class BrewsController < ApplicationController
     end
 
     def prepare_record_links(record)
-      blank_rows = 3 - record.record_links.reject(&:marked_for_destruction?).size
-      record.build_blank_record_links(blank_rows) if blank_rows.positive?
+      record.prepare_record_links_for_form
     end
 
     def brew_draft_storage_key

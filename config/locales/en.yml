@@ -393,6 +393,7 @@ en:
         dose: "Dose and grind"
         extraction: "Extraction"
         notes: "Notes"
+        public_sharing: "Public sharing"
         setup: "Setup"
         taste: "Taste"
       taste: "Taste balance"
