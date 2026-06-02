@@ -75,7 +75,9 @@ class PublicBrewMediaController < ApplicationController
     end
 
     def public_attachment_log_id
-      "PublicBrewShare##{@share.id}/attachment/#{@attachment.id}"
+      share_digest = Digest::SHA256.hexdigest(@share.id.to_s).first(12)
+      attachment_digest = Digest::SHA256.hexdigest(@attachment.id.to_s).first(12)
+      "PublicBrewShare##{share_digest}/attachment/#{attachment_digest}"
     end
 
     def public_filename

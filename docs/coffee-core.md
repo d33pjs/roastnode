@@ -15,6 +15,8 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Brew correction flows for edit/delete with inventory adjustment.
 - Inventory adjustment history for brew consumption.
 - Compact screenshot-worthy brew detail cards.
+- Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
+- Curated public brew sharing with optional passwords, selected photos, and public buy/affiliate links.
 - Paginated all-time brew history with compact-card and hero-card views.
 - Paginated all-time workspace activity history for brews, manual inventory adjustments, and equipment events.
 - Private workspace statistics and analytics page.
@@ -29,7 +31,9 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 ## Explicitly Deferred
 
 - Recipes, recipe snapshots, and target definitions.
-- Advanced media handling, including thumbnails and object storage.
+- Public overview pages for all shared brews.
+- Fediverse publishing for brew shares.
+- Advanced media handling beyond current private/public thumbnails, including object storage.
 - Beanconqueror media import and full round-trip compatibility.
 - Interactive ECharts analytics and exportable brew card images.
 
@@ -88,6 +92,7 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Beans can be archived, reopened, marked as stock/open/used up from the edit form, or duplicated as a new open bag. Duplicates copy descriptive metadata and photos, set `opened_on` to the current date, clear `archived_at`, and reset remaining grams to the bag size.
 - Beans can be deleted from a danger zone. This deletes the bean, its brews, and all inventory movements for that bean in one transaction.
 - Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, website, notes, and variety information.
+- Public notes and public links are separate from private notes. Public brew shares copy only `public_note` and public links into their snapshots.
 - If multiple open beans have the same roaster/name, the espresso logging selector appends the opened date to those duplicate labels only.
 - Creating a brew subtracts `bean_weight_grams` from the selected bean.
 - Creating a brew also records an `InventoryAdjustment` with reason `brew`.
@@ -104,5 +109,6 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Preparation tools are checklist records, not equipment records.
 - Use `Bean#destroy_with_history!` for destructive bean deletion; plain `destroy!` is intentionally blocked by dependent brew and inventory guards.
 - Render photos through `media_attachment_path`, never raw Active Storage blob URLs.
+- Public brew pages are the exception to private media routing: they render selected snapshot media through `public_brew_media_path`, never raw Active Storage blob URLs.
 - Remove photos through `MediaAttachmentsController#destroy` so workspace and write permissions stay centralized.
 - Beanconqueror import is a practical JSON subset, not full feature parity.

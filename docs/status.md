@@ -1,6 +1,6 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-06-01
+Last reviewed: 2026-06-02
 
 This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
@@ -18,6 +18,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Brew corrections: edit and delete flows keep bean inventory consistent through correction/reversal helpers, while saved taste balance and rating can be adjusted from brew detail with an explicit save.
 - Hero Brew Card: dense screenshot-friendly brew card on dashboard and brew details, with safe user labels, avatar/household/equipment marks, bean photo, ratio, rating, balance, retention, SVG brew chart, first drip, pre-infusion, total time, and vertical temperature label.
 - Brew detail pages: full log details below the card plus related bean/equipment/preparation-tool photos and cross-links.
+- Public brew sharing: workspace writers can publish their own brews through curated, optionally password-protected token pages with a snapshot-driven Hero Brew Card, selected photos, public notes, public links, and prominent buy/affiliate links. Owners/admins can manage any workspace share; viewers cannot. Public media is served only through the public share whitelist.
 - Preparation tools: method-scoped checklist records with ordering, owner/admin-only lifecycle and media management, member-visible tool use in brew logging, brew snapshots, and detail analytics.
 - Equipment: owner/admin-only edit/archive/reopen/delete lifecycle and media management, member-visible gear details, list photos, detail analytics, and historical brew safety when equipment is deleted.
 - Equipment events: first-class maintenance logs with multiple event types, multiple affected equipment records, photos, edit/delete, Gear overview logging entry point, equipment detail history, and dashboard activity.
@@ -37,7 +38,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Last-brew defaults were narrowed after product testing. The current contract copies only setup fields: bean, grinder, machine, preparation tools, grind setting, temperature, and pre-infusion seconds.
 - Beanconqueror compatibility means practical import first, not round-trip parity.
 - The first analytics implementation is server-rendered/query-backed. ECharts/Stimulus interactivity remains optional future work.
-- User public banner is a product concept, but uploaded files remain private behind authenticated media routes.
+- Public identity images are now split by context: normal app media stays private behind authenticated routes, while workspace logos and user avatars referenced by enabled public brew-share snapshots can render through the public share media whitelist.
 
 ## Private Open Topics
 
@@ -50,4 +51,5 @@ Current roadmap and open-topic notes are intentionally kept out of the public re
 - Backup system note: `docs/backup-system.md`
 - Production self-hosting guide: `docs/production-self-hosting.md`
 - Documentation index: `docs/README.md`
+- Public brew sharing contract: `docs/public-brew-sharing.md`
 - Slice specs and implementation plans: `docs/superpowers/`

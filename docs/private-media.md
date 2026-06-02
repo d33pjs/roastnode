@@ -35,6 +35,14 @@ In-page previews can request `media_attachment_path(attachment, variant: :thumbn
 
 User avatar/banner replacement is limited to the signed-in user. Workspace logo/banner replacement is limited to owners and admins through the workspace settings page.
 
+## Public Brew Share Media
+
+Public brew share pages are the only current public media exception. They must use `PublicBrewMediaController`, not `MediaAttachmentsController`.
+
+The public media controller streams only attachment IDs allowed by an enabled `PublicBrewShare` snapshot and its selected photo list. New snapshots use a builder-generated `public_media` manifest as the media allowlist; legacy snapshots fall back to live validation against selected share photos and public identity images. This includes selected brew/bean/equipment/tool photos plus the workspace logo and user avatar when those identity images are referenced by the snapshot. Unsupported variants, disabled shares, unknown tokens, locked password-protected shares, and attachments outside the public whitelist return `404 Not Found`.
+
+Public media responses should not expose original uploaded filenames. Public pages should not expose `rails_blob_path`, `rails_storage_proxy_path`, signed Active Storage URLs, private `media_attachment_path` URLs, or raw Active Storage attachment IDs.
+
 Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, and preparation tools. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
 
 Cropping uses `MediaAttachmentsController#crop` and requires workspace write access. The crop page renders the private image through `media_attachment_path`, then the `photo-crop` Stimulus controller uses browser canvas APIs to create a normal image upload. Save-as-new adds another photo to the same record. Overwrite attaches the cropped image and removes the old attachment; if the overwritten photo was primary, the new attachment becomes primary automatically. This avoids depending on native libvips/ImageMagick availability in the app runtime.
@@ -55,4 +63,5 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 - Keep primary photo changes routed through `MediaAttachmentsController#primary` so workspace scoping and write authorization stay centralized.
 - Keep photo cropping routed through `MediaAttachmentsController#crop`; it accepts a browser-generated image upload rather than processing the source blob on the server.
 - Keep preview thumbnails behind `MediaAttachmentsController` with `variant: :thumbnail`; do not expose raw variant/blob URLs.
+- Keep public-share thumbnails behind `PublicBrewMediaController` with `variant: :thumbnail`; apply the share password gate and attachment whitelist before streaming bytes.
 - Keep workspace media archives owner-only through `WorkspaceExportsController#media`. Include workspace-owned media and workspace identity images, but do not include user avatars/public banners without a separate account-data export decision.

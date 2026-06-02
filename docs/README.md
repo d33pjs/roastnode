@@ -19,6 +19,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/bean-danger-zone.md` describes destructive bean deletion and dependent brew/inventory cleanup.
 - `docs/brew-corrections.md` describes brew edits/deletes and inventory correction rules.
 - `docs/brew-card.md` describes the compact screenshot-worthy brew detail card.
+- `docs/public-brew-sharing.md` describes curated public brew pages, public notes, affiliate links, password gates, and public media privacy rules.
 - `docs/beanconqueror-import.md` describes practical Beanconqueror JSON import.
 - `docs/equipment-events.md` describes maintenance events, equipment detail pages, and timeline activity rules.
 - `docs/equipment-lifecycle.md` describes equipment edit, archive, reopen, delete, and historical-reference behavior.

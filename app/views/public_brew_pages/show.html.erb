@@ -4,16 +4,16 @@
   <section class="mx-auto max-w-5xl px-5 py-6 sm:px-8">
     <header class="flex items-center justify-between gap-4 py-4">
       <div class="flex min-w-0 items-center gap-2 text-xs font-black uppercase text-stone-800">
-        <% if (logo_id = @snapshot.dig("workspace", "logo_attachment_id")).present? %>
-          <%= image_tag public_media_url_for(@share, logo_id, variant: :thumbnail), alt: "", class: "h-8 w-8 rounded-full object-cover" %>
+        <% if (logo_url = public_media_url_for(@share, @snapshot.dig("workspace", "logo_attachment_id"), variant: :thumbnail)).present? %>
+          <%= image_tag logo_url, alt: "", class: "h-8 w-8 rounded-full object-cover" %>
         <% end %>
         <span class="truncate"><%= @snapshot.dig("workspace", "name") %></span>
       </div>
 
       <div class="flex min-w-0 items-center gap-2 text-sm font-extrabold text-stone-700">
         <span class="truncate"><%= @snapshot.dig("user", "display_label") %></span>
-        <% if (avatar_id = @snapshot.dig("user", "avatar_attachment_id")).present? %>
-          <%= image_tag public_media_url_for(@share, avatar_id, variant: :thumbnail), alt: "", class: "h-8 w-8 rounded-full object-cover" %>
+        <% if (avatar_url = public_media_url_for(@share, @snapshot.dig("user", "avatar_attachment_id"), variant: :thumbnail)).present? %>
+          <%= image_tag avatar_url, alt: "", class: "h-8 w-8 rounded-full object-cover" %>
         <% end %>
       </div>
     </header>
@@ -38,7 +38,9 @@
     <% if @snapshot.fetch("photos", []).any? %>
       <section data-testid="public-brew-gallery" class="mt-8 grid gap-3 sm:grid-cols-2">
         <% @snapshot.fetch("photos", []).each do |photo| %>
-          <%= image_tag public_media_url_for(@share, photo["attachment_id"], variant: :thumbnail), alt: "", class: "h-72 w-full rounded-lg object-cover" %>
+          <% if (photo_url = public_media_url_for(@share, photo["attachment_id"], variant: :thumbnail)).present? %>
+            <%= image_tag photo_url, alt: "", class: "h-72 w-full rounded-lg object-cover" %>
+          <% end %>
         <% end %>
       </section>
     <% end %>

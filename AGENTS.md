@@ -27,6 +27,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Protect user changes. Do not revert unrelated local edits.
 - Use `current_workspace`, `current_membership`, and `current_workspace_policy` from `ApplicationController` instead of ad hoc workspace lookups in controllers.
 - Add authorization and workspace-isolation tests whenever adding workspace-scoped behavior.
+- Public brew pages and public media must use curated `PublicBrewShare` snapshots and opaque public media handles. Do not expose private notes, raw media routes, signed Active Storage URLs, raw attachment IDs, original filenames, raw share tokens in logs, or equipment/tool costs.
 - Owners and admins manage workspace settings and invite links. Members can write normal workspace data. Viewers are read-only.
 - Workspace settings are singleton active-workspace routes and should not accept workspace IDs.
 
@@ -42,6 +43,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Brew corrections and inventory-safe update/delete helpers: `docs/brew-corrections.md`
 - Bean lifecycle, deletion, inventory corrections, analytics, and Beanconqueror import: `docs/coffee-core.md`, `docs/bean-danger-zone.md`, `docs/inventory-adjustments.md`, `docs/bean-analytics.md`, `docs/beanconqueror-import.md`
 - Hero Brew Card, brew detail cross-links, and mobile back-link behavior: `docs/brew-card.md`, `docs/navigation.md`
+- Public brew sharing, public notes, affiliate links, password gates, and public media privacy: `docs/public-brew-sharing.md`
 - Equipment, equipment events, and preparation tools: `docs/equipment-lifecycle.md`, `docs/equipment-events.md`, `docs/preparation-tools.md`
 - Workspace analytics: `docs/statistics.md`
 - Private media, thumbnails, crop/primary/remove routes, and media authorization: `docs/private-media.md`

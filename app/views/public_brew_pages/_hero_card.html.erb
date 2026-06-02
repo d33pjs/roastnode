@@ -27,17 +27,21 @@
             <p class="mt-2 text-sm text-stone-300"><%= descriptor %></p>
           <% end %>
           <div class="mt-2 flex items-center gap-1.5 text-xs text-stone-400">
-            <% if (avatar_id = snapshot.dig("user", "avatar_attachment_id")).present? %>
-              <%= image_tag public_media_url_for(share, avatar_id, variant: :thumbnail), alt: "", class: "h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+          <% if (avatar_id = snapshot.dig("user", "avatar_attachment_id")).present? %>
+              <% if (avatar_url = public_media_url_for(share, avatar_id, variant: :thumbnail)).present? %>
+                <%= image_tag avatar_url, alt: "", class: "h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
+              <% end %>
             <% end %>
             <span><%= t("brews.show.byline", user: snapshot.dig("user", "display_label").presence || unknown) %></span>
           </div>
         </div>
 
         <% if bean["photo_attachment_id"].present? %>
-          <div class="h-16 w-14 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10">
-            <%= image_tag public_media_url_for(share, bean["photo_attachment_id"], variant: :thumbnail), alt: bean["name"].presence || "", class: "h-full w-full object-cover" %>
-          </div>
+          <% if (bean_photo_url = public_media_url_for(share, bean["photo_attachment_id"], variant: :thumbnail)).present? %>
+            <div class="h-16 w-14 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10">
+              <%= image_tag bean_photo_url, alt: bean["name"].presence || "", class: "h-full w-full object-cover" %>
+            </div>
+          <% end %>
         <% end %>
       </div>
 

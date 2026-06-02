@@ -5,8 +5,8 @@
 
   <section id="<%= anchor %>" data-testid="public-product-section" class="mt-8 grid gap-5 border-t border-stone-300 pt-8 md:grid-cols-[16rem_1fr] md:items-center">
     <div class="overflow-hidden rounded-lg border border-stone-200 bg-white">
-      <% if section["photo_attachment_id"].present? %>
-        <%= image_tag public_media_url_for(share, section["photo_attachment_id"], variant: :thumbnail), alt: "", class: "h-64 w-full object-cover" %>
+      <% if (photo_url = public_media_url_for(share, section["photo_attachment_id"], variant: :thumbnail)).present? %>
+        <%= image_tag photo_url, alt: "", class: "h-64 w-full object-cover" %>
       <% else %>
         <div class="flex h-64 items-center justify-center bg-stone-100 text-sm font-bold text-stone-500"><%= label.humanize %></div>
       <% end %>

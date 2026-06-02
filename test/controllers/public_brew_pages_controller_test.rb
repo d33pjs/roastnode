@@ -117,6 +117,29 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /#{I18n.t("public_brew_pages.show.unknown")}/
   end
 
+  test "stale legacy media references render without public page failure" do
+    share = create_share(enabled: true)
+    stale_attachment_id = 999_999
+    share.update!(snapshot: {
+      "title" => "Stale media share",
+      "workspace" => { "name" => "Household", "logo_attachment_id" => stale_attachment_id },
+      "user" => { "display_label" => "user", "avatar_attachment_id" => stale_attachment_id },
+      "brew" => { "method" => "espresso", "occurred_at" => Time.current.iso8601 },
+      "bean" => { "name" => "Bean", "photo_attachment_id" => stale_attachment_id },
+      "equipment" => [
+        { "role" => "grinder", "name" => "Grinder", "photo_attachment_id" => stale_attachment_id }
+      ],
+      "photos" => [ { "attachment_id" => stale_attachment_id } ]
+    })
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-page]"
+    assert_select "img[src*='/media/']", count: 0
+    assert_select "body", text: /Stale media share/
+  end
+
   test "public share request path and redirects redact bearer tokens for logs" do
     share = create_share(enabled: true, password: "espresso")
     media_handle = share.public_media_handle_for(share.public_attachment_ids.first || 1) || "abc123"
