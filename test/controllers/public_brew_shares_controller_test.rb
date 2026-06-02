@@ -54,6 +54,50 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Public tasting note.", share.snapshot.dig("brew", "public_note")
   end
 
+  test "create filters selected photos to share records" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    brew = create_brew_for(user)
+    selected_photo = attach_photo(brew)
+    unrelated_photo = attach_photo(beans(:other_workspace_open))
+    sign_in_as(user)
+
+    post brew_public_brew_share_path(brew), params: {
+      public_brew_share: {
+        enabled: "0",
+        title: "Filtered shot",
+        selected_photo_attachment_ids: [ selected_photo.id, unrelated_photo.id ]
+      }
+    }
+
+    share = brew.reload.public_brew_share
+    assert_equal [ selected_photo.id ], share.selected_photo_attachment_ids
+    assert_includes share.snapshot.to_json, selected_photo.id.to_s
+    assert_not_includes share.snapshot.to_json, unrelated_photo.id.to_s
+  end
+
+  test "post to existing share updates without creating duplicate" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    brew = create_brew_for(user)
+    share = create_share_for(brew, user:, title: "Old share")
+    sign_in_as(user)
+
+    assert_no_difference -> { PublicBrewShare.count } do
+      post brew_public_brew_share_path(brew), params: {
+        public_brew_share: {
+          enabled: "1",
+          title: "Updated by post",
+          selected_photo_attachment_ids: []
+        }
+      }
+    end
+
+    assert_equal share.id, brew.reload.public_brew_share.id
+    assert_equal "Updated by post", share.reload.title
+    assert share.enabled?
+  end
+
   test "writer cannot manage another writers brew share" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -116,6 +160,70 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_equal user, share.updated_by
   end
 
+  test "blank password keeps existing password" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    brew = create_brew_for(user)
+    share = create_share_for(brew, user:, enabled: true, password: "espresso")
+    sign_in_as(user)
+
+    patch brew_public_brew_share_path(brew), params: {
+      public_brew_share: {
+        enabled: "1",
+        title: "Still protected",
+        password: "",
+        selected_photo_attachment_ids: []
+      }
+    }
+
+    assert_redirected_to edit_brew_public_brew_share_path(brew)
+    share.reload
+    assert share.password_protected?
+    assert share.authenticate_password("espresso")
+    assert_equal "Still protected", share.title
+  end
+
+  test "writer can destroy own public share" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    brew = create_brew_for(user)
+    create_share_for(brew, user:)
+    sign_in_as(user)
+
+    assert_difference -> { PublicBrewShare.count }, -1 do
+      delete brew_public_brew_share_path(brew)
+    end
+
+    assert_redirected_to brew_path(brew)
+  end
+
+  test "writer cannot destroy another writers public share" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    create_share_for(brews(:morning_espresso), user: users(:one))
+    sign_in_as(user)
+
+    assert_no_difference -> { PublicBrewShare.count } do
+      delete brew_public_brew_share_path(brews(:morning_espresso))
+    end
+
+    assert_redirected_to root_path
+  end
+
+  test "viewer cannot destroy public share" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    create_share_for(brews(:morning_espresso), user: users(:one))
+    sign_in_as(user)
+
+    assert_no_difference -> { PublicBrewShare.count } do
+      delete brew_public_brew_share_path(brews(:morning_espresso))
+    end
+
+    assert_redirected_to root_path
+  end
+
   private
     def create_brew_for(user, public_note: nil)
       workspaces(:household).brews.create!(
@@ -132,18 +240,18 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
       )
     end
 
-    def create_share_for(brew, user:, enabled: true, password: nil)
+    def create_share_for(brew, user:, enabled: true, password: nil, title: "Shared shot")
       brew.create_public_brew_share!(
         workspace: brew.workspace,
         created_by: user,
         updated_by: user,
         enabled:,
-        title: "Shared shot",
+        title:,
         password:,
         selected_photo_attachment_ids: [],
         snapshot: PublicBrewShareSnapshotBuilder.new(
           brew:,
-          title: "Shared shot",
+          title:,
           selected_photo_attachment_ids: []
         ).call
       )

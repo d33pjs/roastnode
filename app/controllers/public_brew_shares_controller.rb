@@ -12,7 +12,7 @@ class PublicBrewSharesController < ApplicationController
 
     redirect_to edit_brew_public_brew_share_path(@brew), notice: t(".created")
   rescue ActiveRecord::RecordInvalid
-    load_form_state(selected_photo_attachment_ids_from_params)
+    load_form_state(permitted_selected_photo_attachment_ids)
     render :new, status: :unprocessable_entity
   end
 
@@ -25,7 +25,7 @@ class PublicBrewSharesController < ApplicationController
 
     redirect_to edit_brew_public_brew_share_path(@brew), notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
-    load_form_state(selected_photo_attachment_ids_from_params)
+    load_form_state(permitted_selected_photo_attachment_ids)
     render :edit, status: :unprocessable_entity
   end
 
@@ -69,7 +69,7 @@ class PublicBrewSharesController < ApplicationController
         apply_password_changes
         @share.refresh_snapshot!(
           title: share_params[:title],
-          selected_photo_attachment_ids: selected_photo_attachment_ids_from_params,
+          selected_photo_attachment_ids: permitted_selected_photo_attachment_ids,
           updated_by: Current.user
         )
       end
@@ -108,6 +108,10 @@ class PublicBrewSharesController < ApplicationController
 
     def selected_photo_attachment_ids_from_params
       Array(share_params[:selected_photo_attachment_ids]).map(&:to_i)
+    end
+
+    def permitted_selected_photo_attachment_ids
+      selected_photo_attachment_ids_from_params & available_photos.map(&:id)
     end
 
     def share_params
