@@ -13,8 +13,22 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     )
 
     assert share.token.present?
+    assert_equal Digest::SHA256.hexdigest(share.token), share.token_digest
     assert_not share.enabled?
     assert_equal({}, share.snapshot)
+  end
+
+  test "finds enabled shares by token digest" do
+    share = PublicBrewShare.create!(
+      workspace: workspaces(:household),
+      brew: brews(:morning_espresso),
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true
+    )
+
+    assert_equal share, PublicBrewShare.find_enabled_by_token!(share.token)
+    assert_raises(ActiveRecord::RecordNotFound) { PublicBrewShare.find_enabled_by_token!("wrong") }
   end
 
   test "optional password protection works" do

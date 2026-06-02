@@ -18,7 +18,7 @@ class PublicBrewMediaController < ApplicationController
 
   private
     def set_share
-      @share = PublicBrewShare.find_by!(token: params[:token], enabled: true)
+      @share = PublicBrewShare.find_enabled_by_token!(params[:token])
     rescue ActiveRecord::RecordNotFound
       head :not_found
     end

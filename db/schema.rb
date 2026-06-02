@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_01_130200) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_02_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -335,12 +335,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_01_130200) do
     t.jsonb "snapshot", default: {}, null: false
     t.string "title"
     t.string "token", null: false
+    t.string "token_digest", null: false
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id", null: false
     t.bigint "workspace_id", null: false
     t.index ["brew_id"], name: "index_public_brew_shares_on_brew_id", unique: true
     t.index ["created_by_id"], name: "index_public_brew_shares_on_created_by_id"
     t.index ["token"], name: "index_public_brew_shares_on_token", unique: true
+    t.index ["token_digest"], name: "index_public_brew_shares_on_token_digest", unique: true
     t.index ["updated_by_id"], name: "index_public_brew_shares_on_updated_by_id"
     t.index ["workspace_id", "enabled"], name: "index_public_brew_shares_on_workspace_id_and_enabled"
     t.index ["workspace_id"], name: "index_public_brew_shares_on_workspace_id"

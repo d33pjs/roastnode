@@ -61,6 +61,8 @@ The private share editor controls:
 
 Disabled shares and unknown tokens return `404 Not Found`. Password-protected shares show the password gate before the page. Unlock session state is scoped to the share token and to the current password fingerprint, so changing a share password invalidates previous browser unlocks.
 
+Public controllers look up shares by `token_digest`, not by raw token, so request logs and SQL logs do not need to include the bearer token.
+
 ## Public Links
 
 `RecordLink` is the shared link model for `Brew`, `Bean`, `Equipment`, and `PreparationTool`. Links are workspace scoped and only accept HTTP or HTTPS URLs.

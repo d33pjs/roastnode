@@ -10,13 +10,23 @@ class PublicBrewShare < ApplicationRecord
   belongs_to :updated_by, class_name: "User"
 
   before_validation :set_token, on: :create
+  before_validation :set_token_digest
   before_validation :set_workspace_from_brew
 
   validates :token, presence: true, uniqueness: true
+  validates :token_digest, presence: true, uniqueness: true
   validate :brew_belongs_to_workspace
 
   validates :brew_id, uniqueness: true
   validates :password, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_blank: true
+
+  def self.find_enabled_by_token!(token)
+    find_by!(token_digest: token_digest_for(token), enabled: true)
+  end
+
+  def self.token_digest_for(token)
+    Digest::SHA256.hexdigest(token.to_s)
+  end
 
   def password_protected?
     password_digest.present?
@@ -77,6 +87,10 @@ class PublicBrewShare < ApplicationRecord
   private
     def set_token
       self.token ||= SecureRandom.urlsafe_base64(24)
+    end
+
+    def set_token_digest
+      self.token_digest = self.class.token_digest_for(token) if token.present?
     end
 
     def set_workspace_from_brew
