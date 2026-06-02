@@ -1,0 +1,94 @@
+<% profile = recipe.profile || {} %>
+<% targets = profile["targets"] || {} %>
+<% guide = profile["guide"] || {} %>
+<% label_class = "block text-sm font-extrabold text-rn-muted" %>
+<% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+<% section_class = "grid gap-4 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
+
+<%= form_with model: recipe, class: "grid gap-4" do |form| %>
+  <% if recipe.errors.any? %>
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">
+      <%= recipe.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <% if recipe.source_brew_id.present? %>
+    <%= form.hidden_field :source_brew_id, value: recipe.source_brew_id %>
+  <% end %>
+
+  <section class="<%= section_class %>">
+    <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.form.identity") %></h2>
+    <div>
+      <%= form.label :title, t("recipes.form.title"), class: label_class %>
+      <%= form.text_field :title, class: input_class %>
+    </div>
+  </section>
+
+  <section class="<%= section_class %>">
+    <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.form.targets") %></h2>
+    <div class="grid gap-3 sm:grid-cols-2">
+      <div>
+        <%= label_tag "recipe_targets_bean_weight_grams", t("recipes.form.bean_weight"), class: label_class %>
+        <%= text_field_tag "recipe[targets][bean_weight_grams]", targets["bean_weight_grams"], id: "recipe_targets_bean_weight_grams", inputmode: "decimal", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_ground_weight_grams", t("recipes.form.ground_weight"), class: label_class %>
+        <%= text_field_tag "recipe[targets][ground_weight_grams]", targets["ground_weight_grams"], id: "recipe_targets_ground_weight_grams", inputmode: "decimal", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_dose_grams", t("recipes.form.dose"), class: label_class %>
+        <%= text_field_tag "recipe[targets][dose_grams]", targets["dose_grams"], id: "recipe_targets_dose_grams", inputmode: "decimal", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_beverage_grams", t("recipes.form.beverage"), class: label_class %>
+        <%= text_field_tag "recipe[targets][beverage_grams]", targets["beverage_grams"], id: "recipe_targets_beverage_grams", inputmode: "decimal", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_grind_setting", t("recipes.form.grind_setting"), class: label_class %>
+        <%= text_field_tag "recipe[targets][grind_setting]", targets["grind_setting"], id: "recipe_targets_grind_setting", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_brew_temperature_celsius", t("recipes.form.temperature"), class: label_class %>
+        <%= text_field_tag "recipe[targets][brew_temperature_celsius]", targets["brew_temperature_celsius"], id: "recipe_targets_brew_temperature_celsius", inputmode: "decimal", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_preinfusion_seconds", t("recipes.form.preinfusion"), class: label_class %>
+        <%= number_field_tag "recipe[targets][preinfusion_seconds]", targets["preinfusion_seconds"], id: "recipe_targets_preinfusion_seconds", inputmode: "numeric", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_first_drip_seconds", t("recipes.form.first_drip"), class: label_class %>
+        <%= number_field_tag "recipe[targets][first_drip_seconds]", targets["first_drip_seconds"], id: "recipe_targets_first_drip_seconds", inputmode: "numeric", class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_targets_total_time_seconds", t("recipes.form.total_time"), class: label_class %>
+        <%= number_field_tag "recipe[targets][total_time_seconds]", targets["total_time_seconds"], id: "recipe_targets_total_time_seconds", inputmode: "numeric", class: input_class %>
+      </div>
+    </div>
+  </section>
+
+  <section class="<%= section_class %>">
+    <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.form.guide") %></h2>
+    <div class="grid gap-3">
+      <div>
+        <%= label_tag "recipe_guide_note", t("recipes.form.guide_note"), class: label_class %>
+        <%= text_area_tag "recipe[guide_note]", guide["note"], id: "recipe_guide_note", rows: 3, class: input_class %>
+      </div>
+      <div>
+        <%= label_tag "recipe_pressure_note", t("recipes.form.pressure_note"), class: label_class %>
+        <%= text_area_tag "recipe[pressure_note]", guide["pressure_note"], id: "recipe_pressure_note", rows: 2, class: input_class %>
+      </div>
+    </div>
+  </section>
+
+  <%= render "shared/record_links_fields",
+    form: form,
+    section_class: section_class,
+    section_title_class: "text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted",
+    label_class: label_class,
+    input_class: input_class %>
+
+  <div class="flex flex-wrap items-center gap-2">
+    <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-accent-strong)] px-5 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
+    <%= link_to t("recipes.edit.back"), recipe.persisted? ? recipe_path(recipe) : recipes_path, class: "rounded-2xl border border-rn-line bg-rn-surface px-5 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+  </div>
+<% end %>

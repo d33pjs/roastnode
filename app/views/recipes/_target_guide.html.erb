@@ -1,0 +1,58 @@
+<% profile = recipe.profile || {} %>
+<% targets = profile["targets"] || {} %>
+<% guide = profile["guide"] || {} %>
+<% unknown = t("recipes.target_guide.unknown") %>
+<% grinder = targets["grind_setting"].presence || unknown %>
+<% dose = targets["dose_grams"].presence || targets["ground_weight_grams"].presence || unknown %>
+<% bean = targets["bean_weight_grams"].presence || unknown %>
+<% beverage = targets["beverage_grams"].presence || unknown %>
+<% stop_time = targets["total_time_seconds"].presence || unknown %>
+<% temperature = targets["brew_temperature_celsius"].presence %>
+<% preinfusion = targets["preinfusion_seconds"].presence %>
+<% first_drip = targets["first_drip_seconds"].presence %>
+
+<aside data-testid="recipe-target-guide" class="overflow-hidden rounded-3xl border border-rn-line bg-rn-surface shadow-sm">
+  <div class="border-b border-rn-line bg-[var(--rn-canvas)] px-4 py-3">
+    <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.target_guide.eyebrow") %></p>
+    <h2 class="mt-1 text-lg font-black text-rn-ink"><%= t("recipes.target_guide.title") %></h2>
+  </div>
+
+  <div class="grid gap-2 p-3">
+    <div class="rounded-2xl bg-[var(--rn-surface-muted)] px-4 py-3">
+      <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.form.grind_setting") %></p>
+      <p class="mt-1 text-xl font-black text-rn-ink"><%= t("recipes.target_guide.grinder", value: grinder) %></p>
+    </div>
+
+    <div class="rounded-2xl bg-[var(--rn-surface-muted)] px-4 py-3">
+      <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.form.dose") %></p>
+      <p class="mt-1 text-base font-black text-rn-ink"><%= t("recipes.target_guide.dose", dose: dose, bean: bean) %></p>
+    </div>
+
+    <div class="rounded-2xl bg-[var(--rn-surface-muted)] px-4 py-3">
+      <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.form.total_time") %></p>
+      <p class="mt-1 text-base font-black text-rn-ink"><%= t("recipes.target_guide.stop", time: stop_time, yield: beverage) %></p>
+    </div>
+
+    <% if temperature.present? || preinfusion.present? || first_drip.present? %>
+      <div class="rounded-2xl border border-rn-line bg-rn-surface px-4 py-3">
+        <% if temperature.present? %>
+          <p class="text-sm font-extrabold text-rn-ink"><%= t("recipes.target_guide.temperature", value: temperature) %></p>
+        <% end %>
+        <% if preinfusion.present? || first_drip.present? %>
+          <p class="mt-1 text-sm font-bold text-rn-muted"><%= t("recipes.target_guide.timing", preinfusion: preinfusion.presence || unknown, first_drip: first_drip.presence || unknown) %></p>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if guide["note"].present? || guide["pressure_note"].present? %>
+      <div class="rounded-2xl border border-rn-line bg-rn-surface px-4 py-3">
+        <% if guide["note"].present? %>
+          <p class="text-sm font-bold text-rn-ink"><%= guide["note"] %></p>
+        <% end %>
+        <% if guide["pressure_note"].present? %>
+          <p class="mt-2 text-sm font-semibold text-rn-muted"><%= guide["pressure_note"] %></p>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</aside>

@@ -1,0 +1,19 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-6xl py-6 sm:px-6 lg:py-10">
+    <div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
+      <div class="min-w-0">
+        <%= render "shared/back_link", label: t(".back"), path: @recipe.source_brew ? brew_path(@recipe.source_brew) : recipes_path %>
+        <p class="mt-4 text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".eyebrow") %></p>
+        <h1 class="mt-2 text-3xl font-black leading-tight text-rn-ink sm:text-4xl"><%= t(".title") %></h1>
+
+        <div class="mt-6">
+          <%= render "form", recipe: @recipe, submit_label: t(".create") %>
+        </div>
+      </div>
+
+      <div class="lg:sticky lg:top-6">
+        <%= render "recipes/target_guide", recipe: @recipe %>
+      </div>
+    </div>
+  </section>
+</main>

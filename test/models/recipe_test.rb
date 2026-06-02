@@ -50,4 +50,14 @@ class RecipeTest < ActiveSupport::TestCase
 
     assert_match(/\Ahouse-blend-reference-[a-z0-9]+\.json\z/, recipe.export_filename)
   end
+
+  test "source brew can be deleted while recipe keeps its profile" do
+    recipe = recipes(:household_recipe)
+    source_brew = recipe.source_brew
+
+    source_brew.destroy_with_inventory_reversal!
+
+    assert_nil recipe.reload.source_brew_id
+    assert_equal "12", recipe.profile.dig("targets", "grind_setting")
+  end
 end

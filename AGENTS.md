@@ -17,7 +17,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Prefer Rails-native, boring security patterns over custom cleverness.
 - Store measurements in canonical metric units: grams, seconds, Celsius.
 - Keep data private by default. Do not leak passwords, sessions, invite tokens, signed media URLs, raw private media URLs, environment variables, or infrastructure secrets.
-- Keep recipes deferred until a dedicated recipes slice is explicitly chosen.
+- Recipe profiles are now an active private workspace area; see `docs/recipe-profiles.md` before changing recipe behavior.
 
 ## Working Rules
 
@@ -37,7 +37,8 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Workspace settings, logo/banner, and currency: `docs/workspace-settings.md`
 - Account labels, email placement, avatars, and public banners: `docs/account-privacy.md`
 - Decimal parsing, comma-friendly measurement inputs, and user number/time formats: `docs/formatting.md`
-- Espresso logging, bean/equipment basics, inventory, last-brew defaults, and recipe deferral: `docs/coffee-core.md`
+- Espresso logging, bean/equipment basics, inventory, and last-brew defaults: `docs/coffee-core.md`
+- Recipe profiles, exact targets, snapshots, and deferred guided-sharing slices: `docs/recipe-profiles.md`
 - Brew form focus and hidden-field preferences: `docs/brew-form-preferences.md`
 - Browser-local espresso draft recovery: `docs/brew-draft-recovery.md`
 - Brew corrections and inventory-safe update/delete helpers: `docs/brew-corrections.md`

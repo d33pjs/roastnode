@@ -130,6 +130,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       BrewPreparationTool.delete_all
       EquipmentEventItem.delete_all
       EquipmentEvent.delete_all
+      PublicRecipeShare.delete_all
+      Recipe.delete_all
       Brew.delete_all
       PreparationTool.delete_all
       Equipment.delete_all

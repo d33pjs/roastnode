@@ -69,6 +69,11 @@ Rails.application.routes.draw do
     patch :taste, on: :member
     resource :public_brew_share, only: %i[new create edit update destroy]
   end
+  resources :recipes do
+    get :log, on: :member
+    get :export, on: :member
+    post :import, on: :collection
+  end
   get "s/:token" => "public_brew_pages#show", as: :public_brew_page
   post "s/:token/password" => "public_brew_pages#unlock", as: :unlock_public_brew_page
   get "s/:token/media/:media_id" => "public_brew_media#show", as: :public_brew_media

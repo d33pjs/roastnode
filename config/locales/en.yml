@@ -102,6 +102,7 @@ en:
       more: "More"
       preparation_tools: "Tools"
       profile: "Profile"
+      recipes: "Recipes"
       settings: "Settings"
       sign_out: "Logout %{user}"
       statistics: "Stats"
@@ -846,6 +847,73 @@ en:
         one: "1 workspace"
         other: "%{count} workspaces"
       workspace_memberships: "Workspaces"
+  recipes:
+    create:
+      created: "Recipe created."
+    destroy:
+      destroyed: "Recipe deleted."
+    edit:
+      back: "Back to recipe"
+      eyebrow: "Recipe profile"
+      title: "Edit recipe"
+      update: "Save recipe"
+    export:
+      pending: "Recipe export will be added in the portability slice."
+    form:
+      bean_weight: "Bean in (g)"
+      beverage: "Yield (g)"
+      dose: "Dose (g)"
+      first_drip: "First drip (s)"
+      grind_setting: "Grind setting"
+      ground_weight: "Ground out (g)"
+      guide: "Guide"
+      guide_note: "Watch-for note"
+      identity: "Identity"
+      pressure_note: "Pressure note"
+      preinfusion: "Preinfusion (s)"
+      targets: "Exact targets"
+      temperature: "Temperature (C)"
+      title: "Title"
+      total_time: "Total time (s)"
+    import:
+      pending: "Recipe import will be added in the portability slice."
+    index:
+      back: "Back to dashboard"
+      dose: "Dose"
+      empty: "No recipes yet."
+      eyebrow: "Recipe profiles"
+      time: "Time"
+      title: "Recipes"
+      unknown: "Unknown"
+      yield: "Yield"
+    new:
+      back: "Back"
+      create: "Create recipe"
+      eyebrow: "Recipe profile"
+      title: "Create recipe"
+    show:
+      back: "Back to recipes"
+      bean: "Bean"
+      details: "Recipe details"
+      edit: "Edit"
+      eyebrow: "Recipe profile"
+      grinder: "Grinder"
+      log: "Log with this recipe"
+      machine: "Machine"
+      rating: "Source rating"
+      source_brew: "Source brew"
+      unknown: "Unknown"
+    target_guide:
+      dose: "Watch dose %{dose} / bean in %{bean}"
+      eyebrow: "Recipe guide"
+      grinder: "Set grinder to %{value}"
+      stop: "Stop at %{time}s / %{yield}g"
+      temperature: "Use %{value}C"
+      timing: "Preinfusion %{preinfusion}s / first drip %{first_drip}s"
+      title: "Target markers"
+      unknown: "unknown"
+    update:
+      updated: "Recipe updated."
   preparation_tools:
     archive:
       archived: "Preparation tool archived."

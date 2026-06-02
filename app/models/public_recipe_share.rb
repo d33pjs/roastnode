@@ -1,0 +1,43 @@
+require "digest"
+
+class PublicRecipeShare < ApplicationRecord
+  has_secure_password :password, validations: false
+
+  belongs_to :workspace
+  belongs_to :recipe
+  belongs_to :created_by, class_name: "User"
+  belongs_to :updated_by, class_name: "User"
+
+  before_validation :set_token, on: :create
+  before_validation :set_token_digest
+  before_validation :set_workspace_from_recipe
+
+  validates :token, presence: true, uniqueness: true
+  validates :token_digest, presence: true, uniqueness: true
+  validates :recipe_id, uniqueness: true
+  validates :password, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_blank: true
+  validate :recipe_belongs_to_workspace
+
+  def self.token_digest_for(token)
+    Digest::SHA256.hexdigest(token.to_s)
+  end
+
+  private
+    def set_token
+      self.token ||= SecureRandom.urlsafe_base64(24)
+    end
+
+    def set_token_digest
+      self.token_digest = self.class.token_digest_for(token) if token.present?
+    end
+
+    def set_workspace_from_recipe
+      self.workspace ||= recipe.workspace if recipe
+    end
+
+    def recipe_belongs_to_workspace
+      return if recipe.blank? || workspace.blank? || recipe.workspace_id == workspace_id
+
+      errors.add(:recipe, "must belong to the workspace")
+    end
+end

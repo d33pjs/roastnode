@@ -17,6 +17,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
 - Curated public brew sharing with optional passwords, selected photos, and public buy/affiliate links.
+- Private recipe profiles created from workspace brews, with editable exact espresso targets and prominent target markers.
 - Paginated all-time brew history with compact-card and hero-card views.
 - Paginated all-time workspace activity history for brews, manual inventory adjustments, and equipment events.
 - Private workspace statistics and analytics page.
@@ -30,7 +31,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 ## Explicitly Deferred
 
-- Recipes, recipe snapshots, and target definitions.
+- Recipe-guided brew logging overlay, Hero Card recipe ghost, recipe JSON import/export, and public recipe sharing.
 - Public overview pages for all shared brews.
 - Fediverse publishing for brew shares.
 - Advanced media handling beyond current private/public thumbnails, including object storage.
@@ -104,7 +105,7 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Query beans, equipment, brews, and inventory through `current_workspace`.
 - Use `current_workspace_policy.write?` for create actions.
 - Keep viewer access read-only.
-- Do not add recipe fields to brew forms until the dedicated recipes slice exists.
+- Recipe profiles are workspace records; do not let recipe-guided logging overwrite normal last-brew defaults.
 - Do not allow hiding the bean selector or bean-in weight from the new espresso form, because they are required for inventory.
 - Preparation tools are checklist records, not equipment records.
 - Use `Bean#destroy_with_history!` for destructive bean deletion; plain `destroy!` is intentionally blocked by dependent brew and inventory guards.

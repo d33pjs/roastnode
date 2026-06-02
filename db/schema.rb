@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_02_191000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -504,7 +504,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_180000) do
   add_foreign_key "public_recipe_shares", "users", column: "created_by_id"
   add_foreign_key "public_recipe_shares", "users", column: "updated_by_id"
   add_foreign_key "public_recipe_shares", "workspaces"
-  add_foreign_key "recipes", "brews", column: "source_brew_id"
+  add_foreign_key "recipes", "brews", column: "source_brew_id", on_delete: :nullify
   add_foreign_key "recipes", "users", column: "created_by_id"
   add_foreign_key "recipes", "workspaces"
   add_foreign_key "record_links", "workspaces"

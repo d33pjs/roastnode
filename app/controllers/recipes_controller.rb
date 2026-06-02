@@ -1,0 +1,186 @@
+class RecipesController < ApplicationController
+  before_action :authorize_workspace_write!, only: %i[new create edit update destroy log export import]
+  before_action :set_recipe, only: %i[show edit update destroy log export]
+
+  def index
+    @recipes = current_workspace
+      .recipes
+      .includes(:source_brew)
+      .order(created_at: :desc, id: :desc)
+  end
+
+  def show
+  end
+
+  def new
+    source_brew = source_brew_from_params!
+    profile = RecipeSnapshotBuilder.new(brew: source_brew, title: default_title(source_brew)).call
+    @recipe = current_workspace.recipes.new(
+      created_by: Current.user,
+      source_brew: source_brew,
+      title: profile["title"],
+      method: profile["method"],
+      profile: profile,
+      source_snapshot: source_snapshot_from_profile(profile)
+    )
+    prepare_record_links(@recipe)
+  end
+
+  def create
+    source_brew = source_brew_from_params!
+    profile = RecipeSnapshotBuilder.new(brew: source_brew, title: default_title(source_brew)).call
+    profile = profile_from_params(profile)
+    @recipe = current_workspace.recipes.new(
+      created_by: Current.user,
+      source_brew: source_brew,
+      title: profile["title"],
+      method: profile["method"],
+      profile: profile,
+      source_snapshot: source_snapshot_from_profile(profile)
+    )
+    assign_record_link_attributes(@recipe)
+
+    if @recipe.save
+      redirect_to @recipe, notice: t(".created")
+    else
+      prepare_record_links(@recipe)
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  def edit
+    prepare_record_links(@recipe)
+  end
+
+  def update
+    profile = profile_from_params(@recipe.profile.deep_dup)
+    @recipe.assign_attributes(title: profile["title"], profile: profile)
+    assign_record_link_attributes(@recipe)
+
+    if @recipe.save
+      redirect_to @recipe, notice: t(".updated")
+    else
+      prepare_record_links(@recipe)
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    @recipe.destroy
+    redirect_to recipes_path, notice: t(".destroyed")
+  end
+
+  def log
+    redirect_to new_brew_path(recipe_id: @recipe.id)
+  end
+
+  def export
+    redirect_to @recipe, alert: t(".pending")
+  end
+
+  def import
+    redirect_to recipes_path, alert: t(".pending")
+  end
+
+  private
+    TARGET_DECIMAL_FIELDS = %i[
+      bean_weight_grams
+      ground_weight_grams
+      dose_grams
+      beverage_grams
+      brew_temperature_celsius
+    ].freeze
+    TARGET_INTEGER_FIELDS = %i[
+      preinfusion_seconds
+      first_drip_seconds
+      total_time_seconds
+    ].freeze
+    TARGET_TEXT_FIELDS = %i[grind_setting].freeze
+    TARGET_FIELDS = (TARGET_DECIMAL_FIELDS + TARGET_INTEGER_FIELDS + TARGET_TEXT_FIELDS).freeze
+
+    def set_recipe
+      @recipe = current_workspace
+        .recipes
+        .includes(:source_brew, :record_links)
+        .find(params[:id])
+    rescue ActiveRecord::RecordNotFound
+      head :not_found
+    end
+
+    def source_brew_from_params!
+      source_brew_id = recipe_params[:source_brew_id].presence || params[:source_brew_id].presence
+      current_workspace
+        .brews
+        .includes(:bean, :grinder, :machine, :record_links, brew_preparation_tools: :preparation_tool)
+        .find(source_brew_id)
+    end
+
+    def default_title(source_brew)
+      "Espresso with #{source_brew.bean.display_name}"
+    end
+
+    def profile_from_params(profile)
+      attributes = recipe_params
+      title = attributes[:title].presence || profile["title"]
+      profile["title"] = title
+      profile["guide"] = guide_from_params(profile["guide"] || {})
+      profile["targets"] = targets_from_params(profile["targets"] || {})
+      profile
+    end
+
+    def guide_from_params(existing_guide)
+      existing_guide.merge(
+        "note" => recipe_params[:guide_note].presence,
+        "pressure_note" => recipe_params[:pressure_note].presence
+      ).compact
+    end
+
+    def targets_from_params(existing_targets)
+      incoming_targets = recipe_params[:targets] || ActionController::Parameters.new
+      return existing_targets if incoming_targets.blank?
+
+      normalized_targets = normalize_decimal_attributes(incoming_targets, *TARGET_DECIMAL_FIELDS)
+      TARGET_DECIMAL_FIELDS.each do |field|
+        value = normalized_targets[field]
+        existing_targets[field.to_s] = value if value.present?
+      end
+      TARGET_INTEGER_FIELDS.each do |field|
+        value = incoming_targets[field]
+        existing_targets[field.to_s] = value.to_i if value.present?
+      end
+      TARGET_TEXT_FIELDS.each do |field|
+        value = incoming_targets[field]
+        existing_targets[field.to_s] = value if value.present?
+      end
+      existing_targets
+    end
+
+    def source_snapshot_from_profile(profile)
+      { "source_brew" => profile["source_brew"] }.compact
+    end
+
+    def assign_record_link_attributes(recipe)
+      return unless recipe_params.key?(:record_links_attributes)
+
+      recipe.assign_attributes(record_links_attributes: recipe_params[:record_links_attributes])
+    end
+
+    def prepare_record_links(record)
+      record.prepare_record_links_for_form
+    end
+
+    def recipe_params
+      @recipe_params ||= recipe_parameter_source.permit(
+        :source_brew_id,
+        :title,
+        :guide_note,
+        :pressure_note,
+        targets: TARGET_FIELDS,
+        record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
+      )
+    end
+
+    def recipe_parameter_source
+      params[:recipe].presence || ActionController::Parameters.new
+    end
+end
