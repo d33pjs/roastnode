@@ -615,6 +615,39 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", brew_path(brews(:morning_espresso))
   end
 
+  test "writer sees public share action on brew detail" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "a[href=?]", new_brew_public_brew_share_path(brew), text: I18n.t("brews.show.share_publicly")
+  end
+
+  test "writer sees edit public share action when brew already has a share" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.create_public_brew_share!(
+      workspace: brew.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: false,
+      title: "Shared shot",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBrewShareSnapshotBuilder.new(
+        brew:,
+        title: "Shared shot",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "a[href=?]", edit_brew_public_brew_share_path(brew), text: I18n.t("brews.show.share_publicly")
+  end
+
   test "writer sees explicit taste correction form on brew detail" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)

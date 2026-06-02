@@ -466,6 +466,7 @@ en:
       related_tool_photos: "Preparation tool photos"
       retention: "Retention"
       save_taste: "Save taste"
+      share_publicly: "Share publicly"
       taste: "Taste"
       temperature: "Temperature"
       temperature_label: "Temperature %{temperature}"
@@ -476,6 +477,30 @@ en:
       unknown: "Unknown"
       yield: "Beverage"
       yes: "Yes"
+  public_brew_shares:
+    create:
+      created: "Public share saved."
+    destroy:
+      destroyed: "Public share removed."
+    edit:
+      back: "Back to brew"
+      title: "Edit public share"
+      update: "Save public share"
+    form:
+      clear_password: "Remove password"
+      enabled: "Enable public page"
+      include_photo: "Include"
+      password: "Password"
+      password_help: "Leave blank to keep the current password. Public visitors need this password before seeing the page."
+      photos: "Public photos"
+      settings: "Share settings"
+      title: "Share title"
+    new:
+      back: "Back to brew"
+      create: "Create public share"
+      title: "Create public share"
+    update:
+      updated: "Public share saved."
   inventory_adjustments:
     create:
       created: "Inventory adjusted."

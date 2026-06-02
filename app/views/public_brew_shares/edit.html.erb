@@ -1,0 +1,15 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-4xl py-6 sm:px-6 lg:py-10">
+    <%= render "shared/back_link", label: t(".back"), path: brew_path(@brew) %>
+    <div class="mt-5">
+      <h1 class="text-3xl font-extrabold text-rn-ink sm:text-4xl"><%= t(".title") %></h1>
+    </div>
+
+    <%= render "form",
+      brew: @brew,
+      share: @share,
+      available_photos: @available_photos,
+      selected_photo_attachment_ids: @selected_photo_attachment_ids,
+      submit_label: t(".update") %>
+  </section>
+</main>

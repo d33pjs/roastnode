@@ -67,6 +67,7 @@ Rails.application.routes.draw do
   end
   resources :brews, only: %i[index new create show edit update destroy] do
     patch :taste, on: :member
+    resource :public_brew_share, only: %i[new create edit update destroy]
   end
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
