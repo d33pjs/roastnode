@@ -11,7 +11,7 @@ class PublicBrewPagesController < ApplicationController
 
   def unlock
     if @share.authenticate_password(params[:password])
-      session[unlock_session_key] = true
+      session[unlock_session_key] = @share.password_unlock_fingerprint
       redirect_to public_brew_page_path(@share.token)
     else
       flash.now[:alert] = t(".failed")
@@ -35,7 +35,7 @@ class PublicBrewPagesController < ApplicationController
     end
 
     def share_unlocked?
-      session[unlock_session_key]
+      session[unlock_session_key] == @share.password_unlock_fingerprint
     end
 
     def unlock_session_key

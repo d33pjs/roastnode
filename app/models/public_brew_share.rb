@@ -1,3 +1,5 @@
+require "digest"
+
 class PublicBrewShare < ApplicationRecord
   has_secure_password :password, validations: false
 
@@ -17,6 +19,12 @@ class PublicBrewShare < ApplicationRecord
 
   def password_protected?
     password_digest.present?
+  end
+
+  def password_unlock_fingerprint
+    return unless password_protected?
+
+    Digest::SHA256.hexdigest(password_digest)
   end
 
   def manageable_by?(user)

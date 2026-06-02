@@ -22,6 +22,8 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Private brew note/, count: 0
     assert_select "body", text: /Private shot link/, count: 0
     assert_select "body", text: /one@example.com/, count: 0
+    assert_no_match "/rails/active_storage", response.body
+    assert_no_match "/media_attachments", response.body
   end
 
   test "password protected share shows gate until unlocked" do
@@ -42,6 +44,44 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     get public_brew_page_path(share.token)
     assert_response :success
     assert_select "[data-testid=public-brew-page]"
+  end
+
+  test "password change invalidates existing public page unlock" do
+    share = create_share(enabled: true, password: "espresso")
+
+    post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
+    assert_redirected_to public_brew_page_path(share.token)
+
+    get public_brew_page_path(share.token)
+    assert_response :success
+    assert_select "[data-testid=public-brew-page]"
+
+    share.update!(password: "ristretto")
+
+    get public_brew_page_path(share.token)
+    assert_response :success
+    assert_select "form[action=?]", unlock_public_brew_page_path(share.token)
+    assert_select "[data-testid=public-brew-page]", count: 0
+  end
+
+  test "equipment purchase prices in snapshot are not rendered publicly" do
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["equipment"] = [
+      {
+        "role" => "grinder",
+        "name" => "Secret grinder",
+        "display_name" => "Secret grinder",
+        "purchase_price_cents" => 123_456
+      }
+    ]
+    share.update!(snapshot:)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "body", text: /Secret grinder/
+    assert_no_match "€1,234.56", response.body
   end
 
   private

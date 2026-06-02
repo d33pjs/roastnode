@@ -18,7 +18,7 @@
         <p class="mt-1 text-sm font-bold text-stone-600"><%= section["model"] %></p>
       <% end %>
 
-      <% if section["purchase_price_cents"].present? %>
+      <% if kind == "bean" && section["purchase_price_cents"].present? %>
         <p class="mt-2 text-sm font-extrabold text-stone-800"><%= number_to_currency(section["purchase_price_cents"].to_i / 100.0, unit: "€", separator: ".", delimiter: ",") %></p>
       <% end %>
 

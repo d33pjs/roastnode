@@ -25,7 +25,7 @@ class PublicBrewMediaController < ApplicationController
 
     def ensure_share_unlocked!
       return unless @share&.password_protected?
-      return if session[unlock_session_key]
+      return if session[unlock_session_key] == @share.password_unlock_fingerprint
 
       head :not_found
     end
@@ -68,15 +68,15 @@ class PublicBrewMediaController < ApplicationController
     end
 
     def log_thumbnail_fallback(error)
-      Rails.logger.info("Falling back to public thumbnail original #{public_attachment_log_id}: #{error.class}: #{error.message}")
+      Rails.logger.info("Falling back to public thumbnail original #{public_attachment_log_id}: #{error.class}")
     end
 
     def public_attachment_log_id
-      "PublicBrewShare##{@share.token}/attachment/#{@attachment.id}"
+      "PublicBrewShare##{@share.id}/attachment/#{@attachment.id}"
     end
 
     def public_filename
-      "#{params[:variant] == THUMBNAIL_VARIANT ? "thumbnail-" : ""}public-brew-media-#{@attachment.id}"
+      params[:variant] == THUMBNAIL_VARIANT ? "public-brew-thumbnail" : "public-brew-media"
     end
 
     def unlock_session_key

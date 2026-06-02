@@ -9,10 +9,15 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     get public_brew_media_path(share.token, photo)
     assert_response :success
     assert_equal "image/jpeg", response.media_type
+    assert_match "public-brew-media", response.headers["Content-Disposition"]
+    assert_no_match "photo.jpg", response.headers["Content-Disposition"]
+    assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
 
     get public_brew_media_path(share.token, photo, variant: "thumbnail")
     assert_response :success
     assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
+    assert_match "public-brew-thumbnail", response.headers["Content-Disposition"]
+    assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
   end
 
   test "rejects unselected photo" do
@@ -22,6 +27,28 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ selected.id ])
 
     get public_brew_media_path(share.token, unselected)
+
+    assert_response :not_found
+  end
+
+  test "rejects media for disabled share and missing token" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(brew:, enabled: false, selected_photo_attachment_ids: [ photo.id ])
+
+    get public_brew_media_path(share.token, photo)
+    assert_response :not_found
+
+    get public_brew_media_path("missing-token", photo)
+    assert_response :not_found
+  end
+
+  test "rejects unknown public media variant" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
+
+    get public_brew_media_path(share.token, photo, variant: "large")
 
     assert_response :not_found
   end
@@ -39,6 +66,23 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
 
     get public_brew_media_path(share.token, photo)
     assert_response :success
+  end
+
+  test "password change invalidates existing public media unlock" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ], password: "espresso")
+
+    post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
+    assert_redirected_to public_brew_page_path(share.token)
+
+    get public_brew_media_path(share.token, photo)
+    assert_response :success
+
+    share.update!(password: "ristretto")
+
+    get public_brew_media_path(share.token, photo)
+    assert_response :not_found
   end
 
   private
