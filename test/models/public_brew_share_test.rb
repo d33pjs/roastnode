@@ -102,7 +102,7 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     assert_not share.manageable_by?(users(:two))
   end
 
-  test "public attachment ids are limited to selected public share records" do
+  test "legacy public attachment ids are limited to selected public share records" do
     brew = brews(:morning_espresso)
     logo = attach_named_photo(brew.workspace, :logo, filename: "workspace-logo.jpg")
     avatar = attach_named_photo(brew.user, :avatar, filename: "avatar.jpg")
@@ -132,5 +132,50 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     )
 
     assert_equal [ avatar.id, bean_photo.id, brew_photo.id, logo.id ].sort, share.public_attachment_ids.sort
+  end
+
+  test "public attachment ids prefer the curated media manifest when present" do
+    brew = brews(:morning_espresso)
+    selected_photo = attach_photo(brew)
+    rogue_photo = attach_photo(beans(:other_workspace_open))
+    share = PublicBrewShare.create!(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      selected_photo_attachment_ids: [ selected_photo.id ],
+      snapshot: {
+        "public_media" => [ { "attachment_id" => selected_photo.id } ],
+        "photos" => [
+          { "attachment_id" => selected_photo.id },
+          { "attachment_id" => rogue_photo.id }
+        ]
+      }
+    )
+
+    assert_equal [ selected_photo.id ], share.public_attachment_ids
+  end
+
+  test "public media handles are opaque and resolve only for snapshot attachments" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = PublicBrewShare.create!(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      snapshot: {
+        "public_media" => [ { "attachment_id" => photo.id } ],
+        "photos" => [ { "attachment_id" => photo.id } ]
+      }
+    )
+
+    handle = share.public_media_handle_for(photo.id)
+
+    assert handle.present?
+    assert_not_equal photo.id.to_s, handle
+    assert_equal photo.id, share.public_attachment_id_for_media_handle(handle)
+    assert_nil share.public_media_handle_for(999_999)
+    assert_nil share.public_attachment_id_for_media_handle(photo.id.to_s)
   end
 end

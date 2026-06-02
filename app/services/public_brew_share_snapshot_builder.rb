@@ -6,7 +6,7 @@ class PublicBrewShareSnapshotBuilder
   end
 
   def call
-    {
+    payload = {
       "title" => title.presence || default_title,
       "workspace" => workspace_payload,
       "user" => user_payload,
@@ -17,6 +17,8 @@ class PublicBrewShareSnapshotBuilder
       "photos" => photo_payloads([ brew ]),
       "generated_at" => Time.current.iso8601
     }
+    payload["public_media"] = public_media_payloads(payload)
+    payload
   end
 
   private
@@ -143,6 +145,23 @@ class PublicBrewShareSnapshotBuilder
 
     def attachment_id(attachment)
       attachment&.id
+    end
+
+    def public_media_payloads(payload)
+      collect_attachment_ids(payload).map { |id| { "attachment_id" => id } }.uniq
+    end
+
+    def collect_attachment_ids(value)
+      case value
+      when Hash
+        value.flat_map do |key, nested|
+          key.to_s.end_with?("attachment_id") && nested.present? ? [ nested.to_i ] : collect_attachment_ids(nested)
+        end
+      when Array
+        value.flat_map { |nested| collect_attachment_ids(nested) }
+      else
+        []
+      end
     end
 
     def decimal_string(value)

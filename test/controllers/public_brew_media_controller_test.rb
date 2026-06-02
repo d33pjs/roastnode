@@ -6,14 +6,14 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     photo = attach_photo(brew)
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
 
-    get public_brew_media_path(share.token, photo)
+    get public_media_path_for(share, photo)
     assert_response :success
     assert_equal "image/jpeg", response.media_type
     assert_match "public-brew-media", response.headers["Content-Disposition"]
     assert_no_match "photo.jpg", response.headers["Content-Disposition"]
     assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
 
-    get public_brew_media_path(share.token, photo, variant: "thumbnail")
+    get public_media_path_for(share, photo, variant: "thumbnail")
     assert_response :success
     assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
     assert_match "public-brew-thumbnail", response.headers["Content-Disposition"]
@@ -25,8 +25,19 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     selected = attach_photo(brew)
     unselected = attach_photo(brew)
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ selected.id ])
+    forged_share = PublicBrewShare.new(token: share.token, snapshot: { "public_media" => [ { "attachment_id" => unselected.id } ] })
 
-    get public_brew_media_path(share.token, unselected)
+    get public_brew_media_path(share.token, forged_share.public_media_handle_for(unselected.id))
+
+    assert_response :not_found
+  end
+
+  test "rejects numeric attachment id guesses" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
+
+    get public_brew_media_path(share.token, photo.id)
 
     assert_response :not_found
   end
@@ -36,10 +47,10 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     photo = attach_photo(brew)
     share = create_share(brew:, enabled: false, selected_photo_attachment_ids: [ photo.id ])
 
-    get public_brew_media_path(share.token, photo)
+    get public_media_path_for(share, photo)
     assert_response :not_found
 
-    get public_brew_media_path("missing-token", photo)
+    get public_brew_media_path("missing-token", share.public_media_handle_for(photo.id))
     assert_response :not_found
   end
 
@@ -48,7 +59,7 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     photo = attach_photo(brew)
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
 
-    get public_brew_media_path(share.token, photo, variant: "large")
+    get public_media_path_for(share, photo, variant: "large")
 
     assert_response :not_found
   end
@@ -58,13 +69,13 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     photo = attach_photo(brew)
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ], password: "espresso")
 
-    get public_brew_media_path(share.token, photo)
+    get public_media_path_for(share, photo)
     assert_response :not_found
 
     post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
     assert_redirected_to public_brew_page_path(share.token)
 
-    get public_brew_media_path(share.token, photo)
+    get public_media_path_for(share, photo)
     assert_response :success
   end
 
@@ -76,16 +87,20 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
     assert_redirected_to public_brew_page_path(share.token)
 
-    get public_brew_media_path(share.token, photo)
+    get public_media_path_for(share, photo)
     assert_response :success
 
     share.update!(password: "ristretto")
 
-    get public_brew_media_path(share.token, photo)
+    get public_media_path_for(share, photo)
     assert_response :not_found
   end
 
   private
+    def public_media_path_for(share, attachment, variant: nil)
+      public_brew_media_path(share.token, share.public_media_handle_for(attachment.id), variant:)
+    end
+
     def create_share(brew:, enabled:, selected_photo_attachment_ids:, password: nil)
       snapshot = PublicBrewShareSnapshotBuilder.new(
         brew:,

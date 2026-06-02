@@ -1,18 +1,20 @@
 <% if section.present? %>
-  <% anchor = public_product_anchor(kind, section["name"] || section["display_name"]) %>
+  <% label = kind.presence || t("public_brew_pages.show.unknown") %>
+  <% name = section["display_name"].presence || section["name"].presence || t("public_brew_pages.show.unknown") %>
+  <% anchor = public_product_anchor(label, name) %>
 
   <section id="<%= anchor %>" data-testid="public-product-section" class="mt-8 grid gap-5 border-t border-stone-300 pt-8 md:grid-cols-[16rem_1fr] md:items-center">
     <div class="overflow-hidden rounded-lg border border-stone-200 bg-white">
       <% if section["photo_attachment_id"].present? %>
         <%= image_tag public_media_url_for(share, section["photo_attachment_id"], variant: :thumbnail), alt: "", class: "h-64 w-full object-cover" %>
       <% else %>
-        <div class="flex h-64 items-center justify-center bg-stone-100 text-sm font-bold text-stone-500"><%= kind.humanize %></div>
+        <div class="flex h-64 items-center justify-center bg-stone-100 text-sm font-bold text-stone-500"><%= label.humanize %></div>
       <% end %>
     </div>
 
     <div>
-      <p class="text-xs font-black uppercase text-stone-500"><%= kind.humanize %></p>
-      <h2 class="mt-1 text-3xl font-black leading-tight text-stone-950"><%= section["display_name"].presence || section["name"] %></h2>
+      <p class="text-xs font-black uppercase text-stone-500"><%= label.humanize %></p>
+      <h2 class="mt-1 text-3xl font-black leading-tight text-stone-950"><%= name %></h2>
 
       <% if section["model"].present? %>
         <p class="mt-1 text-sm font-bold text-stone-600"><%= section["model"] %></p>

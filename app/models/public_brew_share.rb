@@ -1,4 +1,5 @@
 require "digest"
+require "openssl"
 
 class PublicBrewShare < ApplicationRecord
   has_secure_password :password, validations: false
@@ -36,7 +37,28 @@ class PublicBrewShare < ApplicationRecord
   end
 
   def public_attachment_ids
-    collect_attachment_ids(snapshot).uniq & allowed_public_attachment_ids
+    if snapshot.is_a?(Hash) && snapshot.key?("public_media")
+      collect_attachment_ids(snapshot["public_media"]).map(&:to_i).uniq
+    else
+      collect_attachment_ids(snapshot).map(&:to_i).uniq & allowed_public_attachment_ids
+    end
+  end
+
+  def public_media_handle_for(attachment_id)
+    attachment_id = attachment_id.to_i
+    return unless public_attachment_ids.include?(attachment_id)
+
+    media_handle_for_attachment_id(attachment_id)
+  end
+
+  def public_attachment_id_for_media_handle(handle)
+    handle = handle.to_s
+    return if handle.blank?
+
+    public_attachment_ids.find do |attachment_id|
+      expected = media_handle_for_attachment_id(attachment_id)
+      handle.bytesize == expected.bytesize && ActiveSupport::SecurityUtils.secure_compare(handle, expected)
+    end
   end
 
   def refresh_snapshot!(title:, selected_photo_attachment_ids:, updated_by:)
@@ -108,5 +130,13 @@ class PublicBrewShare < ApplicationRecord
       else
         []
       end
+    end
+
+    def media_handle_for_attachment_id(attachment_id)
+      OpenSSL::HMAC.hexdigest("SHA256", public_media_handle_secret, "#{token}:#{attachment_id}").first(32)
+    end
+
+    def public_media_handle_secret
+      Rails.application.key_generator.generate_key("public-brew-share-media-handle")
     end
 end

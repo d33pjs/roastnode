@@ -31,13 +31,16 @@ class PublicBrewMediaController < ApplicationController
     end
 
     def set_attachment
-      @attachment = ActiveStorage::Attachment.find(params[:attachment_id])
+      attachment_id = @share.public_attachment_id_for_media_handle(params[:media_id])
+      return head :not_found if attachment_id.blank?
+
+      @attachment = ActiveStorage::Attachment.find(attachment_id)
     rescue ActiveRecord::RecordNotFound
       head :not_found
     end
 
     def ensure_attachment_public!
-      head :not_found unless @attachment && @share.public_attachment_ids.include?(@attachment.id)
+      head :not_found unless @attachment
     end
 
     def send_blob(disposition:, data: @attachment.blob.download)

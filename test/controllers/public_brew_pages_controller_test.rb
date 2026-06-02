@@ -26,6 +26,20 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "/media_attachments", response.body
   end
 
+  test "public page renders media handles without attachment ids or private media routes" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(enabled: true, selected_photo_attachment_ids: [ photo.id ])
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_includes response.body, "/s/#{share.token}/media/"
+    assert_no_match %r{/media/#{photo.id}(?:[?"])}, response.body
+    assert_no_match "/rails/active_storage", response.body
+    assert_no_match "/media_attachments", response.body
+  end
+
   test "password protected share shows gate until unlocked" do
     share = create_share(enabled: true, password: "espresso")
 
@@ -84,8 +98,44 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "€1,234.56", response.body
   end
 
+  test "sparse stale snapshot renders with public fallbacks" do
+    share = create_share(enabled: true)
+    share.update!(snapshot: {
+      "title" => "Sparse share",
+      "brew" => { "occurred_at" => "not-a-date" },
+      "bean" => {},
+      "equipment" => [ { "role" => nil, "name" => nil } ],
+      "tools" => [ {} ],
+      "photos" => []
+    })
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-page]"
+    assert_select "body", text: /Sparse share/
+    assert_select "body", text: /#{I18n.t("public_brew_pages.show.unknown")}/
+  end
+
+  test "public share request path and redirects redact bearer tokens for logs" do
+    share = create_share(enabled: true, password: "espresso")
+    media_handle = share.public_media_handle_for(share.public_attachment_ids.first || 1) || "abc123"
+
+    request = ActionDispatch::Request.new(
+      Rack::MockRequest.env_for("/s/#{share.token}/media/#{media_handle}?token=secret")
+    )
+    request.set_header("action_dispatch.parameter_filter", Rails.application.config.filter_parameters)
+
+    assert_equal "/s/[FILTERED]/media/[FILTERED]?token=[FILTERED]", request.filtered_path
+
+    post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
+
+    assert_redirected_to public_brew_page_path(share.token)
+    assert_equal "[FILTERED]", response.filtered_location
+  end
+
   private
-    def create_share(enabled:, password: nil)
+    def create_share(enabled:, password: nil, selected_photo_attachment_ids: [])
       brew = brews(:morning_espresso)
       brew.update!(public_note: "Public brew story.", notes: "Private brew note.")
       brew.record_links.destroy_all
@@ -104,7 +154,7 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
       snapshot = PublicBrewShareSnapshotBuilder.new(
         brew:,
         title: "Shared shot",
-        selected_photo_attachment_ids: []
+        selected_photo_attachment_ids:
       ).call
 
       brew.create_public_brew_share!(
@@ -114,7 +164,7 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
         title: "Shared shot",
         enabled:,
         password:,
-        selected_photo_attachment_ids: [],
+        selected_photo_attachment_ids:,
         snapshot:
       )
     end
