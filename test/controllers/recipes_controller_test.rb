@@ -27,6 +27,62 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: recipes(:other_workspace_recipe).title, count: 0
   end
 
+  test "writer exports recipe as portable json attachment" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+
+    get export_recipe_path(recipe)
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_match "attachment", response.headers["Content-Disposition"]
+    assert_match recipe.export_filename, response.headers["Content-Disposition"]
+    payload = JSON.parse(response.body)
+    assert_equal "roastnode.recipe", payload.fetch("schema")
+    assert_equal recipe.title, payload.fetch("recipe").fetch("title")
+  end
+
+  test "writer imports recipe upload as unlinked snapshot" do
+    sign_in_as(users(:one))
+    workspace = workspaces(:household)
+
+    assert_difference -> { workspace.recipes.count }, 1 do
+      assert_no_difference -> { workspace.beans.count } do
+        assert_no_difference -> { workspace.equipment.count } do
+          assert_no_difference -> { workspace.preparation_tools.count } do
+            assert_no_difference -> { workspace.brews.count } do
+              post import_recipes_path, params: {
+                recipe_import: {
+                  file: fixture_file_upload("recipe_export.json", "application/json")
+                }
+              }
+            end
+          end
+        end
+      end
+    end
+
+    recipe = workspace.recipes.order(:created_at).last
+    assert_redirected_to recipe_path(recipe)
+    assert_nil recipe.source_brew
+    assert_equal "Uploaded recipe", recipe.title
+    assert_equal "18.8", recipe.profile.dig("targets", "dose_grams")
+  end
+
+  test "writer import rejects malformed json" do
+    sign_in_as(users(:one))
+
+    assert_no_difference -> { workspaces(:household).recipes.count } do
+      post import_recipes_path, params: {
+        recipe_import: {
+          file: fixture_file_upload("bad_recipe_export.json", "application/json")
+        }
+      }
+    end
+
+    assert_redirected_to recipes_path
+  end
+
   test "writer opens new recipe form from brew" do
     sign_in_as(users(:one))
 
@@ -124,6 +180,16 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
 
     get log_recipe_path(recipe)
+    assert_redirected_to root_path
+
+    get export_recipe_path(recipe)
+    assert_redirected_to root_path
+
+    post import_recipes_path, params: {
+      recipe_import: {
+        file: fixture_file_upload("recipe_export.json", "application/json")
+      }
+    }
     assert_redirected_to root_path
 
     delete recipe_path(recipe)

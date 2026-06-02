@@ -1,0 +1,38 @@
+{
+  "schema": "roastnode.recipe",
+  "version": 1,
+  "generated_at": "2026-06-02T12:00:00Z",
+  "recipe": {
+    "title": "Uploaded recipe",
+    "method": "espresso",
+    "profile": {
+      "title": "Uploaded recipe",
+      "method": "espresso",
+      "targets": {
+        "dose_grams": "18.8",
+        "beverage_grams": "43.0",
+        "grind_setting": "12.25",
+        "total_time_seconds": 31
+      },
+      "guide": {
+        "note": "Watch for a slow, glossy stream."
+      },
+      "source_brew": {
+        "rating": 5
+      }
+    },
+    "source_snapshot": {
+      "source_brew": {
+        "rating": 5
+      }
+    },
+    "links": [
+      {
+        "label": "Recipe notes",
+        "url": "https://example.com/recipe",
+        "kind": "info",
+        "position": 10
+      }
+    ]
+  }
+}

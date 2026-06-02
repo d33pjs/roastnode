@@ -24,6 +24,8 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Recipe-guided brew logging overlays the target guide beside the normal espresso form.
 - Guided logging stores `recipe_id` and a brew-time `recipe_snapshot` on the saved brew.
 - Hero Brew Cards render a subtle recipe target ghost from the brew-time snapshot when one exists.
+- Portable recipe JSON export and import using schema `roastnode.recipe`, version `1`.
+- Recipe import creates an unlinked private recipe snapshot and public recipe links only.
 
 ## Privacy And Ownership
 
@@ -39,7 +41,7 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Targets are exact values, not ranges.
 - Opening a recipe log flow does not overwrite normal last-brew defaults. Recipe targets are an overlay/guide only.
 - Machine-readable brew profile files are deferred.
-- Public recipe sharing, JSON import/export, recipe media, comments, reactions, analytics, and public recipe indexes are deferred to later slices.
+- Public recipe sharing, recipe media, comments, reactions, analytics, and public recipe indexes are deferred to later slices.
 
 ## Agent Notes
 
@@ -47,4 +49,4 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Use `current_workspace_policy.write?` for create/edit/delete/log actions; viewers can index and show only.
 - Keep recipe profile data in canonical metric units: grams, seconds, Celsius.
 - Brews logged with a recipe must store both `recipe_id` and a brew-time `recipe_snapshot` so future recipe edits do not rewrite history.
-- Recipe import must create an unlinked recipe snapshot only. Do not auto-create beans, equipment, tools, media, or brews from imported recipe data.
+- Recipe import creates an unlinked recipe snapshot only. Do not auto-create beans, equipment, tools, media, or brews from imported recipe data.

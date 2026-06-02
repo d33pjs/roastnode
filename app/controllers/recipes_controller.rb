@@ -75,11 +75,29 @@ class RecipesController < ApplicationController
   end
 
   def export
-    redirect_to @recipe, alert: t(".pending")
+    send_data JSON.pretty_generate(RecipeExporter.new(@recipe).call),
+      filename: @recipe.export_filename,
+      type: "application/json",
+      disposition: "attachment"
   end
 
   def import
-    redirect_to recipes_path, alert: t(".pending")
+    uploaded_file = params.dig(:recipe_import, :file)
+
+    if uploaded_file.blank?
+      redirect_to recipes_path, alert: t(".missing_file")
+      return
+    end
+
+    recipe = RecipeImporter.new(
+      workspace: current_workspace,
+      user: Current.user,
+      json: uploaded_file.read
+    ).call
+
+    redirect_to recipe, notice: t(".created")
+  rescue RecipeImporter::ImportError => error
+    redirect_to recipes_path, alert: error.message
   end
 
   private

@@ -859,7 +859,7 @@ en:
       title: "Edit recipe"
       update: "Save recipe"
     export:
-      pending: "Recipe export will be added in the portability slice."
+      created: "Recipe exported."
     form:
       bean_weight: "Bean in (g)"
       beverage: "Yield (g)"
@@ -877,12 +877,15 @@ en:
       title: "Title"
       total_time: "Total time (s)"
     import:
-      pending: "Recipe import will be added in the portability slice."
+      created: "Recipe imported."
+      missing_file: "Choose a recipe JSON file to import."
     index:
       back: "Back to dashboard"
       dose: "Dose"
       empty: "No recipes yet."
       eyebrow: "Recipe profiles"
+      import: "Import recipe JSON"
+      import_submit: "Import"
       time: "Time"
       title: "Recipes"
       unknown: "Unknown"
@@ -898,6 +901,7 @@ en:
       details: "Recipe details"
       edit: "Edit"
       eyebrow: "Recipe profile"
+      export: "Export JSON"
       grinder: "Grinder"
       log: "Log with this recipe"
       machine: "Machine"

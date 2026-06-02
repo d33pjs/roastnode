@@ -7,6 +7,14 @@
         <h1 class="mt-2 text-3xl font-black leading-tight text-rn-ink sm:text-4xl"><%= t(".title") %></h1>
         <p class="mt-1 text-sm font-semibold text-rn-muted"><%= current_workspace.name %></p>
       </div>
+
+      <% if current_workspace_policy.write? %>
+        <%= form_with url: import_recipes_path, scope: :recipe_import, multipart: true, class: "grid gap-2 rounded-2xl border border-rn-line bg-rn-surface p-3 shadow-sm" do |form| %>
+          <%= form.label :file, t(".import"), class: "text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted" %>
+          <%= form.file_field :file, accept: "application/json,.json", class: "block w-full text-sm font-bold text-rn-muted file:mr-3 file:rounded-full file:border-0 file:bg-[var(--rn-accent-strong)] file:px-3 file:py-2 file:text-sm file:font-extrabold file:text-[#f8faf6] hover:file:opacity-90" %>
+          <%= form.submit t(".import_submit"), class: "rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-2 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+        <% end %>
+      <% end %>
     </header>
 
     <div class="grid max-w-full min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-3">
