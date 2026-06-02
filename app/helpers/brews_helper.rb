@@ -98,6 +98,32 @@ module BrewsHelper
     brew.bean.primary_photo_attachment || brew.primary_photo_attachment
   end
 
+  def brew_card_recipe_targets(brew)
+    snapshot = brew.recipe_snapshot
+    return {} unless snapshot.is_a?(Hash)
+
+    targets = snapshot["targets"]
+    targets.is_a?(Hash) ? targets : {}
+  end
+
+  def brew_card_recipe_target_integer(targets, key)
+    value = targets[key.to_s]
+    return if value.blank?
+
+    Integer(value)
+  rescue ArgumentError, TypeError
+    nil
+  end
+
+  def brew_card_recipe_target_decimal(targets, key)
+    value = targets[key.to_s]
+    return if value.blank?
+
+    BigDecimal(value.to_s)
+  rescue ArgumentError
+    nil
+  end
+
   def brew_related_photo_groups(brew)
     [
       related_photo_group(t("brews.show.related_bean_photos"), brew.bean.display_name, brew.bean),

@@ -18,6 +18,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - Taste balance as its own compact metric rectangle.
 - Extraction chart with beverage curve, preinfusion marker, first-drip marker when present, total time, and a separate temperature line with a vertical right-edge temperature label.
 - Chart labels use small callouts when they would otherwise collide with plot or guide lines.
+- Brews logged with a recipe snapshot show a faint recipe target ghost in the chart, including recipe timing guides.
 - The beverage y-axis label rounds above the actual beverage yield, for example `45.2g` displays against a `50g` axis marker.
 - Grinder, machine, and brew preparation tool snapshots in one compact row, with tiny primary equipment photos when available.
 - Hero card internals are intentionally not links. On the dashboard the whole card is wrapped in a single brew-detail link, and nested anchors break browser rendering.
@@ -45,5 +46,6 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - Keep grinder and machine primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.
 - Keep user avatars and household logos small; they should act like identity marks, not extra content blocks.
 - Keep the card dense; avoid adding explanatory headings inside the chart.
+- Keep recipe target ghosts subtle; the live brew remains the primary chart.
 - Keep the mobile chart compact: the x-axis intentionally maps total time into a shorter central span while preserving proportional timing for preinfusion, first drip, and total time.
 - Preserve private media rendering through `media_attachment_path`.

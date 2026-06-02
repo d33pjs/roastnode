@@ -1,6 +1,7 @@
 class BrewsController < ApplicationController
   before_action :authorize_workspace_write!, only: %i[new create edit update taste destroy]
   before_action :set_brew, only: %i[show edit update taste destroy]
+  before_action :set_recipe_guide, only: %i[new create]
 
   def index
     @brew_history_view = params[:view] == "hero" ? "hero" : "compact"
@@ -32,6 +33,7 @@ class BrewsController < ApplicationController
     end
 
     @brew = current_workspace.brews.new(default_attributes)
+    @brew.recipe = @recipe if @recipe
     prepare_record_links(@brew)
     @autofocus_field = Current.user.default_brew_focus_field
     @draft_storage_key = brew_draft_storage_key
@@ -48,6 +50,7 @@ class BrewsController < ApplicationController
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
     @brew = current_workspace.brews.new(attributes)
     @brew.user = Current.user
+    apply_recipe_snapshot
 
     if save_brew_with_preparation_tools
       redirect_to @brew, notice: t(".created")
@@ -95,6 +98,13 @@ class BrewsController < ApplicationController
 
     def set_brew
       @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user, brew_preparation_tools: :preparation_tool).find(params[:id])
+    end
+
+    def set_recipe_guide
+      recipe_id = params[:recipe_id].presence || params.dig(:brew, :recipe_id).presence
+      return if recipe_id.blank?
+
+      @recipe = current_workspace.recipes.find(recipe_id)
     end
 
     def load_form_options(selected_bean: nil, selected_grinder: nil, selected_machine: nil)
@@ -202,6 +212,13 @@ class BrewsController < ApplicationController
           record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
         }
       ]), *DECIMAL_BREW_FIELDS)
+    end
+
+    def apply_recipe_snapshot
+      return unless @recipe
+
+      @brew.recipe = @recipe
+      @brew.recipe_snapshot = @recipe.profile.deep_dup
     end
 
     def taste_brew_params

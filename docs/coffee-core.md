@@ -18,6 +18,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
 - Curated public brew sharing with optional passwords, selected photos, and public buy/affiliate links.
 - Private recipe profiles created from workspace brews, with editable exact espresso targets and prominent target markers.
+- Recipe-guided espresso logging that shows recipe targets without overwriting normal last-brew defaults.
 - Paginated all-time brew history with compact-card and hero-card views.
 - Paginated all-time workspace activity history for brews, manual inventory adjustments, and equipment events.
 - Private workspace statistics and analytics page.
@@ -31,7 +32,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 ## Explicitly Deferred
 
-- Recipe-guided brew logging overlay, Hero Card recipe ghost, recipe JSON import/export, and public recipe sharing.
+- Recipe JSON import/export and public recipe sharing.
 - Public overview pages for all shared brews.
 - Fediverse publishing for brew shares.
 - Advanced media handling beyond current private/public thumbnails, including object storage.

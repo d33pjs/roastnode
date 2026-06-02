@@ -54,6 +54,40 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
   end
 
+  test "new with recipe shows target guide without overriding brew defaults" do
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["targets"].merge!(
+      "bean_weight_grams" => "19.5",
+      "dose_grams" => "19.2",
+      "beverage_grams" => "48.0",
+      "grind_setting" => "10",
+      "total_time_seconds" => 34
+    )
+    recipe.update!(profile:)
+    sign_in_as(users(:one))
+
+    get new_brew_path(recipe_id: recipe.id)
+
+    assert_response :success
+    assert_select "[data-testid=recipe-target-guide]", text: /Set grinder to 10/
+    assert_select "[data-testid=recipe-target-guide]", text: /Stop at 34s/
+    assert_select "input[type=hidden][name=?][value=?]", "brew[recipe_id]", recipe.id.to_s
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", "12"
+    assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "19.5", count: 0
+    assert_select "input[name=?][value=?]", "brew[dose_grams]", "19.2", count: 0
+    assert_select "input[name=?][value=?]", "brew[beverage_grams]", "48.0", count: 0
+    assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "34", count: 0
+  end
+
+  test "new with cross workspace recipe is not found" do
+    sign_in_as(users(:one))
+
+    get new_brew_path(recipe_id: recipes(:other_workspace_recipe).id)
+
+    assert_response :not_found
+  end
+
   test "new does not offer archived equipment" do
     archived_grinder = equipment(:household_grinder)
     archived_machine = equipment(:household_machine)
@@ -422,6 +456,49 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 201.5.to_d, bean.reload.remaining_grams
   end
 
+  test "create with recipe stores recipe reference and brew time snapshot" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    recipe = recipes(:household_recipe)
+
+    assert_difference -> { workspaces(:household).brews.count }, 1 do
+      post brews_path, params: {
+        brew: {
+          recipe_id: recipe.id,
+          bean_id: bean.id,
+          grinder_id: equipment(:household_grinder).id,
+          machine_id: equipment(:household_machine).id,
+          bean_weight_grams: "18.5",
+          dose_grams: "18.2",
+          beverage_grams: "42",
+          total_time_seconds: "31",
+          taste_balance: "neutral"
+        }
+      }
+    end
+
+    brew = workspaces(:household).brews.order(:created_at).last
+    assert_redirected_to brew_path(brew)
+    assert_equal recipe, brew.recipe
+    assert_equal recipe.profile, brew.recipe_snapshot
+    assert_equal "House Blend reference", brew.recipe_snapshot["title"]
+  end
+
+  test "create with cross workspace recipe is not found" do
+    sign_in_as(users(:one))
+
+    post brews_path, params: {
+      brew: {
+        recipe_id: recipes(:other_workspace_recipe).id,
+        bean_id: beans(:open_household).id,
+        bean_weight_grams: "18",
+        taste_balance: "neutral"
+      }
+    }
+
+    assert_response :not_found
+  end
+
   test "show renders private photos through scoped media route" do
     sign_in_as(users(:one))
     attachment = attach_photo(brews(:morning_espresso))
@@ -536,6 +613,29 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-detail-machine] a[href=?]", equipment_path(brew.machine), text: brew.machine.name
     assert_select "a[data-testid=brew-detail-tool][href=?]", preparation_tool_path(preparation_tools(:wdt)), text: "WDT"
     assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
+  end
+
+  test "show renders hero ghost from brew time recipe snapshot" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.update!(
+      recipe: recipes(:household_recipe),
+      recipe_snapshot: recipes(:household_recipe).profile.deep_merge(
+        "targets" => {
+          "beverage_grams" => "42.0",
+          "total_time_seconds" => 30,
+          "preinfusion_seconds" => 6,
+          "first_drip_seconds" => 9
+        }
+      )
+    )
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-recipe-ghost]"
+    assert_select "[data-testid=brew-recipe-ghost-total-time][x1]"
+    assert_select "[data-testid=brew-recipe-ghost-label]", text: /Recipe target/
   end
 
   test "show formats brew card numbers and timestamps from user profile preferences" do

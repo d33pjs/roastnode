@@ -19,6 +19,10 @@
     </div>
   <% end %>
 
+  <% if brew.recipe_id.present? %>
+    <%= form.hidden_field :recipe_id, value: brew.recipe_id %>
+  <% end %>
+
   <% if draft_storage_key.present? %>
     <div data-brew-draft-target="notice" class="hidden rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-rn-ink">
       <div class="flex flex-wrap items-center justify-between gap-3">

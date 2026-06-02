@@ -458,6 +458,7 @@ en:
       preinfusion: "Preinfusion"
       rating: "Rating"
       rating_beans: "Rating %{rating} of %{maximum} beans"
+      recipe_target_label: "Recipe target"
       ratio: "Ratio"
       ratio_time: "in %{time}"
       ratio_with_time: "1:%{ratio} in %{time}"
