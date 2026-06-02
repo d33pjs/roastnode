@@ -1,0 +1,39 @@
+household_recipe:
+  workspace: household
+  created_by: one
+  source_brew: morning_espresso
+  title: House Blend reference
+  method: espresso
+  profile:
+    title: House Blend reference
+    method: espresso
+    targets:
+      bean_weight_grams: "18.0"
+      ground_weight_grams: "18.0"
+      dose_grams: "18.0"
+      beverage_grams: "40.0"
+      grind_setting: "12"
+      brew_temperature_celsius: "93.0"
+      preinfusion_seconds: 5
+      first_drip_seconds: 8
+      total_time_seconds: 28
+    guide:
+      note: Watch for a steady first drip.
+  source_snapshot:
+    brew:
+      id: <%= ActiveRecord::FixtureSet.identify(:morning_espresso) %>
+
+other_workspace_recipe:
+  workspace: other_household
+  created_by: two
+  source_brew: other_workspace_brew
+  title: Other reference
+  method: espresso
+  profile:
+    title: Other reference
+    method: espresso
+    targets:
+      bean_weight_grams: "18.0"
+  source_snapshot:
+    brew:
+      id: <%= ActiveRecord::FixtureSet.identify(:other_workspace_brew) %>

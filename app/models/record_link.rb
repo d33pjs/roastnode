@@ -1,6 +1,6 @@
 class RecordLink < ApplicationRecord
   KINDS = %w[info buy affiliate].freeze
-  LINKABLE_TYPES = %w[Brew Bean Equipment PreparationTool].freeze
+  LINKABLE_TYPES = %w[Brew Bean Equipment PreparationTool Recipe].freeze
   VISIBILITIES = %w[private public].freeze
 
   belongs_to :workspace

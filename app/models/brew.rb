@@ -30,6 +30,7 @@ class Brew < ApplicationRecord
   belongs_to :bean
   belongs_to :grinder, class_name: "Equipment", optional: true
   belongs_to :machine, class_name: "Equipment", optional: true
+  belongs_to :recipe, optional: true
 
   has_one :inventory_adjustment, dependent: :restrict_with_exception
   has_one :public_brew_share, dependent: :destroy
@@ -51,6 +52,7 @@ class Brew < ApplicationRecord
   validate :bean_belongs_to_workspace
   validate :equipment_belongs_to_workspace
   validate :equipment_matches_expected_kind
+  validate :recipe_belongs_to_workspace
 
   def snapshot_preparation_tools!(tools)
     brew_preparation_tools.destroy_all
@@ -156,5 +158,11 @@ class Brew < ApplicationRecord
     def equipment_matches_expected_kind
       errors.add(:grinder, "must be a grinder") if grinder.present? && !grinder.grinder?
       errors.add(:machine, "must be a machine") if machine.present? && !machine.machine?
+    end
+
+    def recipe_belongs_to_workspace
+      return if recipe.blank? || workspace.blank? || recipe.workspace_id == workspace_id
+
+      errors.add(:recipe, "must belong to the workspace")
     end
 end

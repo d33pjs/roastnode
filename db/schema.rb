@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_02_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -129,6 +129,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_090000) do
     t.text "public_note"
     t.integer "rating"
     t.jsonb "raw_import_data", default: {}, null: false
+    t.bigint "recipe_id"
+    t.jsonb "recipe_snapshot", default: {}, null: false
     t.string "retention_marker", default: "unknown", null: false
     t.string "taste_balance", default: "unknown", null: false
     t.integer "total_time_seconds"
@@ -140,6 +142,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_090000) do
     t.index ["grinder_id"], name: "index_brews_on_grinder_id"
     t.index ["machine_id"], name: "index_brews_on_machine_id"
     t.index ["primary_photo_attachment_id"], name: "index_brews_on_primary_photo_attachment_id"
+    t.index ["recipe_id"], name: "index_brews_on_recipe_id"
     t.index ["user_id"], name: "index_brews_on_user_id"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_brews_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
@@ -348,6 +351,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_090000) do
     t.index ["workspace_id"], name: "index_public_brew_shares_on_workspace_id"
   end
 
+  create_table "public_recipe_shares", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.boolean "enabled", default: false, null: false
+    t.string "password_digest"
+    t.bigint "recipe_id", null: false
+    t.jsonb "snapshot", default: {}, null: false
+    t.string "title"
+    t.string "token", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["created_by_id"], name: "index_public_recipe_shares_on_created_by_id"
+    t.index ["recipe_id"], name: "index_public_recipe_shares_on_recipe_id", unique: true
+    t.index ["token"], name: "index_public_recipe_shares_on_token", unique: true
+    t.index ["token_digest"], name: "index_public_recipe_shares_on_token_digest", unique: true
+    t.index ["updated_by_id"], name: "index_public_recipe_shares_on_updated_by_id"
+    t.index ["workspace_id", "enabled"], name: "index_public_recipe_shares_on_workspace_id_and_enabled"
+    t.index ["workspace_id"], name: "index_public_recipe_shares_on_workspace_id"
+  end
+
+  create_table "recipes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id", null: false
+    t.string "method", default: "espresso", null: false
+    t.jsonb "profile", default: {}, null: false
+    t.bigint "source_brew_id"
+    t.jsonb "source_snapshot", default: {}, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["created_by_id"], name: "index_recipes_on_created_by_id"
+    t.index ["source_brew_id"], name: "index_recipes_on_source_brew_id"
+    t.index ["workspace_id", "method", "created_at"], name: "index_recipes_on_workspace_id_and_method_and_created_at"
+    t.index ["workspace_id"], name: "index_recipes_on_workspace_id"
+  end
+
   create_table "record_links", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "kind", default: "info", null: false
@@ -431,6 +472,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_090000) do
   add_foreign_key "brews", "data_imports"
   add_foreign_key "brews", "equipment", column: "grinder_id"
   add_foreign_key "brews", "equipment", column: "machine_id"
+  add_foreign_key "brews", "recipes"
   add_foreign_key "brews", "users"
   add_foreign_key "brews", "workspaces"
   add_foreign_key "data_imports", "users"
@@ -458,6 +500,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_090000) do
   add_foreign_key "public_brew_shares", "users", column: "created_by_id"
   add_foreign_key "public_brew_shares", "users", column: "updated_by_id"
   add_foreign_key "public_brew_shares", "workspaces"
+  add_foreign_key "public_recipe_shares", "recipes"
+  add_foreign_key "public_recipe_shares", "users", column: "created_by_id"
+  add_foreign_key "public_recipe_shares", "users", column: "updated_by_id"
+  add_foreign_key "public_recipe_shares", "workspaces"
+  add_foreign_key "recipes", "brews", column: "source_brew_id"
+  add_foreign_key "recipes", "users", column: "created_by_id"
+  add_foreign_key "recipes", "workspaces"
   add_foreign_key "record_links", "workspaces"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "workspaces", column: "active_workspace_id"

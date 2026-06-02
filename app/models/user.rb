@@ -49,6 +49,7 @@ class User < ApplicationRecord
   has_many :brews, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception
   has_many :equipment_events, dependent: :restrict_with_exception
+  has_many :recipes, foreign_key: :created_by_id, dependent: :restrict_with_exception, inverse_of: :created_by
   has_one_attached :avatar
   has_one_attached :public_banner
 

@@ -17,8 +17,10 @@ class Workspace < ApplicationRecord
   has_many :inventory_adjustments, dependent: :destroy
   has_many :equipment_events, dependent: :destroy
   has_many :preparation_tools, dependent: :destroy
+  has_many :recipes, dependent: :destroy
   has_many :record_links, dependent: :destroy
   has_many :public_brew_shares, dependent: :destroy
+  has_many :public_recipe_shares, dependent: :destroy
   has_one_attached :logo
   has_one_attached :banner
 
