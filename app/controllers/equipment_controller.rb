@@ -96,7 +96,7 @@ class EquipmentController < ApplicationController
     end
 
     def equipment_params
-      attributes = params.expect(equipment: [
+      params.expect(equipment: [
         :name,
         :kind,
         :model,
@@ -107,19 +107,10 @@ class EquipmentController < ApplicationController
           record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
         }
       ])
-      reject_blank_record_link_attributes(attributes)
     end
 
     def prepare_record_links(record)
       blank_rows = 3 - record.record_links.reject(&:marked_for_destruction?).size
       record.build_blank_record_links(blank_rows) if blank_rows.positive?
-    end
-
-    def reject_blank_record_link_attributes(attributes)
-      attributes[:record_links_attributes]&.delete_if do |_index, link_attributes|
-        link_attributes[:label].blank? && link_attributes["label"].blank? &&
-          link_attributes[:url].blank? && link_attributes["url"].blank?
-      end
-      attributes
     end
 end

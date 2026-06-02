@@ -177,7 +177,7 @@ class BrewsController < ApplicationController
     end
 
     def brew_params
-      attributes = normalize_decimal_attributes(params.expect(brew: [
+      normalize_decimal_attributes(params.expect(brew: [
         :bean_id,
         :grinder_id,
         :machine_id,
@@ -202,7 +202,6 @@ class BrewsController < ApplicationController
           record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
         }
       ]), *DECIMAL_BREW_FIELDS)
-      reject_blank_record_link_attributes(attributes)
     end
 
     def taste_brew_params
@@ -212,14 +211,6 @@ class BrewsController < ApplicationController
     def prepare_record_links(record)
       blank_rows = 3 - record.record_links.reject(&:marked_for_destruction?).size
       record.build_blank_record_links(blank_rows) if blank_rows.positive?
-    end
-
-    def reject_blank_record_link_attributes(attributes)
-      attributes[:record_links_attributes]&.delete_if do |_index, link_attributes|
-        link_attributes[:label].blank? && link_attributes["label"].blank? &&
-          link_attributes[:url].blank? && link_attributes["url"].blank?
-      end
-      attributes
     end
 
     def brew_draft_storage_key
