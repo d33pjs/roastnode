@@ -488,6 +488,9 @@ en:
       destroyed: "Public share removed."
     edit:
       back: "Back to brew"
+      public_url: "Public URL"
+      remove: "Remove public share"
+      remove_confirmation: "Remove this public share? The URL will stop working."
       title: "Edit public share"
       update: "Save public share"
     form:
@@ -525,6 +528,9 @@ en:
       destroyed: "Public recipe share removed."
     edit:
       back: "Back to recipe"
+      public_url: "Public URL"
+      remove: "Remove public recipe share"
+      remove_confirmation: "Remove this public recipe share? The URL will stop working."
       title: "Edit public recipe share"
       update: "Save public recipe share"
     form:
@@ -574,9 +580,11 @@ en:
     create:
       created: "Inventory adjusted."
     form:
+      add: "+ Add beans"
       delta_grams: "Adjustment (g)"
       note: "Note"
       occurred_at: "Occurred at"
+      remove: "- Remove beans"
     new:
       back: "Back to bean"
       create: "Save adjustment"

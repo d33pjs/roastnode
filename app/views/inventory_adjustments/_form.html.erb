@@ -1,4 +1,4 @@
-<%= form_with model: [ bean, inventory_adjustment ], class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+<%= form_with model: [ bean, inventory_adjustment ], data: { controller: "signed-decimal" }, class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
   <% if inventory_adjustment.errors.any? %>
     <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
       <%= inventory_adjustment.errors.full_messages.to_sentence %>
@@ -7,7 +7,11 @@
 
   <div>
     <%= form.label :delta_grams, t("inventory_adjustments.form.delta_grams"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.text_field :delta_grams, inputmode: "decimal", autofocus: true, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    <%= form.text_field :delta_grams, inputmode: "text", autofocus: true, data: { signed_decimal_target: "input" }, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    <div class="mt-2 grid grid-cols-2 gap-2">
+      <%= button_tag t("inventory_adjustments.form.add"), type: "button", data: { action: "signed-decimal#markAdd" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+      <%= button_tag t("inventory_adjustments.form.remove"), type: "button", data: { action: "signed-decimal#markRemove" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+    </div>
   </div>
 
   <div>

@@ -10,7 +10,10 @@ class InventoryAdjustmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", I18n.t("inventory_adjustments.new.title")
     assert_select "form[action=?]", bean_inventory_adjustments_path(bean)
-    assert_select "input[type=text][inputmode=decimal][name=?]", "inventory_adjustment[delta_grams]"
+    assert_select "form[data-controller=?]", "signed-decimal"
+    assert_select "input[type=text][inputmode=text][name=?][data-signed-decimal-target=input]", "inventory_adjustment[delta_grams]"
+    assert_select "button[type=button][data-action=?]", "signed-decimal#markAdd", text: I18n.t("inventory_adjustments.form.add")
+    assert_select "button[type=button][data-action=?]", "signed-decimal#markRemove", text: I18n.t("inventory_adjustments.form.remove")
     assert_select "input[name=?]", "inventory_adjustment[occurred_at]"
     assert_select "textarea[name=?]", "inventory_adjustment[note]"
   end

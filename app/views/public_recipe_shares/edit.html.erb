@@ -6,8 +6,9 @@
     </div>
 
     <% if @share.enabled? %>
-      <div class="mt-5 rounded-2xl border border-rn-line bg-rn-surface p-4 text-sm font-bold text-rn-muted shadow-sm">
-        <%= link_to public_recipe_page_url(@share.token), public_recipe_page_path(@share.token), target: "_blank", rel: "noopener", class: "text-rn-ink underline decoration-rn-line underline-offset-4 hover:decoration-rn-ink" %>
+      <div data-testid="public-recipe-share-url" class="mt-5 rounded-2xl border border-rn-line bg-rn-surface p-4 text-sm font-bold text-rn-muted shadow-sm">
+        <p class="mb-2 text-xs font-extrabold uppercase tracking-[0.08em]"><%= t(".public_url") %></p>
+        <%= link_to public_recipe_page_url(@share.token), public_recipe_page_path(@share.token), target: "_blank", rel: "noopener", class: "break-all text-rn-ink underline decoration-rn-line underline-offset-4 hover:decoration-rn-ink" %>
       </div>
     <% end %>
 
@@ -17,5 +18,19 @@
       available_photos: @available_photos,
       selected_photo_attachment_ids: @selected_photo_attachment_ids,
       submit_label: t(".update") %>
+
+    <section class="mt-6 grid gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 shadow-sm sm:p-5">
+      <h2 class="text-lg font-black text-red-950"><%= t(".remove") %></h2>
+      <%= button_to t(".remove"),
+        recipe_public_recipe_share_path(@recipe),
+        method: :delete,
+        form: {
+          data: {
+            testid: "public-recipe-share-destroy-form",
+            turbo_confirm: t(".remove_confirmation")
+          }
+        },
+        class: "rounded-2xl bg-red-700 px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:bg-red-800" %>
+    </section>
   </section>
 </main>

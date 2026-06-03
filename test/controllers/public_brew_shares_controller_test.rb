@@ -123,6 +123,23 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "public_brew_share[title]", share.title
   end
 
+  test "edit shows enabled public URL and remove action" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    brew = create_brew_for(user)
+    share = create_share_for(brew, user:, enabled: true)
+    sign_in_as(user)
+
+    get edit_brew_public_brew_share_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-share-url] a[href=?]", public_brew_page_path(share.token), text: public_brew_page_url(share.token)
+    assert_select "form[data-testid=public-brew-share-destroy-form][action=?]", brew_public_brew_share_path(brew)
+    assert_select "form[data-testid=public-brew-share-destroy-form] input[name=_method][value=delete]"
+    assert_select "button", text: I18n.t("public_brew_shares.edit.remove")
+    assert_select "[data-turbo-confirm=?]", I18n.t("public_brew_shares.edit.remove_confirmation")
+  end
+
   test "viewer cannot manage public shares" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)

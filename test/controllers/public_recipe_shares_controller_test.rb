@@ -121,6 +121,21 @@ class PublicRecipeSharesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "public_recipe_share[title]", share.title
   end
 
+  test "edit shows enabled public URL and remove action" do
+    recipe = recipes(:household_recipe)
+    share = create_share_for(recipe, enabled: true)
+    sign_in_as(users(:one))
+
+    get edit_recipe_public_recipe_share_path(recipe)
+
+    assert_response :success
+    assert_select "[data-testid=public-recipe-share-url] a[href=?]", public_recipe_page_path(share.token), text: public_recipe_page_url(share.token)
+    assert_select "form[data-testid=public-recipe-share-destroy-form][action=?]", recipe_public_recipe_share_path(recipe)
+    assert_select "form[data-testid=public-recipe-share-destroy-form] input[name=_method][value=delete]"
+    assert_select "button", text: I18n.t("public_recipe_shares.edit.remove")
+    assert_select "[data-turbo-confirm=?]", I18n.t("public_recipe_shares.edit.remove_confirmation")
+  end
+
   test "viewer cannot manage public recipe shares" do
     memberships(:member).update!(role: "viewer")
     users(:two).update!(active_workspace: workspaces(:household))
