@@ -26,6 +26,54 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "/media_attachments", response.body
   end
 
+  test "successful public page render records a full ip page view" do
+    share = create_share(enabled: true)
+
+    assert_difference -> { PublicBrewShareView.count }, 1 do
+      get public_brew_page_path(share.token), headers: {
+        "REMOTE_ADDR" => "198.51.100.24",
+        "HTTP_USER_AGENT" => "Roastnode test browser"
+      }
+    end
+
+    assert_response :success
+    view = share.public_brew_share_views.last
+    assert_equal "198.51.100.24", view.ip_address
+    assert_equal "Roastnode test browser", view.user_agent
+    assert_equal 1, share.reload.views_count
+  end
+
+  test "password gate does not count until the unlocked page is rendered" do
+    share = create_share(enabled: true, password: "espresso")
+
+    assert_no_difference -> { PublicBrewShareView.count } do
+      get public_brew_page_path(share.token), headers: { "REMOTE_ADDR" => "198.51.100.25" }
+    end
+
+    post unlock_public_brew_page_path(share.token), params: { password: "espresso" }
+    assert_redirected_to public_brew_page_path(share.token)
+
+    assert_difference -> { PublicBrewShareView.count }, 1 do
+      get public_brew_page_path(share.token), headers: { "REMOTE_ADDR" => "198.51.100.25" }
+    end
+
+    assert_equal "198.51.100.25", share.public_brew_share_views.last.ip_address
+  end
+
+  test "disabled and unknown shares do not record page views" do
+    share = create_share(enabled: false)
+
+    assert_no_difference -> { PublicBrewShareView.count } do
+      get public_brew_page_path(share.token), headers: { "REMOTE_ADDR" => "198.51.100.26" }
+    end
+    assert_response :not_found
+
+    assert_no_difference -> { PublicBrewShareView.count } do
+      get public_brew_page_path("missing-token"), headers: { "REMOTE_ADDR" => "198.51.100.27" }
+    end
+    assert_response :not_found
+  end
+
   test "public page renders media handles without attachment ids or private media routes" do
     brew = brews(:morning_espresso)
     photo = attach_photo(brew)

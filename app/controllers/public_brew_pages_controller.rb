@@ -7,6 +7,7 @@ class PublicBrewPagesController < ApplicationController
     return render :password if password_required?
 
     load_snapshot
+    record_page_view
   end
 
   def unlock
@@ -28,6 +29,10 @@ class PublicBrewPagesController < ApplicationController
 
     def load_snapshot
       @snapshot = @share.snapshot
+    end
+
+    def record_page_view
+      PublicBrewShareViewRecorder.new(share: @share, request:).call
     end
 
     def password_required?

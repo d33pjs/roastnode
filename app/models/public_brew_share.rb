@@ -9,6 +9,8 @@ class PublicBrewShare < ApplicationRecord
   belongs_to :created_by, class_name: "User"
   belongs_to :updated_by, class_name: "User"
 
+  has_many :public_brew_share_views, dependent: :delete_all
+
   before_validation :set_token, on: :create
   before_validation :set_token_digest
   before_validation :set_workspace_from_brew

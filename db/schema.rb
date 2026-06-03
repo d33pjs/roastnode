@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_03_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_03_121100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -328,6 +328,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_120000) do
     t.index ["workspace_id"], name: "index_preparation_tools_on_workspace_id"
   end
 
+  create_table "public_brew_share_views", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "ip_address", null: false
+    t.bigint "public_brew_share_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.datetime "viewed_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["public_brew_share_id", "viewed_at", "id"], name: "idx_public_brew_share_views_recent"
+    t.index ["public_brew_share_id"], name: "index_public_brew_share_views_on_public_brew_share_id"
+    t.index ["workspace_id"], name: "index_public_brew_share_views_on_workspace_id"
+  end
+
   create_table "public_brew_shares", force: :cascade do |t|
     t.bigint "brew_id", null: false
     t.datetime "created_at", null: false
@@ -341,6 +354,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_120000) do
     t.string "token_digest", null: false
     t.datetime "updated_at", null: false
     t.bigint "updated_by_id", null: false
+    t.integer "views_count", default: 0, null: false
     t.bigint "workspace_id", null: false
     t.index ["brew_id"], name: "index_public_brew_shares_on_brew_id", unique: true
     t.index ["created_by_id"], name: "index_public_brew_shares_on_created_by_id"
@@ -499,6 +513,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_03_120000) do
   add_foreign_key "passkey_credentials", "users"
   add_foreign_key "preparation_tools", "data_imports"
   add_foreign_key "preparation_tools", "workspaces"
+  add_foreign_key "public_brew_share_views", "public_brew_shares"
+  add_foreign_key "public_brew_share_views", "workspaces"
   add_foreign_key "public_brew_shares", "brews"
   add_foreign_key "public_brew_shares", "users", column: "created_by_id"
   add_foreign_key "public_brew_shares", "users", column: "updated_by_id"
