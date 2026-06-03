@@ -15,6 +15,48 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=back-link][href=?]", dashboard_path
   end
 
+  test "owner sees public share management with full ip view log" do
+    share = create_public_brew_share_for(brews(:morning_espresso), enabled: true)
+    share.public_brew_share_views.create!(
+      ip_address: "198.51.100.31",
+      user_agent: "Settings test browser",
+      viewed_at: Time.zone.local(2026, 6, 3, 11, 0, 0)
+    )
+    sign_in_as(users(:one))
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "[data-testid=workspace-public-shares]"
+    assert_select "[data-testid=?]", "workspace-public-share-#{share.id}", text: /Shared shot/
+    assert_select "a[href=?]", public_brew_page_path(share.token), text: public_brew_page_url(share.token)
+    assert_select "a[href=?]", edit_brew_public_brew_share_path(share.brew)
+    assert_select "form[action=?]", brew_public_brew_share_path(share.brew)
+    assert_select "[data-testid=?]", "public-share-view-count-#{share.id}", text: "1"
+    assert_select "[data-testid=?]", "public-share-recent-ip-#{share.id}", text: /198\.51\.100\.31/
+  end
+
+  test "workspace public share management excludes other workspaces" do
+    other_share = create_public_brew_share_for(brews(:other_workspace_brew), enabled: true, user: users(:two))
+    sign_in_as(users(:one))
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "[data-testid=?]", "workspace-public-share-#{other_share.id}", count: 0
+  end
+
+  test "member cannot see public share management full ip data" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    create_public_brew_share_for(brews(:morning_espresso), enabled: true)
+    sign_in_as(user)
+
+    get edit_workspace_path
+
+    assert_redirected_to root_path
+  end
+
   test "workspace edit previews existing identity media" do
     workspace = workspaces(:household)
     logo = attach_named_photo(workspace, :logo, filename: "workspace-logo.jpg")
@@ -204,4 +246,21 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name=confirmation]", count: 0
   end
+
+  private
+    def create_public_brew_share_for(brew, enabled:, user: users(:one), title: "Shared shot")
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: user,
+        updated_by: user,
+        enabled:,
+        title:,
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:,
+          title:,
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
 end

@@ -214,6 +214,21 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to brew_path(brew)
   end
 
+  test "owner can destroy public share from workspace settings and return there" do
+    writer = users(:two)
+    writer.update!(active_workspace: workspaces(:household))
+    brew = create_brew_for(writer)
+    share = create_share_for(brew, user: writer, enabled: true)
+    sign_in_as(users(:one))
+
+    assert_difference -> { PublicBrewShare.count }, -1 do
+      delete brew_public_brew_share_path(brew), params: { return_to: "workspace" }
+    end
+
+    assert_redirected_to edit_workspace_path(anchor: "public-shares")
+    assert_not PublicBrewShare.exists?(share.id)
+  end
+
   test "writer cannot destroy another writers public share" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

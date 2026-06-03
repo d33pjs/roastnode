@@ -30,9 +30,10 @@ class PublicBrewSharesController < ApplicationController
   end
 
   def destroy
+    redirect_target = params[:return_to] == "workspace" ? edit_workspace_path(anchor: "public-shares") : @brew
     @share.destroy!
 
-    redirect_to @brew, notice: t(".destroyed")
+    redirect_to redirect_target, notice: t(".destroyed")
   end
 
   private

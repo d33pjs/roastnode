@@ -5,6 +5,7 @@ class WorkspacesController < ApplicationController
 
   def edit
     @workspace = current_workspace
+    load_public_brew_shares
   end
 
   def update
@@ -14,6 +15,7 @@ class WorkspacesController < ApplicationController
       PublicBrewShareRefresher.refresh_for(@workspace)
       redirect_to dashboard_path, notice: t(".updated")
     else
+      load_public_brew_shares
       render :edit, status: :unprocessable_entity
     end
   end
@@ -63,5 +65,12 @@ class WorkspacesController < ApplicationController
 
     def workspace_params
       params.require(:workspace).permit(:name, :default_currency, :logo, :banner)
+    end
+
+    def load_public_brew_shares
+      @public_brew_shares = current_workspace
+        .public_brew_shares
+        .includes(:public_brew_share_views, brew: [ :bean, :user ])
+        .order(updated_at: :desc, created_at: :desc)
     end
 end

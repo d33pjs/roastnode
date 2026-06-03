@@ -1337,6 +1337,23 @@ en:
       name: "Household name"
       save: "Save workspace"
       title: "Workspace settings"
+    public_brew_shares:
+      body: "Review public brew URLs, visitor counts, and recent full-IP views."
+      brew: "Brew: %{bean}"
+      disabled: "Disabled"
+      edit: "Edit"
+      empty: "No public brew shares yet."
+      enabled: "Enabled"
+      latest_ip: "Latest IP"
+      latest_view: "Latest view"
+      no_views: "No views"
+      open: "Open"
+      protected: "Protected"
+      remove: "Remove"
+      remove_confirmation: "Remove this public share? The URL will stop working."
+      title: "Public shares"
+      untitled: "Untitled share"
+      views: "Views"
     switch:
       switched: "Switched to %{name}."
     transfer_ownership:
