@@ -4,7 +4,7 @@
 <% targets = recipe["targets"] || {} %>
 <% guide = recipe["guide"] || {} %>
 <% source_brew = recipe["source_brew"] || {} %>
-<% ingredients = Array(recipe["ingredients"]).select { |item| item["name"].present? } %>
+<% ingredients = Array(recipe["ingredients"]).select { |item| item.is_a?(Hash) && item["name"].present? } %>
 <% finish_note = recipe["finish_note"].presence %>
 <% bean = snapshot["bean"] || {} %>
 <% unknown = public_recipe_unknown_label %>

@@ -89,6 +89,24 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /#{I18n.t("public_recipe_pages.show.unknown")}/
   end
 
+  test "stale snapshot ignores scalar public ingredients" do
+    share = create_share(enabled: true)
+    share.update!(snapshot: {
+      "title" => "Scalar ingredients recipe",
+      "recipe" => {
+        "targets" => {},
+        "source_brew" => {},
+        "ingredients" => [ nil, "matcha", 200, { "name" => "salt" } ]
+      }
+    })
+
+    get public_recipe_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-recipe-finish]", text: /salt/
+    assert_select "[data-testid=public-recipe-finish]", text: /matcha/, count: 0
+  end
+
   private
     def create_share(enabled:, password: nil)
       recipe = recipes(:household_recipe)

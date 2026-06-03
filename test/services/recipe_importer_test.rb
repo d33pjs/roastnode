@@ -44,6 +44,70 @@ class RecipeImporterTest < ActiveSupport::TestCase
     assert_not recipe.photos.attached?
   end
 
+  test "scrubs media internals from imported profile and source snapshot" do
+    base_payload = export_payload
+    payload = export_payload(
+      "profile" => base_payload.fetch("recipe").fetch("profile").merge(
+        "bean" => {
+          "display_name" => "Safe bean",
+          "photo_attachment_id" => 123,
+          "photo" => {
+            "filename" => "private-bean.jpg",
+            "url" => "/rails/active_storage/blobs/private-bean.jpg"
+          },
+          "links" => [
+            { "label" => "Bean notes", "url" => "https://example.test/bean" }
+          ],
+          "selected_photo_attachment_ids" => [ 123 ]
+        },
+        "guide" => base_payload.fetch("recipe").fetch("profile").fetch("guide").merge(
+          "attachment_id" => 456
+        )
+      ),
+      "source_snapshot" => base_payload.fetch("recipe").fetch("source_snapshot").merge(
+        "source_brew" => {
+          "occurred_at" => "2026-06-01T08:00:00Z",
+          "photos" => [
+            {
+              "attachment_id" => 789,
+              "filename" => "private-brew.jpg",
+              "url" => "/media_attachments/789"
+            }
+          ],
+          "links" => [
+            { "label" => "Source notes", "url" => "https://example.test/source" }
+          ]
+        },
+        "equipment" => {
+          "grinder" => {
+            "name" => "Safe grinder",
+            "blob_id" => 987,
+            "signed_id" => "signed-private-media",
+            "media_url" => "/rails/active_storage/representations/private-grinder.jpg"
+          }
+        }
+      )
+    )
+
+    recipe = RecipeImporter.new(workspace: workspaces(:household), user: users(:one), json: JSON.generate(payload)).call
+
+    assert_equal "Safe bean", recipe.profile.dig("bean", "display_name")
+    assert_equal "https://example.test/bean", recipe.profile.dig("bean", "links", 0, "url")
+    assert_equal "Safe grinder", recipe.source_snapshot.dig("equipment", "grinder", "name")
+    assert_equal "https://example.test/source", recipe.source_snapshot.dig("source_brew", "links", 0, "url")
+
+    json = JSON.generate("profile" => recipe.profile, "source_snapshot" => recipe.source_snapshot)
+    assert_not_includes json, "attachment_id"
+    assert_not_includes json, "selected_photo_attachment_ids"
+    assert_not_includes json, "blob_id"
+    assert_not_includes json, "signed_id"
+    assert_not_includes json, "filename"
+    assert_not_includes json, "private-bean.jpg"
+    assert_not_includes json, "private-brew.jpg"
+    assert_not_includes json, "/rails/active_storage"
+    assert_not_includes json, "/media_attachments"
+  end
+
   test "rejects malformed json" do
     error = assert_raises(RecipeImporter::ImportError) do
       RecipeImporter.new(workspace: workspaces(:household), user: users(:one), json: "{").call

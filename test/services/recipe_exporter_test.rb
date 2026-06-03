@@ -61,4 +61,67 @@ class RecipeExporterTest < ActiveSupport::TestCase
     assert_not_includes json, "/rails/active_storage"
     assert_not_includes json, "photo.jpg"
   end
+
+  test "scrubs media internals from polluted profile and source snapshot" do
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["bean"] = {
+      "display_name" => "Safe bean",
+      "photo_attachment_id" => 123,
+      "photo" => {
+        "filename" => "private-bean.jpg",
+        "url" => "/rails/active_storage/blobs/private-bean.jpg"
+      },
+      "links" => [
+        { "label" => "Bean notes", "url" => "https://example.test/bean" }
+      ],
+      "selected_photo_attachment_ids" => [ 123 ]
+    }
+    profile["guide"] ||= {}
+    profile["guide"]["note"] = "Keep the crema glossy."
+    profile["guide"]["attachment_id"] = 456
+    source_snapshot = recipe.source_snapshot.deep_dup
+    source_snapshot["source_brew"] ||= {}
+    source_snapshot["source_brew"]["public_note"] = "Public source note."
+    source_snapshot["source_brew"]["photos"] = [
+      {
+        "attachment_id" => 789,
+        "filename" => "private-brew.jpg",
+        "url" => "/media_attachments/789"
+      }
+    ]
+    source_snapshot["source_brew"]["links"] = [
+      { "label" => "Source notes", "url" => "https://example.test/source" }
+    ]
+    source_snapshot["equipment"] = {
+      "grinder" => {
+        "name" => "Safe grinder",
+        "blob_id" => 987,
+        "signed_id" => "signed-private-media",
+        "media_url" => "/rails/active_storage/representations/private-grinder.jpg"
+      }
+    }
+    recipe.update!(profile:, source_snapshot:)
+
+    payload = RecipeExporter.new(recipe).call
+
+    exported_recipe = payload.fetch("recipe")
+    assert_equal "Safe bean", exported_recipe.dig("profile", "bean", "display_name")
+    assert_equal "Keep the crema glossy.", exported_recipe.dig("profile", "guide", "note")
+    assert_equal "https://example.test/bean", exported_recipe.dig("profile", "bean", "links", 0, "url")
+    assert_equal "Public source note.", exported_recipe.dig("source_snapshot", "source_brew", "public_note")
+    assert_equal "https://example.test/source", exported_recipe.dig("source_snapshot", "source_brew", "links", 0, "url")
+    assert_equal "Safe grinder", exported_recipe.dig("source_snapshot", "equipment", "grinder", "name")
+
+    json = JSON.generate(payload)
+    assert_not_includes json, "attachment_id"
+    assert_not_includes json, "selected_photo_attachment_ids"
+    assert_not_includes json, "blob_id"
+    assert_not_includes json, "signed_id"
+    assert_not_includes json, "filename"
+    assert_not_includes json, "private-bean.jpg"
+    assert_not_includes json, "private-brew.jpg"
+    assert_not_includes json, "/rails/active_storage"
+    assert_not_includes json, "/media_attachments"
+  end
 end

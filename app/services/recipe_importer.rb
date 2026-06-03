@@ -20,6 +20,7 @@ class RecipeImporter
     validate_payload!(payload)
     recipe_payload = payload.fetch("recipe")
     profile = sanitize_profile(recipe_payload.fetch("profile"))
+    source_snapshot = RecipeExporter.scrub_media_internals(recipe_payload.fetch("source_snapshot"))
 
     Recipe.transaction do
       recipe = workspace.recipes.create!(
@@ -27,7 +28,7 @@ class RecipeImporter
         title: recipe_payload.fetch("title"),
         method: recipe_payload.fetch("method"),
         profile:,
-        source_snapshot: recipe_payload.fetch("source_snapshot"),
+        source_snapshot:,
         source_brew: nil
       )
       create_links!(recipe, recipe_payload.fetch("links", []))
@@ -79,7 +80,7 @@ class RecipeImporter
     end
 
     def sanitize_profile(profile)
-      sanitized = profile.deep_dup
+      sanitized = RecipeExporter.scrub_media_internals(profile.deep_dup)
       sanitized["ingredients"] = sanitize_ingredients(sanitized["ingredients"])
       sanitized["finish_note"] = sanitized["finish_note"].to_s.strip.first(FINISH_NOTE_MAX_LENGTH).presence
       sanitized.compact
