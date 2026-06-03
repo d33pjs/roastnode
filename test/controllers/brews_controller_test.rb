@@ -730,6 +730,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", edit_brew_path(brews(:morning_espresso)), text: I18n.t("brews.show.edit")
+    assert_select "a[href=?]", new_recipe_path(source_brew_id: brews(:morning_espresso).id), text: I18n.t("brews.show.save_as_recipe")
     assert_select "form[action=?]", brew_path(brews(:morning_espresso))
   end
 
