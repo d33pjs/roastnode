@@ -18,8 +18,9 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - Taste balance as its own compact metric rectangle.
 - Extraction chart with beverage curve, preinfusion marker, first-drip marker when present, total time, and a separate temperature line with a vertical right-edge temperature label.
 - Chart labels use small callouts when they would otherwise collide with plot or guide lines.
-- Brews logged with a recipe snapshot show a faint recipe target ghost in the chart, including recipe timing guides, target beverage/time labels, and a target temperature line when those targets are present.
-- Recipe snapshot targets for dose, yield/time, and grind appear as subtle target sub-values inside the matching metric rectangles.
+- Brews logged with a recipe snapshot show a faint recipe target ghost in the chart, including small target labels for preinfusion, first drip, total time, beverage yield, and temperature when those targets are present.
+- Target temperature lines render above the current temperature line when the target is hotter, and below it when the target is cooler or the current temperature is unknown.
+- Recipe snapshot targets for dose, yield/time, and grind appear as smaller target sub-values inside the matching metric rectangles.
 - The beverage y-axis label rounds above the actual beverage yield, for example `45.2g` displays against a `50g` axis marker.
 - Grinder, machine, and brew preparation tool snapshots in one compact row, with tiny primary equipment photos when available.
 - Hero card internals are intentionally not links. On the dashboard the whole card is wrapped in a single brew-detail link, and nested anchors break browser rendering.

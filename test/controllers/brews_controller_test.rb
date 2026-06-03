@@ -637,13 +637,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
     brew.update!(
+      brew_temperature_celsius: 90.0,
       recipe: recipes(:household_recipe),
       recipe_snapshot: recipes(:household_recipe).profile.deep_merge(
         "targets" => {
           "dose_grams" => "18.0",
           "beverage_grams" => "42.0",
           "grind_setting" => "10",
-          "brew_temperature_celsius" => "94.0",
+          "brew_temperature_celsius" => "92.0",
           "total_time_seconds" => 30,
           "preinfusion_seconds" => 6,
           "first_drip_seconds" => 9
@@ -654,16 +655,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
-    assert_select "[data-testid=brew-recipe-target-dose]", "Target 18g"
-    assert_select "[data-testid=brew-recipe-target-yield-time]", "Target 42g / 30s"
-    assert_select "[data-testid=brew-recipe-target-grind]", "Target 10"
+    assert_select "[data-testid=brew-recipe-target-dose].brew-metric-target", "Target 18g"
+    assert_select "[data-testid=brew-recipe-target-yield-time].brew-metric-target", "Target 42g / 30s"
+    assert_select "[data-testid=brew-recipe-target-grind].brew-metric-target", "Target 10"
     assert_select "[data-testid=brew-recipe-ghost]"
     assert_select "[data-testid=brew-recipe-ghost-total-time][x1]"
+    assert_select "[data-testid=brew-recipe-ghost-preinfusion-label]", "6s target"
+    assert_select "[data-testid=brew-recipe-ghost-first-drip-label]", "9s target"
     assert_select "[data-testid=brew-recipe-ghost-total-time-label]", "30s target"
     assert_select "[data-testid=brew-recipe-ghost-beverage-label]", "42g target"
-    assert_select "[data-testid=brew-recipe-ghost-temperature]"
-    assert_select "[data-testid=brew-recipe-ghost-temperature-label]", "94°C target"
-    assert_select "[data-testid=brew-recipe-ghost-label]", text: /Recipe target/
+    assert_select "[data-testid=brew-recipe-ghost-temperature][data-position=above]"
+    assert_select "[data-testid=brew-recipe-ghost-temperature-label]", "92°C target"
+    assert_select "[data-testid=brew-recipe-ghost-label]", count: 0
   end
 
   test "show formats brew card numbers and timestamps from user profile preferences" do

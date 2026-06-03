@@ -64,7 +64,7 @@
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.dose") %></p>
           <p data-testid="brew-dose" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_grams(brew.dose_grams) %></p>
           <% if recipe_dose_grams.present? %>
-            <p data-testid="brew-recipe-target-dose" class="brew-metric-subvalue mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-green-300"><%= t("brews.show.recipe_target_value", value: brew_card_grams(recipe_dose_grams)) %></p>
+            <p data-testid="brew-recipe-target-dose" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: brew_card_grams(recipe_dose_grams)) %></p>
           <% end %>
         </div>
         <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
@@ -75,7 +75,7 @@
               <p data-testid="brew-ratio-time" class="brew-metric-subvalue mt-0.5 overflow-hidden text-ellipsis font-semibold text-stone-300"><%= brew_card_ratio_time(brew) %></p>
             <% end %>
             <% if recipe_yield_time.present? %>
-              <p data-testid="brew-recipe-target-yield-time" class="brew-metric-subvalue mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-green-300"><%= t("brews.show.recipe_target_value", value: recipe_yield_time) %></p>
+              <p data-testid="brew-recipe-target-yield-time" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: recipe_yield_time) %></p>
             <% end %>
           </div>
         </div>
@@ -83,7 +83,7 @@
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.grind_setting") %></p>
           <p data-testid="brew-grind" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
           <% if recipe_grind_setting.present? %>
-            <p data-testid="brew-recipe-target-grind" class="brew-metric-subvalue mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-semibold text-green-300"><%= t("brews.show.recipe_target_value", value: recipe_grind_setting) %></p>
+            <p data-testid="brew-recipe-target-grind" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: recipe_grind_setting) %></p>
           <% end %>
         </div>
         <div data-testid="brew-retention-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
@@ -117,6 +117,9 @@
     <% recipe_total_time_x = brew_card_chart_x(recipe_total_seconds, recipe_chart_total_seconds) %>
     <% recipe_preinfusion_x = brew_card_chart_x(recipe_preinfusion_seconds, recipe_chart_total_seconds) %>
     <% recipe_first_drip_x = brew_card_chart_x(recipe_first_drip_seconds, recipe_chart_total_seconds) %>
+    <% recipe_temperature_position = recipe_temperature_celsius.present? && brew.brew_temperature_celsius.present? && recipe_temperature_celsius > brew.brew_temperature_celsius.to_d ? "above" : "below" %>
+    <% recipe_temperature_path = recipe_temperature_position == "above" ? "M44 5 C134 4, 224 4, 314 4 C390 3, 452 4, 500 7" : "M44 18 C134 17, 224 17, 314 17 C390 16, 452 17, 500 20" %>
+    <% recipe_temperature_label_y = recipe_temperature_position == "above" ? 17 : 30 %>
     <svg class="block h-auto w-full" width="560" height="168" viewBox="0 0 560 168" role="img" aria-label="<%= t("brews.show.yield") %>">
       <defs>
         <linearGradient id="<%= chart_id %>" x1="0" x2="0" y1="0" y2="1">
@@ -132,23 +135,24 @@
         <g data-testid="brew-recipe-ghost">
           <path data-testid="brew-recipe-ghost-curve" d="M44 130 C88 131, 124 130, 156 126 C190 119, 218 98, 254 78 C306 50, 370 40, 430 39 C462 39, 486 42, 500 46" fill="none" stroke="#16a34a" stroke-width="4" stroke-linecap="round" stroke-dasharray="10 8" opacity=".32" />
           <% if recipe_beverage_grams.present? %>
-            <text data-testid="brew-recipe-ghost-beverage-label" x="386" y="78" font-size="13" font-weight="800" fill="#15803d" opacity=".62"><%= t("brews.show.recipe_target_chart_value", value: brew_card_grams(recipe_beverage_grams)) %></text>
+            <text data-testid="brew-recipe-ghost-beverage-label" x="386" y="78" font-size="10" font-weight="700" fill="#15803d" opacity=".62"><%= t("brews.show.recipe_target_chart_value", value: brew_card_grams(recipe_beverage_grams)) %></text>
           <% end %>
           <% if recipe_temperature_celsius.present? %>
-            <path data-testid="brew-recipe-ghost-temperature" d="M44 18 C134 17, 224 17, 314 17 C390 16, 452 17, 500 20" fill="none" stroke="#16a34a" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="8 7" opacity=".42" />
-            <text data-testid="brew-recipe-ghost-temperature-label" x="352" y="28" font-size="13" font-weight="800" fill="#15803d" opacity=".68"><%= t("brews.show.recipe_target_chart_value", value: brew_card_temperature(recipe_temperature_celsius)) %></text>
+            <path data-testid="brew-recipe-ghost-temperature" data-position="<%= recipe_temperature_position %>" d="<%= recipe_temperature_path %>" fill="none" stroke="#16a34a" stroke-width="3" stroke-linecap="round" stroke-dasharray="8 7" opacity=".42" />
+            <text data-testid="brew-recipe-ghost-temperature-label" data-position="<%= recipe_temperature_position %>" x="352" y="<%= recipe_temperature_label_y %>" font-size="10" font-weight="700" fill="#15803d" opacity=".68"><%= t("brews.show.recipe_target_chart_value", value: brew_card_temperature(recipe_temperature_celsius)) %></text>
           <% end %>
           <% if recipe_preinfusion_x.present? %>
             <line data-testid="brew-recipe-ghost-preinfusion" x1="<%= recipe_preinfusion_x %>" y1="31" x2="<%= recipe_preinfusion_x %>" y2="134" stroke="#16a34a" stroke-width="2" stroke-dasharray="3 7" opacity=".32" />
+            <text data-testid="brew-recipe-ghost-preinfusion-label" x="<%= [ recipe_preinfusion_x + 6, 446 ].min %>" y="44" font-size="10" font-weight="700" fill="#15803d" opacity=".62"><%= t("brews.show.recipe_target_chart_value", value: brew_card_seconds(recipe_preinfusion_seconds)) %></text>
           <% end %>
           <% if recipe_first_drip_x.present? %>
             <line data-testid="brew-recipe-ghost-first-drip" x1="<%= recipe_first_drip_x %>" y1="31" x2="<%= recipe_first_drip_x %>" y2="134" stroke="#16a34a" stroke-width="2" stroke-dasharray="3 7" opacity=".32" />
+            <text data-testid="brew-recipe-ghost-first-drip-label" x="<%= [ recipe_first_drip_x + 6, 446 ].min %>" y="59" font-size="10" font-weight="700" fill="#15803d" opacity=".62"><%= t("brews.show.recipe_target_chart_value", value: brew_card_seconds(recipe_first_drip_seconds)) %></text>
           <% end %>
           <% if recipe_total_time_x.present? %>
             <line data-testid="brew-recipe-ghost-total-time" x1="<%= recipe_total_time_x %>" y1="31" x2="<%= recipe_total_time_x %>" y2="134" stroke="#16a34a" stroke-width="2.5" stroke-dasharray="8 7" opacity=".34" />
-            <text data-testid="brew-recipe-ghost-total-time-label" x="<%= [ recipe_total_time_x - 72, 48 ].max %>" y="121" font-size="13" font-weight="800" fill="#15803d" opacity=".7"><%= t("brews.show.recipe_target_chart_value", value: brew_card_seconds(recipe_total_seconds)) %></text>
+            <text data-testid="brew-recipe-ghost-total-time-label" x="<%= [ recipe_total_time_x - 64, 48 ].max %>" y="121" font-size="10" font-weight="700" fill="#15803d" opacity=".7"><%= t("brews.show.recipe_target_chart_value", value: brew_card_seconds(recipe_total_seconds)) %></text>
           <% end %>
-          <text data-testid="brew-recipe-ghost-label" x="352" y="88" font-size="13" font-weight="800" fill="#15803d" opacity=".55"><%= t("brews.show.recipe_target_label") %></text>
         </g>
       <% end %>
 
