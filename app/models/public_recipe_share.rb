@@ -46,7 +46,7 @@ class PublicRecipeShare < ApplicationRecord
   end
 
   def public_attachment_ids
-    snapshot_media_attachment_ids.presence || selected_recipe_photo_attachment_ids
+    snapshot_media_attachment_ids
   end
 
   def public_media_handle_for(attachment_id)

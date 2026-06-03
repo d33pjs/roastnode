@@ -188,7 +188,12 @@ class PublicRecipeShareTest < ActiveSupport::TestCase
       recipe:,
       created_by: users(:one),
       updated_by: users(:one),
-      selected_photo_attachment_ids: [ selected.id ]
+      selected_photo_attachment_ids: [ selected.id ],
+      snapshot: {
+        "public_media" => [
+          { "attachment_id" => selected.id }
+        ]
+      }
     )
 
     handle = share.public_media_handle_for(selected.id)
@@ -196,5 +201,29 @@ class PublicRecipeShareTest < ActiveSupport::TestCase
     assert handle.present?
     assert_equal selected.id, share.public_attachment_id_for_media_handle(handle)
     assert_nil share.public_media_handle_for(999_999)
+  end
+
+  test "public media handles require snapshot public media allowlist" do
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    selected = recipe.photos.attachments.first
+    share = PublicRecipeShare.create!(
+      workspace: recipe.workspace,
+      recipe:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      selected_photo_attachment_ids: [ selected.id ],
+      snapshot: {}
+    )
+
+    assert_nil share.public_media_handle_for(selected.id)
+
+    share.update!(snapshot: { "public_media" => [] })
+
+    assert_nil share.public_media_handle_for(selected.id)
   end
 end
