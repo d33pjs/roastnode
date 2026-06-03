@@ -296,6 +296,64 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Aim for syrupy flow.", recipe.profile.dig("guide", "note")
   end
 
+  test "writer uploading new finished drink photo on edit makes it primary and rendered" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "old-photo.jpg",
+      content_type: "image/jpeg"
+    )
+    old_attachment = recipe.primary_photo_attachment
+
+    patch recipe_path(recipe), params: {
+      recipe: {
+        title: recipe.title,
+        photos: [
+          fixture_file_upload("photo.jpg", "image/jpeg")
+        ]
+      }
+    }
+
+    assert_redirected_to recipe_path(recipe)
+    recipe.reload
+    new_attachment = recipe.photos.attachments.order(:id).last
+    assert_not_equal old_attachment.id, new_attachment.id
+    assert_equal new_attachment, recipe.primary_photo_attachment
+
+    get recipe_path(recipe)
+
+    assert_response :success
+    assert_select "img[data-testid=recipe-finished-photo][src=?]", media_attachment_path(new_attachment, variant: :thumbnail)
+    assert_select "img[data-testid=recipe-finished-photo][src=?]", media_attachment_path(old_attachment, variant: :thumbnail), count: 0
+  end
+
+  test "invalid recipe update with uploaded finished drink photo does not attach it" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "old-photo.jpg",
+      content_type: "image/jpeg"
+    )
+    old_attachment = recipe.primary_photo_attachment
+    existing_photo_count = recipe.photos.attachments.count
+
+    patch recipe_path(recipe), params: {
+      recipe: {
+        title: "x" * 161,
+        photos: [
+          fixture_file_upload("photo.jpg", "image/jpeg")
+        ]
+      }
+    }
+
+    assert_response :unprocessable_entity
+    recipe.reload
+    assert_equal existing_photo_count, recipe.photos.attachments.count
+    assert_equal old_attachment, recipe.primary_photo_attachment
+  end
+
   test "writer edits and removes structured ingredients" do
     sign_in_as(users(:one))
     recipe = recipes(:household_recipe)

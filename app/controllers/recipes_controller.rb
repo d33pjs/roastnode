@@ -57,12 +57,13 @@ class RecipesController < ApplicationController
   end
 
   def update
+    uploaded_photos = uploaded_recipe_photos
     profile = profile_from_params(@recipe.profile.deep_dup)
     @recipe.assign_attributes(title: profile["title"], profile: profile)
     assign_record_link_attributes(@recipe)
-    assign_uploaded_recipe_photos(@recipe)
 
     if @recipe.save
+      assign_uploaded_recipe_photos_as_primary(@recipe, uploaded_photos)
       redirect_to @recipe, notice: t(".updated")
     else
       prepare_record_links(@recipe)
@@ -240,8 +241,21 @@ class RecipesController < ApplicationController
     end
 
     def assign_uploaded_recipe_photos(recipe)
-      photos = Array(recipe_params[:photos]).reject(&:blank?)
+      photos = uploaded_recipe_photos
       recipe.photos.attach(photos) if photos.any?
+    end
+
+    def assign_uploaded_recipe_photos_as_primary(recipe, photos)
+      photos = Array(photos).reject(&:blank?)
+      return if photos.blank?
+
+      recipe.photos.attach(photos)
+      new_attachment = recipe.photos.attachments.order(:id).last
+      recipe.set_primary_photo!(new_attachment) if new_attachment
+    end
+
+    def uploaded_recipe_photos
+      Array(recipe_params[:photos]).reject(&:blank?)
     end
 
     def attach_source_brew_photo(recipe, source_brew)
