@@ -46,6 +46,22 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=recipe-finish-card]", text: /Add matcha/
   end
 
+  test "show renders finished drink photo through private media route" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    attachment = recipe.photos.attachments.first
+
+    get recipe_path(recipe)
+
+    assert_response :success
+    assert_select "img[data-testid=recipe-finished-photo][src=?]", media_attachment_path(attachment, variant: :thumbnail)
+  end
+
   test "writer exports recipe as portable json attachment" do
     sign_in_as(users(:one))
     recipe = recipes(:household_recipe)
@@ -113,6 +129,23 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "recipe[targets][grind_setting]", "12"
   end
 
+  test "new recipe form suggests source brew primary photo without selecting it" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    brew.set_primary_photo!(brew.photos.attachments.first)
+
+    get new_recipe_path(source_brew_id: brew.id)
+
+    assert_response :success
+    assert_select "[data-testid=source-brew-photo-suggestion]"
+    assert_select "input[type=checkbox][name=?][checked]", "recipe[use_source_brew_photo]", count: 0
+  end
+
   test "writer creates recipe from brew with edited exact target values" do
     sign_in_as(users(:one))
 
@@ -142,6 +175,71 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 30, recipe.profile.dig("targets", "total_time_seconds")
     assert_equal "Stop as soon as blonding starts.", recipe.profile.dig("guide", "note")
     assert_equal "Full pressure, stable gauge.", recipe.profile.dig("guide", "pressure_note")
+  end
+
+  test "writer can reuse source brew primary photo for recipe" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    brew.set_primary_photo!(brew.photos.attachments.first)
+
+    post recipes_path, params: {
+      recipe: {
+        source_brew_id: brew.id,
+        title: "Photo recipe",
+        use_source_brew_photo: "1"
+      }
+    }
+
+    recipe = workspaces(:household).recipes.order(:created_at).last
+    assert_redirected_to recipe_path(recipe)
+    assert recipe.photos.attached?
+    assert_equal brew.primary_photo_attachment.blob_id, recipe.primary_photo_attachment.blob_id
+  end
+
+  test "writer cannot reuse cross workspace source photo" do
+    sign_in_as(users(:one))
+    other_brew = brews(:other_workspace_brew)
+    other_brew.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    other_brew.set_primary_photo!(other_brew.photos.attachments.first)
+
+    assert_no_difference -> { workspaces(:household).recipes.count } do
+      post recipes_path, params: {
+        recipe: {
+          source_brew_id: brews(:morning_espresso).id,
+          source_brew_photo_attachment_id: other_brew.primary_photo_attachment.id,
+          use_source_brew_photo: "1"
+        }
+      }
+    end
+
+    assert_response :not_found
+  end
+
+  test "writer uploads recipe finished drink photo" do
+    sign_in_as(users(:one))
+
+    post recipes_path, params: {
+      recipe: {
+        source_brew_id: brews(:morning_espresso).id,
+        title: "Uploaded photo recipe",
+        photos: [
+          fixture_file_upload("photo.jpg", "image/jpeg")
+        ]
+      }
+    }
+
+    recipe = workspaces(:household).recipes.order(:created_at).last
+    assert_redirected_to recipe_path(recipe)
+    assert recipe.primary_photo_attachment.present?
   end
 
   test "writer creates recipe with structured ingredients and finish note" do

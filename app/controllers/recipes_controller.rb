@@ -1,4 +1,6 @@
 class RecipesController < ApplicationController
+  rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
+
   before_action :authorize_workspace_write!, only: %i[new create edit update destroy log export import]
   before_action :set_recipe, only: %i[show edit update destroy log export]
 
@@ -14,6 +16,7 @@ class RecipesController < ApplicationController
 
   def new
     source_brew = source_brew_from_params!
+    @source_brew_primary_photo = source_brew.primary_photo_attachment
     profile = RecipeSnapshotBuilder.new(brew: source_brew, title: default_title(source_brew)).call
     @recipe = current_workspace.recipes.new(
       created_by: Current.user,
@@ -39,6 +42,7 @@ class RecipesController < ApplicationController
       source_snapshot: source_snapshot_from_profile(profile)
     )
     assign_record_link_attributes(@recipe)
+    assign_recipe_photos(@recipe, source_brew)
 
     if @recipe.save
       redirect_to @recipe, notice: t(".created")
@@ -56,6 +60,7 @@ class RecipesController < ApplicationController
     profile = profile_from_params(@recipe.profile.deep_dup)
     @recipe.assign_attributes(title: profile["title"], profile: profile)
     assign_record_link_attributes(@recipe)
+    assign_uploaded_recipe_photos(@recipe)
 
     if @recipe.save
       redirect_to @recipe, notice: t(".updated")
@@ -128,15 +133,13 @@ class RecipesController < ApplicationController
         .recipes
         .includes(:source_brew, :record_links)
         .find(params[:id])
-    rescue ActiveRecord::RecordNotFound
-      head :not_found
     end
 
     def source_brew_from_params!
       source_brew_id = recipe_params[:source_brew_id].presence || params[:source_brew_id].presence
       current_workspace
         .brews
-        .includes(:bean, :grinder, :machine, :record_links, brew_preparation_tools: :preparation_tool)
+        .includes(:bean, :grinder, :machine, :record_links, :primary_photo_record, photos_attachments: :blob, brew_preparation_tools: :preparation_tool)
         .find(source_brew_id)
     end
 
@@ -231,6 +234,25 @@ class RecipesController < ApplicationController
       record.prepare_record_links_for_form
     end
 
+    def assign_recipe_photos(recipe, source_brew)
+      assign_uploaded_recipe_photos(recipe)
+      attach_source_brew_photo(recipe, source_brew) if recipe_params[:use_source_brew_photo] == "1"
+    end
+
+    def assign_uploaded_recipe_photos(recipe)
+      photos = Array(recipe_params[:photos]).reject(&:blank?)
+      recipe.photos.attach(photos) if photos.any?
+    end
+
+    def attach_source_brew_photo(recipe, source_brew)
+      attachment = source_brew.primary_photo_attachment
+      requested_id = recipe_params[:source_brew_photo_attachment_id].presence&.to_i
+      raise ActiveRecord::RecordNotFound if requested_id && (attachment.blank? || requested_id != attachment.id)
+      return if attachment.blank?
+
+      recipe.photos.attach(attachment.blob)
+    end
+
     def recipe_params
       @recipe_params ||= recipe_parameter_source.permit(
         :source_brew_id,
@@ -238,13 +260,21 @@ class RecipesController < ApplicationController
         :guide_note,
         :pressure_note,
         :finish_note,
+        :use_source_brew_photo,
+        :source_brew_photo_attachment_id,
+        :photos,
         targets: TARGET_FIELDS,
         ingredients: [ INGREDIENT_FIELDS ],
+        photos: [],
         record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
       )
     end
 
     def recipe_parameter_source
       params[:recipe].presence || ActionController::Parameters.new
+    end
+
+    def render_not_found
+      head :not_found
     end
 end

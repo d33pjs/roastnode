@@ -9,6 +9,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Active Storage-backed photo attachments for equipment.
 - Active Storage-backed photo attachments for equipment events.
 - Active Storage-backed photo attachments for preparation tools.
+- Active Storage-backed finished-drink photo attachments for recipes.
 - Active Storage-backed identity images for users: avatar and public banner.
 - Active Storage-backed identity images for workspaces: logo and banner.
 - Multi-photo upload fields on create forms for photo-enabled records where a create form exists.
@@ -43,7 +44,7 @@ The public media controller streams only attachment IDs allowed by an enabled `P
 
 Public media responses should not expose original uploaded filenames. Public pages should not expose `rails_blob_path`, `rails_storage_proxy_path`, signed Active Storage URLs, private `media_attachment_path` URLs, or raw Active Storage attachment IDs.
 
-Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, and preparation tools. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
+Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, preparation tools, and recipes. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
 
 Cropping uses `MediaAttachmentsController#crop` and requires workspace write access. The crop page renders the private image through `media_attachment_path`, then the `photo-crop` Stimulus controller uses browser canvas APIs to create a normal image upload. Save-as-new adds another photo to the same record. Overwrite attaches the cropped image and removes the old attachment; if the overwritten photo was primary, the new attachment becomes primary automatically. This avoids depending on native libvips/ImageMagick availability in the app runtime.
 

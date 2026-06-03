@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_02_191000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_03_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -357,6 +357,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_191000) do
     t.boolean "enabled", default: false, null: false
     t.string "password_digest"
     t.bigint "recipe_id", null: false
+    t.integer "selected_photo_attachment_ids", default: [], null: false, array: true
     t.jsonb "snapshot", default: {}, null: false
     t.string "title"
     t.string "token", null: false
@@ -377,6 +378,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_191000) do
     t.datetime "created_at", null: false
     t.bigint "created_by_id", null: false
     t.string "method", default: "espresso", null: false
+    t.bigint "primary_photo_attachment_id"
     t.jsonb "profile", default: {}, null: false
     t.bigint "source_brew_id"
     t.jsonb "source_snapshot", default: {}, null: false
@@ -384,6 +386,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_02_191000) do
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["created_by_id"], name: "index_recipes_on_created_by_id"
+    t.index ["primary_photo_attachment_id"], name: "index_recipes_on_primary_photo_attachment_id"
     t.index ["source_brew_id"], name: "index_recipes_on_source_brew_id"
     t.index ["workspace_id", "method", "created_at"], name: "index_recipes_on_workspace_id_and_method_and_created_at"
     t.index ["workspace_id"], name: "index_recipes_on_workspace_id"

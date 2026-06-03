@@ -928,10 +928,12 @@ en:
       ingredient_unit: "Unit"
       pressure_note: "Pressure note"
       preinfusion: "Preinfusion (s)"
+      photo: "Finished drink photo"
       targets: "Exact targets"
       temperature: "Temperature (C)"
       title: "Title"
       total_time: "Total time (s)"
+      use_source_brew_photo: "Use source brew photo"
     import:
       created: "Recipe imported."
       missing_file: "Choose a recipe JSON file to import."

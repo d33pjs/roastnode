@@ -171,6 +171,8 @@ class MediaAttachmentsController < ApplicationController
         bean_path(record)
       when Brew
         brew_path(record)
+      when Recipe
+        recipe_path(record)
       when Equipment
         equipment_path(record)
       when PreparationTool

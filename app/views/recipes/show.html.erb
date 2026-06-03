@@ -68,6 +68,10 @@
         </section>
 
         <%= render "recipes/finish_card", recipe: @recipe %>
+
+        <% if @recipe.primary_photo_attachment.present? %>
+          <%= image_tag media_attachment_path(@recipe.primary_photo_attachment, variant: :thumbnail), alt: "", data: { testid: "recipe-finished-photo" }, class: "mt-4 h-64 w-full rounded-lg object-cover" %>
+        <% end %>
       </div>
 
       <%= render "recipes/target_guide", recipe: @recipe %>

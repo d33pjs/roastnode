@@ -1,4 +1,5 @@
 class Recipe < ApplicationRecord
+  include HasPrimaryPhoto
   include HasRecordLinks
 
   enum :method, {
@@ -11,6 +12,7 @@ class Recipe < ApplicationRecord
 
   has_many :brews, dependent: :nullify
   has_one :public_recipe_share, dependent: :destroy
+  has_many_attached :photos
 
   before_validation :set_defaults
 

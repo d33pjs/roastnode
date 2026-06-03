@@ -105,6 +105,19 @@
         <%= label_tag "recipe_finish_note", t("recipes.form.finish_note"), class: label_class %>
         <%= text_area_tag "recipe[finish_note]", profile["finish_note"], id: "recipe_finish_note", rows: 3, class: input_class %>
       </div>
+      <div>
+        <%= form.label :photos, t("recipes.form.photo"), class: label_class %>
+        <%= form.file_field :photos, multiple: false, accept: "image/*", class: "mt-1 block w-full text-sm font-bold text-rn-muted file:mr-4 file:rounded-full file:border-0 file:bg-[var(--rn-accent-strong)] file:px-4 file:py-2 file:text-sm file:font-extrabold file:text-[#f8faf6] hover:file:opacity-90" %>
+      </div>
+
+      <% if defined?(@source_brew_primary_photo) && @source_brew_primary_photo.present? %>
+        <label data-testid="source-brew-photo-suggestion" class="flex items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 text-sm font-extrabold text-rn-ink">
+          <%= check_box_tag "recipe[use_source_brew_photo]", "1", false, class: "h-4 w-4 rounded border-rn-line text-rn-ink" %>
+          <%= hidden_field_tag "recipe[source_brew_photo_attachment_id]", @source_brew_primary_photo.id %>
+          <%= image_tag media_attachment_path(@source_brew_primary_photo, variant: :thumbnail), alt: "", class: "h-16 w-16 rounded-lg object-cover" %>
+          <%= t("recipes.form.use_source_brew_photo") %>
+        </label>
+      <% end %>
     </div>
   </section>
 

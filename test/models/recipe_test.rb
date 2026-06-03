@@ -51,6 +51,18 @@ class RecipeTest < ActiveSupport::TestCase
     assert_match(/\Ahouse-blend-reference-[a-z0-9]+\.json\z/, recipe.export_filename)
   end
 
+  test "recipe supports one primary finished drink photo" do
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+
+    assert recipe.photos.attached?
+    assert_equal recipe.photos.attachments.first, recipe.primary_photo_attachment
+  end
+
   test "source brew can be deleted while recipe keeps its profile" do
     recipe = recipes(:household_recipe)
     source_brew = recipe.source_brew
