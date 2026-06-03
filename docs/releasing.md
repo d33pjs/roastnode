@@ -46,6 +46,9 @@ If exodos.io settings are missing, the workflow keeps the SBOM artifact but skip
 
 1. Make sure `main` is green on Gitea.
 2. Choose a semver tag such as `v0.1.0`.
+   - Roastnode uses `vX.Y.Z`, with `X` up to 2 digits, `Y` up to 3 digits, and `Z` up to 4 digits.
+   - Unless the release is explicitly called a minor release, increment `Z` by 1 from the latest release tag.
+   - Example: `v0.9.9` is followed by `v0.9.10`.
 3. Tag the exact commit you want to release:
 
    ```bash

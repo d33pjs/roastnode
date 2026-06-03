@@ -30,6 +30,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Public brew pages and public media must use curated `PublicBrewShare` snapshots and opaque public media handles. Public recipe pages and selected recipe media must use curated `PublicRecipeShare` snapshots, selected recipe-photo allowlists, and opaque public media handles. Do not expose private notes, raw media routes, signed Active Storage URLs, raw attachment IDs, original filenames, raw share tokens in logs, or equipment/tool costs.
 - Owners and admins manage workspace settings and invite links. Members can write normal workspace data. Viewers are read-only.
 - Workspace settings are singleton active-workspace routes and should not accept workspace IDs.
+- Agents may automatically use the visual companion/in-app Browser for local visual checks without asking first.
 
 ## Product Docs By Area
 
@@ -61,4 +62,5 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Docker Compose should run alongside other local projects without taking common host ports unnecessarily.
 - The current Compose image is `postgres:17.5`; see `docs/setup.md` for setup commands.
 - After finishing user-facing product changes, start the local development server so the user can check the result. Use `bin/dev` unless another command is specifically needed. Make sure other clients on the network can reach the server via DNS.
+- Release tags are `vX.Y.Z`, with `X` up to 2 digits, `Y` up to 3 digits, and `Z` up to 4 digits. Unless User explicitly says this is a minor release, increment `Z` by 1 from the latest release tag, so `v0.9.9` is followed by `v0.9.10`.
 - When asked to push a git tag, summarize the changes for a public changelog from the last tag and let User approve it. Then create the tag with the approved changelog. Check afterwards if the sync between gitea and github worked and let the user know, when the tag is on github as well.
