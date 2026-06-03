@@ -80,6 +80,7 @@ Rails.application.routes.draw do
   get "s/:token/media/:media_id" => "public_brew_media#show", as: :public_brew_media
   get "r/:token" => "public_recipe_pages#show", as: :public_recipe_page
   post "r/:token/password" => "public_recipe_pages#unlock", as: :unlock_public_recipe_page
+  get "r/:token/media/:media_id" => "public_recipe_media#show", as: :public_recipe_media
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
     match :crop, on: :member, via: %i[get patch]

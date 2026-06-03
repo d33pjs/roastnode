@@ -44,7 +44,7 @@ class PublicRecipeShareSnapshotBuilder
   end
 
   def call
-    {
+    payload = {
       "title" => title.presence || profile["title"].presence || recipe.title,
       "workspace" => workspace_payload,
       "user" => user_payload,
@@ -54,6 +54,8 @@ class PublicRecipeShareSnapshotBuilder
       "tools" => tool_payloads,
       "generated_at" => Time.current.iso8601
     }
+    payload["public_media"] = public_media_payloads(payload)
+    payload
   end
 
   private
@@ -74,9 +76,17 @@ class PublicRecipeShareSnapshotBuilder
         "guide" => slice_hash(profile["guide"], GUIDE_KEYS),
         "ingredients" => ingredient_payloads,
         "finish_note" => sanitized_finish_note,
+        "photo" => recipe_photo_payload,
         "source_brew" => source_brew_payload,
         "links" => link_payloads(recipe)
       }.compact
+    end
+
+    def recipe_photo_payload
+      attachment = recipe.primary_photo_attachment
+      return unless attachment && selected_photo_attachment_ids.include?(attachment.id)
+
+      { "attachment_id" => attachment.id }
     end
 
     def ingredient_payloads
@@ -166,6 +176,23 @@ class PublicRecipeShareSnapshotBuilder
       allowed_keys.each_with_object({}) do |key, payload|
         value = source[key]
         payload[key] = value if value.present?
+      end
+    end
+
+    def public_media_payloads(payload)
+      collect_attachment_ids(payload).map { |id| { "attachment_id" => id } }.uniq
+    end
+
+    def collect_attachment_ids(value)
+      case value
+      when Hash
+        value.flat_map do |key, nested|
+          key.to_s.end_with?("attachment_id") && nested.present? ? [ nested.to_i ] : collect_attachment_ids(nested)
+        end
+      when Array
+        value.flat_map { |nested| collect_attachment_ids(nested) }
+      else
+        []
       end
     end
 end

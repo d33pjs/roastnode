@@ -1,4 +1,13 @@
 module PublicRecipePagesHelper
+  def public_recipe_media_url_for(share, attachment_id, variant: nil)
+    return if attachment_id.blank?
+
+    media_handle = share.public_media_handle_for(attachment_id)
+    return if media_handle.blank?
+
+    public_recipe_media_path(share.token, media_handle, variant:)
+  end
+
   def public_recipe_unknown_label
     t("public_recipe_pages.show.unknown")
   end

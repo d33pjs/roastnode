@@ -4,6 +4,7 @@ class PublicRecipeSharesController < ApplicationController
   before_action :authorize_share_management!
 
   def new
+    load_form_state([])
   end
 
   def create
@@ -11,10 +12,12 @@ class PublicRecipeSharesController < ApplicationController
 
     redirect_to edit_recipe_public_recipe_share_path(@recipe), notice: t(".created")
   rescue ActiveRecord::RecordInvalid
+    load_form_state(permitted_selected_photo_attachment_ids)
     render :new, status: :unprocessable_entity
   end
 
   def edit
+    load_form_state(@share.selected_photo_attachment_ids)
   end
 
   def update
@@ -22,6 +25,7 @@ class PublicRecipeSharesController < ApplicationController
 
     redirect_to edit_recipe_public_recipe_share_path(@recipe), notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
+    load_form_state(permitted_selected_photo_attachment_ids)
     render :edit, status: :unprocessable_entity
   end
 
@@ -35,7 +39,7 @@ class PublicRecipeSharesController < ApplicationController
     def set_recipe
       @recipe = current_workspace
         .recipes
-        .includes(:created_by, :record_links)
+        .includes(:created_by, :record_links, :primary_photo_record, photos_attachments: :blob)
         .find(params[:recipe_id])
     end
 
@@ -65,6 +69,7 @@ class PublicRecipeSharesController < ApplicationController
         apply_password_changes
         @share.refresh_snapshot!(
           title: share_params[:title],
+          selected_photo_attachment_ids: permitted_selected_photo_attachment_ids,
           updated_by: Current.user
         )
       end
@@ -78,12 +83,26 @@ class PublicRecipeSharesController < ApplicationController
       end
     end
 
+    def load_form_state(selected_photo_attachment_ids)
+      @available_photos = @recipe.photos.attachments
+      @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i)
+    end
+
+    def selected_photo_attachment_ids_from_params
+      Array(share_params[:selected_photo_attachment_ids]).map(&:to_i)
+    end
+
+    def permitted_selected_photo_attachment_ids
+      selected_photo_attachment_ids_from_params & @recipe.photos.attachments.map(&:id)
+    end
+
     def share_params
       params.fetch(:public_recipe_share, {}).permit(
         :title,
         :enabled,
         :password,
-        :clear_password
+        :clear_password,
+        selected_photo_attachment_ids: []
       )
     end
 

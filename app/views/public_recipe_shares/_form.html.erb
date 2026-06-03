@@ -1,5 +1,7 @@
 <% label_class = "block text-sm font-extrabold text-rn-muted" %>
 <% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+<% section_class = "grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
+<% section_title_class = "text-lg font-black text-rn-ink" %>
 
 <%= form_with model: share, url: recipe_public_recipe_share_path(recipe), method: share.persisted? ? :patch : :post, class: "mt-6 grid gap-5" do |form| %>
   <% if share.errors.any? %>
@@ -8,8 +10,8 @@
     </div>
   <% end %>
 
-  <section class="grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
-    <h2 class="text-lg font-black text-rn-ink"><%= t(".settings") %></h2>
+  <section class="<%= section_class %>">
+    <h2 class="<%= section_title_class %>"><%= t(".settings") %></h2>
 
     <label class="flex items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink">
       <%= form.check_box :enabled, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
@@ -34,6 +36,24 @@
       </label>
     <% end %>
   </section>
+
+  <% if available_photos.any? %>
+    <section class="<%= section_class %>">
+      <h2 class="<%= section_title_class %>"><%= t(".photos") %></h2>
+
+      <div class="grid gap-3 sm:grid-cols-3">
+        <% available_photos.each do |photo| %>
+          <label class="overflow-hidden rounded-2xl border border-rn-line bg-[var(--rn-canvas)]">
+            <%= image_tag media_attachment_path(photo, variant: :thumbnail), alt: "", class: "h-36 w-full object-cover" %>
+            <span class="flex items-center gap-2 p-3 text-sm font-extrabold text-rn-ink">
+              <%= check_box_tag "public_recipe_share[selected_photo_attachment_ids][]", photo.id, selected_photo_attachment_ids.include?(photo.id), class: "h-4 w-4 rounded border-rn-line text-rn-ink" %>
+              <%= t(".include_photo") %>
+            </span>
+          </label>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 
   <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-accent-strong)] px-5 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
 <% end %>

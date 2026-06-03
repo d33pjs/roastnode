@@ -528,8 +528,10 @@ en:
     form:
       clear_password: "Remove password"
       enabled: "Enable public recipe page"
+      include_photo: "Include"
       password: "Password"
       password_help: "Leave blank to keep the current password. Public visitors need this password before seeing the recipe."
+      photos: "Public recipe photo"
       settings: "Share settings"
       title: "Share title"
     new:

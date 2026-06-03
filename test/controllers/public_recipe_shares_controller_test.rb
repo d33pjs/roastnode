@@ -14,6 +14,23 @@ class PublicRecipeSharesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file]", count: 0
   end
 
+  test "share form can select recipe photo but does not include it by default" do
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    photo = recipe.photos.attachments.first
+    sign_in_as(users(:one))
+
+    get new_recipe_public_recipe_share_path(recipe)
+
+    assert_response :success
+    assert_select "input[type=checkbox][name=?][value=?]", "public_recipe_share[selected_photo_attachment_ids][]", photo.id.to_s
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "public_recipe_share[selected_photo_attachment_ids][]", photo.id.to_s, count: 0
+  end
+
   test "writer creates disabled password protected recipe share snapshot" do
     sign_in_as(users(:one))
     recipe = recipes(:household_recipe)
@@ -110,6 +127,38 @@ class PublicRecipeSharesControllerTest < ActionDispatch::IntegrationTest
     assert share.enabled?
     assert_equal "Enabled recipe", share.title
     assert_not share.password_protected?
+  end
+
+  test "update stores only selected recipe-owned public photo" do
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    selected = recipe.photos.attachments.first
+    unrelated_record = beans(:open_household)
+    unrelated_record.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    unrelated = unrelated_record.photos.attachments.first
+    create_share_for(recipe, enabled: false)
+    sign_in_as(users(:one))
+
+    patch recipe_public_recipe_share_path(recipe), params: {
+      public_recipe_share: {
+        enabled: "1",
+        title: "Photo recipe",
+        selected_photo_attachment_ids: [ selected.id, unrelated.id ]
+      }
+    }
+
+    share = recipe.reload.public_recipe_share
+    assert_redirected_to edit_recipe_public_recipe_share_path(recipe)
+    assert_equal [ selected.id ], share.selected_photo_attachment_ids
+    assert_equal selected.id, share.snapshot.dig("recipe", "photo", "attachment_id")
   end
 
   test "writer can destroy own public recipe share" do

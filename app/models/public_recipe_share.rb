@@ -1,4 +1,5 @@
 require "digest"
+require "openssl"
 
 class PublicRecipeShare < ApplicationRecord
   has_secure_password :password, validations: false
@@ -44,6 +45,27 @@ class PublicRecipeShare < ApplicationRecord
     policy.manage? || (policy.write? && recipe.created_by_id == user.id)
   end
 
+  def public_attachment_ids
+    snapshot_media_attachment_ids.presence || selected_recipe_photo_attachment_ids
+  end
+
+  def public_media_handle_for(attachment_id)
+    attachment_id = attachment_id.to_i
+    return unless public_attachment_ids.include?(attachment_id)
+
+    media_handle_for_attachment_id(attachment_id)
+  end
+
+  def public_attachment_id_for_media_handle(handle)
+    handle = handle.to_s
+    return if handle.blank?
+
+    public_attachment_ids.find do |attachment_id|
+      expected = media_handle_for_attachment_id(attachment_id)
+      handle.bytesize == expected.bytesize && ActiveSupport::SecurityUtils.secure_compare(handle, expected)
+    end
+  end
+
   def refresh_snapshot!(title:, selected_photo_attachment_ids: [], updated_by:)
     update!(
       title:,
@@ -74,5 +96,36 @@ class PublicRecipeShare < ApplicationRecord
       return if recipe.blank? || workspace.blank? || recipe.workspace_id == workspace_id
 
       errors.add(:recipe, "must belong to the workspace")
+    end
+
+    def snapshot_media_attachment_ids
+      snapshot_payload = snapshot.is_a?(Hash) ? snapshot : {}
+      collect_attachment_ids(snapshot_payload.fetch("public_media", [])).map(&:to_i).uniq & selected_recipe_photo_attachment_ids
+    end
+
+    def selected_recipe_photo_attachment_ids
+      selected_ids = Array(selected_photo_attachment_ids).map(&:to_i)
+      recipe.photos.attachments.map(&:id) & selected_ids
+    end
+
+    def collect_attachment_ids(value)
+      case value
+      when Hash
+        value.flat_map do |key, nested|
+          key.to_s.end_with?("attachment_id") && nested.present? ? [ nested.to_i ] : collect_attachment_ids(nested)
+        end
+      when Array
+        value.flat_map { |nested| collect_attachment_ids(nested) }
+      else
+        []
+      end
+    end
+
+    def media_handle_for_attachment_id(attachment_id)
+      OpenSSL::HMAC.hexdigest("SHA256", public_media_handle_secret, "#{token}:#{attachment_id}").first(32)
+    end
+
+    def public_media_handle_secret
+      Rails.application.key_generator.generate_key("public-recipe-share-media-handle")
     end
 end

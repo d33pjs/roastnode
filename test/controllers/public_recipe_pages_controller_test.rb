@@ -51,6 +51,33 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-recipe-finish]", text: /Pour espresso over matcha/
   end
 
+  test "enabled share renders selected recipe photo with opaque public media url" do
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    photo = recipe.photos.attachments.first
+    share = recipe.create_public_recipe_share!(
+      workspace: recipe.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      title: "Shared recipe",
+      enabled: true,
+      selected_photo_attachment_ids: [ photo.id ],
+      snapshot: PublicRecipeShareSnapshotBuilder.new(recipe:, title: "Shared recipe", selected_photo_attachment_ids: [ photo.id ]).call
+    )
+
+    get public_recipe_page_path(share.token)
+
+    assert_response :success
+    assert_select "img[data-testid=public-recipe-photo][src^=?]", "/r/#{share.token}/media/"
+    assert_no_match "attachment_id", response.body
+    assert_no_match "/rails/active_storage", response.body
+    assert_no_match "/media_attachments", response.body
+  end
+
   test "password protected share shows gate until unlocked" do
     share = create_share(enabled: true, password: "espresso")
 

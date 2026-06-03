@@ -174,4 +174,27 @@ class PublicRecipeShareTest < ActiveSupport::TestCase
     ], share.snapshot.dig("recipe", "ingredients")
     assert_equal ("Pour espresso over matcha. " * 50).first(1_000), share.snapshot.dig("recipe", "finish_note")
   end
+
+  test "public media handles resolve only selected recipe photos" do
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+    selected = recipe.photos.attachments.first
+    share = PublicRecipeShare.create!(
+      workspace: recipe.workspace,
+      recipe:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      selected_photo_attachment_ids: [ selected.id ]
+    )
+
+    handle = share.public_media_handle_for(selected.id)
+
+    assert handle.present?
+    assert_equal selected.id, share.public_attachment_id_for_media_handle(handle)
+    assert_nil share.public_media_handle_for(999_999)
+  end
 end
