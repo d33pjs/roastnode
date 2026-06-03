@@ -146,4 +146,32 @@ class PublicRecipeShareTest < ActiveSupport::TestCase
     assert_equal [ { "amount" => "200", "unit" => "ml", "name" => "matcha" } ], share.snapshot.dig("recipe", "ingredients")
     assert_equal "Pour espresso over matcha.", share.snapshot.dig("recipe", "finish_note")
   end
+
+  test "snapshot sanitizes public ingredients and finish note" do
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "  #{"2" * 40}  ", "unit" => "  #{"m" * 40}  ", "name" => "  #{"matcha" * 30}  " },
+      { "amount" => "200", "unit" => "ml", "name" => "   " }
+    ]
+    profile["finish_note"] = "  #{"Pour espresso over matcha. " * 50}  "
+    recipe.update!(profile:)
+
+    share = PublicRecipeShare.create!(
+      workspace: recipe.workspace,
+      recipe:,
+      created_by: users(:one),
+      updated_by: users(:one)
+    )
+    share.refresh_snapshot!(title: "Public recipe", selected_photo_attachment_ids: [], updated_by: users(:one))
+
+    assert_equal [
+      {
+        "amount" => "2" * 32,
+        "unit" => "m" * 32,
+        "name" => ("matcha" * 30).first(120)
+      }
+    ], share.snapshot.dig("recipe", "ingredients")
+    assert_equal ("Pour espresso over matcha. " * 50).first(1_000), share.snapshot.dig("recipe", "finish_note")
+  end
 end

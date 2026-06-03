@@ -29,6 +29,12 @@ class PublicRecipeShareSnapshotBuilder
   EQUIPMENT_KEYS = %w[name kind model public_note].freeze
   TOOL_KEYS = %w[name brew_method position public_note].freeze
   INGREDIENT_KEYS = %w[amount unit name].freeze
+  INGREDIENT_MAX_LENGTHS = {
+    "amount" => 32,
+    "unit" => 32,
+    "name" => 120
+  }.freeze
+  FINISH_NOTE_MAX_LENGTH = 1_000
 
   def initialize(recipe:, title:, selected_photo_attachment_ids: [])
     @recipe = recipe
@@ -67,7 +73,7 @@ class PublicRecipeShareSnapshotBuilder
         "targets" => slice_hash(profile["targets"], TARGET_KEYS),
         "guide" => slice_hash(profile["guide"], GUIDE_KEYS),
         "ingredients" => ingredient_payloads,
-        "finish_note" => profile["finish_note"].presence,
+        "finish_note" => sanitized_finish_note,
         "source_brew" => source_brew_payload,
         "links" => link_payloads(recipe)
       }.compact
@@ -75,9 +81,18 @@ class PublicRecipeShareSnapshotBuilder
 
     def ingredient_payloads
       Array(profile["ingredients"]).filter_map do |ingredient|
-        payload = slice_hash(ingredient, INGREDIENT_KEYS)
+        next unless ingredient.is_a?(Hash)
+
+        payload = INGREDIENT_KEYS.each_with_object({}) do |key, result|
+          value = ingredient[key].to_s.strip.first(INGREDIENT_MAX_LENGTHS.fetch(key))
+          result[key] = value if value.present?
+        end
         payload if payload["name"].present?
       end
+    end
+
+    def sanitized_finish_note
+      profile["finish_note"].to_s.strip.first(FINISH_NOTE_MAX_LENGTH).presence
     end
 
     def source_brew_payload
