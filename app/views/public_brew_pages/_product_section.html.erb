@@ -10,7 +10,7 @@
       <% thumb_url = public_media_url_for(share, primary_photo_id, variant: :thumbnail) %>
       <% full_url = public_media_url_for(share, primary_photo_id) %>
       <% if thumb_url.present? && full_url.present? %>
-        <button type="button" data-action="public-lightbox#open" data-full-src="<%= full_url %>" class="h-64 w-full bg-white p-2">
+        <button type="button" data-action="public-lightbox#open" data-full-src="<%= full_url %>" aria-label="<%= t("public_brew_pages.show.open_named_photo", name:) %>" class="h-64 w-full bg-white p-2">
           <%= image_tag thumb_url, alt: "", class: "h-full w-full object-contain" %>
         </button>
       <% else %>
@@ -58,7 +58,7 @@
         <div class="mt-4 flex flex-wrap gap-2">
           <% section.fetch("links", []).each do |link| %>
             <%= link_to link["url"], target: "_blank", rel: "noopener", data: { testid: "public-product-link" }, class: "inline-flex items-center gap-2 rounded-full bg-stone-950 px-4 py-2 text-sm font-extrabold text-stone-50 underline decoration-stone-400 decoration-2 underline-offset-4 hover:bg-stone-800" do %>
-              <span data-testid="public-link-icon" aria-hidden="true">-&gt;</span>
+              <span data-testid="public-link-icon" aria-hidden="true">🔗</span>
               <span><%= public_link_label(link) %></span>
             <% end %>
           <% end %>

@@ -118,11 +118,28 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-retention]", count: 0
     assert_select "[data-testid=public-brew-card-workspace]", count: 0
     assert_select "[data-testid=public-brew-card-byline]", count: 0
+    assert_select "[data-testid=public-brew-hero-card]", text: /Espresso/, count: 0
     assert_select "[data-testid=public-brew-identity-strip]"
     assert_select "[data-testid=public-brew-preinfusion-label]", text: /5s/
     assert_select "[data-testid=public-brew-first-drip-label]", text: /8s/
     assert_select "[data-testid=public-brew-total-time-label]", text: /28s/
     assert_select "[data-testid=public-brew-temperature-label]", text: /93/
+  end
+
+  test "public hero omits optional timing markers when snapshot values are absent" do
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["brew"].delete("preinfusion_seconds")
+    snapshot["brew"].delete("first_drip_seconds")
+    share.update!(snapshot:)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-preinfusion-label]", count: 0
+    assert_select "[data-testid=public-brew-first-drip-label]", count: 0
+    assert_select "[data-testid=public-brew-total-time-label]", text: /28s/
+    assert_select "[data-testid=public-brew-hero-card]", text: /Unknown/, count: 0
   end
 
   test "public photos use contain cards and lightbox controls" do
@@ -136,8 +153,22 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller~='public-lightbox']"
     assert_select "button[data-action*='public-lightbox#open'][data-full-src]"
     assert_select "img[data-testid=public-brew-gallery-photo].object-contain"
+    assert_select "button[aria-label='#{I18n.t("public_brew_pages.show.open_photo")}'][data-action*='public-lightbox#open']"
+    assert_select "[data-public-lightbox-target=dialog][role=dialog][aria-modal=true]"
     assert_no_match "/media_attachments", response.body
     assert_no_match "/rails/active_storage", response.body
+  end
+
+  test "public product photos expose an accessible lightbox name" do
+    brew = brews(:morning_espresso)
+    bean_photo = attach_photo(brew.bean)
+    share = create_share(enabled: true, selected_photo_attachment_ids: [ bean_photo.id ])
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    name = share.snapshot.dig("bean", "display_name")
+    assert_select "button[aria-label='#{I18n.t("public_brew_pages.show.open_named_photo", name:)}'][data-action*='public-lightbox#open']"
   end
 
   test "public links render with visible link icon treatment" do
@@ -146,7 +177,7 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     get public_brew_page_path(share.token)
 
     assert_response :success
-    assert_select "a[data-testid=public-brew-link] [data-testid=public-link-icon]"
+    assert_select "a[data-testid=public-brew-link] [data-testid=public-link-icon]", text: "🔗"
   end
 
   test "public bean section shows safe bean facts" do

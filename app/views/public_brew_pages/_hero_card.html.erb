@@ -3,14 +3,13 @@
 <% occurred_at = public_snapshot_time(brew["occurred_at"]) %>
 <% unknown = t("public_brew_pages.show.unknown") %>
 <% total_seconds = brew["total_time_seconds"] %>
-<% preinfusion_x = public_snapshot_chart_x(brew["preinfusion_seconds"], total_seconds) || 44 %>
-<% first_drip_x = public_snapshot_chart_x(brew["first_drip_seconds"], total_seconds) || 44 %>
+<% preinfusion_x = public_snapshot_chart_x(brew["preinfusion_seconds"], total_seconds) %>
+<% first_drip_x = public_snapshot_chart_x(brew["first_drip_seconds"], total_seconds) %>
 
 <article data-testid="public-brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm">
   <div class="bg-stone-950 p-5">
     <div class="flex flex-nowrap items-center gap-1 overflow-hidden sm:gap-2">
       <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200"><%= occurred_at ? l(occurred_at, format: :short) : t("public_brew_pages.show.unknown") %></span>
-      <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200"><%= brew["method"].present? ? brew["method"].to_s.humanize : unknown %></span>
       <%= render "shared/brand_mark",
         testid: "public-brew-card-brand-mark",
         container_class: "ml-auto h-9 w-9 shrink-0 sm:h-12 sm:w-12",
@@ -79,10 +78,14 @@
       <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" />
       <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42 L500 130 L44 130 Z" fill="url(#public-brew-fill-<%= share.token.parameterize %>)" />
       <path d="M44 9 C134 8, 224 8, 314 8 C390 7, 452 8, 500 11" fill="none" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" />
-      <line x1="<%= preinfusion_x %>" y1="126" x2="<%= preinfusion_x %>" y2="141" stroke="#92400e" stroke-width="2.5" />
-      <text data-testid="public-brew-preinfusion-label" x="<%= [ preinfusion_x - 24, 44 ].max %>" y="154" font-size="12" font-weight="800" fill="#92400e"><%= public_snapshot_seconds(brew["preinfusion_seconds"]) %></text>
-      <line x1="<%= first_drip_x %>" y1="112" x2="<%= first_drip_x %>" y2="130" stroke="#0f172a" stroke-width="2.5" />
-      <text data-testid="public-brew-first-drip-label" x="<%= [ first_drip_x - 20, 44 ].max %>" y="110" font-size="12" font-weight="800" fill="#0f172a"><%= public_snapshot_seconds(brew["first_drip_seconds"]) %></text>
+      <% if preinfusion_x.present? %>
+        <line x1="<%= preinfusion_x %>" y1="126" x2="<%= preinfusion_x %>" y2="141" stroke="#92400e" stroke-width="2.5" />
+        <text data-testid="public-brew-preinfusion-label" x="<%= [ preinfusion_x - 24, 44 ].max %>" y="154" font-size="12" font-weight="800" fill="#92400e"><%= public_snapshot_seconds(brew["preinfusion_seconds"]) %></text>
+      <% end %>
+      <% if first_drip_x.present? %>
+        <line x1="<%= first_drip_x %>" y1="112" x2="<%= first_drip_x %>" y2="130" stroke="#0f172a" stroke-width="2.5" />
+        <text data-testid="public-brew-first-drip-label" x="<%= [ first_drip_x - 20, 44 ].max %>" y="110" font-size="12" font-weight="800" fill="#0f172a"><%= public_snapshot_seconds(brew["first_drip_seconds"]) %></text>
+      <% end %>
       <text x="8" y="135" font-size="13" fill="#57534e">0g</text>
       <text x="6" y="52" font-size="13" fill="#57534e"><%= public_snapshot_grams(brew["beverage_grams"]) %></text>
       <text x="32" y="157" font-size="13" fill="#57534e">0s</text>

@@ -33,7 +33,7 @@
         <div class="mt-5 flex flex-wrap justify-center gap-2">
           <% @snapshot.dig("brew", "links").each do |link| %>
             <%= link_to link["url"], target: "_blank", rel: "noopener", data: { testid: "public-brew-link" }, class: "inline-flex items-center gap-2 rounded-full bg-stone-950 px-4 py-2 text-sm font-extrabold text-stone-50 underline decoration-stone-400 decoration-2 underline-offset-4 hover:bg-stone-800" do %>
-              <span data-testid="public-link-icon" aria-hidden="true">-&gt;</span>
+              <span data-testid="public-link-icon" aria-hidden="true">🔗</span>
               <span><%= public_link_label(link) %></span>
             <% end %>
           <% end %>
@@ -47,7 +47,7 @@
           <% thumb_url = public_media_url_for(@share, photo["attachment_id"], variant: :thumbnail) %>
           <% full_url = public_media_url_for(@share, photo["attachment_id"]) %>
           <% if thumb_url.present? && full_url.present? %>
-            <button type="button" data-action="public-lightbox#open" data-full-src="<%= full_url %>" class="h-72 w-full rounded-lg border border-stone-200 bg-white p-2">
+            <button type="button" data-action="public-lightbox#open" data-full-src="<%= full_url %>" aria-label="<%= t("public_brew_pages.show.open_photo") %>" class="h-72 w-full rounded-lg border border-stone-200 bg-white p-2">
               <%= image_tag thumb_url, alt: "", data: { testid: "public-brew-gallery-photo" }, class: "h-full w-full object-contain" %>
             </button>
           <% end %>
@@ -65,7 +65,7 @@
       <%= render "product_section", share: @share, kind: "tool", section: section %>
     <% end %>
 
-    <div data-public-lightbox-target="dialog" aria-hidden="true" class="hidden fixed inset-0 z-50 bg-black/90 p-4">
+    <div data-public-lightbox-target="dialog" role="dialog" aria-modal="true" aria-hidden="true" class="hidden fixed inset-0 z-50 bg-black/90 p-4">
       <button type="button" data-action="public-lightbox#close" class="absolute right-4 top-4 rounded-full bg-white px-4 py-2 text-sm font-black text-stone-950"><%= t("public_brew_pages.show.close_photo") %></button>
       <div class="flex h-full items-center justify-center">
         <img data-public-lightbox-target="image" alt="" class="max-h-full max-w-full object-contain" />

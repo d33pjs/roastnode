@@ -523,6 +523,8 @@ en:
       close_photo: "Close"
       info: "Info"
       opened: "Opened %{date}"
+      open_named_photo: "Open %{name} photo"
+      open_photo: "Open photo"
       price: "Cost %{price}"
       roasted: "Roasted %{date}"
       temp_label: "Temp %{temperature}"
