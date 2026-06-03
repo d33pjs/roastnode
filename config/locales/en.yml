@@ -517,8 +517,15 @@ en:
       title: "Protected brew"
     show:
       affiliate: "Affiliate"
+      balance: "Balance"
+      bought: "Bought %{date}"
       buy: "Buy"
+      close_photo: "Close"
       info: "Info"
+      opened: "Opened %{date}"
+      price: "Cost %{price}"
+      roasted: "Roasted %{date}"
+      temp_label: "Temp %{temperature}"
       unknown: "Unknown"
     unlock:
       failed: "Password is not correct."

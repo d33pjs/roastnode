@@ -2,14 +2,14 @@
 <% bean = snapshot.fetch("bean", {}) || {} %>
 <% occurred_at = public_snapshot_time(brew["occurred_at"]) %>
 <% unknown = t("public_brew_pages.show.unknown") %>
+<% total_seconds = brew["total_time_seconds"] %>
+<% preinfusion_x = public_snapshot_chart_x(brew["preinfusion_seconds"], total_seconds) || 44 %>
+<% first_drip_x = public_snapshot_chart_x(brew["first_drip_seconds"], total_seconds) || 44 %>
 
 <article data-testid="public-brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm">
   <div class="bg-stone-950 p-5">
     <div class="flex flex-nowrap items-center gap-1 overflow-hidden sm:gap-2">
       <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200"><%= occurred_at ? l(occurred_at, format: :short) : t("public_brew_pages.show.unknown") %></span>
-      <span class="inline-flex min-w-0 items-center gap-1.5 truncate rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200">
-        <span class="truncate"><%= snapshot.dig("workspace", "name") %></span>
-      </span>
       <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-2 py-1 text-xs font-bold text-stone-200"><%= brew["method"].present? ? brew["method"].to_s.humanize : unknown %></span>
       <%= render "shared/brand_mark",
         testid: "public-brew-card-brand-mark",
@@ -26,14 +26,6 @@
           <% if descriptor.present? %>
             <p class="mt-2 text-sm text-stone-300"><%= descriptor %></p>
           <% end %>
-          <div class="mt-2 flex items-center gap-1.5 text-xs text-stone-400">
-          <% if (avatar_id = snapshot.dig("user", "avatar_attachment_id")).present? %>
-              <% if (avatar_url = public_media_url_for(share, avatar_id, variant: :thumbnail)).present? %>
-                <%= image_tag avatar_url, alt: "", class: "h-5 w-5 shrink-0 rounded-full object-cover ring-1 ring-white/20" %>
-              <% end %>
-            <% end %>
-            <span><%= t("brews.show.byline", user: snapshot.dig("user", "display_label").presence || unknown) %></span>
-          </div>
         </div>
 
         <% if bean["photo_attachment_id"].present? %>
@@ -45,30 +37,29 @@
         <% end %>
       </div>
 
-      <div class="grid grid-cols-3 gap-1 sm:grid-cols-6 sm:gap-2">
-        <div class="min-w-0 rounded-md bg-white/10 p-2">
+      <div class="grid grid-cols-2 gap-1 sm:grid-cols-5 sm:gap-2">
+        <div data-testid="public-brew-dose" class="min-w-0 rounded-md bg-white/10 p-2">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.dose") %></p>
           <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= public_snapshot_grams(brew["dose_grams"]) %></p>
         </div>
-        <div class="min-w-0 rounded-md bg-white/10 p-2">
+        <div data-testid="public-brew-ratio" class="min-w-0 rounded-md bg-white/10 p-2">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.ratio") %></p>
           <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= public_snapshot_ratio(snapshot) %></p>
+          <% if public_snapshot_ratio_time(snapshot).present? %>
+            <p class="mt-0.5 overflow-hidden text-ellipsis text-xs font-semibold text-stone-300"><%= public_snapshot_ratio_time(snapshot) %></p>
+          <% end %>
         </div>
-        <div class="min-w-0 rounded-md bg-white/10 p-2">
+        <div data-testid="public-brew-grind" class="min-w-0 rounded-md bg-white/10 p-2">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.grind_setting") %></p>
           <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew["grind_setting"].presence || unknown %></p>
         </div>
-        <div class="min-w-0 rounded-md bg-white/10 p-2">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.time") %></p>
-          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= public_snapshot_seconds(brew["total_time_seconds"]) %></p>
-        </div>
-        <div class="min-w-0 rounded-md bg-white/10 p-2">
+        <div data-testid="public-brew-rating" class="min-w-0 rounded-md bg-white/10 p-2">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.rating") %></p>
-          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew["rating"].presence || unknown %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis text-xs font-bold leading-tight text-white sm:text-sm"><%= public_snapshot_rating_label(brew["rating"]) %></p>
         </div>
-        <div class="min-w-0 rounded-md bg-white/10 p-2">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.temperature") %></p>
-          <p class="mt-1 overflow-hidden text-ellipsis font-bold text-amber-200"><%= public_snapshot_temperature(brew["brew_temperature_celsius"]) %></p>
+        <div data-testid="public-brew-balance" class="min-w-0 rounded-md bg-white/10 p-2">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("public_brew_pages.show.balance") %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis text-xs font-bold leading-tight text-green-300 sm:text-sm"><%= brew["taste_balance"].present? ? brew["taste_balance"].to_s.humanize : unknown %></p>
         </div>
       </div>
     </div>
@@ -84,13 +75,19 @@
       </defs>
       <line x1="44" y1="130" x2="500" y2="130" stroke="#1c1917" stroke-width="2.5" />
       <line x1="44" y1="20" x2="44" y2="130" stroke="#1c1917" stroke-width="2.5" />
+      <rect x="372" y="14" width="116" height="26" rx="6" fill="#fef3c7" stroke="#a16207" stroke-width="1.5" />
       <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" />
       <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42 L500 130 L44 130 Z" fill="url(#public-brew-fill-<%= share.token.parameterize %>)" />
       <path d="M44 9 C134 8, 224 8, 314 8 C390 7, 452 8, 500 11" fill="none" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" />
+      <line x1="<%= preinfusion_x %>" y1="126" x2="<%= preinfusion_x %>" y2="141" stroke="#92400e" stroke-width="2.5" />
+      <text data-testid="public-brew-preinfusion-label" x="<%= [ preinfusion_x - 24, 44 ].max %>" y="154" font-size="12" font-weight="800" fill="#92400e"><%= public_snapshot_seconds(brew["preinfusion_seconds"]) %></text>
+      <line x1="<%= first_drip_x %>" y1="112" x2="<%= first_drip_x %>" y2="130" stroke="#0f172a" stroke-width="2.5" />
+      <text data-testid="public-brew-first-drip-label" x="<%= [ first_drip_x - 20, 44 ].max %>" y="110" font-size="12" font-weight="800" fill="#0f172a"><%= public_snapshot_seconds(brew["first_drip_seconds"]) %></text>
       <text x="8" y="135" font-size="13" fill="#57534e">0g</text>
       <text x="6" y="52" font-size="13" fill="#57534e"><%= public_snapshot_grams(brew["beverage_grams"]) %></text>
       <text x="32" y="157" font-size="13" fill="#57534e">0s</text>
-      <text x="448" y="157" font-size="13" fill="#57534e"><%= public_snapshot_seconds(brew["total_time_seconds"]) %></text>
+      <text data-testid="public-brew-total-time-label" x="448" y="157" font-size="13" fill="#57534e"><%= public_snapshot_seconds(brew["total_time_seconds"]) %></text>
+      <text data-testid="public-brew-temperature-label" x="384" y="32" font-size="13" font-weight="800" fill="#78350f"><%= t("public_brew_pages.show.temp_label", temperature: public_snapshot_temperature(brew["brew_temperature_celsius"])) %></text>
       <text x="386" y="65" font-size="14" font-weight="800" fill="#0f172a"><%= public_snapshot_grams(brew["beverage_grams"]) %></text>
     </svg>
   </div>

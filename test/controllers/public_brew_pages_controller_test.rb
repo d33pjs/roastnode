@@ -18,7 +18,7 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-page]"
     assert_select "[data-testid=public-brew-hero-card]"
     assert_select "body", text: /Public brew story/
-    assert_select "a[href='https://example.test/shot'][data-testid=public-brew-link]", text: "Shot writeup"
+    assert_select "a[href='https://example.test/shot'][data-testid=public-brew-link]", text: /Shot writeup/
     assert_select "body", text: /Private brew note/, count: 0
     assert_select "body", text: /Private shot link/, count: 0
     assert_select "body", text: /one@example.com/, count: 0
@@ -101,6 +101,65 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match %r{/media/#{photo.id}(?:[?"])}, response.body
     assert_no_match "/rails/active_storage", response.body
     assert_no_match "/media_attachments", response.body
+  end
+
+  test "public hero mirrors private card metrics without in-card identity clutter" do
+    share = create_share(enabled: true)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-hero-card]"
+    assert_select "[data-testid=public-brew-dose]"
+    assert_select "[data-testid=public-brew-ratio]"
+    assert_select "[data-testid=public-brew-grind]"
+    assert_select "[data-testid=public-brew-rating]"
+    assert_select "[data-testid=public-brew-balance]"
+    assert_select "[data-testid=public-brew-retention]", count: 0
+    assert_select "[data-testid=public-brew-card-workspace]", count: 0
+    assert_select "[data-testid=public-brew-card-byline]", count: 0
+    assert_select "[data-testid=public-brew-identity-strip]"
+    assert_select "[data-testid=public-brew-preinfusion-label]", text: /5s/
+    assert_select "[data-testid=public-brew-first-drip-label]", text: /8s/
+    assert_select "[data-testid=public-brew-total-time-label]", text: /28s/
+    assert_select "[data-testid=public-brew-temperature-label]", text: /93/
+  end
+
+  test "public photos use contain cards and lightbox controls" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(enabled: true, selected_photo_attachment_ids: [ photo.id ])
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-controller~='public-lightbox']"
+    assert_select "button[data-action*='public-lightbox#open'][data-full-src]"
+    assert_select "img[data-testid=public-brew-gallery-photo].object-contain"
+    assert_no_match "/media_attachments", response.body
+    assert_no_match "/rails/active_storage", response.body
+  end
+
+  test "public links render with visible link icon treatment" do
+    share = create_share(enabled: true)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "a[data-testid=public-brew-link] [data-testid=public-link-icon]"
+  end
+
+  test "public bean section shows safe bean facts" do
+    share = create_share(enabled: true)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-product-section][data-kind=bean]"
+    assert_select "[data-testid=public-bean-fact]", text: /Bought/
+    assert_select "[data-testid=public-bean-fact]", text: /Opened/
+    assert_select "[data-testid=public-bean-fact]", text: /€/
+    assert_select "body", text: /Local roaster/, count: 0
   end
 
   test "password protected share shows gate until unlocked" do
