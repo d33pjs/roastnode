@@ -115,6 +115,13 @@ class RecipesController < ApplicationController
     ].freeze
     TARGET_TEXT_FIELDS = %i[grind_setting].freeze
     TARGET_FIELDS = (TARGET_DECIMAL_FIELDS + TARGET_INTEGER_FIELDS + TARGET_TEXT_FIELDS).freeze
+    INGREDIENT_FIELDS = %i[amount unit name].freeze
+    INGREDIENT_MAX_LENGTHS = {
+      "amount" => 32,
+      "unit" => 32,
+      "name" => 120
+    }.freeze
+    FINISH_NOTE_MAX_LENGTH = 1_000
 
     def set_recipe
       @recipe = current_workspace
@@ -143,7 +150,9 @@ class RecipesController < ApplicationController
       profile["title"] = title
       profile["guide"] = guide_from_params(profile["guide"] || {})
       profile["targets"] = targets_from_params(profile["targets"] || {})
-      profile
+      profile["ingredients"] = ingredients_from_params if attributes.key?(:ingredients)
+      profile["finish_note"] = finish_note_from_params if attributes.key?(:finish_note)
+      profile.compact
     end
 
     def guide_from_params(existing_guide)
@@ -173,6 +182,22 @@ class RecipesController < ApplicationController
       existing_targets
     end
 
+    def ingredients_from_params
+      rows = recipe_params[:ingredients] || ActionController::Parameters.new
+      rows.to_unsafe_h.values.filter_map do |row|
+        payload = INGREDIENT_FIELDS.each_with_object({}) do |field, result|
+          key = field.to_s
+          value = row[key].to_s.strip.first(INGREDIENT_MAX_LENGTHS.fetch(key))
+          result[key] = value if value.present?
+        end
+        payload if payload["name"].present?
+      end
+    end
+
+    def finish_note_from_params
+      recipe_params[:finish_note].to_s.strip.first(FINISH_NOTE_MAX_LENGTH).presence
+    end
+
     def source_snapshot_from_profile(profile)
       { "source_brew" => profile["source_brew"] }.compact
     end
@@ -193,7 +218,9 @@ class RecipesController < ApplicationController
         :title,
         :guide_note,
         :pressure_note,
+        :finish_note,
         targets: TARGET_FIELDS,
+        ingredients: [ INGREDIENT_FIELDS ],
         record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
       )
     end

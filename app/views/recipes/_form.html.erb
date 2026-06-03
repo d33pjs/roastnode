@@ -1,6 +1,8 @@
 <% profile = recipe.profile || {} %>
 <% targets = profile["targets"] || {} %>
 <% guide = profile["guide"] || {} %>
+<% ingredients = Array(profile["ingredients"]) %>
+<% ingredient_rows = ingredients + [ {} ] %>
 <% label_class = "block text-sm font-extrabold text-rn-muted" %>
 <% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
 <% section_class = "grid gap-4 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
@@ -76,6 +78,32 @@
       <div>
         <%= label_tag "recipe_pressure_note", t("recipes.form.pressure_note"), class: label_class %>
         <%= text_area_tag "recipe[pressure_note]", guide["pressure_note"], id: "recipe_pressure_note", rows: 2, class: input_class %>
+      </div>
+    </div>
+  </section>
+
+  <section class="<%= section_class %>">
+    <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("recipes.form.finish") %></h2>
+    <div class="grid gap-3">
+      <% ingredient_rows.each_with_index do |ingredient, index| %>
+        <div class="grid gap-2 sm:grid-cols-[7rem_7rem_minmax(0,1fr)]">
+          <div>
+            <%= label_tag "recipe_ingredients_#{index}_amount", t("recipes.form.ingredient_amount"), class: label_class %>
+            <%= text_field_tag "recipe[ingredients][#{index}][amount]", ingredient["amount"], id: "recipe_ingredients_#{index}_amount", class: input_class %>
+          </div>
+          <div>
+            <%= label_tag "recipe_ingredients_#{index}_unit", t("recipes.form.ingredient_unit"), class: label_class %>
+            <%= text_field_tag "recipe[ingredients][#{index}][unit]", ingredient["unit"], id: "recipe_ingredients_#{index}_unit", class: input_class %>
+          </div>
+          <div>
+            <%= label_tag "recipe_ingredients_#{index}_name", t("recipes.form.ingredient_name"), class: label_class %>
+            <%= text_field_tag "recipe[ingredients][#{index}][name]", ingredient["name"], id: "recipe_ingredients_#{index}_name", class: input_class %>
+          </div>
+        </div>
+      <% end %>
+      <div>
+        <%= label_tag "recipe_finish_note", t("recipes.form.finish_note"), class: label_class %>
+        <%= text_area_tag "recipe[finish_note]", profile["finish_note"], id: "recipe_finish_note", rows: 3, class: input_class %>
       </div>
     </div>
   </section>

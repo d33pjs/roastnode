@@ -21,50 +21,54 @@
     </div>
 
     <div class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-      <section class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
-        <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".details") %></h2>
+      <div class="grid gap-5">
+        <section class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+          <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".details") %></h2>
 
-        <dl class="mt-4 grid gap-3 sm:grid-cols-2">
-          <% bean = @recipe.profile["bean"] || {} %>
-          <% equipment = @recipe.profile["equipment"] || {} %>
-          <% grinder = equipment["grinder"] || {} %>
-          <% machine = equipment["machine"] || {} %>
-          <% source = @recipe.profile["source_brew"] || {} %>
-          <div>
-            <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".bean") %></dt>
-            <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= bean["display_name"].presence || bean["name"].presence || t(".unknown") %></dd>
-          </div>
-          <div>
-            <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".grinder") %></dt>
-            <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= grinder["name"].presence || t(".unknown") %></dd>
-          </div>
-          <div>
-            <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".machine") %></dt>
-            <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= machine["name"].presence || t(".unknown") %></dd>
-          </div>
-          <div>
-            <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".rating") %></dt>
-            <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= source["rating"].presence || t(".unknown") %></dd>
-          </div>
-        </dl>
-
-        <% if @recipe.source_brew.present? %>
-          <div class="mt-5 border-t border-rn-line pt-4">
-            <%= link_to t(".source_brew"), brew_path(@recipe.source_brew), class: "text-sm font-extrabold text-rn-ink underline decoration-rn-line underline-offset-4 hover:decoration-rn-ink" %>
-          </div>
-        <% end %>
-
-        <% if @recipe.record_links.ordered.any? %>
-          <div class="mt-5 border-t border-rn-line pt-4">
-            <h3 class="text-xs font-bold uppercase text-rn-muted"><%= t("shared.record_links.title") %></h3>
-            <div class="mt-2 flex flex-wrap gap-2">
-              <% @recipe.record_links.ordered.each do |link| %>
-                <%= link_to link.label, link.url, target: "_blank", rel: "noopener", class: "rounded-full border border-rn-line bg-[var(--rn-canvas)] px-3 py-1.5 text-sm font-bold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
-              <% end %>
+          <dl class="mt-4 grid gap-3 sm:grid-cols-2">
+            <% bean = @recipe.profile["bean"] || {} %>
+            <% equipment = @recipe.profile["equipment"] || {} %>
+            <% grinder = equipment["grinder"] || {} %>
+            <% machine = equipment["machine"] || {} %>
+            <% source = @recipe.profile["source_brew"] || {} %>
+            <div>
+              <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".bean") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= bean["display_name"].presence || bean["name"].presence || t(".unknown") %></dd>
             </div>
-          </div>
-        <% end %>
-      </section>
+            <div>
+              <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".grinder") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= grinder["name"].presence || t(".unknown") %></dd>
+            </div>
+            <div>
+              <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".machine") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= machine["name"].presence || t(".unknown") %></dd>
+            </div>
+            <div>
+              <dt class="text-xs font-bold uppercase text-rn-muted"><%= t(".rating") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= source["rating"].presence || t(".unknown") %></dd>
+            </div>
+          </dl>
+
+          <% if @recipe.source_brew.present? %>
+            <div class="mt-5 border-t border-rn-line pt-4">
+              <%= link_to t(".source_brew"), brew_path(@recipe.source_brew), class: "text-sm font-extrabold text-rn-ink underline decoration-rn-line underline-offset-4 hover:decoration-rn-ink" %>
+            </div>
+          <% end %>
+
+          <% if @recipe.record_links.ordered.any? %>
+            <div class="mt-5 border-t border-rn-line pt-4">
+              <h3 class="text-xs font-bold uppercase text-rn-muted"><%= t("shared.record_links.title") %></h3>
+              <div class="mt-2 flex flex-wrap gap-2">
+                <% @recipe.record_links.ordered.each do |link| %>
+                  <%= link_to link.label, link.url, target: "_blank", rel: "noopener", class: "rounded-full border border-rn-line bg-[var(--rn-canvas)] px-3 py-1.5 text-sm font-bold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </section>
+
+        <%= render "recipes/finish_card", recipe: @recipe %>
+      </div>
 
       <%= render "recipes/target_guide", recipe: @recipe %>
     </div>

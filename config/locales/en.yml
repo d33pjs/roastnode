@@ -909,16 +909,23 @@ en:
       update: "Save recipe"
     export:
       created: "Recipe exported."
+    finish:
+      title: "Finish with"
     form:
       bean_weight: "Bean in (g)"
       beverage: "Yield (g)"
       dose: "Dose (g)"
+      finish: "Ingredients / finish"
+      finish_note: "Finish note"
       first_drip: "First drip (s)"
       grind_setting: "Grind setting"
       ground_weight: "Ground out (g)"
       guide: "Guide"
       guide_note: "Watch-for note"
       identity: "Identity"
+      ingredient_amount: "Amount"
+      ingredient_name: "Ingredient"
+      ingredient_unit: "Unit"
       pressure_note: "Pressure note"
       preinfusion: "Preinfusion (s)"
       targets: "Exact targets"

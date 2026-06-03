@@ -17,8 +17,9 @@
 
     <% if @recipe %>
       <div class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
-        <div class="lg:order-2 lg:sticky lg:top-6">
+        <div class="grid gap-4 lg:order-2 lg:sticky lg:top-6">
           <%= render "recipes/target_guide", recipe: @recipe %>
+          <%= render "recipes/finish_card", recipe: @recipe %>
         </div>
         <div class="min-w-0 lg:order-1">
           <%= form_markup %>

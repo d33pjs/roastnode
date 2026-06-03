@@ -80,6 +80,24 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "34", count: 0
   end
 
+  test "new brew with recipe renders recipe finish card without pre-filling brew fields" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" }
+    ]
+    profile["finish_note"] = "Pour espresso over matcha."
+    recipe.update!(profile:)
+
+    get new_brew_path(recipe_id: recipe.id)
+
+    assert_response :success
+    assert_select "[data-testid=recipe-finish-card]", text: /200 ml matcha/
+    assert_select "[data-testid=recipe-finish-card]", text: /Pour espresso over matcha/
+    assert_select "input[name='brew[dose_grams]'][value='18.0']", count: 0
+  end
+
   test "new with cross workspace recipe is not found" do
     sign_in_as(users(:one))
 

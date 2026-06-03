@@ -1,0 +1,33 @@
+<%
+  profile = recipe.profile || {}
+  ingredients = Array(profile["ingredients"]).filter_map do |ingredient|
+    name = ingredient["name"].to_s.strip
+    next if name.blank?
+
+    prefix = [ ingredient["amount"], ingredient["unit"] ].map { |value| value.to_s.strip }.reject(&:blank?).join(" ")
+    [ prefix, name ].reject(&:blank?).join(" ")
+  end
+  finish_note = profile["finish_note"].presence
+%>
+
+<% if ingredients.any? || finish_note.present? %>
+  <aside data-testid="recipe-finish-card" class="overflow-hidden rounded-3xl border border-rn-line bg-rn-surface shadow-sm">
+    <div class="border-b border-rn-line bg-[var(--rn-canvas)] px-4 py-3">
+      <h2 class="text-lg font-black text-rn-ink"><%= t("recipes.finish.title") %></h2>
+    </div>
+
+    <div class="p-4">
+      <% if ingredients.any? %>
+        <ul class="grid gap-2">
+          <% ingredients.each do |ingredient| %>
+            <li class="rounded-2xl bg-[var(--rn-surface-muted)] px-4 py-3 text-sm font-extrabold text-rn-ink"><%= ingredient %></li>
+          <% end %>
+        </ul>
+      <% end %>
+
+      <% if finish_note.present? %>
+        <p class="<%= ingredients.any? ? "mt-3 " : "" %>whitespace-pre-line text-sm font-semibold leading-6 text-rn-muted"><%= finish_note %></p>
+      <% end %>
+    </div>
+  </aside>
+<% end %>

@@ -12,6 +12,8 @@ class RecipeSnapshotBuilder
       "method" => brew.method,
       "targets" => target_payload,
       "guide" => guide_payload,
+      "ingredients" => [],
+      "finish_note" => nil,
       "source_brew" => source_brew_payload,
       "bean" => bean_payload,
       "equipment" => equipment_payload,

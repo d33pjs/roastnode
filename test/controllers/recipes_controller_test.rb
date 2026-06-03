@@ -27,6 +27,25 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: recipes(:other_workspace_recipe).title, count: 0
   end
 
+  test "show renders finish ingredients and finish note" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" },
+      { "amount" => "1", "unit" => "shot", "name" => "honey" }
+    ]
+    profile["finish_note"] = "Add matcha after pulling the espresso."
+    recipe.update!(profile:)
+
+    get recipe_path(recipe)
+
+    assert_response :success
+    assert_select "[data-testid=recipe-finish-card]", text: /200 ml matcha/
+    assert_select "[data-testid=recipe-finish-card]", text: /1 shot honey/
+    assert_select "[data-testid=recipe-finish-card]", text: /Add matcha/
+  end
+
   test "writer exports recipe as portable json attachment" do
     sign_in_as(users(:one))
     recipe = recipes(:household_recipe)
@@ -125,6 +144,33 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Full pressure, stable gauge.", recipe.profile.dig("guide", "pressure_note")
   end
 
+  test "writer creates recipe with structured ingredients and finish note" do
+    sign_in_as(users(:one))
+
+    assert_difference -> { workspaces(:household).recipes.count }, 1 do
+      post recipes_path, params: {
+        recipe: {
+          source_brew_id: brews(:morning_espresso).id,
+          title: "Matcha honey espresso",
+          finish_note: "Add matcha after pulling the espresso, then stir in honey.",
+          ingredients: {
+            "0" => { amount: "200", unit: "ml", name: "matcha" },
+            "1" => { amount: "1", unit: "shot", name: "honey" },
+            "2" => { amount: "", unit: "", name: "" }
+          }
+        }
+      }
+    end
+
+    recipe = workspaces(:household).recipes.order(:created_at).last
+    assert_redirected_to recipe_path(recipe)
+    assert_equal "Add matcha after pulling the espresso, then stir in honey.", recipe.profile["finish_note"]
+    assert_equal [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" },
+      { "amount" => "1", "unit" => "shot", "name" => "honey" }
+    ], recipe.profile["ingredients"]
+  end
+
   test "writer edits exact target values" do
     sign_in_as(users(:one))
     recipe = recipes(:household_recipe)
@@ -150,6 +196,36 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "11.75", recipe.profile.dig("targets", "grind_setting")
     assert_equal 29, recipe.profile.dig("targets", "total_time_seconds")
     assert_equal "Aim for syrupy flow.", recipe.profile.dig("guide", "note")
+  end
+
+  test "writer edits and removes structured ingredients" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" },
+      { "amount" => "1", "unit" => "shot", "name" => "honey" }
+    ]
+    profile["finish_note"] = "Old finish."
+    recipe.update!(profile:)
+
+    patch recipe_path(recipe), params: {
+      recipe: {
+        title: recipe.title,
+        finish_note: "Stir gently.",
+        ingredients: {
+          "0" => { amount: "180", unit: "ml", name: "iced matcha" },
+          "1" => { amount: "", unit: "", name: "" }
+        }
+      }
+    }
+
+    assert_redirected_to recipe_path(recipe)
+    recipe.reload
+    assert_equal "Stir gently.", recipe.profile["finish_note"]
+    assert_equal [
+      { "amount" => "180", "unit" => "ml", "name" => "iced matcha" }
+    ], recipe.profile["ingredients"]
   end
 
   test "viewer can read recipes but cannot create edit destroy or log" do
