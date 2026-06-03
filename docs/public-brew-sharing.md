@@ -8,6 +8,7 @@ Public Brew Sharing lets a workspace writer publish one curated brew page withou
 - Unlisted public URL at `/s/:token` for enabled shares.
 - Optional per-share password gate.
 - Private share editor from the brew detail page.
+- Workspace-settings public-share overview with the public URL, linked brew, edit/remove actions, view count, and recent view IP history.
 - Public notes on brews, beans, equipment, and preparation tools.
 - Multiple typed record links on brews, beans, equipment, and preparation tools.
 - Link kinds: `info`, `buy`, and `affiliate`.
@@ -15,6 +16,8 @@ Public Brew Sharing lets a workspace writer publish one curated brew page withou
 - Selected brew/bean/equipment/tool photos on the public page.
 - Snapshot-driven public Hero Brew Card plus bean, grinder, machine, and preparation-tool sections.
 - Public media route with opaque handles for selected share media and public identity images.
+- Automatic snapshot refresh for public-safe brew, bean, gear, tool, public-link, workspace-logo, and user-avatar changes.
+- Public page view counts plus a capped recent list of full viewer IP addresses and viewed-at timestamps.
 
 ## Privacy Contract
 
@@ -59,9 +62,27 @@ The private share editor controls:
 - selected photo attachment IDs
 - snapshot regeneration from current public-safe fields
 
+The workspace settings page lists the active workspace's public brew shares. Each row shows the share URL, enabled state, linked brew, creation/update timestamps, view count, latest viewer IP/time, recent viewer IP history, and quick actions to open, edit, or remove the share. Removing a share from this list deletes the public share record and its retained view rows.
+
 Disabled shares and unknown tokens return `404 Not Found`. Password-protected shares show the password gate before the page. Unlock session state is scoped to the share token and to the current password fingerprint, so changing a share password invalidates previous browser unlocks.
 
 Public controllers look up shares by `token_digest`, not by raw token, so request logs and SQL logs do not need to include the bearer token.
+
+## Snapshot Refresh
+
+Public brew shares remain snapshot based, but current public-safe changes refresh every share that references the changed record.
+
+Refresh triggers include:
+
+- the shared brew
+- the brew's bean
+- the brew's grinder or machine
+- the brew's preparation tools
+- public links on any shared brew, bean, equipment, or preparation tool
+- workspace logo changes
+- user avatar/profile public-label changes for users who logged shared brews
+
+Refreshing a share rebuilds its snapshot and removes selected photos that are no longer valid for the brew, bean, equipment, machine, or preparation tools in that share. Public pages still render from the refreshed snapshot; they do not read arbitrary live private fields at request time.
 
 ## Public Links
 
@@ -86,21 +107,29 @@ The public media route applies the same password gate as the HTML page. It retur
 
 Because `/s/:token` is bearer access, Rails request logging redacts public share tokens and public media handles from `filtered_path`. Public share redirects are also configured through Rails redirect filtering.
 
+## Public View Tracking
+
+Each successful public page render records one `PublicBrewShareView` row with the share, workspace, full remote IP address, user agent, and timestamp. `PublicBrewShare#views_count` stores the total public page-view count, while the per-view table keeps only the latest 100 rows per share for quick review in workspace settings.
+
+Media requests and password-gate requests do not count as page views.
+
 ## Explicitly Deferred
 
 - Fediverse publishing.
 - Public overview page for all shared brews.
-- Public comments, reactions, or analytics.
+- Public comments or reactions.
+- Public analytics beyond the workspace-settings view count and recent IP history.
 - Public profiles beyond the identity shown on a shared brew page.
 - Dedicated mug records. Mugs can be modeled as preparation tools for now.
-- Automatic live regeneration after private records change.
 
 ## Agent Notes
 
 - Use `PublicBrewShareSnapshotBuilder` for public share data.
+- Use `PublicBrewShareRefresher` when private public-safe records change after a share already exists.
 - Treat `/s/:token` as bearer access for unlisted shares; do not log raw share tokens.
 - Use public media handles in public HTML; do not render Active Storage attachment IDs.
 - Keep public pages and public media independent from `current_workspace`.
 - Render only `public_note`, never private `notes`, on public pages.
 - Bean purchase price may render publicly; equipment and preparation-tool prices must not.
+- Page-view IP history is intentionally full IP storage for owner/admin share management, but retained per-share rows are capped.
 - Add negative tests whenever changing public sharing, especially for password gates, disabled shares, selected media, private notes, private links, and raw media URL leakage.
