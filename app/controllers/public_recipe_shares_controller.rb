@@ -84,8 +84,12 @@ class PublicRecipeSharesController < ApplicationController
     end
 
     def load_form_state(selected_photo_attachment_ids)
-      @available_photos = @recipe.photos.attachments
+      @available_photos = available_photos
       @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i)
+    end
+
+    def available_photos
+      Array(@recipe.primary_photo_attachment)
     end
 
     def selected_photo_attachment_ids_from_params
@@ -93,7 +97,7 @@ class PublicRecipeSharesController < ApplicationController
     end
 
     def permitted_selected_photo_attachment_ids
-      selected_photo_attachment_ids_from_params & @recipe.photos.attachments.map(&:id)
+      selected_photo_attachment_ids_from_params & available_photos.map(&:id)
     end
 
     def share_params

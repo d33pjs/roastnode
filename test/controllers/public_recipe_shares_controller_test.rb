@@ -31,6 +31,30 @@ class PublicRecipeSharesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?][checked]", "public_recipe_share[selected_photo_attachment_ids][]", photo.id.to_s, count: 0
   end
 
+  test "share form only offers the primary recipe photo" do
+    recipe = recipes(:household_recipe)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "primary-photo.jpg",
+      content_type: "image/jpeg"
+    )
+    primary = recipe.photos.attachments.first
+    recipe.set_primary_photo!(primary)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "legacy-extra-photo.jpg",
+      content_type: "image/jpeg"
+    )
+    legacy_extra = recipe.photos.attachments.order(:id).last
+    sign_in_as(users(:one))
+
+    get new_recipe_public_recipe_share_path(recipe)
+
+    assert_response :success
+    assert_select "input[type=checkbox][name=?][value=?]", "public_recipe_share[selected_photo_attachment_ids][]", primary.id.to_s
+    assert_select "input[type=checkbox][name=?][value=?]", "public_recipe_share[selected_photo_attachment_ids][]", legacy_extra.id.to_s, count: 0
+  end
+
   test "writer creates disabled password protected recipe share snapshot" do
     sign_in_as(users(:one))
     recipe = recipes(:household_recipe)

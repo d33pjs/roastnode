@@ -42,9 +42,10 @@ class RecipesController < ApplicationController
       source_snapshot: source_snapshot_from_profile(profile)
     )
     assign_record_link_attributes(@recipe)
-    assign_recipe_photos(@recipe, source_brew)
+    recipe_photo = recipe_photo_from_params(source_brew)
 
     if @recipe.save
+      replace_recipe_photo(@recipe, recipe_photo) if recipe_photo
       redirect_to @recipe, notice: t(".created")
     else
       prepare_record_links(@recipe)
@@ -63,7 +64,7 @@ class RecipesController < ApplicationController
     assign_record_link_attributes(@recipe)
 
     if @recipe.save
-      assign_uploaded_recipe_photos_as_primary(@recipe, uploaded_photos)
+      replace_recipe_photo(@recipe, uploaded_photos.first) if uploaded_photos.any?
       redirect_to @recipe, notice: t(".updated")
     else
       prepare_record_links(@recipe)
@@ -235,36 +236,32 @@ class RecipesController < ApplicationController
       record.prepare_record_links_for_form
     end
 
-    def assign_recipe_photos(recipe, source_brew)
-      assign_uploaded_recipe_photos(recipe)
-      attach_source_brew_photo(recipe, source_brew) if recipe_params[:use_source_brew_photo] == "1"
-    end
-
-    def assign_uploaded_recipe_photos(recipe)
-      photos = uploaded_recipe_photos
-      recipe.photos.attach(photos) if photos.any?
-    end
-
-    def assign_uploaded_recipe_photos_as_primary(recipe, photos)
-      photos = Array(photos).reject(&:blank?)
-      return if photos.blank?
-
-      recipe.photos.attach(photos)
+    def replace_recipe_photo(recipe, attachable)
+      previous_attachments = recipe.photos.attachments.to_a
+      recipe.photos.attach(attachable)
       new_attachment = recipe.photos.attachments.order(:id).last
-      recipe.set_primary_photo!(new_attachment) if new_attachment
+      return unless new_attachment
+
+      recipe.set_primary_photo!(new_attachment)
+      previous_attachments.each(&:destroy!)
     end
 
     def uploaded_recipe_photos
       Array(recipe_params[:photos]).reject(&:blank?)
     end
 
-    def attach_source_brew_photo(recipe, source_brew)
+    def recipe_photo_from_params(source_brew)
+      source_photo = source_brew_photo_from_params(source_brew) if recipe_params[:use_source_brew_photo] == "1"
+      uploaded_recipe_photos.first || source_photo
+    end
+
+    def source_brew_photo_from_params(source_brew)
       attachment = source_brew.primary_photo_attachment
       requested_id = recipe_params[:source_brew_photo_attachment_id].presence&.to_i
       raise ActiveRecord::RecordNotFound if requested_id && (attachment.blank? || requested_id != attachment.id)
       return if attachment.blank?
 
-      recipe.photos.attach(attachment.blob)
+      attachment.blob
     end
 
     def recipe_params

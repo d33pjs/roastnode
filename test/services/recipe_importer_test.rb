@@ -58,7 +58,12 @@ class RecipeImporterTest < ActiveSupport::TestCase
           "links" => [
             { "label" => "Bean notes", "url" => "https://example.test/bean" }
           ],
-          "selected_photo_attachment_ids" => [ 123 ]
+          "selected_photo_attachment_ids" => [ 123 ],
+          "media_handle" => "public-media-handle",
+          "public_media_handle" => "public-media-handle",
+          "original_filename" => "private-original.jpg",
+          "file_name" => "private-file-name.jpg",
+          "public_media_path" => "/r/raw-token/media/raw-handle"
         },
         "guide" => base_payload.fetch("recipe").fetch("profile").fetch("guide").merge(
           "attachment_id" => 456
@@ -76,7 +81,9 @@ class RecipeImporterTest < ActiveSupport::TestCase
           ],
           "links" => [
             { "label" => "Source notes", "url" => "https://example.test/source" }
-          ]
+          ],
+          "media_handle" => "source-media-handle",
+          "url" => "/r/source-token/media/source-handle"
         },
         "equipment" => {
           "grinder" => {
@@ -102,10 +109,18 @@ class RecipeImporterTest < ActiveSupport::TestCase
     assert_not_includes json, "blob_id"
     assert_not_includes json, "signed_id"
     assert_not_includes json, "filename"
+    assert_not_includes json, "original_filename"
+    assert_not_includes json, "file_name"
+    assert_not_includes json, "media_handle"
+    assert_not_includes json, "public_media_handle"
     assert_not_includes json, "private-bean.jpg"
     assert_not_includes json, "private-brew.jpg"
+    assert_not_includes json, "private-original.jpg"
+    assert_not_includes json, "private-file-name.jpg"
     assert_not_includes json, "/rails/active_storage"
     assert_not_includes json, "/media_attachments"
+    assert_not_includes json, "/r/raw-token/media/raw-handle"
+    assert_not_includes json, "/r/source-token/media/source-handle"
   end
 
   test "rejects malformed json" do

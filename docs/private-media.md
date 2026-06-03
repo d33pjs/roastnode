@@ -50,7 +50,7 @@ Public recipe share pages may render explicitly selected recipe photos through `
 
 The public recipe media controller streams only recipe photo attachment IDs that are both selected on the `PublicRecipeShare` and present in the share snapshot's `public_media` allowlist. Disabled shares, unknown tokens, locked password-protected shares, unsupported variants, deleted attachments, unselected recipe photos, and attachments outside the snapshot allowlist return `404 Not Found`.
 
-Public recipe media responses use generic filenames and opaque per-share media handles. Rendered public recipe HTML and request/redirect logs must not expose raw attachment IDs, original filenames, raw share tokens, or media handles.
+Public recipe media responses use generic filenames and opaque per-share media handles. Rendered public recipe HTML must not expose raw attachment IDs or original filenames. Request and redirect logs must not expose raw share tokens or media handles.
 
 Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, preparation tools, and recipes. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
 

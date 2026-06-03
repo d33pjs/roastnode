@@ -201,6 +201,34 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal brew.primary_photo_attachment.blob_id, recipe.primary_photo_attachment.blob_id
   end
 
+  test "writer create keeps one finished drink photo when upload and source reuse are both present" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "source-photo.jpg",
+      content_type: "image/jpeg"
+    )
+    brew.set_primary_photo!(brew.photos.attachments.first)
+
+    post recipes_path, params: {
+      recipe: {
+        source_brew_id: brew.id,
+        title: "Single photo recipe",
+        use_source_brew_photo: "1",
+        source_brew_photo_attachment_id: brew.primary_photo_attachment.id,
+        photos: [
+          fixture_file_upload("photo.jpg", "image/jpeg")
+        ]
+      }
+    }
+
+    recipe = workspaces(:household).recipes.order(:created_at).last
+    assert_redirected_to recipe_path(recipe)
+    assert_equal 1, recipe.photos.attachments.count
+    assert_not_equal brew.primary_photo_attachment.blob_id, recipe.primary_photo_attachment.blob_id
+  end
+
   test "writer cannot reuse cross workspace source photo" do
     sign_in_as(users(:one))
     other_brew = brews(:other_workspace_brew)
@@ -319,6 +347,8 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     recipe.reload
     new_attachment = recipe.photos.attachments.order(:id).last
     assert_not_equal old_attachment.id, new_attachment.id
+    assert_equal 1, recipe.photos.attachments.count
+    assert_not_includes recipe.photos.attachments.map(&:id), old_attachment.id
     assert_equal new_attachment, recipe.primary_photo_attachment
 
     get recipe_path(recipe)

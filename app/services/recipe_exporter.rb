@@ -5,6 +5,7 @@ class RecipeExporter
     "/rails/active_storage",
     "/media_attachments"
   ].freeze
+  PUBLIC_MEDIA_PATH_PATTERN = %r{/[sr]/[^/?#]+/media/[^/?#]+}
   MEDIA_INTERNAL_KEYS = %w[
     photos
     photo
@@ -13,7 +14,13 @@ class RecipeExporter
     blob_id
     signed_id
     filename
+    original_filename
+    file_name
     content_type
+    media_handle
+    public_media_handle
+    media_path
+    public_media_path
     media_url
   ].freeze
 
@@ -53,7 +60,7 @@ class RecipeExporter
       end
 
       def media_internal_string?(value)
-        MEDIA_PATH_MARKERS.any? { |marker| value.include?(marker) }
+        MEDIA_PATH_MARKERS.any? { |marker| value.include?(marker) } || value.match?(PUBLIC_MEDIA_PATH_PATTERN)
       end
   end
 
