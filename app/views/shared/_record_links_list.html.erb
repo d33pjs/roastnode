@@ -1,0 +1,16 @@
+<% links = record.record_links.ordered.to_a %>
+<% if links.any? %>
+  <section data-testid="record-links-list" class="<%= local_assigns.fetch(:section_class, "mt-6 rounded-lg border border-stone-200 bg-white p-5 shadow-sm") %>">
+    <h2 class="<%= local_assigns.fetch(:title_class, "text-lg font-semibold text-stone-950") %>"><%= t("shared.record_links.title") %></h2>
+    <div class="mt-3 flex flex-wrap gap-2">
+      <% links.each do |link| %>
+        <%= link_to link.url, target: "_blank", rel: "noopener", class: "inline-flex items-center gap-2 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-bold text-stone-950 underline decoration-stone-300 underline-offset-4 hover:bg-stone-50 hover:decoration-stone-950" do %>
+          <span aria-hidden="true">-></span>
+          <span><%= link.label %></span>
+          <span class="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-black uppercase text-stone-600"><%= t("shared.record_links.kinds.#{link.kind}") %></span>
+          <span data-testid="record-link-visibility" class="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-black uppercase text-stone-600"><%= t("shared.record_links.visibilities.#{link.visibility}") %></span>
+        <% end %>
+      <% end %>
+    </div>
+  </section>
+<% end %>

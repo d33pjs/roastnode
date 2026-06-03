@@ -203,6 +203,18 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", equipment_path(equipment)
   end
 
+  test "show renders equipment record links" do
+    sign_in_as(users(:one))
+    equipment = equipment(:household_grinder)
+    equipment.record_links.create!(label: "Buy grinder", url: "https://example.test/grinder", kind: "buy", visibility: "public")
+
+    get equipment_path(equipment)
+
+    assert_response :success
+    assert_select "[data-testid=record-links-list]"
+    assert_select "a[href='https://example.test/grinder']", text: /Buy grinder/
+  end
+
   test "archive and reopen equipment" do
     sign_in_as(users(:one))
     equipment = equipment(:household_grinder)

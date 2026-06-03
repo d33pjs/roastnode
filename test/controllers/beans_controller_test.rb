@@ -392,6 +392,22 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
+  test "show renders bean record links with visibility labels" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.record_links.create!(label: "Buy beans", url: "https://example.test/beans", kind: "buy", visibility: "public")
+    bean.record_links.create!(label: "Private cupping", url: "https://example.test/private", kind: "info", visibility: "private")
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=record-links-list]"
+    assert_select "a[href='https://example.test/beans']", text: /Buy beans/
+    assert_select "a[href='https://example.test/private']", text: /Private cupping/
+    assert_select "[data-testid=record-link-visibility]", text: I18n.t("shared.record_links.visibilities.public")
+    assert_select "[data-testid=record-link-visibility]", text: I18n.t("shared.record_links.visibilities.private")
+  end
+
   test "show renders bean analytics" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

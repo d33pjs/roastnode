@@ -252,6 +252,8 @@
       </dl>
     </section>
 
+    <%= render "shared/record_links_list", record: @bean %>
+
     <section class="mt-6 rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
       <h2 class="text-lg font-semibold text-stone-950"><%= t(".notes") %></h2>
       <p class="mt-2 whitespace-pre-line text-stone-700"><%= @bean.notes.presence || t(".no_notes") %></p>

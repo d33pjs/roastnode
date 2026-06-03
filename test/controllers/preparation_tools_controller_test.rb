@@ -54,6 +54,18 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", preparation_tool_path(preparation_tools(:wdt))
   end
 
+  test "show renders preparation tool record links" do
+    sign_in_as(users(:one))
+    tool = preparation_tools(:wdt)
+    tool.record_links.create!(label: "Tool info", url: "https://example.test/tool", kind: "info", visibility: "public")
+
+    get preparation_tool_path(tool)
+
+    assert_response :success
+    assert_select "[data-testid=record-links-list]"
+    assert_select "a[href='https://example.test/tool']", text: /Tool info/
+  end
+
   test "show filters preparation tool analytics by date range" do
     sign_in_as(users(:one))
     tool = preparation_tools(:wdt)
