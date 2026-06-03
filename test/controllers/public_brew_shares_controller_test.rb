@@ -19,6 +19,8 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("public_brew_shares.new.title")
     assert_select "input[type=checkbox][name=?]", "public_brew_share[enabled]"
     assert_select "input[name=?]", "public_brew_share[title]"
+    assert_select "input[name=?][value=?]", "public_brew_share[title]", "Espresso with #{brew.bean.name}"
+    assert_select "input[name=?][value*=?]", "public_brew_share[title]", brew.bean.roaster_name, count: 0
     assert_select "input[type=password][name=?]", "public_brew_share[password]"
     [ brew_photo, bean_photo, grinder_photo, machine_photo, tool_photo ].each do |photo|
       assert_select "input[type=checkbox][name=?][value=?]", "public_brew_share[selected_photo_attachment_ids][]", photo.id.to_s
@@ -72,8 +74,8 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
 
     share = brew.reload.public_brew_share
     assert_equal [ selected_photo.id ], share.selected_photo_attachment_ids
-    assert_includes share.snapshot.to_json, selected_photo.id.to_s
-    assert_not_includes share.snapshot.to_json, unrelated_photo.id.to_s
+    assert_includes share.public_attachment_ids, selected_photo.id
+    assert_not_includes share.public_attachment_ids, unrelated_photo.id
   end
 
   test "post to existing share updates without creating duplicate" do

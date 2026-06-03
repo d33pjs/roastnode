@@ -126,6 +126,6 @@ class PublicBrewSharesController < ApplicationController
     end
 
     def default_title
-      "Espresso with #{@brew.bean.display_name}"
+      PublicBrewShare.default_title_for(@brew)
     end
 end

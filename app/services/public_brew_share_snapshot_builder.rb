@@ -25,7 +25,7 @@ class PublicBrewShareSnapshotBuilder
     attr_reader :brew, :title, :selected_photo_attachment_ids
 
     def default_title
-      "Espresso with #{brew.bean.display_name}"
+      PublicBrewShare.default_title_for(brew)
     end
 
     def workspace_payload

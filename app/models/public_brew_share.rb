@@ -11,6 +11,30 @@ class PublicBrewShare < ApplicationRecord
 
   has_many :public_brew_share_views, dependent: :delete_all
 
+  class << self
+    def default_title_for(brew)
+      "#{share_method_label(brew)} with #{brew.bean.name}"
+    end
+
+    def legacy_default_title_for(brew)
+      "#{share_method_label(brew)} with #{brew.bean.display_name}"
+    end
+
+    def generated_default_title?(title, brew)
+      title = title.to_s
+      title.present? && [ default_title_for(brew), legacy_default_title_for(brew) ].include?(title)
+    end
+
+    def normalized_generated_title(title, brew)
+      generated_default_title?(title, brew) ? default_title_for(brew) : title
+    end
+
+    private
+      def share_method_label(brew)
+        brew.method.to_s.humanize
+      end
+  end
+
   before_validation :set_token, on: :create
   before_validation :set_token_digest
   before_validation :set_workspace_from_brew
@@ -74,6 +98,8 @@ class PublicBrewShare < ApplicationRecord
   end
 
   def refresh_snapshot!(title:, selected_photo_attachment_ids:, updated_by:)
+    title = self.class.normalized_generated_title(title, brew)
+
     update!(
       title:,
       selected_photo_attachment_ids: Array(selected_photo_attachment_ids).map(&:to_i).uniq,

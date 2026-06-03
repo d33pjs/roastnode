@@ -59,7 +59,7 @@ Workspace writers can create and manage public shares for brews they logged. Own
 The private share editor controls:
 
 - enabled or disabled state
-- share title
+- share title, prefilled as `Method with Bean Name` without the roaster name
 - optional password
 - selected photo attachment IDs
 - snapshot regeneration from current public-safe fields
@@ -84,7 +84,7 @@ Refresh triggers include:
 - workspace logo changes
 - user avatar/profile public-label changes for users who logged shared brews
 
-Refreshing a share rebuilds its snapshot and removes selected photos that are no longer valid for the brew, bean, equipment, machine, or preparation tools in that share. Public pages still render from the refreshed snapshot; they do not read arbitrary live private fields at request time.
+Refreshing a share rebuilds its snapshot, shortens legacy generated titles that used the roaster name, and removes selected photos that are no longer valid for the brew, bean, equipment, machine, or preparation tools in that share. Public pages still render from the refreshed snapshot; they do not read arbitrary live private fields at request time.
 
 ## Public Links
 

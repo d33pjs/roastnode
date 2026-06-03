@@ -3,6 +3,19 @@ require "test_helper"
 class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
   include PhotoTestHelper
 
+  test "default title uses bean name without roaster" do
+    brew = brews(:morning_espresso)
+
+    snapshot = PublicBrewShareSnapshotBuilder.new(
+      brew:,
+      title: "",
+      selected_photo_attachment_ids: []
+    ).call
+
+    assert_equal "Espresso with #{brew.bean.name}", snapshot.fetch("title")
+    assert_not_includes snapshot.fetch("title"), brew.bean.roaster_name
+  end
+
   test "builds a public-safe snapshot from selected records" do
     brew = brews(:morning_espresso)
     brew.update!(public_note: "Public brew story.", notes: "Private brew note.")

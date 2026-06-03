@@ -60,18 +60,40 @@ class PublicBrewShareRefresherTest < ActiveSupport::TestCase
     assert_not_includes share.public_attachment_ids, photo.id
   end
 
+  test "refresh shortens legacy generated title" do
+    brew = brews(:morning_espresso)
+    share = create_share_for(brew, title: PublicBrewShare.legacy_default_title_for(brew))
+
+    PublicBrewShareRefresher.refresh(share)
+
+    share.reload
+    assert_equal PublicBrewShare.default_title_for(brew), share.title
+    assert_equal PublicBrewShare.default_title_for(brew), share.snapshot.fetch("title")
+  end
+
+  test "refresh preserves custom title" do
+    brew = brews(:morning_espresso)
+    share = create_share_for(brew, title: "Shared morning shot")
+
+    PublicBrewShareRefresher.refresh(share)
+
+    share.reload
+    assert_equal "Shared morning shot", share.title
+    assert_equal "Shared morning shot", share.snapshot.fetch("title")
+  end
+
   private
-    def create_share_for(brew, selected_photo_attachment_ids: [])
+    def create_share_for(brew, title: "Shared shot", selected_photo_attachment_ids: [])
       brew.create_public_brew_share!(
         workspace: brew.workspace,
         created_by: users(:one),
         updated_by: users(:one),
         enabled: true,
-        title: "Shared shot",
+        title:,
         selected_photo_attachment_ids:,
         snapshot: PublicBrewShareSnapshotBuilder.new(
           brew:,
-          title: "Shared shot",
+          title:,
           selected_photo_attachment_ids:
         ).call
       )

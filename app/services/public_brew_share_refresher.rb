@@ -44,13 +44,15 @@ class PublicBrewShareRefresher
   def refresh
     share.reload
     selected_photo_attachment_ids = share.valid_selected_photo_attachment_ids
+    title = PublicBrewShare.normalized_generated_title(share.title, share.brew)
     snapshot = PublicBrewShareSnapshotBuilder.new(
       brew: share.brew,
-      title: share.title,
+      title:,
       selected_photo_attachment_ids:
     ).call
 
     share.update!(
+      title:,
       selected_photo_attachment_ids:,
       snapshot:
     )
