@@ -125,4 +125,25 @@ class PublicRecipeShareTest < ActiveSupport::TestCase
     assert_not_includes json, "attachment_id"
     assert_not_includes json, "one@example.com"
   end
+
+  test "snapshot includes public ingredients and finish note" do
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" }
+    ]
+    profile["finish_note"] = "Pour espresso over matcha."
+    recipe.update!(profile:)
+
+    share = PublicRecipeShare.create!(
+      workspace: recipe.workspace,
+      recipe:,
+      created_by: users(:one),
+      updated_by: users(:one)
+    )
+    share.refresh_snapshot!(title: "Public recipe", selected_photo_attachment_ids: [], updated_by: users(:one))
+
+    assert_equal [ { "amount" => "200", "unit" => "ml", "name" => "matcha" } ], share.snapshot.dig("recipe", "ingredients")
+    assert_equal "Pour espresso over matcha.", share.snapshot.dig("recipe", "finish_note")
+  end
 end

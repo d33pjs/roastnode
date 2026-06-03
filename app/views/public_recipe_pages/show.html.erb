@@ -4,6 +4,8 @@
 <% targets = recipe["targets"] || {} %>
 <% guide = recipe["guide"] || {} %>
 <% source_brew = recipe["source_brew"] || {} %>
+<% ingredients = Array(recipe["ingredients"]).select { |item| item["name"].present? } %>
+<% finish_note = recipe["finish_note"].presence %>
 <% bean = snapshot["bean"] || {} %>
 <% unknown = public_recipe_unknown_label %>
 
@@ -62,6 +64,25 @@
               <%= link_to public_recipe_link_label(link), link["url"], target: "_blank", rel: "noopener", data: { testid: "public-recipe-link" }, class: "rounded-full bg-stone-950 px-4 py-2 text-sm font-extrabold text-stone-50 hover:bg-stone-800" %>
             <% end %>
           </div>
+        <% end %>
+
+        <% if ingredients.any? || finish_note.present? %>
+          <section data-testid="public-recipe-finish" class="mt-6 rounded-lg border border-stone-300 bg-white p-4">
+            <h2 class="text-xs font-black uppercase tracking-[0.08em] text-stone-600"><%= t(".finish") %></h2>
+            <% if ingredients.any? %>
+              <ul class="mt-3 grid gap-2">
+                <% ingredients.each do |ingredient| %>
+                  <% amount = [ ingredient["amount"], ingredient["unit"] ].compact_blank.join(" ") %>
+                  <li class="rounded-lg bg-[#f6f4ef] px-4 py-3 text-sm font-black text-stone-950">
+                    <%= [ amount.presence, ingredient["name"] ].compact.join(" ") %>
+                  </li>
+                <% end %>
+              </ul>
+            <% end %>
+            <% if finish_note.present? %>
+              <p class="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-stone-700"><%= finish_note %></p>
+            <% end %>
+          </section>
         <% end %>
       </div>
 

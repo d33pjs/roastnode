@@ -28,11 +28,13 @@ class PublicRecipeShareSnapshotBuilder
   ].freeze
   EQUIPMENT_KEYS = %w[name kind model public_note].freeze
   TOOL_KEYS = %w[name brew_method position public_note].freeze
+  INGREDIENT_KEYS = %w[amount unit name].freeze
 
-  def initialize(recipe:, title:)
+  def initialize(recipe:, title:, selected_photo_attachment_ids: [])
     @recipe = recipe
     @title = title
     @profile = recipe.profile || {}
+    @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i).uniq
   end
 
   def call
@@ -49,7 +51,7 @@ class PublicRecipeShareSnapshotBuilder
   end
 
   private
-    attr_reader :recipe, :title, :profile
+    attr_reader :recipe, :title, :profile, :selected_photo_attachment_ids
 
     def workspace_payload
       { "name" => recipe.workspace.name }
@@ -64,9 +66,18 @@ class PublicRecipeShareSnapshotBuilder
         "method" => profile["method"].presence || recipe.method,
         "targets" => slice_hash(profile["targets"], TARGET_KEYS),
         "guide" => slice_hash(profile["guide"], GUIDE_KEYS),
+        "ingredients" => ingredient_payloads,
+        "finish_note" => profile["finish_note"].presence,
         "source_brew" => source_brew_payload,
         "links" => link_payloads(recipe)
       }.compact
+    end
+
+    def ingredient_payloads
+      Array(profile["ingredients"]).filter_map do |ingredient|
+        payload = slice_hash(ingredient, INGREDIENT_KEYS)
+        payload if payload["name"].present?
+      end
     end
 
     def source_brew_payload

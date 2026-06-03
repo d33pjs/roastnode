@@ -550,6 +550,7 @@ en:
       dose_label: "Dose"
       equipment: "Equipment"
       eyebrow: "Shared recipe"
+      finish: "Finish with"
       grinder: "Set grinder to %{value}"
       grinder_label: "Grinder"
       info: "Info"

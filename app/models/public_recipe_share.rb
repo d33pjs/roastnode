@@ -44,11 +44,16 @@ class PublicRecipeShare < ApplicationRecord
     policy.manage? || (policy.write? && recipe.created_by_id == user.id)
   end
 
-  def refresh_snapshot!(title:, updated_by:)
+  def refresh_snapshot!(title:, selected_photo_attachment_ids: [], updated_by:)
     update!(
       title:,
+      selected_photo_attachment_ids: Array(selected_photo_attachment_ids).map(&:to_i).uniq,
       updated_by:,
-      snapshot: PublicRecipeShareSnapshotBuilder.new(recipe:, title:).call
+      snapshot: PublicRecipeShareSnapshotBuilder.new(
+        recipe:,
+        title:,
+        selected_photo_attachment_ids:
+      ).call
     )
   end
 

@@ -27,6 +27,30 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "attachment_id", response.body
   end
 
+  test "enabled share renders public ingredients and finish note" do
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" }
+    ]
+    profile["finish_note"] = "Pour espresso over matcha."
+    recipe.update!(profile:)
+    share = recipe.create_public_recipe_share!(
+      workspace: recipe.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      title: "Shared recipe",
+      enabled: true,
+      snapshot: PublicRecipeShareSnapshotBuilder.new(recipe:, title: "Shared recipe", selected_photo_attachment_ids: []).call
+    )
+
+    get public_recipe_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-recipe-finish]", text: /200 ml matcha/
+    assert_select "[data-testid=public-recipe-finish]", text: /Pour espresso over matcha/
+  end
+
   test "password protected share shows gate until unlocked" do
     share = create_share(enabled: true, password: "espresso")
 

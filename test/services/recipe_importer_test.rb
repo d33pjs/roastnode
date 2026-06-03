@@ -26,6 +26,24 @@ class RecipeImporterTest < ActiveSupport::TestCase
     assert_equal [ "Shared guide" ], @recipe.record_links.ordered.pluck(:label)
   end
 
+  test "imports ingredients and finish note without media" do
+    payload = export_payload(
+      "profile" => export_payload.fetch("recipe").fetch("profile").merge(
+        "ingredients" => [
+          { "amount" => "200", "unit" => "ml", "name" => "matcha" },
+          { "amount" => "", "unit" => "", "name" => "" }
+        ],
+        "finish_note" => "Stir in honey."
+      )
+    )
+
+    recipe = RecipeImporter.new(workspace: workspaces(:household), user: users(:one), json: JSON.generate(payload)).call
+
+    assert_equal [ { "amount" => "200", "unit" => "ml", "name" => "matcha" } ], recipe.profile["ingredients"]
+    assert_equal "Stir in honey.", recipe.profile["finish_note"]
+    assert_not recipe.photos.attached?
+  end
+
   test "rejects malformed json" do
     error = assert_raises(RecipeImporter::ImportError) do
       RecipeImporter.new(workspace: workspaces(:household), user: users(:one), json: "{").call

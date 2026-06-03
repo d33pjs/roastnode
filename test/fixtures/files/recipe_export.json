@@ -17,6 +17,14 @@
       "guide": {
         "note": "Watch for a slow, glossy stream."
       },
+      "ingredients": [
+        {
+          "amount": "200",
+          "unit": "ml",
+          "name": "matcha"
+        }
+      ],
+      "finish_note": "Pour espresso over matcha.",
       "source_brew": {
         "rating": 5
       }

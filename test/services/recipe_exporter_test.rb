@@ -36,4 +36,29 @@ class RecipeExporterTest < ActiveSupport::TestCase
     assert_not_includes json, "Private vendor"
     assert_not_includes json, "one@example.com"
   end
+
+  test "exports ingredients and finish note but no media internals" do
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" }
+    ]
+    profile["finish_note"] = "Pour espresso over matcha."
+    recipe.update!(profile:)
+    recipe.photos.attach(
+      io: file_fixture("photo.jpg").open,
+      filename: "photo.jpg",
+      content_type: "image/jpeg"
+    )
+
+    payload = RecipeExporter.new(recipe).call
+
+    exported_profile = payload.fetch("recipe").fetch("profile")
+    assert_equal [ { "amount" => "200", "unit" => "ml", "name" => "matcha" } ], exported_profile.fetch("ingredients")
+    assert_equal "Pour espresso over matcha.", exported_profile.fetch("finish_note")
+    json = JSON.generate(payload)
+    assert_not_includes json, "attachment_id"
+    assert_not_includes json, "/rails/active_storage"
+    assert_not_includes json, "photo.jpg"
+  end
 end

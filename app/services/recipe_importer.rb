@@ -1,6 +1,14 @@
 class RecipeImporter
   class ImportError < StandardError; end
 
+  INGREDIENT_FIELDS = %w[amount unit name].freeze
+  INGREDIENT_MAX_LENGTHS = {
+    "amount" => 32,
+    "unit" => 32,
+    "name" => 120
+  }.freeze
+  FINISH_NOTE_MAX_LENGTH = 1_000
+
   def initialize(workspace:, user:, json:)
     @workspace = workspace
     @user = user
@@ -11,13 +19,14 @@ class RecipeImporter
     payload = parse_payload
     validate_payload!(payload)
     recipe_payload = payload.fetch("recipe")
+    profile = sanitize_profile(recipe_payload.fetch("profile"))
 
     Recipe.transaction do
       recipe = workspace.recipes.create!(
         created_by: user,
         title: recipe_payload.fetch("title"),
         method: recipe_payload.fetch("method"),
-        profile: recipe_payload.fetch("profile"),
+        profile:,
         source_snapshot: recipe_payload.fetch("source_snapshot"),
         source_brew: nil
       )
@@ -67,6 +76,25 @@ class RecipeImporter
       raise ImportError, "Recipe link URL must be an HTTP or HTTPS URL."
     rescue URI::InvalidURIError
       raise ImportError, "Recipe link URL must be an HTTP or HTTPS URL."
+    end
+
+    def sanitize_profile(profile)
+      sanitized = profile.deep_dup
+      sanitized["ingredients"] = sanitize_ingredients(sanitized["ingredients"])
+      sanitized["finish_note"] = sanitized["finish_note"].to_s.strip.first(FINISH_NOTE_MAX_LENGTH).presence
+      sanitized.compact
+    end
+
+    def sanitize_ingredients(ingredients)
+      Array(ingredients).filter_map do |ingredient|
+        next unless ingredient.is_a?(Hash)
+
+        payload = INGREDIENT_FIELDS.each_with_object({}) do |field, result|
+          value = ingredient[field].to_s.strip.first(INGREDIENT_MAX_LENGTHS.fetch(field))
+          result[field] = value if value.present?
+        end
+        payload if payload["name"].present?
+      end
     end
 
     def create_links!(recipe, links)
