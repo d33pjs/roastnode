@@ -251,6 +251,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
   test "writer can edit bean public note and public links" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
+    share = create_public_brew_share_for(brews(:morning_espresso))
 
     get edit_bean_path(bean)
 
@@ -280,6 +281,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to bean_path(bean)
     assert_equal "Public bean note.", bean.reload.public_note
     assert_equal "Buy beans", bean.record_links.first.label
+    assert_includes share.reload.snapshot.dig("bean", "links").map { |link| link.fetch("label") }, "Buy beans"
   end
 
   test "writer can update bean lifecycle status" do
@@ -712,6 +714,22 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
         beverage_grams: 45.3,
         total_time_seconds: 42,
         grind_setting: "1/3,0"
+      )
+    end
+
+    def create_public_brew_share_for(brew, selected_photo_attachment_ids: [])
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared shot",
+        selected_photo_attachment_ids:,
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:,
+          title: "Shared shot",
+          selected_photo_attachment_ids:
+        ).call
       )
     end
 end

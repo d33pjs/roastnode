@@ -11,6 +11,7 @@ class WorkspacesController < ApplicationController
     @workspace = current_workspace
 
     if @workspace.update(workspace_params)
+      PublicBrewShareRefresher.refresh_for(@workspace)
       redirect_to dashboard_path, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity

@@ -222,6 +222,8 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     grinder = equipment(:household_grinder)
     brew = brews(:morning_espresso)
+    share = create_public_brew_share_for(brew)
+    assert_equal grinder.name, share.snapshot.dig("equipment", 0, "name")
 
     assert_difference -> { workspaces(:household).equipment.count }, -1 do
       assert_no_difference -> { Brew.count } do
@@ -231,6 +233,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to equipment_index_path
     assert_nil brew.reload.grinder
+    assert_not_includes share.reload.snapshot.fetch("equipment").map { |item| item.fetch("role") }, "grinder"
   end
 
   test "viewer cannot manage equipment" do
@@ -332,4 +335,21 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
+
+  private
+    def create_public_brew_share_for(brew, selected_photo_attachment_ids: [])
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared shot",
+        selected_photo_attachment_ids:,
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:,
+          title: "Shared shot",
+          selected_photo_attachment_ids:
+        ).call
+      )
+    end
 end

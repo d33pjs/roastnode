@@ -73,6 +73,8 @@ class PublicBrewShareSnapshotBuilder
         "origin" => bean.origin,
         "process" => bean.process,
         "roast_date" => bean.roast_date&.iso8601,
+        "purchased_on" => bean.purchased_on&.iso8601,
+        "opened_on" => bean.opened_on&.iso8601,
         "roast_type" => bean.roast_type,
         "roast_level" => bean.roast_level,
         "roast_degree" => decimal_string(bean.roast_degree),

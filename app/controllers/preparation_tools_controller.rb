@@ -34,6 +34,7 @@ class PreparationToolsController < ApplicationController
 
     if @preparation_tool.save
       @preparation_tool.photos.attach(photos) if photos.any?
+      refresh_public_brew_shares_for(@preparation_tool)
       redirect_to preparation_tools_path, notice: t(".created")
     else
       prepare_record_links(@preparation_tool)
@@ -47,6 +48,7 @@ class PreparationToolsController < ApplicationController
 
     if @preparation_tool.update(attributes)
       @preparation_tool.photos.attach(photos) if photos.any?
+      refresh_public_brew_shares_for(@preparation_tool)
       redirect_to @preparation_tool, notice: t(".updated")
     else
       prepare_record_links(@preparation_tool)
@@ -56,16 +58,20 @@ class PreparationToolsController < ApplicationController
 
   def archive
     @preparation_tool.archive!
+    refresh_public_brew_shares_for(@preparation_tool)
     redirect_to @preparation_tool, notice: t(".archived")
   end
 
   def reopen
     @preparation_tool.reopen!
+    refresh_public_brew_shares_for(@preparation_tool)
     redirect_to @preparation_tool, notice: t(".reopened")
   end
 
   def destroy
+    share_ids = PublicBrewShareRefresher.shares_for(@preparation_tool).pluck(:id)
     @preparation_tool.destroy_with_history!
+    refresh_public_brew_shares(share_ids)
     redirect_to preparation_tools_path, notice: t(".destroyed")
   end
 
@@ -109,5 +115,13 @@ class PreparationToolsController < ApplicationController
 
     def prepare_record_links(record)
       record.prepare_record_links_for_form
+    end
+
+    def refresh_public_brew_shares_for(record)
+      PublicBrewShareRefresher.refresh_for(record)
+    end
+
+    def refresh_public_brew_shares(share_ids)
+      PublicBrewShare.where(id: share_ids).find_each { |share| PublicBrewShareRefresher.refresh(share) }
     end
 end

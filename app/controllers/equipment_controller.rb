@@ -36,6 +36,7 @@ class EquipmentController < ApplicationController
 
     if @equipment.save
       @equipment.photos.attach(photos) if photos.any?
+      refresh_public_brew_shares_for(@equipment)
       redirect_to equipment_index_path, notice: t(".created")
     else
       prepare_record_links(@equipment)
@@ -49,6 +50,7 @@ class EquipmentController < ApplicationController
 
     if @equipment.update(attributes)
       @equipment.photos.attach(photos) if photos.any?
+      refresh_public_brew_shares_for(@equipment)
       redirect_to @equipment, notice: t(".updated")
     else
       prepare_record_links(@equipment)
@@ -58,16 +60,20 @@ class EquipmentController < ApplicationController
 
   def archive
     @equipment.archive!
+    refresh_public_brew_shares_for(@equipment)
     redirect_to @equipment, notice: t(".archived")
   end
 
   def reopen
     @equipment.reopen!
+    refresh_public_brew_shares_for(@equipment)
     redirect_to @equipment, notice: t(".reopened")
   end
 
   def destroy
+    share_ids = PublicBrewShareRefresher.shares_for(@equipment).pluck(:id)
     @equipment.destroy_with_history!
+    refresh_public_brew_shares(share_ids)
     redirect_to equipment_index_path, notice: t(".destroyed")
   end
 
@@ -111,5 +117,13 @@ class EquipmentController < ApplicationController
 
     def prepare_record_links(record)
       record.prepare_record_links_for_form
+    end
+
+    def refresh_public_brew_shares_for(record)
+      PublicBrewShareRefresher.refresh_for(record)
+    end
+
+    def refresh_public_brew_shares(share_ids)
+      PublicBrewShare.where(id: share_ids).find_each { |share| PublicBrewShareRefresher.refresh(share) }
     end
 end

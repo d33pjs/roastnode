@@ -192,6 +192,8 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     bean = beans(:open_household)
     attachment = attach_photo(bean)
+    share = create_public_brew_share_for(brews(:morning_espresso), selected_photo_attachment_ids: [ attachment.id ])
+    assert_includes share.public_attachment_ids, attachment.id
 
     assert_difference -> { bean.photos.attachments.reload.count }, -1 do
       delete media_attachment_path(attachment)
@@ -199,6 +201,8 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to bean_path(bean)
     assert_equal I18n.t("media_attachments.destroy.destroyed"), flash[:notice]
+    assert_not_includes share.reload.selected_photo_attachment_ids, attachment.id
+    assert_not_includes share.public_attachment_ids, attachment.id
   end
 
   test "writer marks an active workspace attachment as primary" do
@@ -333,4 +337,21 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
   ensure
     memberships(:owner)&.update!(role: "owner")
   end
+
+  private
+    def create_public_brew_share_for(brew, selected_photo_attachment_ids: [])
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared shot",
+        selected_photo_attachment_ids:,
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:,
+          title: "Shared shot",
+          selected_photo_attachment_ids:
+        ).call
+      )
+    end
 end

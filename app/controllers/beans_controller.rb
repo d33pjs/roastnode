@@ -32,6 +32,7 @@ class BeansController < ApplicationController
 
     if @bean.save
       @bean.photos.attach(photos) if photos.any?
+      refresh_public_brew_shares_for(@bean)
       redirect_to @bean, notice: t(".created")
     else
       prepare_record_links(@bean)
@@ -48,6 +49,7 @@ class BeansController < ApplicationController
 
     if @bean.save
       @bean.photos.attach(photos) if photos.any?
+      refresh_public_brew_shares_for(@bean)
       redirect_to @bean, notice: t(".updated")
     else
       prepare_record_links(@bean)
@@ -57,16 +59,19 @@ class BeansController < ApplicationController
 
   def close
     @bean.archive!
+    refresh_public_brew_shares_for(@bean)
     redirect_to @bean, notice: t(".closed")
   end
 
   def finish
     @bean.finish!
+    refresh_public_brew_shares_for(@bean)
     redirect_to @bean, notice: t(".finished")
   end
 
   def reopen
     @bean.reopen!
+    refresh_public_brew_shares_for(@bean)
     redirect_to @bean, notice: t(".reopened")
   end
 
@@ -147,5 +152,9 @@ class BeansController < ApplicationController
 
     def prepare_record_links(record)
       record.prepare_record_links_for_form
+    end
+
+    def refresh_public_brew_shares_for(record)
+      PublicBrewShareRefresher.refresh_for(record)
     end
 end

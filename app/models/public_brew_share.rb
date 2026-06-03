@@ -86,6 +86,10 @@ class PublicBrewShare < ApplicationRecord
     )
   end
 
+  def valid_selected_photo_attachment_ids
+    selected_share_record_photo_attachment_ids
+  end
+
   private
     def set_token
       self.token ||= SecureRandom.urlsafe_base64(24)

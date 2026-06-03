@@ -53,6 +53,7 @@ class BrewsController < ApplicationController
     apply_recipe_snapshot
 
     if save_brew_with_preparation_tools
+      refresh_public_brew_shares_for(@brew)
       redirect_to @brew, notice: t(".created")
     else
       prepare_record_links(@brew)
@@ -68,6 +69,7 @@ class BrewsController < ApplicationController
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
 
     @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
+    refresh_public_brew_shares_for(@brew)
     redirect_to @brew, notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
     prepare_record_links(@brew)
@@ -76,6 +78,7 @@ class BrewsController < ApplicationController
 
   def taste
     if @brew.update(taste_brew_params)
+      refresh_public_brew_shares_for(@brew)
       redirect_to @brew, notice: t(".updated")
     else
       render :show, status: :unprocessable_entity
@@ -227,6 +230,10 @@ class BrewsController < ApplicationController
 
     def prepare_record_links(record)
       record.prepare_record_links_for_form
+    end
+
+    def refresh_public_brew_shares_for(record)
+      PublicBrewShareRefresher.refresh_for(record)
     end
 
     def brew_draft_storage_key

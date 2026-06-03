@@ -51,6 +51,8 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "Public brew story.", snapshot.fetch("brew").fetch("public_note")
     assert_equal "Public bean note.", snapshot.fetch("bean").fetch("public_note")
     assert_equal "Public grinder note.", snapshot.fetch("equipment").first.fetch("public_note")
+    assert_equal "2026-05-02", snapshot.fetch("bean").fetch("purchased_on")
+    assert_equal "2026-05-10", snapshot.fetch("bean").fetch("opened_on")
     assert_equal 1290, snapshot.fetch("bean").fetch("purchase_price_cents")
     assert_includes snapshot.to_json, "Buy beans"
     assert_includes snapshot.to_json, "Brew writeup"
@@ -60,6 +62,7 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_not_includes snapshot.to_json, "Private WDT note"
     assert_not_includes snapshot.to_json, "Private receipt"
     assert_not_includes snapshot.to_json, "Private cellar source"
+    assert_not_includes snapshot.to_json, "Local roaster"
     assert_not_includes snapshot.to_json, "jens-private-receipt.jpg"
     attachment_ids = collect_attachment_ids(snapshot)
     assert_includes attachment_ids, brew_photo.id
