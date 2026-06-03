@@ -62,6 +62,36 @@ module PublicBrewSharesHelper
     (start_x + (seconds.to_f / total_seconds.to_f * (end_x - start_x))).clamp(start_x, end_x).round
   end
 
+  def public_snapshot_axis_max_grams(value)
+    return if value.blank?
+
+    grams = value.to_d
+    return if grams <= 0
+
+    ((grams / 5).floor + 1) * 5
+  end
+
+  def public_lightbox_sources_for(share, snapshot)
+    attachment_ids = []
+    attachment_ids.concat(Array(snapshot["photos"]).filter_map { |photo| photo["attachment_id"] })
+    attachment_ids.concat(Array(snapshot.dig("bean", "photos")).filter_map { |photo| photo["attachment_id"] })
+    attachment_ids << snapshot.dig("bean", "photo_attachment_id")
+    Array(snapshot["equipment"]).each do |section|
+      attachment_ids.concat(Array(section["photos"]).filter_map { |photo| photo["attachment_id"] })
+      attachment_ids << section["photo_attachment_id"]
+    end
+    Array(snapshot["tools"]).each do |section|
+      attachment_ids.concat(Array(section["photos"]).filter_map { |photo| photo["attachment_id"] })
+      attachment_ids << section["photo_attachment_id"]
+    end
+
+    attachment_ids.compact_blank.uniq.filter_map { |attachment_id| public_media_url_for(share, attachment_id) }
+  end
+
+  def public_lightbox_index_for(sources, full_url)
+    sources.index(full_url).presence || 0
+  end
+
   def public_snapshot_rating_label(rating)
     return public_unknown_label if rating.blank?
 

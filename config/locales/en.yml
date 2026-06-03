@@ -521,14 +521,18 @@ en:
       bought: "Bought %{date}"
       buy: "Buy"
       close_photo: "Close"
+      household: "Household"
       info: "Info"
+      next_photo: "Next photo"
       opened: "Opened %{date}"
       open_named_photo: "Open %{name} photo"
       open_photo: "Open photo"
+      previous_photo: "Previous photo"
       price: "Cost %{price}"
       roasted: "Roasted %{date}"
       temp_label: "Temp %{temperature}"
       unknown: "Unknown"
+      user: "User"
     unlock:
       failed: "Password is not correct."
   public_recipe_shares:

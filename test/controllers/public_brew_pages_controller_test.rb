@@ -119,7 +119,17 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-card-workspace]", count: 0
     assert_select "[data-testid=public-brew-card-byline]", count: 0
     assert_select "[data-testid=public-brew-hero-card]", text: /Espresso/, count: 0
+    assert_select "[data-testid=public-brew-hero-card] img[data-testid=public-brew-card-bean-photo]", count: 0
+    assert_select "a[data-testid=public-brew-bean-anchor][href='##{public_bean_anchor_for(share)}']", text: /Good Coffee/
+    assert_select "a[data-testid=public-brew-bean-anchor][href='##{public_bean_anchor_for(share)}']", text: /House Blend/
     assert_select "[data-testid=public-brew-identity-strip]"
+    assert_select "[data-testid=public-household-identity].justify-self-start", text: /Household/
+    assert_select "[data-testid=public-user-identity].justify-self-end", text: /User/
+    assert_select "[data-testid=public-brew-chart-grid].brew-chart-grid"
+    assert_select "[data-testid=public-brew-preinfusion-guide]"
+    assert_select "[data-testid=public-brew-first-drip-callout]"
+    assert_select "[data-testid=public-brew-total-time-guide]"
+    assert_select "[data-testid=public-brew-temperature-callout]"
     assert_select "[data-testid=public-brew-preinfusion-label]", text: /5s/
     assert_select "[data-testid=public-brew-first-drip-label]", text: /8s/
     assert_select "[data-testid=public-brew-total-time-label]", text: /28s/
@@ -151,10 +161,12 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-controller~='public-lightbox']"
-    assert_select "button[data-action*='public-lightbox#open'][data-full-src]"
+    assert_select "button[data-action*='public-lightbox#open'][data-public-lightbox-index-param='0'][data-full-src]"
     assert_select "img[data-testid=public-brew-gallery-photo].object-contain"
     assert_select "button[aria-label='#{I18n.t("public_brew_pages.show.open_photo")}'][data-action*='public-lightbox#open']"
     assert_select "[data-public-lightbox-target=dialog][role=dialog][aria-modal=true]"
+    assert_select "button[data-action*='public-lightbox#previous']", text: /#{I18n.t("public_brew_pages.show.previous_photo")}/
+    assert_select "button[data-action*='public-lightbox#next']", text: /#{I18n.t("public_brew_pages.show.next_photo")}/
     assert_no_match "/media_attachments", response.body
     assert_no_match "/rails/active_storage", response.body
   end
@@ -168,7 +180,10 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     name = share.snapshot.dig("bean", "display_name")
-    assert_select "button[aria-label='#{I18n.t("public_brew_pages.show.open_named_photo", name:)}'][data-action*='public-lightbox#open']"
+    assert_select "button[aria-label='#{I18n.t("public_brew_pages.show.open_named_photo", name:)}'][data-action*='public-lightbox#open'][data-public-lightbox-index-param='0']"
+    assert_select "[data-testid=public-product-section][data-kind=bean].md\\:items-start"
+    assert_select "[data-testid=public-bean-thumbnail-rail]"
+    assert_select "button[data-testid=public-bean-thumbnail][data-action*='public-lightbox#open']"
   end
 
   test "public links render with visible link icon treatment" do
@@ -344,5 +359,10 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
         selected_photo_attachment_ids:,
         snapshot:
       )
+    end
+
+    def public_bean_anchor_for(share)
+      bean = share.snapshot.fetch("bean")
+      [ "bean", bean["display_name"].presence || bean["name"] ].join("-").parameterize
     end
 end

@@ -31,6 +31,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Browser-local unsaved draft recovery for new espresso logs.
 - One-way ground-out to dose prefill while logging espresso.
 - Dashboard actions, open beans, compact status, and recent activity.
+- Bean index cards sort active bags by latest brew use first, then by opened date and name for beans without brew history.
 
 ## Explicitly Deferred
 
@@ -98,6 +99,7 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, website, notes, and variety information.
 - Public notes and public links are separate from private notes. Public brew shares copy only `public_note` and public links into their snapshots.
 - If multiple open beans have the same roaster/name, the espresso logging selector appends the opened date to those duplicate labels only.
+- The bean overview prioritizes recently used beans by the newest brew logged with each bean. Beans with no brew history fall back to opened-date/name ordering after recently used beans.
 - Creating a brew subtracts `bean_weight_grams` from the selected bean.
 - Creating a brew also records an `InventoryAdjustment` with reason `brew`.
 - Manual inventory adjustments are logged from a bean detail page with reason `manual`; they add their signed gram delta to the bean and clamp remaining inventory at zero.

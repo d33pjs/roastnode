@@ -4,8 +4,15 @@ class BeansController < ApplicationController
 
   def index
     @beans = current_workspace.beans
+      .left_joins(:brews)
       .includes(:primary_photo_record, photos_attachments: :blob)
-      .order(Arel.sql("archived_at ASC NULLS FIRST"), Arel.sql("opened_on ASC NULLS LAST"), :name)
+      .group("beans.id")
+      .order(
+        Arel.sql("beans.archived_at ASC NULLS FIRST"),
+        Arel.sql("MAX(brews.occurred_at) DESC NULLS LAST"),
+        Arel.sql("beans.opened_on DESC NULLS LAST"),
+        :name
+      )
   end
 
   def show

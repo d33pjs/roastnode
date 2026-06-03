@@ -1,6 +1,7 @@
 <% content_for :hide_app_navigation, true %>
+<% lightbox_sources = public_lightbox_sources_for(@share, @snapshot) %>
 
-<main data-testid="public-brew-page" data-controller="public-lightbox" data-action="keydown@window->public-lightbox#closeFromKeyboard" class="min-h-screen bg-[#f6f4ef] text-stone-950">
+<main data-testid="public-brew-page" data-controller="public-lightbox" data-public-lightbox-sources-value="<%= lightbox_sources.to_json %>" data-action="keydown@window->public-lightbox#closeFromKeyboard" class="min-h-screen bg-[#f6f4ef] text-stone-950">
   <section class="mx-auto max-w-5xl px-5 py-6 sm:px-8">
     <header class="py-5 text-center">
       <h1 class="text-3xl font-black leading-tight sm:text-5xl"><%= @snapshot["title"] %></h1>
@@ -8,19 +9,25 @@
 
     <%= render "hero_card", share: @share, snapshot: @snapshot %>
 
-    <section data-testid="public-brew-identity-strip" class="mx-auto mt-5 flex max-w-3xl flex-wrap items-center justify-center gap-4 rounded-lg border border-stone-200 bg-white/80 px-5 py-4">
-      <div class="flex min-w-0 items-center gap-3 text-sm font-black uppercase text-stone-800">
+    <section data-testid="public-brew-identity-strip" class="mt-5 grid gap-4 rounded-lg border border-stone-200 bg-white/80 px-5 py-4 sm:grid-cols-2">
+      <div data-testid="public-household-identity" class="min-w-0 justify-self-start text-left">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t("public_brew_pages.show.household") %></p>
+        <div class="mt-2 flex min-w-0 items-center gap-4 text-lg font-black text-stone-900">
         <% if (logo_url = public_media_url_for(@share, @snapshot.dig("workspace", "logo_attachment_id"), variant: :thumbnail)).present? %>
-          <%= image_tag logo_url, alt: "", class: "h-12 w-12 rounded-full object-cover" %>
+          <%= image_tag logo_url, alt: "", class: "h-16 w-16 rounded-full object-cover" %>
         <% end %>
         <span class="truncate"><%= @snapshot.dig("workspace", "name") %></span>
+        </div>
       </div>
 
-      <div class="flex min-w-0 items-center gap-3 text-sm font-extrabold text-stone-700">
+      <div data-testid="public-user-identity" class="min-w-0 justify-self-end text-right">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t("public_brew_pages.show.user") %></p>
+        <div class="mt-2 flex min-w-0 flex-row-reverse items-center gap-4 text-lg font-black text-stone-900">
         <% if (avatar_url = public_media_url_for(@share, @snapshot.dig("user", "avatar_attachment_id"), variant: :thumbnail)).present? %>
-          <%= image_tag avatar_url, alt: "", class: "h-12 w-12 rounded-full object-cover" %>
+          <%= image_tag avatar_url, alt: "", class: "h-16 w-16 rounded-full object-cover" %>
         <% end %>
         <span class="truncate"><%= @snapshot.dig("user", "display_label") %></span>
+        </div>
       </div>
     </section>
 
@@ -47,7 +54,7 @@
           <% thumb_url = public_media_url_for(@share, photo["attachment_id"], variant: :thumbnail) %>
           <% full_url = public_media_url_for(@share, photo["attachment_id"]) %>
           <% if thumb_url.present? && full_url.present? %>
-            <button type="button" data-action="public-lightbox#open" data-full-src="<%= full_url %>" aria-label="<%= t("public_brew_pages.show.open_photo") %>" class="h-72 w-full rounded-lg border border-stone-200 bg-white p-2">
+            <button type="button" data-action="public-lightbox#open" data-public-lightbox-index-param="<%= public_lightbox_index_for(lightbox_sources, full_url) %>" data-full-src="<%= full_url %>" aria-label="<%= t("public_brew_pages.show.open_photo") %>" class="h-72 w-full rounded-lg border border-stone-200 bg-white p-2">
               <%= image_tag thumb_url, alt: "", data: { testid: "public-brew-gallery-photo" }, class: "h-full w-full object-contain" %>
             </button>
           <% end %>
@@ -55,18 +62,26 @@
       </section>
     <% end %>
 
-    <%= render "product_section", share: @share, kind: "bean", section: @snapshot["bean"] %>
+    <%= render "product_section", share: @share, kind: "bean", section: @snapshot["bean"], lightbox_sources: %>
 
     <% @snapshot.fetch("equipment", []).each do |section| %>
-      <%= render "product_section", share: @share, kind: section["role"], section: section %>
+      <%= render "product_section", share: @share, kind: section["role"], section:, lightbox_sources: %>
     <% end %>
 
     <% @snapshot.fetch("tools", []).each do |section| %>
-      <%= render "product_section", share: @share, kind: "tool", section: section %>
+      <%= render "product_section", share: @share, kind: "tool", section:, lightbox_sources: %>
     <% end %>
 
-    <div data-public-lightbox-target="dialog" role="dialog" aria-modal="true" aria-hidden="true" class="hidden fixed inset-0 z-50 bg-black/90 p-4">
+    <div data-public-lightbox-target="dialog" data-action="touchstart->public-lightbox#touchStart touchend->public-lightbox#touchEnd" role="dialog" aria-modal="true" aria-hidden="true" class="hidden fixed inset-0 z-50 bg-black/90 p-4">
       <button type="button" data-action="public-lightbox#close" class="absolute right-4 top-4 rounded-full bg-white px-4 py-2 text-sm font-black text-stone-950"><%= t("public_brew_pages.show.close_photo") %></button>
+      <button type="button" data-action="public-lightbox#previous" class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-2xl font-black text-stone-950" aria-label="<%= t("public_brew_pages.show.previous_photo") %>">
+        <span aria-hidden="true">‹</span>
+        <span class="sr-only"><%= t("public_brew_pages.show.previous_photo") %></span>
+      </button>
+      <button type="button" data-action="public-lightbox#next" class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-2xl font-black text-stone-950" aria-label="<%= t("public_brew_pages.show.next_photo") %>">
+        <span aria-hidden="true">›</span>
+        <span class="sr-only"><%= t("public_brew_pages.show.next_photo") %></span>
+      </button>
       <div class="flex h-full items-center justify-center">
         <img data-public-lightbox-target="image" alt="" class="max-h-full max-w-full object-contain" />
       </div>

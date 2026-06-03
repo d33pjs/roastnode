@@ -13,7 +13,7 @@ Public Brew Sharing lets a workspace writer publish one curated brew page withou
 - Multiple typed record links on brews, beans, equipment, and preparation tools.
 - Link kinds: `info`, `buy`, and `affiliate`.
 - Link visibility: `private` or `public`.
-- Selected brew/bean/equipment/tool photos on the public page.
+- Selected brew/bean/equipment/tool photos on the public page, with contained thumbnails and a next/previous/swipe fullscreen viewer.
 - Snapshot-driven public Hero Brew Card plus bean, grinder, machine, and preparation-tool sections.
 - Public media route with opaque handles for selected share media and public identity images.
 - Automatic snapshot refresh for public-safe brew, bean, gear, tool, public-link, workspace-logo, and user-avatar changes.
@@ -49,6 +49,8 @@ The snapshot and public page must not include:
 - backup, export, admin, session, environment, or infrastructure data
 
 Workspace name/logo and user display label/avatar are intentional public identity surfaces for this feature. They should still be routed through the public-share media whitelist instead of raw Active Storage URLs.
+
+The public Hero Brew Card mirrors the private card's brew curve, timing guides, first-drip callout, total-time marker, and vertical temperature callout, but it does not render recipe ghost targets, the private retention card, or a bean photo in the hero. Public household and user identity sit below the hero instead of inside it.
 
 ## Share Management
 
@@ -100,6 +102,8 @@ New snapshots use the builder-generated `public_media` manifest as the public me
 
 - selected share-record photos
 - workspace logo and user avatar referenced by the snapshot
+
+Public photo controls can open any rendered selected photo into one shared lightbox source list. Bean sections also show a small thumbnail rail for selected bean photos below the bean copy.
 
 Older snapshots without `public_media` fall back to live validation against the share's selected record photos and public identity images.
 
