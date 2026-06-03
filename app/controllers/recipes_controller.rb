@@ -183,15 +183,34 @@ class RecipesController < ApplicationController
     end
 
     def ingredients_from_params
-      rows = recipe_params[:ingredients] || ActionController::Parameters.new
-      rows.to_unsafe_h.values.filter_map do |row|
+      ingredient_rows_from_params(recipe_params[:ingredients]).filter_map do |row|
         payload = INGREDIENT_FIELDS.each_with_object({}) do |field, result|
           key = field.to_s
-          value = row[key].to_s.strip.first(INGREDIENT_MAX_LENGTHS.fetch(key))
+          value = ingredient_row_value(row, field).to_s.strip.first(INGREDIENT_MAX_LENGTHS.fetch(key))
           result[key] = value if value.present?
         end
         payload if payload["name"].present?
       end
+    end
+
+    def ingredient_rows_from_params(rows)
+      case rows
+      when ActionController::Parameters
+        rows.to_unsafe_h.values
+      when Hash
+        rows.values
+      when Array
+        rows
+      else
+        []
+      end
+    end
+
+    def ingredient_row_value(row, field)
+      row = row.to_unsafe_h if row.respond_to?(:to_unsafe_h)
+      return unless row.respond_to?(:key?)
+
+      row[field.to_s] || row[field]
     end
 
     def finish_note_from_params

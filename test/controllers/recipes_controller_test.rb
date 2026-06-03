@@ -228,6 +228,50 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     ], recipe.profile["ingredients"]
   end
 
+  test "writer edits structured ingredients with array params" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+
+    patch recipe_path(recipe), params: {
+      recipe: {
+        title: recipe.title,
+        ingredients: [
+          { amount: "200", unit: "ml", name: "matcha" },
+          { amount: "", unit: "", name: "" },
+          { amount: "1", unit: "shot", name: "honey" }
+        ]
+      }
+    }
+
+    assert_redirected_to recipe_path(recipe)
+    recipe.reload
+    assert_equal [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" },
+      { "amount" => "1", "unit" => "shot", "name" => "honey" }
+    ], recipe.profile["ingredients"]
+  end
+
+  test "writer clears structured ingredients with empty array params" do
+    sign_in_as(users(:one))
+    recipe = recipes(:household_recipe)
+    profile = recipe.profile.deep_dup
+    profile["ingredients"] = [
+      { "amount" => "200", "unit" => "ml", "name" => "matcha" }
+    ]
+    recipe.update!(profile:)
+
+    patch recipe_path(recipe), params: {
+      recipe: {
+        title: recipe.title,
+        ingredients: []
+      }
+    }
+
+    assert_redirected_to recipe_path(recipe)
+    recipe.reload
+    assert_equal [], recipe.profile["ingredients"]
+  end
+
   test "viewer can read recipes but cannot create edit destroy or log" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
