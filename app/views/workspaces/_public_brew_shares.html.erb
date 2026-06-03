@@ -21,11 +21,23 @@
                 <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-900"><%= t("#{locale_scope}.protected") %></span>
               <% end %>
             </div>
-            <p class="mt-1 text-sm font-semibold text-stone-600"><%= t("#{locale_scope}.brew", bean: share.brew.bean.display_name) %></p>
+            <p class="mt-1 text-sm font-semibold text-stone-600">
+              <%= link_to t("#{locale_scope}.brew", bean: share.brew.bean.display_name),
+                brew_path(share.brew),
+                class: "underline decoration-stone-300 underline-offset-4 hover:decoration-stone-950" %>
+            </p>
             <p class="mt-2 break-all text-sm font-bold text-stone-950">
               <%= link_to public_brew_page_url(share.token), public_brew_page_path(share.token), target: "_blank", rel: "noopener", class: "underline decoration-stone-300 underline-offset-4 hover:decoration-stone-950" %>
             </p>
-            <dl class="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+            <dl class="mt-3 grid gap-2 text-sm sm:grid-cols-3 lg:grid-cols-5">
+              <div>
+                <dt class="text-xs font-bold uppercase text-stone-500"><%= t("#{locale_scope}.created") %></dt>
+                <dd data-testid="public-share-created-at-<%= share.id %>" class="font-bold text-stone-950"><%= profile_timestamp(share.created_at) %></dd>
+              </div>
+              <div>
+                <dt class="text-xs font-bold uppercase text-stone-500"><%= t("#{locale_scope}.updated") %></dt>
+                <dd data-testid="public-share-updated-at-<%= share.id %>" class="font-bold text-stone-950"><%= profile_timestamp(share.updated_at) %></dd>
+              </div>
               <div>
                 <dt class="text-xs font-bold uppercase text-stone-500"><%= t("#{locale_scope}.views") %></dt>
                 <dd data-testid="public-share-view-count-<%= share.id %>" class="font-bold text-stone-950"><%= share.views_count %></dd>

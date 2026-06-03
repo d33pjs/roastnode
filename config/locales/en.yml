@@ -1340,6 +1340,7 @@ en:
     public_brew_shares:
       body: "Review public brew URLs, visitor counts, and recent full-IP views."
       brew: "Brew: %{bean}"
+      created: "Created"
       disabled: "Disabled"
       edit: "Edit"
       empty: "No public brew shares yet."
@@ -1353,6 +1354,7 @@ en:
       remove_confirmation: "Remove this public share? The URL will stop working."
       title: "Public shares"
       untitled: "Untitled share"
+      updated: "Updated"
       views: "Views"
     switch:
       switched: "Switched to %{name}."

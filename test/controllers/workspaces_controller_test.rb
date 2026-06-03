@@ -29,9 +29,12 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=workspace-public-shares]"
     assert_select "[data-testid=?]", "workspace-public-share-#{share.id}", text: /Shared shot/
+    assert_select "[data-testid=?] a[href=?]", "workspace-public-share-#{share.id}", brew_path(share.brew), text: /Brew:/
     assert_select "a[href=?]", public_brew_page_path(share.token), text: public_brew_page_url(share.token)
     assert_select "a[href=?]", edit_brew_public_brew_share_path(share.brew)
     assert_select "form[action=?]", brew_public_brew_share_path(share.brew)
+    assert_select "[data-testid=?]", "public-share-created-at-#{share.id}"
+    assert_select "[data-testid=?]", "public-share-updated-at-#{share.id}"
     assert_select "[data-testid=?]", "public-share-view-count-#{share.id}", text: "1"
     assert_select "[data-testid=?]", "public-share-recent-ip-#{share.id}", text: /198\.51\.100\.31/
   end
