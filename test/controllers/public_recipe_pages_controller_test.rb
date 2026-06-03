@@ -134,6 +134,24 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-recipe-finish]", text: /matcha/, count: 0
   end
 
+  test "public recipe request path and redirects redact bearer tokens for logs" do
+    share = create_share(enabled: true, password: "espresso")
+    media_handle = "opaque-media-handle"
+
+    request = ActionDispatch::Request.new(
+      Rack::MockRequest.env_for("/r/#{share.token}/media/#{media_handle}?token=secret")
+    )
+    request.set_header("action_dispatch.parameter_filter", Rails.application.config.filter_parameters)
+
+    assert_equal "/r/[FILTERED]/media/[FILTERED]?token=[FILTERED]", request.filtered_path
+    assert_equal "[FILTERED]", request.parameter_filter.filter(media_id: media_handle).fetch(:media_id)
+
+    post unlock_public_recipe_page_path(share.token), params: { password: "espresso" }
+
+    assert_redirected_to public_recipe_page_path(share.token)
+    assert_equal "[FILTERED]", response.filtered_location
+  end
+
   private
     def create_share(enabled:, password: nil)
       recipe = recipes(:household_recipe)
