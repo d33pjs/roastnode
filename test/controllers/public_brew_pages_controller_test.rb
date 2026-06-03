@@ -74,6 +74,21 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "malformed overlong forwarded ip does not prevent public page render" do
+    share = create_share(enabled: true)
+    overlong_ip = "198.51.100.#{'1' * 300}"
+
+    get public_brew_page_path(share.token), headers: {
+      "REMOTE_ADDR" => overlong_ip,
+      "HTTP_X_FORWARDED_FOR" => overlong_ip
+    }
+
+    assert_response :success
+    if (view = share.public_brew_share_views.last)
+      assert_operator view.ip_address.length, :<=, 255
+    end
+  end
+
   test "public page renders media handles without attachment ids or private media routes" do
     brew = brews(:morning_espresso)
     photo = attach_photo(brew)
