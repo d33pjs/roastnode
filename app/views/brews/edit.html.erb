@@ -1,7 +1,12 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-4xl px-6 py-10">
     <%= render "shared/back_link", label: t(".back"), path: brew_path(@brew) %>
-    <h1 class="mt-4 text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+    <div class="mt-4 flex flex-wrap items-center gap-3">
+      <h1 class="text-3xl font-bold text-stone-950"><%= t(".title") %></h1>
+      <% if @brew.public_brew_share&.enabled? %>
+        <span data-testid="brew-edit-shared-marker" class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-extrabold uppercase tracking-[0.08em] text-emerald-800"><%= t("brews.shared_marker") %></span>
+      <% end %>
+    </div>
 
     <%= render "form",
       brew: @brew,

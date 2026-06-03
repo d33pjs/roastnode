@@ -7,7 +7,7 @@ class BrewsController < ApplicationController
     @brew_history_view = params[:view] == "hero" ? "hero" : "compact"
     brews = current_workspace
       .brews
-      .includes(:bean, :user, :grinder, :machine, brew_preparation_tools: :preparation_tool)
+      .includes(:bean, :user, :grinder, :machine, :public_brew_share, brew_preparation_tools: :preparation_tool)
       .order(occurred_at: :desc, created_at: :desc)
     @brew_history = HistoryPaginator.new(brews, page: params[:page])
   end
@@ -97,7 +97,7 @@ class BrewsController < ApplicationController
     ].freeze
 
     def set_brew
-      @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user, brew_preparation_tools: :preparation_tool).find(params[:id])
+      @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :user, :public_brew_share, brew_preparation_tools: :preparation_tool).find(params[:id])
     end
 
     def set_recipe_guide

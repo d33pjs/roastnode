@@ -354,6 +354,7 @@ en:
       created: "Brew logged."
     destroy:
       destroyed: "Brew deleted and inventory restored."
+    shared_marker: "Shared"
     edit:
       back: "Back to brew"
       photos: "Current photos"

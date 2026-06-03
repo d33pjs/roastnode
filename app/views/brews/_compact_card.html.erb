@@ -3,7 +3,12 @@
   class: "block rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm hover:bg-[var(--rn-surface-muted)]" do %>
   <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
     <div class="min-w-0">
-      <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= profile_timestamp(brew.occurred_at) %></p>
+      <div class="flex flex-wrap items-center gap-2">
+        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= profile_timestamp(brew.occurred_at) %></p>
+        <% if brew.public_brew_share&.enabled? %>
+          <span data-testid="brew-history-shared-marker-<%= brew.id %>" class="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-extrabold uppercase tracking-[0.08em] text-emerald-800"><%= t("brews.shared_marker") %></span>
+        <% end %>
+      </div>
       <h2 class="mt-1 truncate text-xl font-black text-rn-ink"><%= brew.bean.name %></h2>
       <p class="mt-1 truncate text-sm font-bold text-rn-ink"><%= brew.bean.roaster_name.presence || t("beans.index.unknown") %></p>
       <p class="mt-2 text-sm font-semibold text-rn-muted"><%= t("brews.show.logged_by") %>: <%= brew.user.display_label %></p>

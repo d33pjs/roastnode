@@ -868,6 +868,28 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "18.0"
   end
 
+  test "edit marks brew when public share is enabled" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    create_public_brew_share_for(brew, enabled: true)
+
+    get edit_brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-edit-shared-marker]", I18n.t("brews.shared_marker")
+  end
+
+  test "edit does not mark brew when public share is disabled" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    create_public_brew_share_for(brew, enabled: false)
+
+    get edit_brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-edit-shared-marker]", count: 0
+  end
+
   test "writer can update brew and inventory" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
@@ -949,6 +971,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "index shows workspace brews newest first in compact view by default" do
     older = brews(:morning_espresso)
     older.update!(occurred_at: Time.zone.local(2026, 5, 30, 8, 0, 0))
+    create_public_brew_share_for(older, enabled: true)
     newest = workspaces(:household).brews.create!(
       user: users(:one),
       bean: beans(:second_open_household),
@@ -963,6 +986,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       taste_balance: "neutral",
       rating: 5
     )
+    create_public_brew_share_for(newest, enabled: false)
 
     sign_in_as(users(:one))
     get brews_path
@@ -973,6 +997,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-history-hero-card]", count: 0
     assert_select "a[href=?]", brew_path(newest), text: /#{newest.bean.name}/
     assert_select "a[href=?]", brew_path(older), text: /#{older.bean.name}/
+    assert_select "[data-testid=?]", "brew-history-shared-marker-#{older.id}", I18n.t("brews.shared_marker")
+    assert_select "[data-testid=?]", "brew-history-shared-marker-#{newest.id}", count: 0
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
     assert_appears_before newest.bean.name, older.bean.name
   end
@@ -1033,5 +1059,21 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       assert first_index, "Expected #{first.inspect} to appear in response body"
       assert second_index, "Expected #{second.inspect} to appear in response body"
       assert first_index < second_index, "Expected #{first.inspect} to appear before #{second.inspect}"
+    end
+
+    def create_public_brew_share_for(brew, enabled:)
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled:,
+        title: "Shared shot",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:,
+          title: "Shared shot",
+          selected_photo_attachment_ids: []
+        ).call
+      )
     end
 end
