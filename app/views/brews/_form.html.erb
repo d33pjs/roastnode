@@ -42,7 +42,7 @@
           <%= render "shared/record_photo_thumb",
             record: bean,
             testid: "brew-bean-option-photo",
-            class_name: "h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-stone-200" %>
+            class_name: "h-14 w-14 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
           <span class="min-w-0">
             <span class="block truncate font-extrabold text-rn-ink"><%= bean.display_name_for_collection(@beans) %></span>
             <span class="mt-1 block text-sm font-semibold text-rn-muted"><%= profile_grams(bean.remaining_grams) %></span>
@@ -146,7 +146,7 @@
         </label>
         <% @grinders.each do |item| %>
           <label for="brew_grinder_id_<%= item.id %>" class="grid cursor-pointer grid-cols-[2.75rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
-            <%= render "shared/record_photo_thumb", record: item, testid: "brew-grinder-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-cover ring-1 ring-stone-200" %>
+            <%= render "shared/record_photo_thumb", record: item, testid: "brew-grinder-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
             <span class="truncate text-sm font-extrabold text-rn-ink"><%= item.name %></span>
             <%= form.radio_button :grinder_id, item.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
           </label>
@@ -163,7 +163,7 @@
         </label>
         <% @machines.each do |item| %>
           <label for="brew_machine_id_<%= item.id %>" class="grid cursor-pointer grid-cols-[2.75rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
-            <%= render "shared/record_photo_thumb", record: item, testid: "brew-machine-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-cover ring-1 ring-stone-200" %>
+            <%= render "shared/record_photo_thumb", record: item, testid: "brew-machine-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
             <span class="truncate text-sm font-extrabold text-rn-ink"><%= item.name %></span>
             <%= form.radio_button :machine_id, item.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
           </label>
@@ -184,7 +184,7 @@
         <div class="mt-2 grid gap-2 sm:grid-cols-2">
           <% @preparation_tools.each do |tool| %>
             <label for="<%= dom_id(tool, :brew) %>" class="grid cursor-pointer grid-cols-[2.5rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
-              <%= render "shared/record_photo_thumb", record: tool, testid: "brew-tool-option-photo", class_name: "h-10 w-10 shrink-0 rounded-xl object-cover ring-1 ring-stone-200" %>
+              <%= render "shared/record_photo_thumb", record: tool, testid: "brew-tool-option-photo", class_name: "h-10 w-10 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
               <span class="truncate"><%= tool.name %></span>
               <%= check_box_tag "brew[preparation_tool_ids][]", tool.id, @selected_preparation_tools.include?(tool), id: dom_id(tool, :brew), class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
             </label>

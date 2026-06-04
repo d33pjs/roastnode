@@ -1,0 +1,18 @@
+<% close_label = local_assigns.fetch(:close_label, t("shared.photo_grid.close_photo")) %>
+<% previous_label = local_assigns.fetch(:previous_label, t("shared.photo_grid.previous_photo")) %>
+<% next_label = local_assigns.fetch(:next_label, t("shared.photo_grid.next_photo")) %>
+
+<div data-photo-lightbox-target="dialog" data-action="touchstart->photo-lightbox#touchStart touchend->photo-lightbox#touchEnd" role="dialog" aria-modal="true" aria-hidden="true" class="hidden fixed inset-0 z-50 bg-black/90 p-4">
+  <button type="button" data-action="photo-lightbox#close" class="absolute right-4 top-4 rounded-full bg-white px-4 py-2 text-sm font-black text-stone-950"><%= close_label %></button>
+  <button type="button" data-action="photo-lightbox#previous" class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-2xl font-black text-stone-950" aria-label="<%= previous_label %>">
+    <span aria-hidden="true">&lsaquo;</span>
+    <span class="sr-only"><%= previous_label %></span>
+  </button>
+  <button type="button" data-action="photo-lightbox#next" class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-2xl font-black text-stone-950" aria-label="<%= next_label %>">
+    <span aria-hidden="true">&rsaquo;</span>
+    <span class="sr-only"><%= next_label %></span>
+  </button>
+  <div class="flex h-full items-center justify-center">
+    <img data-photo-lightbox-target="image" alt="" class="max-h-full max-w-full object-contain" />
+  </div>
+</div>

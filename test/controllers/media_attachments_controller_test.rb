@@ -312,8 +312,12 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     get bean_path(beans(:open_household))
 
     assert_response :success
+    assert_select "[data-controller~=?]", "photo-lightbox"
+    assert_select "[data-photo-lightbox-sources-value]"
     assert_select "a[href=?]", media_attachment_path(attachment), text: I18n.t("shared.photo_grid.view")
-    assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
+    assert_select "button[data-action=?][data-full-src=?]", "photo-lightbox#open", media_attachment_path(attachment)
+    assert_select "img[src=?][class*=object-contain]", media_attachment_path(attachment, variant: :thumbnail)
+    assert_select "[data-photo-lightbox-target=?][role=dialog]", "dialog"
     assert_select "a[href=?]", download_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.download")
     assert_select "span", text: I18n.t("shared.photo_grid.primary")
     assert_select "a[href=?]", crop_media_attachment_path(attachment), text: I18n.t("shared.photo_grid.crop")

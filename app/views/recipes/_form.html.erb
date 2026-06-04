@@ -114,7 +114,7 @@
         <label data-testid="source-brew-photo-suggestion" class="flex items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 text-sm font-extrabold text-rn-ink">
           <%= check_box_tag "recipe[use_source_brew_photo]", "1", false, class: "h-4 w-4 rounded border-rn-line text-rn-ink" %>
           <%= hidden_field_tag "recipe[source_brew_photo_attachment_id]", @source_brew_primary_photo.id %>
-          <%= image_tag media_attachment_path(@source_brew_primary_photo, variant: :thumbnail), alt: "", class: "h-16 w-16 rounded-lg object-cover" %>
+          <%= image_tag media_attachment_path(@source_brew_primary_photo, variant: :thumbnail), alt: "", class: "h-16 w-16 rounded-lg object-contain" %>
           <%= t("recipes.form.use_source_brew_photo") %>
         </label>
       <% end %>

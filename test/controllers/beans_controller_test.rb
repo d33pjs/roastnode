@@ -36,23 +36,51 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid^=bean-list-channeling]", count: 0
   end
 
-  test "index sorts beans by latest brew use first" do
+  test "index groups active beans before historical bags" do
     sign_in_as(users(:one))
     workspace = workspaces(:household)
-    older_used = beans(:open_household)
-    never_used = beans(:second_open_household)
-    newest_used = workspace.beans.create!(
-      name: "Newest Used Bag",
+    open_recent = beans(:open_household)
+    open_never_used = beans(:second_open_household)
+    stock = workspace.beans.create!(
+      name: "Pantry Stock Bag",
+      roaster_name: "Future Coffee",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil,
+      purchased_on: Date.new(2026, 6, 2)
+    )
+    finished_recent = workspace.beans.create!(
+      name: "Finished Recent Bag",
+      roaster_name: "Past Coffee",
+      bag_size_grams: 250,
+      remaining_grams: 8,
+      opened_on: Date.new(2026, 5, 1),
+      finished_at: Time.zone.local(2026, 6, 2, 8, 0, 0)
+    )
+    archived = beans(:archived_household)
+    open_newest = workspace.beans.create!(
+      name: "Open Newest Bag",
       roaster_name: "Recent Coffee",
       bag_size_grams: 250,
       remaining_grams: 220,
       opened_on: Date.new(2026, 6, 1)
     )
 
-    brews(:morning_espresso).update!(bean: older_used, occurred_at: Time.zone.local(2026, 5, 20, 8, 0, 0))
+    brews(:morning_espresso).update!(bean: open_recent, occurred_at: Time.zone.local(2026, 5, 20, 8, 0, 0))
     workspace.brews.create!(
       user: users(:one),
-      bean: newest_used,
+      bean: finished_recent,
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 6, 3, 8, 0, 0),
+      bean_weight_grams: 18,
+      ground_weight_grams: 18,
+      dose_grams: 18,
+      beverage_grams: 42
+    )
+    workspace.brews.create!(
+      user: users(:one),
+      bean: open_newest,
       grinder: equipment(:household_grinder),
       machine: equipment(:household_machine),
       occurred_at: Time.zone.local(2026, 6, 1, 8, 0, 0),
@@ -65,8 +93,19 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get beans_path
 
     assert_response :success
-    assert_appears_before newest_used.name, older_used.name
-    assert_appears_before older_used.name, never_used.name
+    assert_select "[data-testid=bean-group][data-group=open]"
+    assert_select "[data-testid=bean-group][data-group=stock]"
+    assert_select "[data-testid=bean-group][data-group=finished]"
+    assert_select "[data-testid=bean-group][data-group=archived]"
+    assert_appears_before I18n.t("beans.index.groups.open"), open_newest.name
+    assert_appears_before open_newest.name, open_recent.name
+    assert_appears_before open_recent.name, open_never_used.name
+    assert_appears_before open_never_used.name, I18n.t("beans.index.groups.stock")
+    assert_appears_before I18n.t("beans.index.groups.stock"), stock.name
+    assert_appears_before stock.name, I18n.t("beans.index.groups.finished")
+    assert_appears_before I18n.t("beans.index.groups.finished"), finished_recent.name
+    assert_appears_before finished_recent.name, I18n.t("beans.index.groups.archived")
+    assert_appears_before I18n.t("beans.index.groups.archived"), archived.name
   end
 
   test "index renders low inventory warnings and finished bag statistics" do
@@ -96,7 +135,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /13 days/
     assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /18[,.]2g\/day/
     assert_select "[data-testid=?]", "bean-card-finished-on-#{finished.id}", text: /Finished/
-    assert_select "[data-testid=?]", "bean-card-progress-#{finished.id}", count: 0
+    assert_select "[data-testid=?][data-remaining-state=low]", "bean-card-progress-#{finished.id}"
   end
 
   test "member can create bean" do

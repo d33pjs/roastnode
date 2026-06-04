@@ -31,7 +31,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Browser-local unsaved draft recovery for new espresso logs.
 - One-way ground-out to dose prefill while logging espresso.
 - Dashboard actions, open beans, compact status, and recent activity.
-- Bean index cards sort active bags by latest brew use first, then by opened date and name for beans without brew history.
+- Bean index cards group bags by workflow state: open, stock, finished/used up, and archived. Open bags sort by latest brew use first, then opened date and name for beans without brew history. Historical bags stay below active stock/open bags.
 
 ## Explicitly Deferred
 
@@ -99,7 +99,7 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, website, notes, and variety information.
 - Public notes and public links are separate from private notes. Public brew shares copy only `public_note` and public links into their snapshots.
 - If multiple open beans have the same roaster/name, the espresso logging selector appends the opened date to those duplicate labels only.
-- The bean overview prioritizes recently used beans by the newest brew logged with each bean. Beans with no brew history fall back to opened-date/name ordering after recently used beans.
+- The bean overview groups bags by lifecycle before sorting. Open bags prioritize recently used beans by newest brew, then fall back to opened-date/name ordering. Stock bags sort by purchase, roast, and creation freshness. Finished, used-up, and archived bags stay in historical sections so old bags do not jump above active workflow items.
 - Creating a brew subtracts `bean_weight_grams` from the selected bean.
 - Creating a brew also records an `InventoryAdjustment` with reason `brew`.
 - Manual inventory adjustments are logged from a bean detail page with reason `manual`; they add their signed gram delta to the bean and clamp remaining inventory at zero.

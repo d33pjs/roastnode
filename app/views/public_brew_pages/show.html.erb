@@ -14,7 +14,7 @@
         <p class="text-xs font-black uppercase text-stone-500"><%= t("public_brew_pages.show.household") %></p>
         <div class="mt-2 flex min-w-0 items-center gap-4 text-lg font-black text-stone-900">
         <% if (logo_url = public_media_url_for(@share, @snapshot.dig("workspace", "logo_attachment_id"), variant: :thumbnail)).present? %>
-          <%= image_tag logo_url, alt: "", class: "h-16 w-16 rounded-full object-cover" %>
+          <%= image_tag logo_url, alt: "", class: "h-16 w-16 rounded-full object-contain" %>
         <% end %>
         <span class="truncate"><%= @snapshot.dig("workspace", "name") %></span>
         </div>
@@ -24,7 +24,7 @@
         <p class="text-xs font-black uppercase text-stone-500"><%= t("public_brew_pages.show.user") %></p>
         <div class="mt-2 flex min-w-0 flex-row-reverse items-center gap-4 text-lg font-black text-stone-900">
         <% if (avatar_url = public_media_url_for(@share, @snapshot.dig("user", "avatar_attachment_id"), variant: :thumbnail)).present? %>
-          <%= image_tag avatar_url, alt: "", class: "h-16 w-16 rounded-full object-cover" %>
+          <%= image_tag avatar_url, alt: "", class: "h-16 w-16 rounded-full object-contain" %>
         <% end %>
         <span class="truncate"><%= @snapshot.dig("user", "display_label") %></span>
         </div>

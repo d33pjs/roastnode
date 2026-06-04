@@ -1,4 +1,11 @@
 class BeansController < ApplicationController
+  INDEX_GROUPS = [
+    { key: "open", statuses: %w[open] },
+    { key: "stock", statuses: %w[stock] },
+    { key: "finished", statuses: %w[finished used_up] },
+    { key: "archived", statuses: %w[archived] }
+  ].freeze
+
   before_action :authorize_workspace_write!, only: %i[new create edit update finish close reopen duplicate destroy]
   before_action :set_bean, only: %i[show edit update finish close reopen duplicate destroy]
 
@@ -6,13 +13,10 @@ class BeansController < ApplicationController
     @beans = current_workspace.beans
       .left_joins(:brews)
       .includes(:primary_photo_record, photos_attachments: :blob)
+      .select("beans.*, MAX(brews.occurred_at) AS latest_brew_at")
       .group("beans.id")
-      .order(
-        Arel.sql("beans.archived_at ASC NULLS FIRST"),
-        Arel.sql("MAX(brews.occurred_at) DESC NULLS LAST"),
-        Arel.sql("beans.opened_on DESC NULLS LAST"),
-        :name
-      )
+      .to_a
+    @bean_groups = bean_index_groups(@beans)
   end
 
   def show
@@ -163,5 +167,57 @@ class BeansController < ApplicationController
 
     def refresh_public_brew_shares_for(record)
       PublicBrewShareRefresher.refresh_for(record)
+    end
+
+    def bean_index_groups(beans)
+      INDEX_GROUPS.filter_map do |group|
+        grouped_beans = beans.select { |bean| group.fetch(:statuses).include?(bean.bag_status) }
+        next if grouped_beans.empty?
+
+        {
+          key: group.fetch(:key),
+          beans: sort_beans_for_index(group.fetch(:key), grouped_beans)
+        }
+      end
+    end
+
+    def sort_beans_for_index(group_key, beans)
+      beans.sort_by do |bean|
+        case group_key
+        when "open"
+          [
+            descending_time_sort(bean[:latest_brew_at]),
+            descending_time_sort(bean.opened_on),
+            descending_time_sort(bean.created_at),
+            bean.name.to_s.downcase
+          ]
+        when "stock"
+          [
+            descending_time_sort(bean.purchased_on),
+            descending_time_sort(bean.roast_date),
+            descending_time_sort(bean.created_at),
+            bean.name.to_s.downcase
+          ]
+        when "finished"
+          [
+            descending_time_sort(bean.finished_at || bean[:latest_brew_at]),
+            descending_time_sort(bean[:latest_brew_at]),
+            descending_time_sort(bean.opened_on),
+            bean.name.to_s.downcase
+          ]
+        else
+          [
+            descending_time_sort(bean.archived_at),
+            descending_time_sort(bean.opened_on),
+            bean.name.to_s.downcase
+          ]
+        end
+      end
+    end
+
+    def descending_time_sort(value)
+      return Float::INFINITY if value.blank?
+
+      -value.to_time.to_i
     end
 end

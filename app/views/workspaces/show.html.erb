@@ -10,7 +10,7 @@
             <%= image_tag media_attachment_path(current_workspace.logo.attachment, variant: :thumbnail),
               alt: "",
               data: { testid: "dashboard-workspace-logo" },
-              class: "h-16 w-16 shrink-0 rounded-2xl border border-rn-line object-cover sm:h-20 sm:w-20" %>
+              class: "h-16 w-16 shrink-0 rounded-2xl border border-rn-line object-contain sm:h-20 sm:w-20" %>
           <% end %>
           <h1 class="min-w-0 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= current_workspace.name %></h1>
         </div>
@@ -85,7 +85,7 @@
                     <%= render "shared/record_photo_thumb",
                       record: bean,
                       testid: "dashboard-open-bean-photo",
-                      class_name: "h-14 w-14 shrink-0 rounded-2xl object-cover ring-1 ring-stone-200" %>
+                      class_name: "h-14 w-14 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
                     <div class="min-w-0">
                       <p class="truncate font-extrabold text-rn-ink"><%= bean.name %></p>
                       <p class="mt-1 truncate text-sm text-rn-muted"><%= bean.roaster_name.presence || t(".unknown_roaster") %></p>

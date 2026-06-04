@@ -1,7 +1,7 @@
 <% record = local_assigns.fetch(:record) %>
 <% photo = record&.primary_photo_attachment %>
 <% testid = local_assigns.fetch(:testid, "record-photo") %>
-<% class_name = local_assigns.fetch(:class_name, "h-12 w-12 shrink-0 rounded-xl object-cover ring-1 ring-stone-200") %>
+<% class_name = local_assigns.fetch(:class_name, "h-12 w-12 shrink-0 rounded-xl object-contain ring-1 ring-stone-200") %>
 <% fallback = local_assigns.fetch(:fallback, record&.respond_to?(:name) ? record.name : "R") %>
 
 <% if photo.present? %>

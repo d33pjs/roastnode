@@ -69,13 +69,13 @@ export default class extends Controller {
   }
 
   initializeSelection() {
-    const bounds = this.stageBounds
-    if (!bounds.width || !bounds.height) return
+    const imageRect = this.displayedImageRect
+    if (!imageRect.width || !imageRect.height) return
 
-    const size = Math.min(bounds.width, bounds.height) * 0.72
+    const size = Math.min(imageRect.width, imageRect.height) * 0.72
     this.selection = {
-      x: (bounds.width - size) / 2,
-      y: (bounds.height - size) / 2,
+      x: imageRect.left + (imageRect.width - size) / 2,
+      y: imageRect.top + (imageRect.height - size) / 2,
       width: size,
       height: size
     }
@@ -111,15 +111,20 @@ export default class extends Controller {
   cropInNaturalPixels() {
     if (!this.selection || !this.imageTarget.naturalWidth || !this.imageTarget.naturalHeight) return null
 
-    const bounds = this.stageBounds
-    const scaleX = this.imageTarget.naturalWidth / bounds.width
-    const scaleY = this.imageTarget.naturalHeight / bounds.height
+    const imageRect = this.displayedImageRect
+    if (!imageRect.width || !imageRect.height) return null
+
+    const selection = this.selectionInsideImage(imageRect)
+    if (!selection) return null
+
+    const scaleX = this.imageTarget.naturalWidth / imageRect.width
+    const scaleY = this.imageTarget.naturalHeight / imageRect.height
 
     return {
-      x: Math.round(this.selection.x * scaleX),
-      y: Math.round(this.selection.y * scaleY),
-      width: Math.max(1, Math.round(this.selection.width * scaleX)),
-      height: Math.max(1, Math.round(this.selection.height * scaleY))
+      x: Math.round((selection.x - imageRect.left) * scaleX),
+      y: Math.round((selection.y - imageRect.top) * scaleY),
+      width: Math.max(1, Math.round(selection.width * scaleX)),
+      height: Math.max(1, Math.round(selection.height * scaleY))
     }
   }
 
@@ -137,15 +142,50 @@ export default class extends Controller {
 
   pointFromEvent(event) {
     const bounds = this.stageTarget.getBoundingClientRect()
+    const imageRect = this.displayedImageRect
 
     return {
-      x: this.clamp(event.clientX - bounds.left, 0, bounds.width),
-      y: this.clamp(event.clientY - bounds.top, 0, bounds.height)
+      x: this.clamp(event.clientX - bounds.left, imageRect.left, imageRect.left + imageRect.width),
+      y: this.clamp(event.clientY - bounds.top, imageRect.top, imageRect.top + imageRect.height)
     }
   }
 
-  get stageBounds() {
-    return this.stageTarget.getBoundingClientRect()
+  selectionInsideImage(imageRect) {
+    const left = this.clamp(this.selection.x, imageRect.left, imageRect.left + imageRect.width)
+    const top = this.clamp(this.selection.y, imageRect.top, imageRect.top + imageRect.height)
+    const right = this.clamp(this.selection.x + this.selection.width, imageRect.left, imageRect.left + imageRect.width)
+    const bottom = this.clamp(this.selection.y + this.selection.height, imageRect.top, imageRect.top + imageRect.height)
+    const width = right - left
+    const height = bottom - top
+
+    if (width <= 0 || height <= 0) return null
+
+    return { x: left, y: top, width, height }
+  }
+
+  get displayedImageRect() {
+    const stageRect = this.stageTarget.getBoundingClientRect()
+    const imageRect = this.imageTarget.getBoundingClientRect()
+    if (!imageRect.width || !imageRect.height || !this.imageTarget.naturalWidth || !this.imageTarget.naturalHeight) {
+      return { left: 0, top: 0, width: 0, height: 0 }
+    }
+
+    const naturalRatio = this.imageTarget.naturalWidth / this.imageTarget.naturalHeight
+    const boxRatio = imageRect.width / imageRect.height
+    let width = imageRect.width
+    let height = imageRect.height
+    let left = imageRect.left - stageRect.left
+    let top = imageRect.top - stageRect.top
+
+    if (boxRatio > naturalRatio) {
+      width = imageRect.height * naturalRatio
+      left += (imageRect.width - width) / 2
+    } else {
+      height = imageRect.width / naturalRatio
+      top += (imageRect.height - height) / 2
+    }
+
+    return { left, top, width, height }
   }
 
   clamp(value, minimum, maximum) {

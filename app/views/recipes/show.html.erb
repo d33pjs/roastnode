@@ -70,7 +70,13 @@
         <%= render "recipes/finish_card", recipe: @recipe %>
 
         <% if @recipe.primary_photo_attachment.present? %>
-          <%= image_tag media_attachment_path(@recipe.primary_photo_attachment, variant: :thumbnail), alt: "", data: { testid: "recipe-finished-photo" }, class: "mt-4 h-64 w-full rounded-lg object-cover" %>
+          <% photo_url = media_attachment_path(@recipe.primary_photo_attachment) %>
+          <div data-controller="photo-lightbox" data-photo-lightbox-sources-value="<%= [ photo_url ].to_json %>" data-action="keydown@window->photo-lightbox#closeFromKeyboard" class="mt-4">
+            <button type="button" data-action="photo-lightbox#open" data-photo-lightbox-index-param="0" data-full-src="<%= photo_url %>" aria-label="<%= t("shared.photo_grid.open_photo") %>" class="block h-64 w-full rounded-lg bg-[var(--rn-surface-muted)] p-2">
+              <%= image_tag media_attachment_path(@recipe.primary_photo_attachment, variant: :thumbnail), alt: "", data: { testid: "recipe-finished-photo" }, class: "h-full w-full object-contain" %>
+            </button>
+            <%= render "shared/photo_lightbox" %>
+          </div>
         <% end %>
       </div>
 

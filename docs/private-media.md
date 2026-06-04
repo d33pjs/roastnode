@@ -14,8 +14,8 @@ Private Media adds basic photo capture to the current household coffee records.
 - Active Storage-backed identity images for workspaces: logo and banner.
 - Multi-photo upload fields on create forms for photo-enabled records where a create form exists.
 - Photo galleries on detail pages.
-- Clickable photo thumbnails that open the private original image in a new tab.
-- Generated private thumbnail variants for in-page previews.
+- Contained photo thumbnails that open the private original image in an in-page lightbox, with raw view links still available.
+- Generated private thumbnail variants for in-page previews without CSS zoom/crop.
 - Per-photo private download links.
 - Primary-photo selection for photo-enabled records.
 - Browser-side photo cropping with save-as-new and overwrite modes.
@@ -32,7 +32,7 @@ Views must render photos through `media_attachment_path(attachment)`, not raw Ra
 
 Viewing and downloading photos use `MediaAttachmentsController#show` and `MediaAttachmentsController#download`. Both actions are read-scoped to the active workspace. Removing a photo uses the same scoped media route and additionally requires `current_workspace_policy.write?`. The controller detaches the attachment from the parent record instead of purging the blob immediately, because duplicated bean bags can intentionally reuse the same photo blob.
 
-In-page previews can request `media_attachment_path(attachment, variant: :thumbnail)`. The controller only supports the `thumbnail` variant, applies the same workspace visibility checks as original media, and returns `404 Not Found` for unknown variants. Thumbnails use Active Storage variants with `resize_to_limit: [480, 480]`. If the local native image-processing runtime is missing or cannot process a file, the controller logs the error and falls back to the original bytes for that thumbnail response.
+In-page previews can request `media_attachment_path(attachment, variant: :thumbnail)`. The controller only supports the `thumbnail` variant, applies the same workspace visibility checks as original media, and returns `404 Not Found` for unknown variants. Thumbnails use Active Storage variants with `resize_to_limit: [480, 480]`. Views render those thumbnails with contained object fitting so the full uploaded or cropped image remains visible instead of being visually re-cropped. If the local native image-processing runtime is missing or cannot process a file, the controller logs the error and falls back to the original bytes for that thumbnail response.
 
 User avatar/banner replacement is limited to the signed-in user. Workspace logo/banner replacement is limited to owners and admins through the workspace settings page.
 
@@ -54,7 +54,7 @@ Public recipe media responses use generic filenames and opaque per-share media h
 
 Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, preparation tools, and recipes. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
 
-Cropping uses `MediaAttachmentsController#crop` and requires workspace write access. The crop page renders the private image through `media_attachment_path`, then the `photo-crop` Stimulus controller uses browser canvas APIs to create a normal image upload. Save-as-new adds another photo to the same record. Overwrite attaches the cropped image and removes the old attachment; if the overwritten photo was primary, the new attachment becomes primary automatically. This avoids depending on native libvips/ImageMagick availability in the app runtime.
+Cropping uses `MediaAttachmentsController#crop` and requires workspace write access. The crop page renders the private image through `media_attachment_path`, then the `photo-crop` Stimulus controller maps the selected crop box through the actual displayed image rectangle before using browser canvas APIs to create a normal image upload. This keeps square selections square even when the image is letterboxed by contained fitting. Save-as-new adds another photo to the same record. Overwrite attaches the cropped image and removes the old attachment; if the overwritten photo was primary, the new attachment becomes primary automatically. This avoids depending on native libvips/ImageMagick availability in the app runtime.
 
 ## Current Limits
 
