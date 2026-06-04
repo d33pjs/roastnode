@@ -637,7 +637,7 @@ en:
     destroy:
       destroyed: "Equipment deleted."
     edit:
-      back: "Back to equipment"
+      back: "Back to gear"
       eyebrow: "Gear"
       photos: "Current photos"
       title: "Edit equipment"
@@ -665,7 +665,7 @@ en:
       title: "Equipment"
       unknown: "Unknown"
     new:
-      back: "Back to equipment"
+      back: "Back to gear"
       create: "Add equipment"
       eyebrow: "Gear"
       kind: "Kind"
@@ -681,7 +681,7 @@ en:
       apply_filters: "Apply"
       archive: "Archive"
       average_rating: "Average rating"
-      back: "Back to equipment"
+      back: "Back to gear"
       brew: "Espresso with %{bean}"
       brews_by_day: "Brews by day"
       brews_since_service: "Brews since service"
@@ -1039,7 +1039,7 @@ en:
     destroy:
       destroyed: "Preparation tool deleted."
     edit:
-      back: "Back to preparation tool"
+      back: "Back to gear"
       eyebrow: "Prep tools"
       photos: "Current photos"
       title: "Edit preparation tool"
@@ -1067,7 +1067,7 @@ en:
       status: "Status"
       title: "Preparation tools"
     new:
-      back: "Back to preparation tools"
+      back: "Back to gear"
       create: "Add preparation tool"
       eyebrow: "Prep tools"
       title: "Add preparation tool"
@@ -1082,7 +1082,7 @@ en:
       average_time: "Average time"
       average_yield: "Average yield"
       best_brews: "Best brews"
-      back: "Back to preparation tools"
+      back: "Back to gear"
       brew: "Espresso with %{bean}"
       channeling_count: "%{count} of %{total} brews"
       channeling_rate: "Channeling"
@@ -1404,6 +1404,7 @@ en:
       no_views: "No views"
       open: "Open"
       protected: "Protected"
+      recent_views: "Recent views"
       remove: "Remove"
       remove_confirmation: "Remove this public share? The URL will stop working."
       title: "Public shares"

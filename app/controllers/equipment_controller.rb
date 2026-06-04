@@ -37,7 +37,7 @@ class EquipmentController < ApplicationController
     if @equipment.save
       @equipment.photos.attach(photos) if photos.any?
       refresh_public_brew_shares_for(@equipment)
-      redirect_to equipment_index_path, notice: t(".created")
+      redirect_to gear_path, notice: t(".created")
     else
       prepare_record_links(@equipment)
       render :new, status: :unprocessable_entity
@@ -51,7 +51,7 @@ class EquipmentController < ApplicationController
     if @equipment.update(attributes)
       @equipment.photos.attach(photos) if photos.any?
       refresh_public_brew_shares_for(@equipment)
-      redirect_to @equipment, notice: t(".updated")
+      redirect_to gear_path, notice: t(".updated")
     else
       prepare_record_links(@equipment)
       render :edit, status: :unprocessable_entity
@@ -61,20 +61,20 @@ class EquipmentController < ApplicationController
   def archive
     @equipment.archive!
     refresh_public_brew_shares_for(@equipment)
-    redirect_to @equipment, notice: t(".archived")
+    redirect_to gear_path, notice: t(".archived")
   end
 
   def reopen
     @equipment.reopen!
     refresh_public_brew_shares_for(@equipment)
-    redirect_to @equipment, notice: t(".reopened")
+    redirect_to gear_path, notice: t(".reopened")
   end
 
   def destroy
     share_ids = PublicBrewShareRefresher.shares_for(@equipment).pluck(:id)
     @equipment.destroy_with_history!
     refresh_public_brew_shares(share_ids)
-    redirect_to equipment_index_path, notice: t(".destroyed")
+    redirect_to gear_path, notice: t(".destroyed")
   end
 
   private

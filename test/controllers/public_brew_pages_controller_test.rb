@@ -25,8 +25,10 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /one@example.com/, count: 0
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
     assert_select "[data-testid=site-footer-github-logo]"
+    assert_select "a[data-testid=site-footer-github].h-11"
     assert_select "[data-testid=site-footer-version]", count: 0
     assert_select "a[data-testid=site-footer-buy-me-a-coffee][href=?]", "https://buymeacoffee.com/roastnode"
+    assert_select "a[data-testid=site-footer-buy-me-a-coffee].h-11"
     assert_select "[data-testid=site-footer-buy-me-a-coffee-logo]"
     assert_no_match "/rails/active_storage", response.body
     assert_no_match "/media_attachments", response.body
@@ -153,8 +155,13 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=public-brew-bean-anchor][href='##{public_bean_anchor_for(share)}']", text: /Good Coffee/
     assert_select "a[data-testid=public-brew-bean-anchor][href='##{public_bean_anchor_for(share)}']", text: /House Blend/
     assert_select "[data-testid=public-brew-identity-strip]"
-    assert_select "[data-testid=public-household-identity].justify-self-start", text: /Household/
-    assert_select "[data-testid=public-user-identity].justify-self-end", text: /User/
+    assert_select "[data-testid=public-brew-identity-strip]" do |elements|
+      classes = elements.first["class"].split
+      assert_includes classes, "grid-cols-2"
+      assert_not_includes classes, "sm:grid-cols-2"
+    end
+    assert_select "[data-testid=public-household-identity].self-start", text: /Household/
+    assert_select "[data-testid=public-user-identity].self-start", text: /User/
     assert_select "[data-testid=public-brew-chart-grid].brew-chart-grid"
     assert_select "[data-testid=public-brew-preinfusion-guide]"
     assert_select "[data-testid=public-brew-first-drip-callout]"

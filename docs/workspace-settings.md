@@ -7,7 +7,7 @@ Workspace settings are scoped to the current active workspace.
 - Owners and admins can open `/workspace/edit`.
 - The page edits the household/workspace name, default currency, household logo, and household banner.
 - The page can configure a public footer support badge for the household. It supports the existing simple Buy Me a Coffee URL badge and an opt-in official Buy Me a Coffee script badge driven by slug and display text.
-- The page lists public brew shares for the active workspace, including each public URL, linked brew, enabled state, creation/update timestamps, view count, latest view IP/time, retained recent IP history, and quick open/edit/remove actions.
+- The page lists public brew shares for the active workspace, including each public URL, linked brew, enabled state, creation/update timestamps, view count, retained recent IP history as a compact list, and quick open/edit/remove actions.
 - Owners see a deletion danger zone with typed-name confirmation.
 - The route is singleton and uses `current_workspace`; it does not accept a workspace ID.
 - Members and viewers are redirected by the existing workspace admin authorization helper.

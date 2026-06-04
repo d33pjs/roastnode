@@ -41,6 +41,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", preparation_tools(:wdt).name
+    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("preparation_tools.show.back"))}/
     assert_select "[data-testid=preparation-tool-status]", I18n.t("preparation_tools.show.active")
     assert_select "[data-testid=preparation-tool-brew-count]", "1"
     assert_select "[data-testid=preparation-tool-total-ground]", "18g"
@@ -117,6 +118,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=preparation-tool-form-section][data-section=identity]"
+    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("preparation_tools.new.back"))}/
     assert_select "[data-testid=preparation-tool-form-section][data-section=setup]"
     assert_select "[data-testid=preparation-tool-form-section][data-section=notes]"
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
@@ -139,7 +141,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to preparation_tools_path
+    assert_redirected_to gear_path
     tool = workspaces(:household).preparation_tools.order(:created_at).last
     assert_equal "Paper filter", tool.name
     assert_equal 1, tool.photos.count
@@ -193,6 +195,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("preparation_tools.edit.title")
+    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("preparation_tools.edit.back"))}/
     assert_select "img[src=?]", media_attachment_path(existing_photo, variant: :thumbnail)
     assert_select "input[name=?][value=?]", "preparation_tool[position]", tool.position.to_s
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
@@ -209,7 +212,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to preparation_tool_path(tool)
+    assert_redirected_to gear_path
     assert_equal "Precision WDT", tool.reload.name
     assert_equal "Nine needles.", tool.notes
     assert_equal 12, tool.position
@@ -243,7 +246,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to preparation_tool_path(tool)
+    assert_redirected_to gear_path
     assert_equal "Public WDT note.", tool.reload.public_note
     assert_equal "Tool info", tool.record_links.first.label
   end
@@ -254,12 +257,12 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     patch archive_preparation_tool_path(tool)
 
-    assert_redirected_to preparation_tool_path(tool)
+    assert_redirected_to gear_path
     assert_not tool.reload.active?
 
     patch reopen_preparation_tool_path(tool)
 
-    assert_redirected_to preparation_tool_path(tool)
+    assert_redirected_to gear_path
     assert tool.reload.active?
   end
 
@@ -276,7 +279,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    assert_redirected_to preparation_tools_path
+    assert_redirected_to gear_path
     assert_nil snapshot.reload.preparation_tool
     assert_equal "WDT", snapshot.tool_name
   end

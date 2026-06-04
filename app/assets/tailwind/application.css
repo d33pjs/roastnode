@@ -164,6 +164,29 @@
     color: var(--rn-ink);
   }
 
+  .rn-footer-bmc-official {
+    transform-origin: center right;
+  }
+
+  .rn-footer-bmc-official .bmc-btn {
+    min-width: 9rem !important;
+    height: 2.75rem !important;
+    border-radius: 0.375rem !important;
+    padding: 0 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+
+  .rn-footer-bmc-official .bmc-btn svg {
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    transform: none !important;
+  }
+
+  .rn-footer-bmc-official iframe {
+    max-height: 2.75rem !important;
+  }
+
   .rn-choice-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));

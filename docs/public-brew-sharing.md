@@ -53,7 +53,7 @@ Workspace name/logo and user display label/avatar are intentional public identit
 
 The optional workspace Buy Me a Coffee URL is not copied into public share snapshots. Public share controllers may read it from the share's workspace to render the global footer support badge.
 
-The public Hero Brew Card mirrors the private card's brew curve, timing guides, first-drip callout, total-time marker, and vertical temperature callout, but it does not render recipe ghost targets, the private retention card, or a bean photo in the hero. Public household and user identity sit below the hero instead of inside it.
+The public Hero Brew Card mirrors the private card's brew curve, timing guides, first-drip callout, total-time marker, and vertical temperature callout, but it does not render recipe ghost targets, the private retention card, or a bean photo in the hero. Public household and user identity sit below the hero instead of inside it, in a two-column strip even on mobile so the two identity blocks stay aligned.
 
 ## Share Management
 
@@ -67,7 +67,7 @@ The private share editor controls:
 - selected photo attachment IDs
 - snapshot regeneration from current public-safe fields
 
-The workspace settings page lists the active workspace's public brew shares. Each row shows the share URL, enabled state, linked brew, creation/update timestamps, view count, latest viewer IP/time, recent viewer IP history, and quick actions to open, edit, or remove the share. Removing a share from this list deletes the public share record and its retained view rows.
+The workspace settings page lists the active workspace's public brew shares. Each row shows the share URL, enabled state, linked brew, creation/update timestamps, total view count, a compact recent-view list with full IPs and timestamps, and quick actions to open, edit, or remove the share. Removing a share from this list deletes the public share record and its retained view rows.
 
 Disabled shares and unknown tokens return `404 Not Found`. Password-protected shares show the password gate before the page. Unlock session state is scoped to the share token and to the current password fingerprint, so changing a share password invalidates previous browser unlocks.
 

@@ -35,7 +35,7 @@ class PreparationToolsController < ApplicationController
     if @preparation_tool.save
       @preparation_tool.photos.attach(photos) if photos.any?
       refresh_public_brew_shares_for(@preparation_tool)
-      redirect_to preparation_tools_path, notice: t(".created")
+      redirect_to gear_path, notice: t(".created")
     else
       prepare_record_links(@preparation_tool)
       render :new, status: :unprocessable_entity
@@ -49,7 +49,7 @@ class PreparationToolsController < ApplicationController
     if @preparation_tool.update(attributes)
       @preparation_tool.photos.attach(photos) if photos.any?
       refresh_public_brew_shares_for(@preparation_tool)
-      redirect_to @preparation_tool, notice: t(".updated")
+      redirect_to gear_path, notice: t(".updated")
     else
       prepare_record_links(@preparation_tool)
       render :edit, status: :unprocessable_entity
@@ -59,20 +59,20 @@ class PreparationToolsController < ApplicationController
   def archive
     @preparation_tool.archive!
     refresh_public_brew_shares_for(@preparation_tool)
-    redirect_to @preparation_tool, notice: t(".archived")
+    redirect_to gear_path, notice: t(".archived")
   end
 
   def reopen
     @preparation_tool.reopen!
     refresh_public_brew_shares_for(@preparation_tool)
-    redirect_to @preparation_tool, notice: t(".reopened")
+    redirect_to gear_path, notice: t(".reopened")
   end
 
   def destroy
     share_ids = PublicBrewShareRefresher.shares_for(@preparation_tool).pluck(:id)
     @preparation_tool.destroy_with_history!
     refresh_public_brew_shares(share_ids)
-    redirect_to preparation_tools_path, notice: t(".destroyed")
+    redirect_to gear_path, notice: t(".destroyed")
   end
 
   private

@@ -70,7 +70,7 @@ This is visibility only, not user management. Do not add role changes, password 
 
 ## Navigation
 
-The dashboard shows an "Instance admin" link only when `Current.user.instance_admin?` is true. Normal workspace users should not see the link and should be redirected away from `/instance_admin` with the standard authorization alert.
+The dashboard and app navigation show an "Instance admin" link only when `Current.user.instance_admin?` is true. The instance admin page uses the normal app navigation for signed-in admins who have an active workspace. Normal workspace users should not see the link and should be redirected away from `/instance_admin` with the standard authorization alert.
 
 ## Future Ideas
 

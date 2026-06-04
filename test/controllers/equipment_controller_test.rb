@@ -45,7 +45,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to equipment_index_path
+    assert_redirected_to gear_path
     equipment = workspaces(:household).equipment.order(:created_at).last
     assert_equal "grinder", equipment.kind
     assert_equal 1, equipment.photos.count
@@ -58,6 +58,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=equipment-form-section][data-section=identity]"
+    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("equipment.new.back"))}/
     assert_select "[data-testid=equipment-form-section][data-section=setup]"
     assert_select "[data-testid=equipment-form-section][data-section=notes]"
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
@@ -72,6 +73,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("equipment.edit.title")
+    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("equipment.edit.back"))}/
     assert_select "img[src=?]", media_attachment_path(existing_photo, variant: :thumbnail)
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
 
@@ -87,7 +89,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to equipment_path(equipment)
+    assert_redirected_to gear_path
     assert_equal "Eureka Atom", equipment.reload.name
     assert_equal "Atom 75", equipment.model
     assert_equal "Single dosing setup.", equipment.notes
@@ -121,7 +123,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to equipment_path(equipment)
+    assert_redirected_to gear_path
     assert_equal "Public grinder note.", equipment.reload.public_note
     assert_equal "Buy grinder", equipment.record_links.first.label
   end
@@ -184,6 +186,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", equipment(:household_grinder).name
+    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("equipment.show.back"))}/
     assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
     assert_select "p", text: /18g/
@@ -221,12 +224,12 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     patch archive_equipment_path(equipment)
 
-    assert_redirected_to equipment_path(equipment)
+    assert_redirected_to gear_path
     assert equipment.reload.archived?
 
     patch reopen_equipment_path(equipment)
 
-    assert_redirected_to equipment_path(equipment)
+    assert_redirected_to gear_path
     assert_not equipment.reload.archived?
   end
 
@@ -243,7 +246,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    assert_redirected_to equipment_index_path
+    assert_redirected_to gear_path
     assert_nil brew.reload.grinder
     assert_not_includes share.reload.snapshot.fetch("equipment").map { |item| item.fetch("role") }, "grinder"
   end

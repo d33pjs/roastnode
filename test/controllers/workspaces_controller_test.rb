@@ -27,6 +27,11 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
       user_agent: "Settings test browser",
       viewed_at: Time.zone.local(2026, 6, 3, 11, 0, 0)
     )
+    share.public_brew_share_views.create!(
+      ip_address: "203.0.113.42",
+      user_agent: "Settings test browser",
+      viewed_at: Time.zone.local(2026, 6, 3, 12, 30, 0)
+    )
     sign_in_as(users(:one))
 
     get edit_workspace_path
@@ -40,8 +45,11 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", brew_public_brew_share_path(share.brew)
     assert_select "[data-testid=?]", "public-share-created-at-#{share.id}"
     assert_select "[data-testid=?]", "public-share-updated-at-#{share.id}"
-    assert_select "[data-testid=?]", "public-share-view-count-#{share.id}", text: "1"
-    assert_select "[data-testid=?]", "public-share-recent-ip-#{share.id}", text: /198\.51\.100\.31/
+    assert_select "[data-testid=?]", "public-share-view-count-#{share.id}", text: "2"
+    assert_select "[data-testid=?]", "public-share-recent-views-#{share.id}" do
+      assert_select "[data-testid=?]", "public-share-recent-view-#{share.id}-#{share.public_brew_share_views.recent.first.id}", text: /203\.0\.113\.42/
+      assert_select "li", text: /198\.51\.100\.31/
+    end
   end
 
   test "workspace public share management excludes other workspaces" do

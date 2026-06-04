@@ -2,7 +2,7 @@
   <section class="mx-auto max-w-5xl px-6 py-10">
     <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
       <div>
-        <%= render "shared/back_link", label: t(".back"), path: preparation_tools_path %>
+        <%= render "shared/back_link", label: t(".back"), path: gear_path %>
         <p data-testid="preparation-tool-status" class="mt-4 text-sm font-semibold uppercase text-stone-600"><%= @preparation_tool.active? ? t(".active") : t(".inactive") %></p>
         <h1 class="mt-2 text-3xl font-bold text-stone-950"><%= @preparation_tool.name %></h1>
         <p class="mt-2 text-stone-700"><%= @preparation_tool.brew_method.humanize %></p>

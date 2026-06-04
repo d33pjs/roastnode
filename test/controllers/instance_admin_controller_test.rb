@@ -24,6 +24,9 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     get "/instance_admin"
 
     assert_response :success
+    assert_select "[data-testid=app-navigation]"
+    assert_select "a[data-testid=app-nav-dashboard][href=?]", dashboard_path
+    assert_select "a[href=?]", instance_admin_path, text: I18n.t("shared.app_navigation.instance_admin")
     assert_select "h1", I18n.t("instance_admin.index.title")
     assert_select "[data-testid=instance-admin-status]", text: /#{I18n.t("instance_admin.index.private_mode")}/
     assert_select "[data-testid=instance-admin-public-registration]", text: /#{I18n.t("instance_admin.index.disabled")}/
@@ -33,7 +36,7 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=instance-admin-metric-beans]", text: /#{Bean.count}/
     assert_select "[data-testid=instance-admin-metric-brews]", text: /#{Brew.count}/
     assert_select "[data-testid=instance-admin-metric-equipment]", text: /#{Equipment.count}/
-    assert_no_match(/password_digest|session|invite token/i, response.body)
+    assert_no_match(/password_digest|_session_id|session_id|invite token/i, response.body)
     assert_no_match(admin.password_digest, response.body)
   end
 
@@ -130,7 +133,7 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=instance-admin-backup-failure-#{failed_run.id}]", text: /RuntimeError/
     assert_select "[data-testid=instance-admin-backup-failure-#{failed_run.id}]", text: /\[REDACTED\]/
     assert_no_match(/super-secret|abc123/, response.body)
-    assert_no_match(/password_digest|session|invite token/i, response.body)
+    assert_no_match(/password_digest|_session_id|session_id|invite token/i, response.body)
   end
 
   test "shows household invite management to instance admins" do
