@@ -22,6 +22,12 @@
           <%= form.text_field :default_currency, required: true, maxlength: 3, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 uppercase text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
         </div>
 
+        <div>
+          <%= form.label :buy_me_a_coffee_url, t(".buy_me_a_coffee_url"), class: "block text-sm font-medium text-stone-700" %>
+          <%= form.url_field :buy_me_a_coffee_url, placeholder: t(".buy_me_a_coffee_url_placeholder"), class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+          <p class="mt-1 text-xs font-semibold text-stone-500"><%= t(".buy_me_a_coffee_url_help") %></p>
+        </div>
+
         <div class="grid gap-4 sm:grid-cols-2">
           <div>
             <%= form.label :logo, t(".logo"), class: "block text-sm font-medium text-stone-700" %>

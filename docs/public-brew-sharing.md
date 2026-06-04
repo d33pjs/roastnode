@@ -18,6 +18,7 @@ Public Brew Sharing lets a workspace writer publish one curated brew page withou
 - Public media route with opaque handles for selected share media and public identity images.
 - Automatic snapshot refresh for public-safe brew, bean, gear, tool, public-link, workspace-logo, and user-avatar changes.
 - Public page view counts plus a capped recent list of full viewer IP addresses and viewed-at timestamps.
+- Public shared pages include the global GitHub footer link, and show the workspace's Buy Me a Coffee support badge when that workspace setting is present.
 
 ## Privacy Contract
 
@@ -49,6 +50,8 @@ The snapshot and public page must not include:
 - backup, export, admin, session, environment, or infrastructure data
 
 Workspace name/logo and user display label/avatar are intentional public identity surfaces for this feature. They should still be routed through the public-share media whitelist instead of raw Active Storage URLs.
+
+The optional workspace Buy Me a Coffee URL is not copied into public share snapshots. Public share controllers may read it from the share's workspace to render the global footer support badge.
 
 The public Hero Brew Card mirrors the private card's brew curve, timing guides, first-drip callout, total-time marker, and vertical temperature callout, but it does not render recipe ghost targets, the private retention card, or a bean photo in the hero. Public household and user identity sit below the hero instead of inside it.
 

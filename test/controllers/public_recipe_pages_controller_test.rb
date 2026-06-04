@@ -11,6 +11,7 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
 
   test "enabled share renders public snapshot without authentication" do
     share = create_share(enabled: true)
+    share.workspace.update!(buy_me_a_coffee_url: "https://buymeacoffee.com/roastnode")
 
     get public_recipe_page_path(share.token)
 
@@ -22,6 +23,9 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='https://example.test/recipe'][data-testid=public-recipe-link]", text: "Recipe writeup"
     assert_select "body", text: /Private recipe link/, count: 0
     assert_select "body", text: /one@example.com/, count: 0
+    assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
+    assert_select "[data-testid=site-footer-version]", count: 0
+    assert_select "a[data-testid=site-footer-buy-me-a-coffee][href=?]", "https://buymeacoffee.com/roastnode"
     assert_no_match "/rails/active_storage", response.body
     assert_no_match "/media_attachments", response.body
     assert_no_match "attachment_id", response.body

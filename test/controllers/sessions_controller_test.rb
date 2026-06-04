@@ -5,7 +5,10 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
   test "new" do
     get new_session_path
+
     assert_response :success
+    assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
+    assert_select "[data-testid=site-footer-version]", count: 0
   end
 
   test "create with valid credentials" do

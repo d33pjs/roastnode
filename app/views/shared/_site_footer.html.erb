@@ -1,0 +1,30 @@
+<% buy_me_a_coffee_url = local_assigns[:buy_me_a_coffee_url].presence %>
+<% show_version = local_assigns.fetch(:show_version, true) && Current.user.present? %>
+
+<footer data-testid="site-footer" class="border-t border-rn-line bg-rn-surface px-5 py-6 text-sm text-rn-muted">
+  <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+    <div class="flex flex-wrap items-center justify-center gap-3">
+      <% if buy_me_a_coffee_url.present? %>
+        <%= link_to t("shared.site_footer.buy_me_a_coffee"),
+          buy_me_a_coffee_url,
+          target: "_blank",
+          rel: "noopener",
+          data: { testid: "site-footer-buy-me-a-coffee" },
+          class: "inline-flex items-center rounded-md bg-[#ffdd00] px-3 py-2 text-xs font-black uppercase text-[#0d0c0b] shadow-sm hover:bg-[#f4ce00]" %>
+      <% end %>
+
+      <%= link_to t("shared.site_footer.github"),
+        Roastnode::AppVersion.github_url,
+        target: "_blank",
+        rel: "noopener",
+        data: { testid: "site-footer-github" },
+        class: "font-extrabold text-rn-ink underline decoration-rn-line underline-offset-4 hover:decoration-rn-ink" %>
+    </div>
+
+    <% if show_version %>
+      <p data-testid="site-footer-version" class="font-bold">
+        <%= t("shared.site_footer.version", version: Roastnode::AppVersion.current) %>
+      </p>
+    <% end %>
+  </div>
+</footer>

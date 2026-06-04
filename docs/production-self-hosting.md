@@ -31,6 +31,7 @@ RAILS_LOG_LEVEL=info
 SOLID_QUEUE_IN_PUMA=false
 ROASTNODE_HOST=coffee.example.com
 ROASTNODE_PROTOCOL=https
+ROASTNODE_VERSION=vX.Y.Z
 ```
 
 If you enable outbound password reset or invite mail, configure SMTP through host-level secrets or the rendered env file. `SMTP_FROM_ADDRESS` controls the message `From:` header and should use a domain verified with your SMTP provider, such as Resend. When `SMTP_FROM_ADDRESS` is blank, Roastnode falls back to `no-reply@SMTP_DOMAIN`. Do not put SMTP passwords, database passwords, backup files, `config/master.key`, or generated `.env` files into git.
@@ -124,6 +125,7 @@ The production env example documents the supported settings. Important groups:
 - SSL headers and redirects: `RAILS_ASSUME_SSL`, `RAILS_FORCE_SSL`.
 - SMTP: `SMTP_ENABLED`, `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_DOMAIN`, `SMTP_FROM_ADDRESS`, `SMTP_USER_NAME`, `SMTP_PASSWORD`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO`, `SMTP_OPENSSL_VERIFY_MODE`, `SMTP_RAISE_DELIVERY_ERRORS`.
 - Jobs and concurrency: `SOLID_QUEUE_IN_PUMA`, `RAILS_MAX_THREADS`, `WEB_CONCURRENCY`.
+- Footer metadata: optional `ROASTNODE_VERSION` for the signed-in footer version label and optional `ROASTNODE_GITHUB_URL` for the global source link. Without `ROASTNODE_VERSION`, local checkouts fall back to the latest git tag when `.git` is present, then `development`.
 - Backup defaults: `ROASTNODE_BACKUP_STORAGE_PATH`, `ROASTNODE_BACKUP_RETENTION_COUNT`.
 - Thruster: `THRUSTER_TLS_DOMAIN`, `THRUSTER_STORAGE_PATH`, `THRUSTER_GZIP_COMPRESSION_DISABLE_ON_AUTH`.
 - Direct Puma HTTPS: `ROASTNODE_WEB_COMMAND`, `ROASTNODE_CONTAINER_PORT`, `PORT`, `PUMA_SSL_CERT_PATH`, `PUMA_SSL_KEY_PATH`, `PUMA_BIND_HOST`.

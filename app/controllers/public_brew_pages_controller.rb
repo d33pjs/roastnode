@@ -23,6 +23,8 @@ class PublicBrewPagesController < ApplicationController
   private
     def set_share
       @share = PublicBrewShare.find_enabled_by_token!(params[:token])
+      @site_footer_buy_me_a_coffee_url = @share.workspace.buy_me_a_coffee_url
+      @site_footer_show_version = false
     rescue ActiveRecord::RecordNotFound
       head :not_found
     end

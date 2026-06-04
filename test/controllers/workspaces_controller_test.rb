@@ -2,6 +2,7 @@ require "test_helper"
 
 class WorkspacesControllerTest < ActionDispatch::IntegrationTest
   test "owner can edit active workspace settings" do
+    workspaces(:household).update!(buy_me_a_coffee_url: "https://buymeacoffee.com/roastnode")
     sign_in_as(users(:one))
 
     get edit_workspace_path
@@ -10,6 +11,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("workspaces.edit.title")
     assert_select "input[name=?][value=?]", "workspace[name]", workspaces(:household).name
     assert_select "input[name=?][value=?]", "workspace[default_currency]", "EUR"
+    assert_select "input[name=?][value=?]", "workspace[buy_me_a_coffee_url]", "https://buymeacoffee.com/roastnode"
     assert_select "input[type=file][name=?]", "workspace[logo]"
     assert_select "input[type=file][name=?]", "workspace[banner]"
     assert_select "a[data-testid=back-link][href=?]", dashboard_path
@@ -73,19 +75,21 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=workspace-banner-preview][src=?]", media_attachment_path(banner, variant: :thumbnail)
   end
 
-  test "owner can update active workspace name and default currency" do
+  test "owner can update active workspace name, default currency, and support badge url" do
     sign_in_as(users(:one))
 
     patch workspace_path, params: {
       workspace: {
         name: "Jens Coffee Lab",
-        default_currency: "eur"
+        default_currency: "eur",
+        buy_me_a_coffee_url: "https://buymeacoffee.com/roastnode"
       }
     }
 
     assert_redirected_to dashboard_path
     assert_equal "Jens Coffee Lab", workspaces(:household).reload.name
     assert_equal "EUR", workspaces(:household).default_currency
+    assert_equal "https://buymeacoffee.com/roastnode", workspaces(:household).buy_me_a_coffee_url
   end
 
   test "owner can update workspace identity media" do

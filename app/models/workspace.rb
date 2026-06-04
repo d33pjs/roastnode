@@ -1,4 +1,8 @@
+require "uri"
+
 class Workspace < ApplicationRecord
+  BUY_ME_A_COFFEE_HOSTS = %w[buymeacoffee.com www.buymeacoffee.com].freeze
+
   enum :kind, {
     household: "household",
     roaster: "roaster",
@@ -25,9 +29,11 @@ class Workspace < ApplicationRecord
   has_one_attached :banner
 
   normalizes :default_currency, with: ->(currency) { currency.strip.upcase }
+  normalizes :buy_me_a_coffee_url, with: ->(url) { url.to_s.strip.presence }
 
   validates :name, presence: true
   validates :default_currency, presence: true
+  validate :buy_me_a_coffee_url_is_supported
 
   def destroy_with_history!
     transaction do
@@ -41,4 +47,17 @@ class Workspace < ApplicationRecord
       destroy!
     end
   end
+
+  private
+    def buy_me_a_coffee_url_is_supported
+      return if buy_me_a_coffee_url.blank?
+
+      uri = URI.parse(buy_me_a_coffee_url)
+      host = uri.host.to_s.downcase
+      return if uri.is_a?(URI::HTTP) && BUY_ME_A_COFFEE_HOSTS.include?(host)
+
+      errors.add(:buy_me_a_coffee_url, :invalid)
+    rescue URI::InvalidURIError
+      errors.add(:buy_me_a_coffee_url, :invalid)
+    end
 end

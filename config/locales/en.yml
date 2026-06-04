@@ -120,6 +120,10 @@ en:
     history_pagination:
       next: "Next"
       previous: "Previous"
+    site_footer:
+      buy_me_a_coffee: "Buy me a coffee"
+      github: "GitHub"
+      version: "Version %{version}"
     record_links:
       help: "Public links can appear on shared brew pages. Private links stay inside this workspace."
       kind: "Type"
@@ -1340,6 +1344,9 @@ en:
     edit:
       back: "Back to dashboard"
       banner: "Household banner"
+      buy_me_a_coffee_url: "Buy Me a Coffee URL"
+      buy_me_a_coffee_url_help: "Shown as a support badge at the bottom of public shared brew and recipe pages."
+      buy_me_a_coffee_url_placeholder: "https://buymeacoffee.com/your-name"
       confirmation_label: "Type %{name} to confirm"
       danger_body: "Deleting %{name} removes the workspace and its beans, brews, equipment, invites, imports, exports, and media references. This cannot be undone."
       danger_title: "Delete workspace"
