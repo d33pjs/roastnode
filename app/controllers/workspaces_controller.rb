@@ -64,7 +64,16 @@ class WorkspacesController < ApplicationController
     end
 
     def workspace_params
-      params.require(:workspace).permit(:name, :default_currency, :buy_me_a_coffee_url, :logo, :banner)
+      params.require(:workspace).permit(
+        :name,
+        :default_currency,
+        :buy_me_a_coffee_url,
+        :buy_me_a_coffee_display_mode,
+        :buy_me_a_coffee_slug,
+        :buy_me_a_coffee_text,
+        :logo,
+        :banner
+      )
     end
 
     def load_public_brew_shares

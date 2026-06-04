@@ -44,6 +44,7 @@
     <%= render "shared/app_navigation" if !content_for?(:hide_app_navigation) && Current.user.present? && current_workspace.present? %>
     <%= yield %>
     <%= render "shared/site_footer",
+      buy_me_a_coffee: @site_footer_buy_me_a_coffee,
       buy_me_a_coffee_url: @site_footer_buy_me_a_coffee_url,
       show_version: @site_footer_show_version != false %>
   </body>

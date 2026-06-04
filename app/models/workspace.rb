@@ -2,6 +2,9 @@ require "uri"
 
 class Workspace < ApplicationRecord
   BUY_ME_A_COFFEE_HOSTS = %w[buymeacoffee.com www.buymeacoffee.com].freeze
+  BUY_ME_A_COFFEE_DISPLAY_MODES = %w[link official_badge].freeze
+  BUY_ME_A_COFFEE_DEFAULT_TEXT = "Buy me a coffee"
+  BUY_ME_A_COFFEE_SLUG_FORMAT = /\A[a-zA-Z0-9._-]+\z/
 
   enum :kind, {
     household: "household",
@@ -30,10 +33,38 @@ class Workspace < ApplicationRecord
 
   normalizes :default_currency, with: ->(currency) { currency.strip.upcase }
   normalizes :buy_me_a_coffee_url, with: ->(url) { url.to_s.strip.presence }
+  normalizes :buy_me_a_coffee_display_mode, with: ->(mode) { mode.to_s.strip.presence || "link" }
+  normalizes :buy_me_a_coffee_slug, with: ->(slug) { slug.to_s.strip.presence }
+  normalizes :buy_me_a_coffee_text, with: ->(text) { text.to_s.strip.presence }
 
   validates :name, presence: true
   validates :default_currency, presence: true
+  validates :buy_me_a_coffee_display_mode, inclusion: { in: BUY_ME_A_COFFEE_DISPLAY_MODES }
+  validates :buy_me_a_coffee_slug,
+    presence: true,
+    length: { maximum: 100 },
+    format: { with: BUY_ME_A_COFFEE_SLUG_FORMAT },
+    if: :official_buy_me_a_coffee_badge?
+  validates :buy_me_a_coffee_text, length: { maximum: 80 }, allow_blank: true
   validate :buy_me_a_coffee_url_is_supported
+
+  def official_buy_me_a_coffee_badge?
+    buy_me_a_coffee_display_mode == "official_badge"
+  end
+
+  def buy_me_a_coffee_badge_text
+    buy_me_a_coffee_text.presence || BUY_ME_A_COFFEE_DEFAULT_TEXT
+  end
+
+  def site_footer_buy_me_a_coffee
+    if official_buy_me_a_coffee_badge?
+      return if buy_me_a_coffee_slug.blank?
+
+      { mode: :official_badge, slug: buy_me_a_coffee_slug, text: buy_me_a_coffee_badge_text }
+    elsif buy_me_a_coffee_url.present?
+      { mode: :link, url: buy_me_a_coffee_url }
+    end
+  end
 
   def destroy_with_history!
     transaction do

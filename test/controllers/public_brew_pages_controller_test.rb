@@ -24,10 +24,36 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Private shot link/, count: 0
     assert_select "body", text: /one@example.com/, count: 0
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
+    assert_select "[data-testid=site-footer-github-logo]"
     assert_select "[data-testid=site-footer-version]", count: 0
     assert_select "a[data-testid=site-footer-buy-me-a-coffee][href=?]", "https://buymeacoffee.com/roastnode"
+    assert_select "[data-testid=site-footer-buy-me-a-coffee-logo]"
     assert_no_match "/rails/active_storage", response.body
     assert_no_match "/media_attachments", response.body
+  end
+
+  test "enabled share renders official buy me a coffee badge script when configured" do
+    share = create_share(enabled: true)
+    share.workspace.update!(
+      buy_me_a_coffee_display_mode: "official_badge",
+      buy_me_a_coffee_slug: "d33p.js",
+      buy_me_a_coffee_text: "Buy me a coffee"
+    )
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
+    assert_select "script[data-testid=site-footer-buy-me-a-coffee][src=?]", "https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
+    assert_select "script[data-name=?]", "bmc-button"
+    assert_select "script[data-slug=?]", "d33p.js"
+    assert_select "script[data-text=?]", "Buy me a coffee"
+    assert_select "script[data-color=?]", "#986338"
+    assert_select "script[data-font=?]", "Comic"
+    assert_select "script[data-outline-color=?]", "#ffffff"
+    assert_select "script[data-font-color=?]", "#ffffff"
+    assert_select "script[data-coffee-color=?]", "#FFDD00"
+    assert_select "[data-testid=site-footer-version]", count: 0
   end
 
   test "successful public page render records a full ip page view" do

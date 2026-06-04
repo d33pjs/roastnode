@@ -12,6 +12,9 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "workspace[name]", workspaces(:household).name
     assert_select "input[name=?][value=?]", "workspace[default_currency]", "EUR"
     assert_select "input[name=?][value=?]", "workspace[buy_me_a_coffee_url]", "https://buymeacoffee.com/roastnode"
+    assert_select "select[name=?]", "workspace[buy_me_a_coffee_display_mode]"
+    assert_select "input[name=?]", "workspace[buy_me_a_coffee_slug]"
+    assert_select "input[name=?]", "workspace[buy_me_a_coffee_text]"
     assert_select "input[type=file][name=?]", "workspace[logo]"
     assert_select "input[type=file][name=?]", "workspace[banner]"
     assert_select "a[data-testid=back-link][href=?]", dashboard_path
@@ -90,6 +93,26 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Jens Coffee Lab", workspaces(:household).reload.name
     assert_equal "EUR", workspaces(:household).default_currency
     assert_equal "https://buymeacoffee.com/roastnode", workspaces(:household).buy_me_a_coffee_url
+  end
+
+  test "owner can update official buy me a coffee badge settings" do
+    sign_in_as(users(:one))
+
+    patch workspace_path, params: {
+      workspace: {
+        name: "Jens Coffee Lab",
+        default_currency: "eur",
+        buy_me_a_coffee_display_mode: "official_badge",
+        buy_me_a_coffee_slug: "d33p.js",
+        buy_me_a_coffee_text: "Buy me a coffee"
+      }
+    }
+
+    workspace = workspaces(:household).reload
+    assert_redirected_to dashboard_path
+    assert_equal "official_badge", workspace.buy_me_a_coffee_display_mode
+    assert_equal "d33p.js", workspace.buy_me_a_coffee_slug
+    assert_equal "Buy me a coffee", workspace.buy_me_a_coffee_text
   end
 
   test "owner can update workspace identity media" do

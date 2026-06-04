@@ -11,6 +11,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_session_path, text: I18n.t("home.index.sign_in")
     assert_select "[data-testid=app-mobile-navigation]", count: 0
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
+    assert_select "[data-testid=site-footer-github-logo]"
     assert_select "[data-testid=site-footer-version]", count: 0
   end
 
@@ -56,6 +57,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?][method=post]", session_path, text: /#{Regexp.escape(user.display_label)}/
     assert_select "[data-testid=site-footer-version]", text: I18n.t("shared.site_footer.version", version: Roastnode::AppVersion.current)
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
+    assert_select "[data-testid=site-footer-github-logo]"
     assert_no_match(/fixed inset-x-3 bottom-3/, response.body)
     assert_no_match user.email_address, response.body
   end

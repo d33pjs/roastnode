@@ -1366,8 +1366,18 @@ en:
     edit:
       back: "Back to dashboard"
       banner: "Household banner"
+      buy_me_a_coffee_display_mode: "Buy Me a Coffee display"
+      buy_me_a_coffee_display_modes:
+        link: "Simple link badge"
+        official_badge: "Official badge script"
+      buy_me_a_coffee_slug: "Badge slug"
+      buy_me_a_coffee_slug_help: "Used in the official badge as data-slug. Letters, numbers, dot, underscore, and hyphen are allowed."
+      buy_me_a_coffee_slug_placeholder: "d33p.js"
+      buy_me_a_coffee_text: "Badge text"
+      buy_me_a_coffee_text_help: "Used in the official badge as data-text. Leave blank for the default."
+      buy_me_a_coffee_text_placeholder: "Buy me a coffee"
       buy_me_a_coffee_url: "Buy Me a Coffee URL"
-      buy_me_a_coffee_url_help: "Shown as a support badge at the bottom of public shared brew and recipe pages."
+      buy_me_a_coffee_url_help: "Used when the simple link badge mode is selected."
       buy_me_a_coffee_url_placeholder: "https://buymeacoffee.com/your-name"
       confirmation_label: "Type %{name} to confirm"
       danger_body: "Deleting %{name} removes the workspace and its beans, brews, equipment, invites, imports, exports, and media references. This cannot be undone."
@@ -1378,6 +1388,8 @@ en:
       logo: "Household logo"
       name: "Household name"
       save: "Save workspace"
+      support_badge_help: "Shown on public shared brew and recipe pages. Official badge mode loads the Buy Me a Coffee CDN script."
+      support_badge_title: "Support badge"
       title: "Workspace settings"
     public_brew_shares:
       body: "Review public brew URLs, visitor counts, and recent full-IP views."

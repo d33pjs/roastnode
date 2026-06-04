@@ -22,7 +22,7 @@ class PublicRecipePagesController < ApplicationController
   private
     def set_share
       @share = PublicRecipeShare.find_enabled_by_token!(params[:token])
-      @site_footer_buy_me_a_coffee_url = @share.workspace.buy_me_a_coffee_url
+      @site_footer_buy_me_a_coffee = @share.workspace.site_footer_buy_me_a_coffee
       @site_footer_show_version = false
     rescue ActiveRecord::RecordNotFound
       head :not_found

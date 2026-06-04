@@ -8,6 +8,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
+    assert_select "[data-testid=site-footer-github-logo]"
     assert_select "[data-testid=site-footer-version]", count: 0
   end
 
