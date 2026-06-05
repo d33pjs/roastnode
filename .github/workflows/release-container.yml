@@ -137,6 +137,8 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           annotations: ${{ steps.meta.outputs.annotations }}
+          build-args: |
+            ROASTNODE_VERSION=${{ env.RELEASE_TAG }}
           provenance: mode=max
           sbom: true
 

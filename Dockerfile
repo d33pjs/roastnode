@@ -9,7 +9,9 @@
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
 ARG RUBY_VERSION=3.3.7
+ARG ROASTNODE_VERSION=development
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
+ARG ROASTNODE_VERSION
 
 # Rails app lives here
 WORKDIR /rails
@@ -25,7 +27,8 @@ ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
     BUNDLE_WITHOUT="development" \
-    LD_PRELOAD="/usr/local/lib/libjemalloc.so"
+    LD_PRELOAD="/usr/local/lib/libjemalloc.so" \
+    ROASTNODE_VERSION="${ROASTNODE_VERSION}"
 
 # Throw-away build stage to reduce size of final image
 FROM base AS build

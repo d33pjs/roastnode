@@ -61,6 +61,7 @@ If exodos.io settings are missing, the workflow keeps the SBOM artifact but skip
 6. The automatic tag run publishes the GitHub Release after attaching generated assets. This is required when GitHub release immutability is enabled, because published immutable releases cannot accept new or replacement assets.
 7. The GitHub `Release Container` workflow will:
    - Build `linux/amd64` and `linux/arm64` images.
+   - Bake the release tag into the image as the default `ROASTNODE_VERSION`.
    - Push the image to GHCR.
    - Apply `vX.Y.Z`, `X.Y.Z`, `X.Y`, `latest` for stable releases, and `sha-<short-commit>` tags.
    - Generate SPDX and CycloneDX container SBOMs.
