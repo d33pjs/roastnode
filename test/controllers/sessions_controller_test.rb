@@ -7,9 +7,44 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     get new_session_path
 
     assert_response :success
+    assert_select "main[data-testid=session-new]"
+    assert_select "[data-testid=session-form-panel]"
+    assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
+    assert_select "form[action=?][method=post]", session_path
+    assert_select "button[data-action=?]", "passkey#authenticate"
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
     assert_select "[data-testid=site-footer-github-logo]"
     assert_select "[data-testid=site-footer-version]", count: 0
+  end
+
+  test "new does not show unrelated app notices" do
+    sign_in_as(users(:one))
+
+    patch workspace_path, params: {
+      workspace: {
+        name: "Jens Coffee Lab",
+        default_currency: "EUR"
+      }
+    }
+
+    assert_redirected_to dashboard_path
+
+    get new_session_path
+
+    assert_response :success
+    assert_select "#notice", count: 0
+    assert_no_match I18n.t("workspaces.update.updated"), response.body
+  end
+
+  test "new keeps password reset notices" do
+    post passwords_path, params: { email_address: @user.email_address }
+
+    assert_redirected_to new_session_path
+
+    follow_redirect!
+
+    assert_response :success
+    assert_select "#notice", text: "Password reset instructions sent (if user with that email address exists)."
   end
 
   test "create with valid credentials" do

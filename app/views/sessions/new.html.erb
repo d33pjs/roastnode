@@ -1,54 +1,81 @@
-<div class="mx-auto md:w-2/3 w-full">
-  <%= link_to root_path, class: "mb-6 inline-block" do %>
-    <%= render "shared/brand_wordmark",
-      container_class: "block h-14 w-64",
-      image_class: "h-full w-full object-contain object-left" %>
-  <% end %>
+<% content_for :title, "Sign in · Roastnode" %>
 
-  <% if alert = flash[:alert] %>
-    <p class="py-2 px-3 bg-red-50 mb-5 text-red-500 font-medium rounded-lg inline-block" id="alert"><%= alert %></p>
-  <% end %>
+<main data-testid="session-new" class="min-h-[calc(100svh-6rem)] bg-rn-canvas px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-16">
+  <div class="mx-auto grid min-h-[calc(100svh-14rem)] w-full max-w-5xl items-center gap-8 lg:grid-cols-[0.9fr_1fr]">
+    <aside class="hidden lg:block">
+      <%= link_to root_path, class: "inline-block" do %>
+        <%= render "shared/brand_wordmark",
+          container_class: "block h-20 w-80",
+          image_class: "h-full w-full object-contain object-left" %>
+      <% end %>
 
-  <% if notice = flash[:notice] %>
-    <p class="py-2 px-3 bg-green-50 mb-5 text-green-500 font-medium rounded-lg inline-block" id="notice"><%= notice %></p>
-  <% end %>
+      <p class="mt-8 text-sm font-extrabold uppercase text-rn-muted">Private coffee workspace</p>
+      <h1 class="mt-4 max-w-md text-5xl font-black leading-tight text-rn-ink">Welcome back to Roastnode.</h1>
+      <p class="mt-5 max-w-md text-lg leading-8 text-rn-muted">Sign in to continue with your household account.</p>
+    </aside>
 
-  <h1 class="font-bold text-4xl">Sign in</h1>
+    <section class="mx-auto w-full max-w-md">
+      <%= link_to root_path, class: "mb-6 inline-block lg:hidden" do %>
+        <%= render "shared/brand_wordmark",
+          container_class: "block h-14 w-64 max-w-full",
+          image_class: "h-full w-full object-contain object-left" %>
+      <% end %>
 
-  <div
-    class="my-5"
-    data-controller="passkey"
-    data-passkey-options-url-value="<%= options_passkey_session_path %>"
-    data-passkey-submit-url-value="<%= passkey_session_path %>">
-    <button type="button" data-action="passkey#authenticate" class="w-full rounded-md border border-stone-300 px-3.5 py-2.5 text-center font-medium text-stone-900 hover:bg-stone-100">
-      <%= t(".sign_in_with_passkey") %>
-    </button>
-    <p class="mt-2 hidden text-sm text-red-600" data-passkey-target="error"></p>
+      <% if alert = flash[:alert] %>
+        <p data-testid="session-flash" class="mb-4 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700" id="alert"><%= alert %></p>
+      <% end %>
+
+      <% if notice = flash[:notice] %>
+        <p data-testid="session-flash" class="mb-4 rounded-md border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3 text-sm font-bold text-rn-ink" id="notice"><%= notice %></p>
+      <% end %>
+
+      <div data-testid="session-form-panel" class="rn-surface rounded-lg p-5 sm:p-7">
+        <div>
+          <p class="text-sm font-extrabold uppercase text-rn-muted">Account access</p>
+          <h2 class="mt-2 text-3xl font-black text-rn-ink">Sign in</h2>
+        </div>
+
+        <div
+          class="mt-6"
+          data-controller="passkey"
+          data-passkey-options-url-value="<%= options_passkey_session_path %>"
+          data-passkey-submit-url-value="<%= passkey_session_path %>">
+          <button type="button" data-action="passkey#authenticate" class="inline-flex h-12 w-full items-center justify-center rounded-md border border-rn-line bg-rn-canvas px-4 text-sm font-extrabold text-rn-ink shadow-sm transition hover:bg-[var(--rn-surface-muted)] focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]">
+            <%= t(".sign_in_with_passkey") %>
+          </button>
+          <p class="mt-2 hidden text-sm font-bold text-red-700" data-passkey-target="error"></p>
+        </div>
+
+        <div class="my-6 flex items-center gap-3 text-xs font-extrabold uppercase text-rn-muted">
+          <span class="h-px flex-1 bg-[var(--rn-line)]"></span>
+          <span>Password</span>
+          <span class="h-px flex-1 bg-[var(--rn-line)]"></span>
+        </div>
+
+        <%= form_with url: session_path, class: "space-y-5" do |form| %>
+          <div>
+            <%= form.label :email_address, "Email", class: "text-sm font-extrabold text-rn-ink" %>
+            <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "you@example.com", value: params[:email_address], class: "mt-2 block h-12 w-full rounded-md border border-rn-line bg-rn-canvas px-3 text-base text-rn-ink shadow-sm placeholder:text-rn-muted focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
+          </div>
+
+          <div>
+            <%= form.label :password, "Password", class: "text-sm font-extrabold text-rn-ink" %>
+            <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Your password", maxlength: 72, class: "mt-2 block h-12 w-full rounded-md border border-rn-line bg-rn-canvas px-3 text-base text-rn-ink shadow-sm placeholder:text-rn-muted focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
+          </div>
+
+          <div class="space-y-4 pt-1">
+            <%= form.submit "Sign in", class: "inline-flex h-12 w-full cursor-pointer items-center justify-center rounded-md bg-[var(--rn-accent-strong)] px-4 text-sm font-extrabold text-[#f8faf6] shadow-sm transition hover:bg-[var(--rn-accent)] focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
+
+            <div class="flex flex-col gap-3 text-sm font-bold text-rn-muted sm:flex-row sm:items-center sm:justify-between">
+              <%= link_to "Forgot password?", new_password_path, class: "text-rn-ink underline decoration-[var(--rn-line)] underline-offset-4 hover:decoration-[var(--rn-accent-strong)]" %>
+
+              <% if first_user_setup_available? %>
+                <%= link_to t(".setup_first_user"), new_first_user_setup_path, class: "text-rn-ink underline decoration-[var(--rn-line)] underline-offset-4 hover:decoration-[var(--rn-accent-strong)]" %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
   </div>
-
-  <%= form_with url: session_url, class: "contents" do |form| %>
-    <div class="my-5">
-      <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address], class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
-    </div>
-
-    <div class="my-5">
-      <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "block shadow-sm rounded-md border border-gray-400 focus:outline-blue-600 px-3 py-2 mt-2 w-full" %>
-    </div>
-
-    <div class="col-span-6 sm:flex sm:items-center sm:gap-4">
-      <div class="inline">
-        <%= form.submit "Sign in", class: "w-full sm:w-auto text-center rounded-md px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white inline-block font-medium cursor-pointer" %>
-      </div>
-
-      <div class="mt-4 text-sm text-gray-500 sm:mt-0">
-        <%= link_to "Forgot password?", new_password_path, class: "text-gray-700 underline hover:no-underline" %>
-      </div>
-    </div>
-
-    <% if first_user_setup_available? %>
-      <div class="mt-3 text-sm text-gray-500">
-        <%= link_to t(".setup_first_user"), new_first_user_setup_path, class: "text-gray-700 underline hover:no-underline" %>
-      </div>
-    <% end %>
-  <% end %>
-</div>
+</main>
