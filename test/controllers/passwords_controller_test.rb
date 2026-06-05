@@ -5,7 +5,13 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "new" do
     get new_password_path
+
     assert_response :success
+    assert_select "main[data-testid=password-new]"
+    assert_select "[data-testid=password-form-panel]"
+    assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
+    assert_select "form[action=?][method=post]", passwords_path
+    assert_select "a[href=?]", new_session_path, text: "Back to sign in"
   end
 
   test "create" do
@@ -27,8 +33,15 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "edit" do
-    get edit_password_path(@user.password_reset_token)
+    token = @user.password_reset_token
+    get edit_password_path(token)
+
     assert_response :success
+    assert_select "main[data-testid=password-edit]"
+    assert_select "[data-testid=password-form-panel]"
+    assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
+    assert_select "form[action=?][method=post]", password_path(token)
+    assert_select "input[name=?][type=hidden][value=?]", "_method", "put"
   end
 
   test "edit with invalid password reset token" do
@@ -77,6 +90,6 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   private
     def assert_notice(text)
-      assert_select "div", /#{text}/
+      assert_select "body", /#{Regexp.escape(text)}/
     end
 end
