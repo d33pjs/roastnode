@@ -1,0 +1,17 @@
+<% button_class = local_assigns.fetch(:button_class, "inline-flex items-center justify-center rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100") %>
+<% share_text = local_assigns.fetch(:text, title) %>
+
+<%= button_tag type: "button",
+  class: button_class,
+  data: {
+    controller: "native-share",
+    action: "click->native-share#share",
+    native_share_title_value: title,
+    native_share_text_value: share_text,
+    native_share_url_value: url,
+    native_share_copied_label_value: t("shared.native_share.copied"),
+    native_share_failed_label_value: t("shared.native_share.failed"),
+    testid: local_assigns[:testid]
+  } do %>
+  <span data-native-share-target="label"><%= t("shared.native_share.share") %></span>
+<% end %>

@@ -19,6 +19,7 @@ Public Brew Sharing lets a workspace writer publish one curated brew page withou
 - Automatic snapshot refresh for public-safe brew, bean, gear, tool, public-link, workspace-logo, and user-avatar changes.
 - Public page view counts plus a capped recent list of full viewer IP addresses and viewed-at timestamps.
 - Public shared pages include the global GitHub footer link, and show the workspace's Buy Me a Coffee support badge when that workspace setting is present.
+- Native mobile share shortcuts for enabled public shares on the private compact Brew Log and brew detail action area.
 
 ## Privacy Contract
 

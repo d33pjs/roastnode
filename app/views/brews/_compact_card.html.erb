@@ -1,40 +1,56 @@
-<%= link_to brew_path(brew),
-  data: { testid: "brew-history-compact-card" },
-  class: "block rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm hover:bg-[var(--rn-surface-muted)]" do %>
-  <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-    <div class="min-w-0">
-      <div class="flex flex-wrap items-center gap-2">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= profile_timestamp(brew.occurred_at) %></p>
-        <% if brew.public_brew_share&.enabled? %>
-          <span data-testid="brew-history-shared-marker-<%= brew.id %>" class="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-extrabold uppercase tracking-[0.08em] text-emerald-800"><%= t("brews.shared_marker") %></span>
-        <% end %>
+<% public_share = brew.public_brew_share if brew.public_brew_share&.enabled? %>
+<% public_share_title = public_share.title.presence || PublicBrewShare.default_title_for(brew) if public_share %>
+
+<article data-testid="brew-history-compact-card" class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+  <%= link_to brew_path(brew),
+    data: { testid: "brew-history-compact-card-link-#{brew.id}" },
+    class: "block p-4 hover:bg-[var(--rn-surface-muted)]" do %>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= profile_timestamp(brew.occurred_at) %></p>
+          <% if public_share %>
+            <span data-testid="brew-history-shared-marker-<%= brew.id %>" class="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-extrabold uppercase tracking-[0.08em] text-emerald-800"><%= t("brews.shared_marker") %></span>
+          <% end %>
+        </div>
+        <h2 class="mt-1 truncate text-xl font-black text-rn-ink"><%= brew.bean.name %></h2>
+        <p class="mt-1 truncate text-sm font-bold text-rn-ink"><%= brew.bean.roaster_name.presence || t("beans.index.unknown") %></p>
+        <p class="mt-2 text-sm font-semibold text-rn-muted"><%= t("brews.show.logged_by") %>: <%= brew.user.display_label %></p>
       </div>
-      <h2 class="mt-1 truncate text-xl font-black text-rn-ink"><%= brew.bean.name %></h2>
-      <p class="mt-1 truncate text-sm font-bold text-rn-ink"><%= brew.bean.roaster_name.presence || t("beans.index.unknown") %></p>
-      <p class="mt-2 text-sm font-semibold text-rn-muted"><%= t("brews.show.logged_by") %>: <%= brew.user.display_label %></p>
+      <div class="grid grid-cols-2 gap-2 text-sm sm:min-w-60">
+        <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
+          <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.dose") %></p>
+          <p class="mt-1 font-black text-rn-ink"><%= brew_card_grams(brew.dose_grams) %></p>
+        </div>
+        <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
+          <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.ratio") %></p>
+          <p class="mt-1 font-black text-rn-ink"><%= brew_card_ratio(brew) %></p>
+        </div>
+        <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
+          <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.grind_setting") %></p>
+          <p class="mt-1 font-black text-rn-ink"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
+        </div>
+        <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
+          <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.rating") %></p>
+          <p class="mt-1 font-black text-rn-ink"><%= brew.rating.presence || t("brews.show.unknown") %></p>
+        </div>
+      </div>
     </div>
-    <div class="grid grid-cols-2 gap-2 text-sm sm:min-w-60">
-      <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.dose") %></p>
-        <p class="mt-1 font-black text-rn-ink"><%= brew_card_grams(brew.dose_grams) %></p>
-      </div>
-      <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.ratio") %></p>
-        <p class="mt-1 font-black text-rn-ink"><%= brew_card_ratio(brew) %></p>
-      </div>
-      <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.grind_setting") %></p>
-        <p class="mt-1 font-black text-rn-ink"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
-      </div>
-      <div class="rounded-xl border border-rn-line bg-rn-canvas p-3">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.show.rating") %></p>
-        <p class="mt-1 font-black text-rn-ink"><%= brew.rating.presence || t("brews.show.unknown") %></p>
-      </div>
+    <div class="mt-3 flex flex-wrap gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted">
+      <span><%= brew.grinder&.name || t("brews.show.unknown") %></span>
+      <span><%= brew.machine&.name || t("brews.show.unknown") %></span>
+      <span><%= brew.taste_balance.humanize %></span>
     </div>
-  </div>
-  <div class="mt-3 flex flex-wrap gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted">
-    <span><%= brew.grinder&.name || t("brews.show.unknown") %></span>
-    <span><%= brew.machine&.name || t("brews.show.unknown") %></span>
-    <span><%= brew.taste_balance.humanize %></span>
-  </div>
-<% end %>
+  <% end %>
+
+  <% if public_share %>
+    <div class="flex justify-end border-t border-rn-line bg-rn-canvas px-4 py-3">
+      <%= render "shared/native_share_button",
+        url: public_brew_page_url(public_share.token),
+        title: public_share_title,
+        text: t("brews.native_share.text", title: public_share_title),
+        testid: "brew-native-share-button-#{brew.id}",
+        button_class: "inline-flex items-center justify-center rounded-md border border-rn-line bg-rn-surface px-3 py-2 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+    </div>
+  <% end %>
+</article>

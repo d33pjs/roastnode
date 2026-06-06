@@ -778,6 +778,21 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", edit_brew_public_brew_share_path(brew), text: I18n.t("brews.show.share_publicly")
+    assert_select "[data-testid=?]", "brew-native-share-button-#{brew.id}", count: 0
+  end
+
+  test "writer sees native share action when public share is enabled" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    share = create_public_brew_share_for(brew, enabled: true)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=?][data-native-share-url-value=?]",
+      "brew-native-share-button-#{brew.id}",
+      public_brew_page_url(share.token),
+      text: I18n.t("shared.native_share.share")
   end
 
   test "writer sees explicit taste correction form on brew detail" do
@@ -999,6 +1014,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", brew_path(older), text: /#{older.bean.name}/
     assert_select "[data-testid=?]", "brew-history-shared-marker-#{older.id}", I18n.t("brews.shared_marker")
     assert_select "[data-testid=?]", "brew-history-shared-marker-#{newest.id}", count: 0
+    assert_select "[data-testid=?]", "brew-native-share-button-#{older.id}", I18n.t("shared.native_share.share")
+    assert_select "[data-testid=?]", "brew-native-share-button-#{newest.id}", count: 0
+    assert_select "[data-testid=?]", "brew-history-compact-card-link-#{older.id}"
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
     assert_appears_before newest.bean.name, older.bean.name
   end

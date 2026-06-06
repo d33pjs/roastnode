@@ -11,6 +11,14 @@
             <% share_path = @brew.public_brew_share ? edit_brew_public_brew_share_path(@brew) : new_brew_public_brew_share_path(@brew) %>
             <%= link_to t(".share_publicly"), share_path, class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <% end %>
+          <% if @brew.public_brew_share&.enabled? %>
+            <% public_share_title = @brew.public_brew_share.title.presence || PublicBrewShare.default_title_for(@brew) %>
+            <%= render "shared/native_share_button",
+              url: public_brew_page_url(@brew.public_brew_share.token),
+              title: public_share_title,
+              text: t("brews.native_share.text", title: public_share_title),
+              testid: "brew-native-share-button-#{@brew.id}" %>
+          <% end %>
           <%= link_to t(".save_as_recipe"), new_recipe_path(source_brew_id: @brew.id), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <%= link_to t(".edit"), edit_brew_path(@brew), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <%= button_to t(".delete"), brew_path(@brew), method: :delete, class: "rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>

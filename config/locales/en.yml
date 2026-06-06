@@ -128,6 +128,10 @@ en:
     history_pagination:
       next: "Next"
       previous: "Previous"
+    native_share:
+      copied: "Copied"
+      failed: "Copy failed"
+      share: "Share"
     site_footer:
       buy_me_a_coffee: "Buy me a coffee"
       github: "GitHub"
@@ -376,6 +380,8 @@ en:
       created: "Brew logged."
     destroy:
       destroyed: "Brew deleted and inventory restored."
+    native_share:
+      text: "Shared brew: %{title}"
     shared_marker: "Shared"
     edit:
       back: "Back to brew"
