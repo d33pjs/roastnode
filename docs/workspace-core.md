@@ -34,6 +34,8 @@ Email-bound invites queue an invite email when created. Owners and admins can re
 
 Instance-admin household invites are separate from workspace member invites. They create a brand-new household for the recipient and never join the recipient to the inviting admin's active workspace.
 
+Workspace member invite management and instance-admin household invite management show when an invite has been accepted, including the accepting account when still available and the acceptance timestamp.
+
 ## Member Management
 
 Owners can manage admins, members, and viewers from the active workspace members page. Admins can manage members and viewers only. Members and viewers can read the member list but cannot change roles or remove members.

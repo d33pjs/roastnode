@@ -38,10 +38,23 @@
         </thead>
         <tbody class="divide-y divide-stone-100">
           <% @workspace_invites.each do |invite| %>
-            <tr>
+            <tr data-testid="workspace-invite-<%= invite.id %>">
               <td class="px-4 py-3 text-sm text-stone-900"><%= invite.email_address.presence || t(".anyone") %></td>
               <td class="px-4 py-3 text-sm text-stone-700"><%= invite.role %></td>
-              <td class="px-4 py-3 text-sm text-stone-700"><%= invite.acceptable? ? t(".active") : t(".closed") %></td>
+              <td class="px-4 py-3 text-sm text-stone-700">
+                <% if invite.accepted_at.present? %>
+                  <p class="font-semibold text-stone-950"><%= t(".accepted") %></p>
+                  <p class="mt-1 text-xs text-stone-600">
+                    <% if invite.accepted_by.present? %>
+                      <%= t(".accepted_by", user: invite.accepted_by.display_label, time: l(invite.accepted_at, format: :european_seconds)) %>
+                    <% else %>
+                      <%= t(".accepted_at", time: l(invite.accepted_at, format: :european_seconds)) %>
+                    <% end %>
+                  </p>
+                <% else %>
+                  <%= invite.acceptable? ? t(".active") : t(".closed") %>
+                <% end %>
+              </td>
               <td class="px-4 py-3">
                 <%= text_field_tag nil, workspace_invite_url(invite.token), readonly: true, class: "w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm text-stone-700" %>
               </td>

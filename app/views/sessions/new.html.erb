@@ -52,7 +52,7 @@
           <span class="h-px flex-1 bg-[var(--rn-line)]"></span>
         </div>
 
-        <%= form_with url: session_path, class: "space-y-5" do |form| %>
+        <%= form_with url: session_path, html: { autocomplete: "on" }, class: "space-y-5" do |form| %>
           <div>
             <%= form.label :email_address, "Email", class: "text-sm font-extrabold text-rn-ink" %>
             <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "you@example.com", value: params[:email_address], class: "mt-2 block h-12 w-full rounded-md border border-rn-line bg-rn-canvas px-3 text-base text-rn-ink shadow-sm placeholder:text-rn-muted focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>

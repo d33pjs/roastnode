@@ -5,7 +5,7 @@ class WorkspaceInvitesController < ApplicationController
   before_action :set_workspace_invite, only: %i[revoke resend reinvite]
 
   def index
-    @workspace_invites = current_workspace.workspace_invites.order(created_at: :desc)
+    @workspace_invites = current_workspace.workspace_invites.includes(:accepted_by).order(created_at: :desc)
     @workspace_invite = current_workspace.workspace_invites.new(role: "member")
   end
 

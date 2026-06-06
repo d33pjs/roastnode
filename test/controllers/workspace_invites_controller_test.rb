@@ -25,6 +25,25 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "workspace owner can see accepted invite details" do
+    sign_in_as(users(:one))
+    invite = workspace_invites(:member_invite)
+    accepted_at = Time.zone.local(2026, 6, 7, 10, 15, 0)
+    invite.update!(email_address: "friend@example.com", accepted_by: users(:two), accepted_at:)
+
+    get workspace_invites_path
+
+    assert_response :success
+    assert_select "[data-testid=workspace-invite-#{invite.id}]" do
+      assert_select "p", text: I18n.t("workspace_invites.index.accepted")
+      assert_select "p", text: I18n.t(
+        "workspace_invites.index.accepted_by",
+        user: users(:two).display_label,
+        time: I18n.l(accepted_at, format: :european_seconds)
+      )
+    end
+  end
+
   test "workspace owner can create invite" do
     sign_in_as(users(:one))
 

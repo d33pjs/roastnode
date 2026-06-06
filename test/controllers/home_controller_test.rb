@@ -179,6 +179,20 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=workspace-desktop-menu]", count: 0
   end
 
+  test "workspace dashboard constrains open beans and recent activity on narrow screens" do
+    sign_in_as(users(:one))
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=dashboard-open-beans].min-w-0"
+    assert_select "[data-testid=dashboard-recent-activity].min-w-0"
+    assert_select "[data-testid=dashboard-recent-activity] a.min-w-0"
+    assert_select "[data-testid=dashboard-recent-activity] p.break-words"
+    assert_select "[data-testid=dashboard-latest-brew-card].min-w-0"
+    assert_select "[data-testid=dashboard-latest-brew-card] > a.min-w-0"
+  end
+
   test "workspace dashboard header uses household logo without repeated app identity" do
     workspace = workspaces(:household)
     logo = attach_named_photo(workspace, :logo, filename: "household-logo.jpg")

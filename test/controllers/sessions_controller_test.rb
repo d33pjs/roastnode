@@ -10,7 +10,9 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "main[data-testid=session-new]"
     assert_select "[data-testid=session-form-panel]"
     assert_select "img[data-testid=brand-wordmark][alt=?]", "Roastnode"
-    assert_select "form[action=?][method=post]", session_path
+    assert_select "form[action=?][method=post][autocomplete=on]", session_path
+    assert_select "input[name=email_address][autocomplete=username]"
+    assert_select "input[name=password][autocomplete=current-password]"
     assert_select "button[data-action=?]", "passkey#authenticate"
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
     assert_select "[data-testid=site-footer-github-logo]"

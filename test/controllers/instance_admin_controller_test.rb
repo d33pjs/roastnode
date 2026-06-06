@@ -168,6 +168,35 @@ class InstanceAdminControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "shows accepted household invite details to instance admins" do
+    admin = users(:one)
+    admin.update!(instance_admin: true)
+    accepted_user = User.create!(email_address: "accepted-owner@example.com", password: "password")
+    accepted_workspace = Workspace.create!(name: "Accepted Household", kind: "household", default_currency: "EUR")
+    accepted_at = Time.zone.local(2026, 6, 7, 11, 30, 0)
+    invite = HouseholdInvite.create!(
+      created_by: admin,
+      email_address: accepted_user.email_address,
+      accepted_by: accepted_user,
+      accepted_at:,
+      workspace: accepted_workspace
+    )
+    sign_in_as(admin)
+
+    get "/instance_admin"
+
+    assert_response :success
+    assert_select "[data-testid=instance-admin-household-invite-#{invite.id}]" do
+      assert_select "p", text: accepted_workspace.name
+      assert_select "p", text: I18n.t("instance_admin.index.household_invite_accepted")
+      assert_select "p", text: I18n.t(
+        "instance_admin.index.household_invite_accepted_by",
+        user: accepted_user.display_label,
+        time: I18n.l(accepted_at, format: :european_seconds)
+      )
+    end
+  end
+
   test "shows read-only account rows to instance admins" do
     admin = users(:one)
     admin.update!(display_name: "Jens", instance_admin: true)

@@ -59,7 +59,20 @@
                     <p class="text-sm font-semibold text-stone-950"><%= invite.email_address %></p>
                     <p class="text-xs text-stone-600"><%= invite.workspace&.name || t(".household_invite_any_workspace") %></p>
                   </td>
-                  <td class="px-4 py-3 text-sm text-stone-700"><%= invite.acceptable? ? t(".household_invite_active") : t(".household_invite_closed") %></td>
+                  <td class="px-4 py-3 text-sm text-stone-700">
+                    <% if invite.accepted_at.present? %>
+                      <p class="font-semibold text-stone-950"><%= t(".household_invite_accepted") %></p>
+                      <p class="mt-1 text-xs text-stone-600">
+                        <% if invite.accepted_by.present? %>
+                          <%= t(".household_invite_accepted_by", user: invite.accepted_by.display_label, time: l(invite.accepted_at, format: :european_seconds)) %>
+                        <% else %>
+                          <%= t(".household_invite_accepted_at", time: l(invite.accepted_at, format: :european_seconds)) %>
+                        <% end %>
+                      </p>
+                    <% else %>
+                      <%= invite.acceptable? ? t(".household_invite_active") : t(".household_invite_closed") %>
+                    <% end %>
+                  </td>
                   <td class="px-4 py-3">
                     <%= text_field_tag nil, household_invite_url(invite.token), readonly: true, class: "w-full rounded-md border border-stone-300 bg-stone-50 px-3 py-2 text-sm text-stone-700" %>
                   </td>
