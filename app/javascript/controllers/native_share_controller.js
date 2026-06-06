@@ -48,9 +48,11 @@ export default class extends Controller {
 
   flashLabel(label) {
     this.labelTarget.textContent = label
+    this.element.setAttribute("aria-label", label)
     clearTimeout(this.resetTimer)
     this.resetTimer = setTimeout(() => {
       this.labelTarget.textContent = this.defaultLabel
+      this.element.setAttribute("aria-label", this.defaultLabel)
     }, 2000)
   }
 }

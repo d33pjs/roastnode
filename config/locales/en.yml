@@ -132,6 +132,7 @@ en:
       copied: "Copied"
       failed: "Copy failed"
       share: "Share"
+      share_public_brew: "Share public brew"
     site_footer:
       buy_me_a_coffee: "Buy me a coffee"
       github: "GitHub"

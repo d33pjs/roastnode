@@ -1,8 +1,11 @@
-<% button_class = local_assigns.fetch(:button_class, "inline-flex items-center justify-center rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100") %>
+<% button_class = local_assigns.fetch(:button_class, "inline-flex h-10 w-10 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 hover:text-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400") %>
 <% share_text = local_assigns.fetch(:text, title) %>
+<% label = t("shared.native_share.share_public_brew") %>
 
 <%= button_tag type: "button",
   class: button_class,
+  aria: { label: label },
+  title: label,
   data: {
     controller: "native-share",
     action: "click->native-share#share",
@@ -13,5 +16,10 @@
     native_share_failed_label_value: t("shared.native_share.failed"),
     testid: local_assigns[:testid]
   } do %>
-  <span data-native-share-target="label"><%= t("shared.native_share.share") %></span>
+  <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 16V4" />
+    <path d="m7 9 5-5 5 5" />
+    <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
+  </svg>
+  <span data-native-share-target="label" class="sr-only"><%= label %></span>
 <% end %>

@@ -791,8 +791,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "brew-native-share-button-#{brew.id}",
-      public_brew_page_url(share.token),
-      text: I18n.t("shared.native_share.share")
+      public_brew_page_url(share.token)
+    assert_select "[data-testid=?] svg[aria-hidden=true]", "brew-native-share-button-#{brew.id}"
+    assert_select "[data-testid=?] span.sr-only", "brew-native-share-button-#{brew.id}", I18n.t("shared.native_share.share_public_brew")
   end
 
   test "writer sees explicit taste correction form on brew detail" do
@@ -1014,7 +1015,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", brew_path(older), text: /#{older.bean.name}/
     assert_select "[data-testid=?]", "brew-history-shared-marker-#{older.id}", I18n.t("brews.shared_marker")
     assert_select "[data-testid=?]", "brew-history-shared-marker-#{newest.id}", count: 0
-    assert_select "[data-testid=?]", "brew-native-share-button-#{older.id}", I18n.t("shared.native_share.share")
+    assert_select "[data-testid=?] svg[aria-hidden=true]", "brew-native-share-button-#{older.id}"
+    assert_select "[data-testid=?] span.sr-only", "brew-native-share-button-#{older.id}", I18n.t("shared.native_share.share_public_brew")
     assert_select "[data-testid=?]", "brew-native-share-button-#{newest.id}", count: 0
     assert_select "[data-testid=?]", "brew-history-compact-card-link-#{older.id}"
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
