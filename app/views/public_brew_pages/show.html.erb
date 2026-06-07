@@ -1,4 +1,5 @@
 <% content_for :hide_app_navigation, true %>
+<%= render "brews/hero_card_styles" %>
 <% lightbox_sources = public_lightbox_sources_for(@share, @snapshot) %>
 
 <main data-testid="public-brew-page" data-controller="public-lightbox" data-public-lightbox-sources-value="<%= lightbox_sources.to_json %>" data-action="keydown@window->public-lightbox#closeFromKeyboard" class="min-h-screen bg-[#f6f4ef] text-stone-950">

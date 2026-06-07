@@ -146,6 +146,12 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-ratio]"
     assert_select "[data-testid=public-brew-grind]"
     assert_select "[data-testid=public-brew-rating]"
+    assert_select "[data-testid=public-brew-rating] [data-testid=public-brew-rating-icons][aria-label=?]",
+      I18n.t("brews.show.rating_beans", rating: share.snapshot.dig("brew", "rating"), maximum: 5) do
+        assert_select ".rating-bean--filled", 4
+        assert_select ".rating-bean--empty", 1
+      end
+    assert_includes response.body, ".brew-rating-bean"
     assert_select "[data-testid=public-brew-balance]"
     assert_select "[data-testid=public-brew-retention]", count: 0
     assert_select "[data-testid=public-brew-card-workspace]", count: 0

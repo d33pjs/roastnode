@@ -9,6 +9,7 @@
 <% first_drip_label_x = first_drip_x ? [ first_drip_x + 12, 432 ].min : nil %>
 <% axis_max_grams = public_snapshot_axis_max_grams(brew["beverage_grams"]) || brew["beverage_grams"] %>
 <% bean_anchor = public_product_anchor("bean", bean["display_name"].presence || bean["name"]) %>
+<% rating = brew["rating"].presence&.to_i %>
 
 <article data-testid="public-brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm">
   <div class="bg-stone-950 p-5">
@@ -50,7 +51,12 @@
         </div>
         <div data-testid="public-brew-rating" class="min-w-0 rounded-md bg-white/10 p-2">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.rating") %></p>
-          <p class="mt-1 overflow-hidden text-ellipsis text-xs font-bold leading-tight text-white sm:text-sm"><%= public_snapshot_rating_label(brew["rating"]) %></p>
+          <div data-testid="public-brew-rating-icons" aria-label="<%= public_snapshot_rating_label(brew["rating"]) %>" class="mt-1 flex gap-0.5 sm:gap-1">
+            <% 5.times do |index| %>
+              <% filled = rating.present? && index < rating %>
+              <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-stone-400" %>"></span>
+            <% end %>
+          </div>
         </div>
         <div data-testid="public-brew-balance" class="min-w-0 rounded-md bg-white/10 p-2">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("public_brew_pages.show.balance") %></p>
