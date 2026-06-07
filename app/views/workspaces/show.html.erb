@@ -76,27 +76,84 @@
           <%= link_to t(".view_all"), beans_path, class: "text-sm font-bold text-rn-muted hover:text-rn-ink" %>
         </div>
 
-        <div class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
-          <% if @open_beans.any? %>
-            <% @open_beans.each do |bean| %>
-              <%= link_to bean_path(bean), class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
-                <div class="flex min-w-0 items-center justify-between gap-4">
-                  <div class="flex min-w-0 items-center gap-3">
-                    <%= render "shared/record_photo_thumb",
-                      record: bean,
-                      testid: "dashboard-open-bean-photo",
-                      class_name: "h-14 w-14 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
-                    <div class="min-w-0">
-                      <p class="truncate font-extrabold text-rn-ink"><%= bean.name %></p>
-                      <p class="mt-1 truncate text-sm text-rn-muted"><%= bean.roaster_name.presence || t(".unknown_roaster") %></p>
+        <div data-testid="dashboard-open-bean-cockpit" class="grid gap-3">
+          <% if @open_bean_cockpit_entries.any? %>
+            <% @open_bean_cockpit_entries.each do |entry| %>
+              <% bean = entry.bean %>
+              <% remaining_bar_class = {
+                "plenty" => "bg-emerald-600",
+                "medium" => "bg-amber-500",
+                "low" => "bg-red-600"
+              }.fetch(entry.remaining_state) %>
+
+              <article data-testid="dashboard-open-bean-card-<%= bean.id %>" class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+                <div class="flex min-w-0 items-start gap-3">
+                  <%= render "shared/record_photo_thumb",
+                    record: bean,
+                    testid: "dashboard-open-bean-photo",
+                    class_name: "h-16 w-16 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex min-w-0 items-start justify-between gap-3">
+                      <div class="min-w-0">
+                        <%= link_to bean.name, bean_path(bean), class: "block truncate font-extrabold text-rn-ink hover:underline" %>
+                        <p class="mt-1 truncate text-sm text-rn-muted"><%= bean.roaster_name.presence || t(".unknown_roaster") %></p>
+                      </div>
+                      <span class="shrink-0 rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-xs font-extrabold text-rn-muted"><%= t(".cockpit.brew_count", count: entry.brew_count) %></span>
+                    </div>
+
+                    <div class="mt-3">
+                      <div class="flex min-w-0 items-end justify-between gap-3 text-xs font-extrabold text-rn-muted">
+                        <span><%= t(".cockpit.remaining") %></span>
+                        <span data-testid="dashboard-open-bean-remaining-<%= bean.id %>" class="min-w-0 truncate text-right text-rn-ink"><%= t("beans.index.remaining_of", remaining: profile_grams(bean.remaining_grams), total: profile_grams(bean.bag_size_grams)) %></span>
+                      </div>
+                      <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]">
+                        <div data-testid="dashboard-open-bean-progress-<%= bean.id %>" data-remaining-state="<%= entry.remaining_state %>" class="h-full rounded-full <%= remaining_bar_class %>" style="width: <%= bean.remaining_percent %>%"></div>
+                      </div>
                     </div>
                   </div>
-                  <p class="shrink-0 text-sm font-extrabold text-rn-ink"><%= profile_grams(bean.remaining_grams) %></p>
                 </div>
-              <% end %>
+
+                <div class="mt-3 flex min-w-0 flex-wrap gap-1.5 text-xs font-bold text-rn-muted">
+                  <% if entry.days_open.present? %>
+                    <span data-testid="dashboard-open-bean-open-age-<%= bean.id %>" class="rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-rn-ink"><%= t(".cockpit.open_age", count: entry.days_open) %></span>
+                  <% end %>
+                  <% if entry.days_since_roast.present? %>
+                    <span data-testid="dashboard-open-bean-roast-age-<%= bean.id %>" class="rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-rn-ink"><%= t(".cockpit.roast_age", count: entry.days_since_roast) %></span>
+                  <% else %>
+                    <span data-testid="dashboard-open-bean-roast-age-<%= bean.id %>" class="rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t(".cockpit.roast_unknown") %></span>
+                  <% end %>
+                </div>
+
+                <div class="mt-3 grid gap-2 sm:grid-cols-2">
+                  <div class="min-w-0 rounded-lg border border-rn-line bg-[var(--rn-surface-muted)] p-3">
+                    <% if entry.latest_brew.present? %>
+                      <%= link_to brew_path(entry.latest_brew), class: "flex min-w-0 items-center justify-between gap-3 text-sm font-extrabold text-rn-ink hover:underline" do %>
+                        <span><%= t(".cockpit.last_brew") %></span>
+                        <span class="min-w-0 truncate text-right text-xs text-rn-muted"><%= l(entry.latest_brew.occurred_at.to_date) %></span>
+                      <% end %>
+                      <% setup_parts = open_bean_cockpit_setup_parts(entry.latest_brew) %>
+                      <p data-testid="dashboard-open-bean-last-setup-<%= bean.id %>" class="mt-1 min-w-0 break-words text-sm font-semibold leading-5 text-rn-muted"><%= setup_parts.presence&.join(" · ") || t(".cockpit.no_setup") %></p>
+                    <% else %>
+                      <p class="text-sm font-extrabold text-rn-ink"><%= t(".cockpit.no_brews") %></p>
+                    <% end %>
+                  </div>
+
+                  <div data-testid="dashboard-open-bean-best-<%= bean.id %>" class="min-w-0 rounded-lg border border-rn-line bg-[var(--rn-surface-muted)] p-3">
+                    <% if entry.best_brew.present? %>
+                      <%= link_to brew_path(entry.best_brew), class: "flex min-w-0 items-center justify-between gap-3 text-sm font-extrabold text-rn-ink hover:underline" do %>
+                        <span><%= t(".cockpit.best_brew") %></span>
+                        <span class="shrink-0 text-xs text-rn-muted"><%= t(".cockpit.rating", rating: entry.best_brew.rating) %></span>
+                      <% end %>
+                      <p class="mt-1 min-w-0 break-words text-sm font-semibold leading-5 text-rn-muted"><%= open_bean_cockpit_setup_parts(entry.best_brew).presence&.join(" · ") || t(".cockpit.no_setup") %></p>
+                    <% else %>
+                      <p class="text-sm font-extrabold text-rn-ink"><%= t(".cockpit.no_best_brew") %></p>
+                    <% end %>
+                  </div>
+                </div>
+              </article>
             <% end %>
           <% else %>
-            <p class="p-4 text-sm text-rn-muted"><%= t(".no_open_beans") %></p>
+            <p class="rounded-2xl border border-rn-line bg-rn-surface p-4 text-sm text-rn-muted"><%= t(".no_open_beans") %></p>
           <% end %>
         </div>
       </section>

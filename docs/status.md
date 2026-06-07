@@ -30,7 +30,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Beanconqueror import: conservative JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, all-time bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed.
 - Production self-hosting guide: deployment assumptions, environment/secrets handling, SMTP sender configuration, storage volume guidance, Ansible-friendly Compose/env examples, digest-based image upgrades, backup validation, empty-server restore drills, and upgrade checks.
-- Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, mobile-friendly back links, Gear-centered equipment/tool return paths, a compact global footer with a left-aligned GitHub badge plus right-aligned app version or configured Buy Me a Coffee support badge, cross-links between domain records, optional demo data, and documentation for each shipped slice.
+- Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, mobile-friendly back links, a dashboard open bean cockpit with open/roast age, remaining inventory pressure, latest brew setup, and best-brew links, Gear-centered equipment/tool return paths, a compact global footer with a left-aligned GitHub badge plus right-aligned app version or configured Buy Me a Coffee support badge, cross-links between domain records, optional demo data, and documentation for each shipped slice.
 
 ## Changed From The Initial Idea
 

@@ -179,6 +179,60 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=workspace-desktop-menu]", count: 0
   end
 
+  test "workspace dashboard renders open bean cockpit facts" do
+    travel_to Time.zone.local(2026, 6, 7, 12, 0, 0) do
+      workspace = workspaces(:household)
+      bean = beans(:open_household)
+      bean.update!(
+        opened_on: Date.new(2026, 5, 10),
+        roast_date: Date.new(2026, 5, 1),
+        remaining_grams: 150
+      )
+      latest = brews(:morning_espresso)
+      latest.update!(
+        bean:,
+        occurred_at: Time.zone.local(2026, 6, 6, 8, 15, 0),
+        grind_setting: "12.5",
+        dose_grams: 18,
+        beverage_grams: 45,
+        total_time_seconds: 29,
+        rating: 3
+      )
+      best = workspace.brews.create!(
+        user: users(:one),
+        bean:,
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        occurred_at: Time.zone.local(2026, 5, 24, 8, 15, 0),
+        bean_weight_grams: 18,
+        ground_weight_grams: 18,
+        dose_grams: 18,
+        beverage_grams: 42,
+        total_time_seconds: 27,
+        grind_setting: "13",
+        rating: 5
+      )
+      sign_in_as(users(:one))
+
+      get dashboard_path
+
+      assert_response :success
+      assert_select "[data-testid=dashboard-open-bean-cockpit]"
+      assert_select "[data-testid=?]", "dashboard-open-bean-card-#{bean.id}" do
+        assert_select "a[href=?]", bean_path(bean), text: /#{bean.name}/
+        assert_select "[data-testid=?]", "dashboard-open-bean-remaining-#{bean.id}", text: /132g of 250g/
+        assert_select "[data-testid=?]", "dashboard-open-bean-open-age-#{bean.id}", text: "Open 28 days"
+        assert_select "[data-testid=?]", "dashboard-open-bean-roast-age-#{bean.id}", text: "Roast age 37 days"
+        assert_select "a[href=?]", brew_path(latest), text: /Last brew/
+        assert_select "[data-testid=?]", "dashboard-open-bean-last-setup-#{bean.id}", text: /Grind 12.5/
+        assert_select "[data-testid=?]", "dashboard-open-bean-last-setup-#{bean.id}", text: /1:2,5 in 29s/
+        assert_select "a[href=?]", brew_path(best), text: /Best brew/
+        assert_select "[data-testid=?]", "dashboard-open-bean-best-#{bean.id}", text: /Rating 5/
+      end
+      assert_select "body", text: beans(:other_workspace_open).name, count: 0
+    end
+  end
+
   test "workspace dashboard constrains open beans and recent activity on narrow screens" do
     sign_in_as(users(:one))
 
