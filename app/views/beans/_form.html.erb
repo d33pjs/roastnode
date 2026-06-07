@@ -21,9 +21,16 @@
         <%= form.text_field :name, autofocus: true, class: input_class %>
       </div>
 
-      <div>
+      <div data-controller="roaster-suggestions" data-roaster-suggestions-url-value="<%= roaster_suggestions_beans_path(format: :json) %>" class="relative">
         <%= form.label :roaster_name, t("beans.form.roaster"), class: label_class %>
-        <%= form.text_field :roaster_name, class: input_class %>
+        <%= form.text_field :roaster_name,
+          autocomplete: "off",
+          class: input_class,
+          data: {
+            roaster_suggestions_target: "input",
+            action: "input->roaster-suggestions#search focus->roaster-suggestions#search blur->roaster-suggestions#blur"
+          } %>
+        <div data-roaster-suggestions-target="list" class="hidden absolute z-20 mt-2 max-h-56 w-full overflow-auto rounded-2xl border border-rn-line bg-rn-surface p-1 shadow-lg" role="listbox"></div>
       </div>
     </div>
 

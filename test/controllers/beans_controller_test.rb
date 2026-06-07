@@ -209,6 +209,9 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", I18n.t("beans.form.sections.origin")
     assert_select "input[name=?]", "bean[country]"
     assert_select "input[name=?]", "bean[blend_percentage]"
+    assert_select "[data-controller=roaster-suggestions][data-roaster-suggestions-url-value=?]", roaster_suggestions_beans_path(format: :json)
+    assert_select "input[name=?][data-roaster-suggestions-target=input][data-action*=?]", "bean[roaster_name]", "input->roaster-suggestions#search"
+    assert_select "[data-roaster-suggestions-target=list]"
   end
 
   test "roaster suggestions match substring across active workspace bean history" do
