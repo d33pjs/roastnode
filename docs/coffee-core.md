@@ -25,6 +25,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Paginated all-time workspace activity history for brews, manual inventory adjustments, and equipment events.
 - Private workspace statistics and analytics page.
 - Bean detail analytics for brew history, best brews, taste balance, and retention markers.
+- Search-while-type roaster suggestions on bean entry, sourced from existing active-workspace bean history.
 - Equipment detail analytics for usage totals, service counters, and maintenance markers.
 - User landing preference for opening Roastnode directly on the espresso form.
 - User espresso form focus preference for fast daily logging.
