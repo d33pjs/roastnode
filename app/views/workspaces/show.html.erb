@@ -145,6 +145,9 @@
                         <span class="shrink-0 text-xs text-rn-muted"><%= t(".cockpit.rating", rating: entry.best_brew.rating) %></span>
                       <% end %>
                       <p class="mt-1 min-w-0 break-words text-sm font-semibold leading-5 text-rn-muted"><%= open_bean_cockpit_setup_parts(entry.best_brew).presence&.join(" · ") || t(".cockpit.no_setup") %></p>
+                      <% if current_workspace_policy.write? %>
+                        <%= link_to t(".cockpit.repeat"), new_brew_path(repeat_brew_id: entry.best_brew.id), class: "mt-2 inline-flex rounded-full border border-rn-line bg-rn-surface px-3 py-1.5 text-xs font-extrabold text-rn-ink hover:bg-[var(--rn-canvas)]" %>
+                      <% end %>
                     <% else %>
                       <p class="text-sm font-extrabold text-rn-ink"><%= t(".cockpit.no_best_brew") %></p>
                     <% end %>

@@ -6,6 +6,15 @@
       <h1 class="mt-2 text-3xl font-extrabold text-rn-ink sm:text-4xl"><%= t(".title") %></h1>
     </div>
 
+    <% if @repeat_source_brew.present? %>
+      <section data-testid="repeat-brew-notice" class="mt-5 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+        <p class="text-sm font-extrabold text-rn-ink"><%= t(".repeat_notice", bean: @repeat_source_brew.bean.display_name, date: profile_timestamp(@repeat_source_brew.occurred_at)) %></p>
+        <% if @repeat_target_bean.present? && @repeat_target_bean != @repeat_source_brew.bean %>
+          <p data-testid="repeat-brew-follow-up-bean" class="mt-1 text-sm font-semibold text-rn-muted"><%= t(".repeat_follow_up_bean", bean: @repeat_target_bean.display_name) %></p>
+        <% end %>
+      </section>
+    <% end %>
+
     <% form_markup = capture do %>
       <%= render "form",
         brew: @brew,

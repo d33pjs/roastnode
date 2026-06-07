@@ -54,6 +54,104 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
   end
 
+  test "new with repeat brew copies targetable values and keeps outcome fields fresh" do
+    source = brews(:morning_espresso)
+    source.update!(
+      bean_weight_grams: 18.5,
+      ground_weight_grams: 18.4,
+      dose_grams: 18.3,
+      beverage_grams: 45.5,
+      grind_setting: "12.5",
+      brew_temperature_celsius: 92.5,
+      preinfusion_seconds: 6,
+      first_drip_seconds: 9,
+      total_time_seconds: 31,
+      rating: 5,
+      taste_balance: "sour",
+      channeling: true,
+      notes: "Do not copy private notes.",
+      public_note: "Do not copy public notes."
+    )
+    source.record_links.create!(
+      label: "Private reference",
+      url: "https://example.com/private",
+      kind: "info",
+      visibility: "private"
+    )
+    sign_in_as(users(:one))
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_response :success
+    assert_select "[data-testid=repeat-brew-notice]", text: /Repeating/
+    assert_select "form[data-controller~=?][data-brew-draft-storage-key-value=?]",
+      "brew-draft",
+      "roastnode:brew:repeat:#{workspaces(:household).id}:#{users(:one).id}:#{source.id}"
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", source.bean.id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[grinder_id]", source.grinder.id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[machine_id]", source.machine.id.to_s
+    assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "18.5"
+    assert_select "input[name=?][value=?]", "brew[ground_weight_grams]", "18.4"
+    assert_select "input[name=?][value=?]", "brew[dose_grams]", "18.3"
+    assert_select "input[name=?][value=?]", "brew[beverage_grams]", "45.5"
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", "12.5"
+    assert_select "input[name=?][value=?]", "brew[brew_temperature_celsius]", "92.5"
+    assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "6"
+    assert_select "input[name=?][value=?]", "brew[first_drip_seconds]", "9"
+    assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "31"
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
+    assert_select "input[name=?][value=?][checked]", "brew[rating]", "5", count: 0
+    assert_select "input[name=?][value=?][checked]", "brew[taste_balance]", "sour", count: 0
+    assert_select "input[name=?][checked]", "brew[channeling]", count: 0
+    assert_select "textarea[name=?]", "brew[notes]", text: ""
+    assert_select "textarea[name=?]", "brew[public_note]", text: ""
+    assert_select "input[name*='[record_links_attributes]'][value='Private reference']", count: 0
+  end
+
+  test "new with repeat brew uses newest open duplicated follow-up bag when source bean is closed" do
+    source = brews(:morning_espresso)
+    original = source.bean
+    older_duplicate = original.duplicate_for_new_bag!
+    older_duplicate.update!(opened_on: Date.new(2026, 5, 30), remaining_grams: 0, finished_at: Time.zone.local(2026, 6, 1, 9, 0, 0))
+    newer_duplicate = older_duplicate.duplicate_for_new_bag!
+    newer_duplicate.update!(opened_on: Date.new(2026, 6, 2))
+    original.update!(remaining_grams: 0, finished_at: Time.zone.local(2026, 6, 1, 9, 0, 0))
+    sign_in_as(users(:one))
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_response :success
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", newer_duplicate.id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", original.id.to_s, count: 0
+    assert_select "[data-testid=repeat-brew-follow-up-bean]", text: /#{Regexp.escape(newer_duplicate.display_name)}/
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", source.grind_setting
+  end
+
+  test "new with repeat brew redirects when source bean and duplicate family are closed" do
+    source = brews(:morning_espresso)
+    original = source.bean
+    duplicate = original.duplicate_for_new_bag!
+    original.update!(remaining_grams: 0, finished_at: Time.zone.local(2026, 6, 1, 9, 0, 0))
+    duplicate.update!(remaining_grams: 0, finished_at: Time.zone.local(2026, 6, 2, 9, 0, 0))
+    sign_in_as(users(:one))
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_redirected_to new_brew_path
+    assert_equal I18n.t("brews.new.repeat_source_unavailable"), flash[:alert]
+    follow_redirect!
+    assert_response :success
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", beans(:second_open_household).id.to_s
+  end
+
+  test "new with repeat brew rejects cross workspace source" do
+    sign_in_as(users(:one))
+
+    get new_brew_path(repeat_brew_id: brews(:other_workspace_brew).id)
+
+    assert_response :not_found
+  end
+
   test "new with recipe shows target guide without overriding brew defaults" do
     recipe = recipes(:household_recipe)
     profile = recipe.profile.deep_dup
@@ -743,6 +841,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", edit_brew_path(brews(:morning_espresso)), text: I18n.t("brews.show.edit")
+    assert_select "a[href=?]", new_brew_path(repeat_brew_id: brews(:morning_espresso).id), text: I18n.t("brews.show.repeat")
     assert_select "a[href=?]", new_recipe_path(source_brew_id: brews(:morning_espresso).id), text: I18n.t("brews.show.save_as_recipe")
     assert_select "form[action=?]", brew_path(brews(:morning_espresso))
   end

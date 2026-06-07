@@ -31,6 +31,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Browser-local unsaved draft recovery for new espresso logs.
 - One-way ground-out to dose prefill while logging espresso.
 - Dashboard open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
+- Repeat Good Brew flow from private brew details and dashboard cockpit best brews, pre-filling targetable shot/setup values from the source brew while keeping taste, notes, media, and sharing fields fresh.
 - Bean index cards group bags by workflow state: open, stock, finished/used up, and archived. Open bags sort by latest brew use first, then opened date and name for beans without brew history. Historical bags stay below active stock/open bags.
 
 ## Explicitly Deferred
@@ -82,6 +83,39 @@ Fresh fields:
 - notes
 - channeling
 - taste balance
+
+## Repeat Good Brew
+
+Repeat mode opens the normal new espresso form with `repeat_brew_id`. It is distinct from normal last-brew defaults: it intentionally copies targetable values from the selected source brew so the user can try to reproduce that shot.
+
+Copied fields:
+
+- bean, if still open
+- newest open duplicated follow-up bag from the same duplicate family when the source bean is no longer open
+- grinder, if still active
+- machine, if still active
+- active espresso preparation tools
+- bean weight
+- ground-out weight
+- dose
+- beverage yield
+- grind setting
+- brew temperature
+- pre-infusion seconds
+- first-drip seconds
+- total time seconds
+
+Fresh fields:
+
+- rating
+- taste balance
+- channeling
+- private notes
+- public note
+- photos
+- record links
+
+If neither the source bean nor a duplicated follow-up bag is open, repeat redirects to normal new espresso logging with an alert instead of silently choosing an unrelated open bean.
 
 ## Espresso Form Helpers
 

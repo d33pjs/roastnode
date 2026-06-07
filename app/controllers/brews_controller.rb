@@ -25,10 +25,15 @@ class BrewsController < ApplicationController
   end
 
   def new
+    @repeat_source_brew = repeat_source_brew_from_params
     load_form_options
     default_attributes = default_brew_attributes
 
     unless default_attributes[:bean]
+      if @repeat_source_brew
+        return redirect_to new_brew_path, alert: t(".repeat_source_unavailable")
+      end
+
       return redirect_to new_bean_path, alert: t(".needs_bean")
     end
 
@@ -36,7 +41,7 @@ class BrewsController < ApplicationController
     @brew.recipe = @recipe if @recipe
     prepare_record_links(@brew)
     @autofocus_field = Current.user.default_brew_focus_field
-    @draft_storage_key = brew_draft_storage_key
+    @draft_storage_key = @repeat_source_brew ? repeat_brew_draft_storage_key(@repeat_source_brew) : brew_draft_storage_key
     @hidden_brew_fields = Current.user.hidden_brew_field_names
   end
 
@@ -120,6 +125,8 @@ class BrewsController < ApplicationController
     end
 
     def default_brew_attributes
+      return repeat_brew_attributes(@repeat_source_brew) if @repeat_source_brew
+
       last_brew = last_brew_for_defaults
       bean = default_brew_bean(last_brew)
       return { bean: nil } unless bean
@@ -139,6 +146,69 @@ class BrewsController < ApplicationController
         brew_temperature_celsius: last_brew.brew_temperature_celsius,
         preinfusion_seconds: last_brew.preinfusion_seconds
       )
+    end
+
+    def repeat_source_brew_from_params
+      repeat_brew_id = params[:repeat_brew_id].presence
+      return if repeat_brew_id.blank?
+
+      current_workspace.brews.includes(:bean, :grinder, :machine, :preparation_tools).find(repeat_brew_id)
+    end
+
+    def repeat_brew_attributes(source_brew)
+      bean = repeat_brew_bean(source_brew.bean)
+      return { bean: nil } unless bean
+
+      @repeat_target_bean = bean
+      @selected_preparation_tools = default_preparation_tools(source_brew)
+      {
+        bean:,
+        occurred_at: Time.current,
+        grinder: default_equipment(source_brew.grinder),
+        machine: default_equipment(source_brew.machine),
+        bean_weight_grams: source_brew.bean_weight_grams,
+        ground_weight_grams: source_brew.ground_weight_grams,
+        dose_grams: source_brew.dose_grams,
+        beverage_grams: source_brew.beverage_grams,
+        grind_setting: source_brew.grind_setting,
+        brew_temperature_celsius: source_brew.brew_temperature_celsius,
+        total_time_seconds: source_brew.total_time_seconds,
+        preinfusion_seconds: source_brew.preinfusion_seconds,
+        first_drip_seconds: source_brew.first_drip_seconds
+      }
+    end
+
+    def repeat_brew_bean(source_bean)
+      return source_bean if source_bean&.open?
+
+      repeat_bean_family(source_bean)
+        .select(&:open?)
+        .max_by { |bean| [ bean.opened_on || Date.new(0), bean.created_at || Time.zone.at(0) ] }
+    end
+
+    def repeat_bean_family(source_bean)
+      return [] unless source_bean
+
+      root = source_bean
+      seen_ids = {}
+      while root.duplicated_from_bean && !seen_ids[root.duplicated_from_bean_id]
+        seen_ids[root.id] = true
+        root = root.duplicated_from_bean
+      end
+
+      family = []
+      frontier = [ root ]
+      seen_ids = {}
+      until frontier.empty?
+        bean = frontier.shift
+        next if bean.blank? || seen_ids[bean.id]
+
+        seen_ids[bean.id] = true
+        family << bean
+        frontier.concat(current_workspace.beans.where(duplicated_from_bean_id: bean.id).to_a)
+      end
+
+      family
     end
 
     def last_brew_for_defaults
@@ -238,5 +308,9 @@ class BrewsController < ApplicationController
 
     def brew_draft_storage_key
       "roastnode:brew:new:#{current_workspace.id}:#{Current.user.id}"
+    end
+
+    def repeat_brew_draft_storage_key(source_brew)
+      "roastnode:brew:repeat:#{current_workspace.id}:#{Current.user.id}:#{source_brew.id}"
     end
 end

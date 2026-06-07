@@ -228,6 +228,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
         assert_select "[data-testid=?]", "dashboard-open-bean-last-setup-#{bean.id}", text: /1:2,5 in 29s/
         assert_select "a[href=?]", brew_path(best), text: /Best brew/
         assert_select "[data-testid=?]", "dashboard-open-bean-best-#{bean.id}", text: /Rating 5/
+        assert_select "a[href=?]", new_brew_path(repeat_brew_id: best.id), text: I18n.t("workspaces.show.cockpit.repeat")
       end
       assert_select "body", text: beans(:other_workspace_open).name, count: 0
     end

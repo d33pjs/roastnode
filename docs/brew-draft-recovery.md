@@ -7,6 +7,7 @@ Roastnode keeps unsaved espresso form values in the browser while a user is logg
 - The new espresso form uses the `brew-draft` Stimulus controller.
 - Drafts are stored in `localStorage` under `roastnode:brew:new:<workspace-id>:<user-id>`.
 - The key is scoped to the active workspace and current user so shared browsers do not reuse another user's draft by accident.
+- Repeat Good Brew uses a separate key, `roastnode:brew:repeat:<workspace-id>:<user-id>:<source-brew-id>`, so a browser draft from normal logging does not overwrite a deliberate repeat form.
 - Drafts restore automatically when the new espresso form opens again.
 - Restored drafts show a compact notice with a discard button.
 - Drafts clear when the form is submitted.
