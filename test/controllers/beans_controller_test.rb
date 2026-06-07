@@ -211,6 +211,59 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "bean[blend_percentage]"
   end
 
+  test "roaster suggestions match substring across active workspace bean history" do
+    sign_in_as(users(:one))
+    workspace = workspaces(:household)
+    workspace.beans.create!(
+      name: "Wildbad Espresso",
+      roaster_name: "Kaffeemanufaktur Bad Wildbad",
+      bag_size_grams: 250,
+      remaining_grams: 0,
+      opened_on: Date.new(2026, 4, 1),
+      archived_at: Time.current
+    )
+
+    get roaster_suggestions_beans_path, params: { q: "bad" }, as: :json
+
+    assert_response :success
+    suggestions = JSON.parse(response.body).fetch("suggestions")
+    assert_includes suggestions, "Kaffeemanufaktur Bad Wildbad"
+  end
+
+  test "roaster suggestions stay scoped to active workspace and skip blanks" do
+    sign_in_as(users(:one))
+    workspaces(:household).beans.create!(
+      name: "Blank Roaster Bag",
+      roaster_name: "",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.current
+    )
+    workspaces(:other_household).beans.create!(
+      name: "Outside Bad Bag",
+      roaster_name: "Bad Outside Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.current
+    )
+
+    get roaster_suggestions_beans_path, params: { q: "bad" }, as: :json
+
+    assert_response :success
+    suggestions = JSON.parse(response.body).fetch("suggestions")
+    assert_not_includes suggestions, "Bad Outside Roaster"
+    assert_not_includes suggestions, ""
+  end
+
+  test "blank roaster suggestion query returns no suggestions" do
+    sign_in_as(users(:one))
+
+    get roaster_suggestions_beans_path, params: { q: " " }, as: :json
+
+    assert_response :success
+    assert_equal [], JSON.parse(response.body).fetch("suggestions")
+  end
+
   test "new renders mobile-first bean form sections in approved order" do
     sign_in_as(users(:one))
 

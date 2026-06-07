@@ -50,6 +50,7 @@ Rails.application.routes.draw do
   end
   get "gear" => "gear#index", as: :gear
   resources :beans, only: %i[index new create show edit update destroy] do
+    get :roaster_suggestions, on: :collection
     patch :finish, on: :member
     patch :close, on: :member
     patch :reopen, on: :member

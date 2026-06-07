@@ -6,7 +6,7 @@ class BeansController < ApplicationController
     { key: "archived", statuses: %w[archived] }
   ].freeze
 
-  before_action :authorize_workspace_write!, only: %i[new create edit update finish close reopen duplicate destroy]
+  before_action :authorize_workspace_write!, only: %i[new create edit update finish close reopen duplicate destroy roaster_suggestions]
   before_action :set_bean, only: %i[show edit update finish close reopen duplicate destroy]
 
   def index
@@ -28,6 +28,13 @@ class BeansController < ApplicationController
   def new
     @bean = current_workspace.beans.new(opened_on: Date.current)
     prepare_record_links(@bean)
+  end
+
+  def roaster_suggestions
+    query = params[:q].to_s.strip
+    suggestions = roaster_name_suggestions_for(query)
+
+    render json: { suggestions: suggestions }
   end
 
   def edit
@@ -163,6 +170,20 @@ class BeansController < ApplicationController
 
     def prepare_record_links(record)
       record.prepare_record_links_for_form
+    end
+
+    def roaster_name_suggestions_for(query)
+      return [] if query.blank?
+
+      current_workspace.beans
+        .where.not(roaster_name: [ nil, "" ])
+        .where("roaster_name ILIKE ?", "%#{Bean.sanitize_sql_like(query)}%")
+        .pluck(:roaster_name)
+        .map { |name| name.to_s.strip }
+        .reject(&:blank?)
+        .uniq { |name| name.downcase }
+        .sort_by(&:downcase)
+        .first(8)
     end
 
     def refresh_public_brew_shares_for(record)
