@@ -229,7 +229,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     source = workspaces(:household).brews.create!(
       user: users(:one),
       method: "quick_drip",
-      bean: beans(:second_open_household),
+      bean: beans(:open_household),
       brewer: equipment(:household_brewer),
       grinder: equipment(:household_grinder),
       machine_cups: 6,
@@ -249,6 +249,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "input[type=hidden][name=?][value=?]", "brew[method]", "quick_drip"
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[brewer_id]", source.brewer.id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[grinder_id]", source.grinder.id.to_s
     assert_select "input[name=?][value=?]", "brew[machine_cups]", "6.0"
     assert_select "input[name=?][value=?]", "brew[coffee_spoons]", "6.0"
     assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "31.0"
