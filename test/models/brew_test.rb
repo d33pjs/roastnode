@@ -199,6 +199,95 @@ class BrewTest < ActiveSupport::TestCase
     assert_equal 185.to_d, bean.reload.remaining_grams
   end
 
+  test "full update with unchanged estimated quick drip grams preserves estimate source and grams" do
+    user = users(:one)
+    user.update!(grams_per_coffee_spoon: 5)
+    bean = beans(:second_open_household)
+    brew = workspaces(:household).brews.create!(
+      user:,
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+    original_weight = brew.bean_weight_grams
+    original_remaining = bean.reload.remaining_grams
+
+    brew.update_with_inventory_correction!(
+      {
+        bean_weight_grams: original_weight,
+        coffee_spoons: brew.coffee_spoons,
+        grams_per_coffee_spoon: brew.grams_per_coffee_spoon,
+        machine_cups: brew.machine_cups,
+        rating: 5
+      },
+      preparation_tools: []
+    )
+
+    assert_equal original_weight, brew.reload.bean_weight_grams
+    assert_predicate brew, :coffee_amount_estimated_spoons?
+    assert_equal original_remaining, bean.reload.remaining_grams
+    assert_equal(-original_weight, brew.inventory_adjustment.reload.delta_grams)
+  end
+
+  test "full update with stale estimated quick drip grams recomputes changed spoons and inventory" do
+    user = users(:one)
+    user.update!(grams_per_coffee_spoon: 5)
+    bean = beans(:second_open_household)
+    brew = workspaces(:household).brews.create!(
+      user:,
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+    stale_weight = brew.bean_weight_grams
+
+    brew.update_with_inventory_correction!(
+      {
+        bean_weight_grams: stale_weight,
+        coffee_spoons: 7,
+        grams_per_coffee_spoon: brew.grams_per_coffee_spoon,
+        machine_cups: brew.machine_cups
+      },
+      preparation_tools: []
+    )
+
+    assert_equal 35.to_d, brew.reload.bean_weight_grams
+    assert_predicate brew, :coffee_amount_estimated_spoons?
+    assert_equal(-35.to_d, brew.inventory_adjustment.reload.delta_grams)
+    assert_equal 185.to_d, bean.reload.remaining_grams
+  end
+
+  test "full update with changed estimated quick drip grams becomes measured" do
+    user = users(:one)
+    user.update!(grams_per_coffee_spoon: 5)
+    brew = workspaces(:household).brews.create!(
+      user:,
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+
+    brew.update_with_inventory_correction!(
+      {
+        bean_weight_grams: 32,
+        coffee_spoons: brew.coffee_spoons,
+        grams_per_coffee_spoon: brew.grams_per_coffee_spoon,
+        machine_cups: brew.machine_cups
+      },
+      preparation_tools: []
+    )
+
+    assert_equal 32.to_d, brew.reload.bean_weight_grams
+    assert_predicate brew, :coffee_amount_measured?
+    assert_equal(-32.to_d, brew.inventory_adjustment.reload.delta_grams)
+  end
+
   test "measured quick drip with spoons remains measured on unrelated update" do
     brew = workspaces(:household).brews.create!(
       user: users(:one),

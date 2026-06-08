@@ -105,7 +105,7 @@ class Brew < ApplicationRecord
   end
 
   def bean_weight_grams=(value)
-    @quick_drip_explicit_bean_weight_grams_assignment = true unless @assigning_quick_drip_spoon_estimate
+    @quick_drip_spoon_estimate_assigned = false unless @assigning_quick_drip_spoon_estimate
     super
   end
 
@@ -140,7 +140,9 @@ class Brew < ApplicationRecord
     def quick_drip_measured_amount?
       return false if bean_weight_grams.blank?
 
-      @quick_drip_explicit_bean_weight_grams_assignment || coffee_amount_measured?
+      return true if coffee_amount_measured?
+
+      will_save_change_to_bean_weight_grams? && !@quick_drip_spoon_estimate_assigned
     end
 
     def preserve_quick_drip_spoon_estimate?
@@ -154,6 +156,7 @@ class Brew < ApplicationRecord
     def assign_quick_drip_spoon_estimate!(amount)
       @assigning_quick_drip_spoon_estimate = true
       self.bean_weight_grams = amount.round(2)
+      @quick_drip_spoon_estimate_assigned = true
     ensure
       @assigning_quick_drip_spoon_estimate = false
     end
@@ -252,7 +255,7 @@ class Brew < ApplicationRecord
     end
 
     def clear_quick_drip_amount_assignment_flags
-      @quick_drip_explicit_bean_weight_grams_assignment = false
+      @quick_drip_spoon_estimate_assigned = false
       @assigning_quick_drip_spoon_estimate = false
     end
 end
