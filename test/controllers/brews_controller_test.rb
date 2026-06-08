@@ -177,6 +177,24 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name*='[record_links_attributes]'][value='Private reference']", count: 0
   end
 
+  test "new with repeat brew uses source method when latest brew is quick drip" do
+    user = users(:one)
+    create_latest_quick_drip_brew_for(user)
+    source = brews(:morning_espresso)
+    sign_in_as(user)
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_response :success
+    assert_select "[data-testid=repeat-brew-notice]", text: /Repeating/
+    assert_select "input[type=hidden][name=?][value=?]", "brew[method]", "espresso"
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", source.grind_setting
+    assert_select "input[name=?][value=?]", "brew[brew_temperature_celsius]", source.brew_temperature_celsius.to_s
+    assert_select "input[name=?]", "brew[machine_cups]", count: 0
+    assert_select "input[name=?]", "brew[coffee_spoons]", count: 0
+    assert_select "[data-testid=brew-form-section][data-section=batch]", count: 0
+  end
+
   test "new with repeat brew uses newest open duplicated follow-up bag when source bean is closed" do
     source = brews(:morning_espresso)
     original = source.bean
@@ -245,6 +263,25 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[dose_grams]", "19.2", count: 0
     assert_select "input[name=?][value=?]", "brew[beverage_grams]", "48.0", count: 0
     assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "34", count: 0
+  end
+
+  test "new with recipe stays espresso when latest brew is quick drip" do
+    user = users(:one)
+    create_latest_quick_drip_brew_for(user)
+    recipe = recipes(:household_recipe)
+    sign_in_as(user)
+
+    get new_brew_path(recipe_id: recipe.id)
+
+    assert_response :success
+    assert_select "[data-testid=recipe-target-guide]"
+    assert_select "input[type=hidden][name=?][value=?]", "brew[recipe_id]", recipe.id.to_s
+    assert_select "input[type=hidden][name=?][value=?]", "brew[method]", "espresso"
+    assert_select "input[name=?]", "brew[brew_temperature_celsius]"
+    assert_select "input[name=?]", "brew[preinfusion_seconds]"
+    assert_select "input[name=?]", "brew[machine_cups]", count: 0
+    assert_select "input[name=?]", "brew[coffee_spoons]", count: 0
+    assert_select "[data-testid=brew-form-section][data-section=batch]", count: 0
   end
 
   test "new brew with recipe renders recipe finish card without pre-filling brew fields" do
@@ -704,6 +741,49 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=radio][name=?][value=?]", "brew[bean_id]", other_bean.id.to_s, count: 0
     assert_select "input[type=radio][name=?][value=?]", "brew[brewer_id]", other_brewer.id.to_s, count: 0
     assert_select "input[type=radio][name=?][value=?]", "brew[grinder_id]", other_grinder.id.to_s, count: 0
+  end
+
+  test "invalid quick drip create does not render same workspace machine as brewer option" do
+    sign_in_as(users(:one))
+    machine = equipment(:household_machine)
+
+    post brews_path, params: {
+      brew: {
+        method: "quick_drip",
+        bean_id: beans(:second_open_household).id,
+        brewer_id: machine.id,
+        machine_cups: "",
+        coffee_spoons: "",
+        beverage_grams: "900",
+        total_time_seconds: "320",
+        taste_balance: "neutral"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "input[type=radio][name=?][value=?]", "brew[brewer_id]", machine.id.to_s, count: 0
+  end
+
+  test "invalid quick drip create does not render archived brewer option" do
+    sign_in_as(users(:one))
+    archived_brewer = equipment(:household_brewer)
+    archived_brewer.update!(archived_at: Time.current)
+
+    post brews_path, params: {
+      brew: {
+        method: "quick_drip",
+        bean_id: beans(:second_open_household).id,
+        brewer_id: archived_brewer.id,
+        machine_cups: "",
+        coffee_spoons: "",
+        beverage_grams: "900",
+        total_time_seconds: "320",
+        taste_balance: "neutral"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "input[type=radio][name=?][value=?]", "brew[brewer_id]", archived_brewer.id.to_s, count: 0
   end
 
   test "create with recipe stores recipe reference and brew time snapshot" do
@@ -1327,6 +1407,21 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
           title: "Shared shot",
           selected_photo_attachment_ids: []
         ).call
+      )
+    end
+
+    def create_latest_quick_drip_brew_for(user)
+      workspaces(:household).brews.create!(
+        user:,
+        bean: beans(:second_open_household),
+        brewer: equipment(:household_brewer),
+        method: "quick_drip",
+        occurred_at: Time.current + 1.minute,
+        machine_cups: 6,
+        bean_weight_grams: 30,
+        beverage_grams: 900,
+        total_time_seconds: 320,
+        taste_balance: "neutral"
       )
     end
 end

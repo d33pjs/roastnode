@@ -18,7 +18,13 @@ class BrewsController < ApplicationController
 
   def edit
     @selected_method = @brew.method
-    load_form_options(selected_bean: @brew.bean, selected_grinder: @brew.grinder, selected_machine: @brew.machine, selected_brewer: @brew.brewer)
+    load_form_options(
+      selected_bean: @brew.bean,
+      selected_grinder: @brew.grinder,
+      selected_machine: @brew.machine,
+      selected_brewer: @brew.brewer,
+      allow_archived_equipment: true
+    )
     @selected_preparation_tools = @brew.preparation_tools.to_a
     @autofocus_field = nil
     @draft_storage_key = nil
@@ -28,6 +34,7 @@ class BrewsController < ApplicationController
 
   def new
     @repeat_source_brew = repeat_source_brew_from_params
+    @selected_method = @repeat_source_brew.method if @repeat_source_brew
     load_form_options
     default_attributes = default_brew_attributes(method: @selected_method)
 
@@ -76,7 +83,7 @@ class BrewsController < ApplicationController
     @selected_method = @brew.method
     @hidden_brew_fields = []
     attributes = brew_params
-    scope_brew_reference_ids!(attributes)
+    scope_brew_reference_ids!(attributes, existing_brew: @brew)
     attributes[:method] = @brew.method
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
@@ -85,7 +92,13 @@ class BrewsController < ApplicationController
     refresh_public_brew_shares_for(@brew)
     redirect_to @brew, notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
-    load_form_options(selected_bean: @brew.bean, selected_grinder: @brew.grinder, selected_machine: @brew.machine, selected_brewer: @brew.brewer)
+    load_form_options(
+      selected_bean: @brew.bean,
+      selected_grinder: @brew.grinder,
+      selected_machine: @brew.machine,
+      selected_brewer: @brew.brewer,
+      allow_archived_equipment: true
+    )
     prepare_record_links(@brew)
     render :edit, status: :unprocessable_entity
   end
@@ -128,6 +141,11 @@ class BrewsController < ApplicationController
     end
 
     def set_selected_method
+      if @recipe
+        @selected_method = @recipe.method.presence_in(Brew::BREW_METHODS) || "espresso"
+        return
+      end
+
       requested = params[:method].presence || params.dig(:brew, :method).presence
       @selected_method = requested.presence_in(Current.user.enabled_brew_methods) || default_log_method
     end
@@ -142,18 +160,18 @@ class BrewsController < ApplicationController
       last_method.presence || Current.user.enabled_brew_methods.first
     end
 
-    def load_form_options(selected_bean: nil, selected_grinder: nil, selected_machine: nil, selected_brewer: nil)
+    def load_form_options(selected_bean: nil, selected_grinder: nil, selected_machine: nil, selected_brewer: nil, allow_archived_equipment: false)
       selected_bean = selected_workspace_record(selected_bean)
-      selected_grinder = selected_workspace_record(selected_grinder)
-      selected_machine = selected_workspace_record(selected_machine)
-      selected_brewer = selected_workspace_record(selected_brewer)
+      selected_grinder = selected_equipment_record(selected_grinder, kind: :grinder, allow_archived: allow_archived_equipment)
+      selected_machine = selected_equipment_record(selected_machine, kind: :machine, allow_archived: allow_archived_equipment)
+      selected_brewer = selected_equipment_record(selected_brewer, kind: :brewer, allow_archived: allow_archived_equipment)
 
       @beans = current_workspace.beans.open.includes(:primary_photo_record, photos_attachments: :blob).to_a
       @beans << selected_bean if selected_bean && @beans.exclude?(selected_bean)
       sort_beans_for_method!
-      @grinders = equipment_options(kind: :grinder, selected_equipment: selected_grinder)
-      @machines = equipment_options(kind: :machine, selected_equipment: selected_machine)
-      @brewers = equipment_options(kind: :brewer, selected_equipment: selected_brewer)
+      @grinders = equipment_options(kind: :grinder, selected_equipment: selected_grinder, allow_archived: allow_archived_equipment)
+      @machines = equipment_options(kind: :machine, selected_equipment: selected_machine, allow_archived: allow_archived_equipment)
+      @brewers = equipment_options(kind: :brewer, selected_equipment: selected_brewer, allow_archived: allow_archived_equipment)
       @preparation_tools = current_workspace.preparation_tools.active.where(brew_method: @selected_method || "espresso").ordered.includes(:primary_photo_record, photos_attachments: :blob)
     end
 
@@ -322,8 +340,8 @@ class BrewsController < ApplicationController
       default_equipment(last_brew&.brewer) || (@brewers.one? ? @brewers.first : nil)
     end
 
-    def equipment_options(kind:, selected_equipment: nil)
-      selected_equipment = selected_workspace_record(selected_equipment)
+    def equipment_options(kind:, selected_equipment: nil, allow_archived: false)
+      selected_equipment = selected_equipment_record(selected_equipment, kind:, allow_archived:)
       options = current_workspace.equipment.active.public_send(kind).includes(:primary_photo_record, photos_attachments: :blob).order(:name).to_a
       options << selected_equipment if selected_equipment && options.exclude?(selected_equipment)
       options.sort_by(&:name)
@@ -346,21 +364,43 @@ class BrewsController < ApplicationController
       record if workspace_record?(record)
     end
 
+    def selected_equipment_record(record, kind:, allow_archived: false)
+      return unless workspace_record?(record)
+      return unless record.public_send("#{kind}?")
+      return if record.archived? && !allow_archived
+
+      record
+    end
+
     def workspace_record?(record)
       record.present? && record.respond_to?(:workspace_id) && record.workspace_id == current_workspace.id
     end
 
-    def scope_brew_reference_ids!(attributes)
+    def scope_brew_reference_ids!(attributes, existing_brew: nil)
       scope_reference_id!(attributes, :bean_id, current_workspace.beans)
-      scope_reference_id!(attributes, :grinder_id, current_workspace.equipment)
-      scope_reference_id!(attributes, :machine_id, current_workspace.equipment)
-      scope_reference_id!(attributes, :brewer_id, current_workspace.equipment)
+      scope_equipment_reference_id!(attributes, :grinder_id, :grinder, existing_equipment: existing_brew&.grinder)
+      scope_equipment_reference_id!(attributes, :machine_id, :machine, existing_equipment: existing_brew&.machine)
+      scope_equipment_reference_id!(attributes, :brewer_id, :brewer, existing_equipment: existing_brew&.brewer)
     end
 
     def scope_reference_id!(attributes, key, scope)
       return unless attributes.key?(key) && attributes[key].present?
 
       attributes[key] = nil unless scope.exists?(id: attributes[key])
+    end
+
+    def scope_equipment_reference_id!(attributes, key, kind, existing_equipment: nil)
+      return unless attributes.key?(key) && attributes[key].present?
+      return if historical_equipment_reference?(attributes[key], existing_equipment, kind)
+
+      attributes[key] = nil unless current_workspace.equipment.active.public_send(kind).exists?(id: attributes[key])
+    end
+
+    def historical_equipment_reference?(id, equipment, kind)
+      return false unless equipment
+      return false unless equipment.id.to_s == id.to_s
+
+      selected_equipment_record(equipment, kind:, allow_archived: true).present?
     end
 
     def save_brew_with_preparation_tools
