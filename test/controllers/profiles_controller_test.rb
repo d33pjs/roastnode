@@ -76,6 +76,44 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal %w[rating channeling photos], user.hidden_brew_field_names
   end
 
+  test "profile renders and saves quick drip preferences" do
+    sign_in_as(users(:one))
+
+    get edit_profile_path
+
+    assert_response :success
+    assert_select "input[type=checkbox][name=?][value=?]", "user[enabled_brew_methods][]", "quick_drip"
+    assert_select "input[type=text][name=?][inputmode=decimal]", "user[grams_per_coffee_spoon]"
+
+    patch profile_path, params: {
+      user: {
+        display_name: "Jens",
+        default_landing_screen: "log_espresso",
+        enabled_brew_methods: [ "", "quick_drip" ],
+        grams_per_coffee_spoon: "4,5"
+      }
+    }
+
+    assert_redirected_to root_path
+    users(:one).reload
+    assert_equal %w[quick_drip], users(:one).enabled_brew_methods
+    assert_equal 4.5.to_d, users(:one).grams_per_coffee_spoon
+  end
+
+  test "profile rejects disabling all brew methods" do
+    sign_in_as(users(:one))
+
+    patch profile_path, params: {
+      user: {
+        enabled_brew_methods: [ "" ],
+        grams_per_coffee_spoon: "5"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select ".text-red-800", text: /Enabled brew methods must include at least one method/
+  end
+
   test "signed-in user can update identity media" do
     user = users(:one)
     sign_in_as(user)

@@ -21,7 +21,7 @@ class EquipmentController < ApplicationController
   end
 
   def new
-    @equipment = current_workspace.equipment.new(kind: "grinder")
+    @equipment = current_workspace.equipment.new(kind: params[:kind].presence_in(Equipment.kinds.keys) || "grinder")
     prepare_record_links(@equipment)
   end
 

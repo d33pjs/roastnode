@@ -64,6 +64,15 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
   end
 
+  test "new equipment can preselect brewer kind" do
+    sign_in_as(users(:one))
+
+    get new_equipment_path(kind: "brewer")
+
+    assert_response :success
+    assert_select "select[name=?] option[value=brewer][selected]", "equipment[kind]"
+  end
+
   test "edit renders current photos and updates equipment with added photos" do
     sign_in_as(users(:one))
     equipment = equipment(:household_grinder)

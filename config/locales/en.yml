@@ -381,6 +381,9 @@ en:
       created: "Brew logged."
     destroy:
       destroyed: "Brew deleted and inventory restored."
+    methods:
+      espresso: "Espresso"
+      quick_drip: "Quick Drip"
     native_share:
       text: "Shared brew: %{title}"
     shared_marker: "Shared"
@@ -1158,9 +1161,13 @@ en:
         taste_balance: "Taste balance"
         total_time_seconds: "Total time"
       hidden_brew_fields_title: "Hide espresso fields"
+      enabled_brew_methods_title: "Enabled brew methods"
+      enabled_brew_methods_help: "Controls which tabs appear on your Log screen. Historical brews stay visible."
+      grams_per_coffee_spoon: "Grams per coffee spoon"
+      grams_per_coffee_spoon_help: "Used to estimate Quick Drip inventory when you log spoons instead of grams. Default: 5g."
       landing_screens:
         dashboard: "Dashboard"
-        log_espresso: "Log espresso"
+        log_espresso: "Log"
       change_password: "Change password"
       number_format: "Number format"
       number_formats:

@@ -34,7 +34,10 @@
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <%= form.label :brew_method, t("preparation_tools.form.method"), class: label_class %>
-        <%= form.select :brew_method, [ [ "Espresso", "espresso" ] ], {}, class: input_class %>
+        <%= form.select :brew_method,
+          PreparationTool::BREW_METHODS.map { |method| [ t("brews.methods.#{method}"), method ] },
+          {},
+          class: input_class %>
       </div>
 
       <div>

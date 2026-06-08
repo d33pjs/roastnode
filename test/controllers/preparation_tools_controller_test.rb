@@ -124,6 +124,15 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
   end
 
+  test "preparation tool form offers quick drip method" do
+    sign_in_as(users(:one))
+
+    get new_preparation_tool_path
+
+    assert_response :success
+    assert_select "select[name=?] option[value=quick_drip]", "preparation_tool[brew_method]"
+  end
+
   test "admin can create preparation tool" do
     admin = User.create!(email_address: "tool-admin@example.com", password: "password")
     Membership.create!(workspace: workspaces(:household), user: admin, role: :admin)

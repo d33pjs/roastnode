@@ -16,16 +16,20 @@ class ProfilesController < ApplicationController
 
   private
     def profile_params
-      params.require(:user).permit(
+      attributes = params.require(:user).permit(
         :display_name,
         :default_landing_screen,
         :theme,
         :number_format,
         :time_format,
         :default_brew_focus_field,
+        :grams_per_coffee_spoon,
         :avatar,
         :public_banner,
+        enabled_brew_methods: [],
         hidden_brew_field_names: []
       )
+
+      normalize_decimal_attributes(attributes, :grams_per_coffee_spoon)
     end
 end
