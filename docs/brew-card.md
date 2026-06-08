@@ -1,6 +1,6 @@
 # Brew Card
 
-The brew detail page and dashboard use a compact Hero Brew Card for screenshot-worthy private espresso logs.
+The brew detail page and dashboard use compact Hero Brew Cards for screenshot-worthy private brew logs.
 
 ## Included Now
 
@@ -10,7 +10,7 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - Bean roaster, bean name, compact origin/process/roast-level descriptor, and the bean primary photo when available. Keep the photo to the right of the name block so the text stays the first read.
 - Safe logged-by label from the user's profile username, falling back to `unknown username`.
 - User avatar next to the logged-by label when one is attached.
-- Dose from the espresso form.
+- Dose from the espresso form on espresso cards.
 - Brew ratio calculated from beverage yield and dose, including total time when present.
 - Grind setting.
 - Grinder retention calculated from bean-in minus ground-out weight.
@@ -31,6 +31,12 @@ The brew detail page and dashboard use a compact Hero Brew Card for screenshot-w
 - The dashboard renders the latest brew and the latest highest-rated brew as hero cards after login.
 - Public brew share pages render a snapshot-driven public Hero Brew Card adapted from the private card's visual language. Its bottom gear/tool pills anchor to public product sections instead of private record routes.
 
+## Quick Drip Cards
+
+Quick Drip uses the same private Hero Brew Card family, but renders method-specific batch metrics instead of the espresso extraction chart. It shows machine cups, coffee amount, consumed coffee, beverage, time, rating, balance, brewer, grinder when present, and Quick Drip preparation tool snapshots.
+
+Estimated consumed grams use a leading `~`. The Quick Drip card does not show espresso-only charting, retention, preinfusion, first drip, temperature, or channeling.
+
 ## Chart Rule
 
 The chart is an illustrative profile generated from stored brew totals. It is not sampled flow telemetry. Roastnode currently stores total beverage, total time, preinfusion, first drip, and temperature, so the curve communicates the brew shape without claiming second-by-second measurement.
@@ -39,10 +45,10 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 
 - Use `BrewPreparationTool#tool_name` for displayed tools, not current `PreparationTool#name`.
 - The card shows `dose_grams` as Dose. `bean_weight_grams` remains inventory input and is not the main card dose.
-- The metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and can show the full retention label; the tighter desktop six-column row shortens it to `Ret.`.
+- The espresso metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and can show the full retention label; the tighter desktop six-column row shortens it to `Ret.`.
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
-- Public share pages use `public_brew_pages/_hero_card` because they render snapshot data and public media routes without `current_workspace`.
+- Public share pages use `public_brew_pages/_hero_card` because they render snapshot data and public media routes without `current_workspace`. Public Quick Drip sharing is deferred, so public shares only resolve espresso brews.
 - Keep cross-links in the full brew details below the hero card, not inside the hero card partial.
 - Use `brew_card_photo_attachment`, which prefers the bean's primary package photo and falls back through the normal primary-photo helper.
 - Keep grinder and machine primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.

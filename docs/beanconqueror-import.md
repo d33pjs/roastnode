@@ -12,7 +12,7 @@ Beanconqueror Import brings the first practical subset of a Beanconqueror JSON e
 - Grinders from `MILL`.
 - Preparation methods from `PREPARATION` as machine/brewer equipment.
 - Nested preparation `tools` as Roastnode preparation tools.
-- Espresso-compatible brews from `BREWS`.
+- Espresso-compatible brews from `BREWS`. Quick Drip brew import is deferred.
 - Brew inventory adjustments through the normal brew creation path.
 
 ## Mapping Notes
@@ -47,7 +47,7 @@ Unsupported or invalid records are skipped with warnings instead of failing the 
 
 - ZIP/media import.
 - Background job processing.
-- Non-espresso method templates.
+- Quick Drip import and other non-espresso method templates.
 - Settings, waters, green beans, graph data, device data, pressure profiles, and advanced Beanconqueror-specific fields.
 - Fuzzy duplicate merge UI.
 - Full Beanconqueror round-trip compatibility.

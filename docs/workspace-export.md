@@ -13,7 +13,9 @@ Workspace Export is the first Roastnode data portability feature.
 - Membership roles with user email/display name.
 - Import batch metadata.
 - Beans, equipment, preparation tools, brews, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
-- Rich bean metadata, including roast type, degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
+- Rich bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
+- Brew method fields, including Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, and coffee amount source.
+- User method preferences and grams-per-coffee-spoon preferences in instance backup/readable export payloads.
 - Photo metadata for photo-enabled records.
 - Preparation tool lifecycle fields, including active status, position, and photo metadata.
 
@@ -36,7 +38,7 @@ CSV exports are separate spreadsheet-friendly downloads:
 
 The beans CSV includes flat bag metadata such as names, roaster, derived status (`stock`, `open`, `used_up`, or `archived`), remaining grams, roast data, variety information, purchase details, rating, notes, and timestamps.
 
-The brews CSV includes flat brew history such as occurred time, user labels, bean/equipment names, preparation tool snapshots, weights, brew ratio, timing, temperature, taste balance, rating, retention marker, notes, and timestamps.
+The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing, temperature, taste balance, rating, retention marker, notes, and timestamps.
 
 CSV exports are useful for spreadsheets and quick analysis. They are not intended to fully reconstruct all relationships; use the JSON export for that.
 
@@ -79,8 +81,11 @@ The top-level JSON shape is:
 
 Local IDs are included so relationships can be reconstructed inside a single export file. Decimal measurements are emitted as strings to avoid precision loss.
 
+## Instance Backup Coverage
+
+Instance backups and empty-server restore preserve the same Quick Drip durable fields: brew method, brewer references, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, bean grind state, preparation tool method, and user enabled-method/spoon preferences.
+
 ## Deferred
 
-- Instance-wide scheduled backups and empty-server restore. These are a separate v1 operations slice, not an active-workspace export feature.
 - Workspace deletion and transfer.
 - Non-owner export policy variants.

@@ -1,28 +1,28 @@
 # Preparation Tools
 
-Preparation Tools are reusable workspace checklist items for brew preparation. They are separate from equipment: grinders and machines remain `Equipment`, while tools like WDT, puck screens, paper filters, baskets, and tampers live here.
+Preparation Tools are reusable workspace checklist items for brew preparation. They are separate from equipment: grinders, machines, and brewers remain `Equipment`, while tools like WDT, puck screens, paper filters, baskets, and tampers live here.
 
 ## Included Now
 
 - Workspace-scoped preparation tools.
-- Espresso method support.
+- Espresso and Quick Drip method support.
 - Tool index and detail screens for all workspace members with read access.
 - Owner/admin-only creation and edit screens.
 - Optional preparation tool photos on create and edit.
 - Owner/admin-only primary photo selection, cropping, removal, archive/reopen, and destructive danger-zone delete.
 - Private viewing/download of preparation tool photos for workspace members with read access.
 - Manual sort position for checklist ordering.
-- Detail analytics for usage count, total coffee ground, average rating/yield/time, channeling rate, taste balance, retention markers, best brews, and recent brews.
+- Detail analytics for usage count, total coffee ground, average rating/yield/time, taste balance, best brews, and recent brews. Channeling and retention metrics are espresso-only.
 - Optional date range filters for brew-derived tool analytics.
-- Brew form checklist for active espresso tools.
+- Brew form checklist for active tools for the selected method.
 - Per-brew snapshots of selected tool names.
-- Last-brew defaults for active tools from the current user's previous brew.
+- Last-brew defaults for active same-method tools from the current user's previous brew.
 
 ## Brew Defaults
 
-When opening a new espresso brew form, Roastnode preselects preparation tools from the current user's most recent brew in the active workspace.
+When opening a new brew form, Roastnode preselects preparation tools from the current user's most recent brew for the selected method in the active workspace.
 
-Only tools that still exist, are active, belong to the active workspace, and use the `espresso` method are selected.
+Only tools that still exist, are active, belong to the active workspace, and use the selected method are selected. Espresso and Quick Drip tool snapshots do not mix; Quick Drip uses Quick Drip tools such as paper filters, while espresso tools such as WDT or puck screens stay on espresso brews.
 
 ## Snapshot Rules
 
@@ -37,7 +37,7 @@ The snapshot keeps old brew history readable if a tool is renamed later.
 
 ## Analytics
 
-Preparation tool analytics are scoped through the active workspace tool. Date range filters are inclusive and apply to brew-derived values: usage count, total coffee ground, averages, channeling, taste balance, retention markers, best brews, and recent brews. Tool lifecycle fields such as active status, method, and position remain current tool facts.
+Preparation tool analytics are scoped through the active workspace tool. Date range filters are inclusive and apply to brew-derived values: usage count, total coffee ground, averages, taste balance, best brews, and recent brews. Channeling and retention are espresso-only and should not be implied for Quick Drip tools. Tool lifecycle fields such as active status, method, and position remain current tool facts.
 
 ## Authorization
 

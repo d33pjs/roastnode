@@ -18,6 +18,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Manual date range filters and relative timeframe shortcuts for brew-based analytics.
 - Taste balance distribution.
 - Retention marker distribution.
+- Brew method distribution, including Quick Drip.
 - Bean breakdowns by roaster, origin, and process.
 - Bean detail analytics through `BeanStatistics`.
 - Equipment detail analytics through `EquipmentStatistics`.
@@ -38,7 +39,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - `timeframe` can be one of `last_7_days`, `last_30_days`, `last_90_days`, `this_year`, or `all_time`.
 - Timeframe shortcuts take precedence over manual date query parameters.
 - `all_time` starts at the active workspace's first brew and ends at today or the latest brew date, whichever is later. If there are no brews, it uses today for both ends.
-- Brew-derived metrics follow the selected range: total brews, beans ground, average brew cost, leaders, channeling, retention, taste balance, and day bars.
+- Brew-derived metrics follow the selected range: total brews, beans ground or estimated consumed grams, average brew cost, leaders, channeling, retention, taste balance, method distribution, and day bars.
 - Current bean inventory/catalog metrics stay unfiltered: open bean count, known bean spend, and bean breakdowns by roaster/origin/process.
 - Empty current-inventory cards explain when there are no open beans or no recorded bean costs. Average brew cost explains when there is no cost data for brews in the selected time range.
 - Links from statistics to brew history do not preserve the selected analytics date range; they always open all-time brew history.
@@ -49,4 +50,6 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - `WorkspaceStatistics`, `BeanStatistics`, `EquipmentStatistics`, and `PreparationToolStatistics` own aggregation logic; keep controllers and views thin.
 - Use live queries/Ruby aggregation for now. Do not add materialized summaries until data volume requires it.
 - Imported brews and beans count like native records.
+- Quick Drip is included in broad brew totals, consumed-grams totals, cost calculations when bean price is known, taste balance, method distributions, and brewer/preparation-tool usage analytics.
+- Channeling, retention, and grinder tendency metrics are espresso-only. Brewer and Quick Drip preparation-tool analytics should not imply channeling for Quick Drip.
 - ECharts/Stimulus interactivity is deferred.

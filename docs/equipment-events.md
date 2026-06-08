@@ -5,7 +5,7 @@ Equipment Events records maintenance and service history for workspace equipment
 ## Included Now
 
 - Workspace-scoped equipment events.
-- Affected equipment selection for one or more grinder or machine records.
+- Affected equipment selection for one or more grinder, machine, or brewer records.
 - Multiple event types per event, so one maintenance session can record actions like grinder cleaning and machine backflush together.
 - Event logging, editing, and deletion by owners, admins, and members.
 - Viewer read-only access.
@@ -24,6 +24,9 @@ An equipment event stores event types in `event_types`. The legacy `event_type` 
 - `grinder_deep_cleaning`
 - `machine_descaling`
 - `machine_backflush`
+- `brewer_cleaning`
+- `brewer_descaling`
+- `filter_change`
 - `burr_change`
 - `other`
 
@@ -57,16 +60,16 @@ Equipment event deletion lives in the event detail danger zone. It removes the e
 Equipment detail pages now show:
 
 - total brews using the equipment
-- total bean-in grams through the equipment
-- average rating and channeling rate
+- total consumed coffee grams through the equipment
+- average rating and espresso-only channeling rate
 - optional date range filters for brew-derived usage analytics
 - brews and grams since the latest relevant service event
 - brews-by-day bars
 - maintenance marker counts by event type
 
-Relevant service events are grinder cleaning, grinder deep cleaning, and burr changes for grinders; machine descaling and backflush for machines.
+Relevant service events are grinder cleaning, grinder deep cleaning, and burr changes for grinders; machine descaling and backflush for machines; brewer cleaning, brewer descaling, and filter changes for brewers.
 
-Date range filters are inclusive and apply to brew-derived usage analytics: total brews, total bean-in grams, average rating, channeling, brews-by-day bars, and recent brews. Service counters, last service, recent events, and maintenance marker counts stay current equipment-history views.
+Date range filters are inclusive and apply to brew-derived usage analytics: total brews, total consumed coffee grams, average rating, espresso-only channeling, brews-by-day bars, and recent brews. Service counters, last service, recent events, and maintenance marker counts stay current equipment-history views.
 
 ## Deferred
 

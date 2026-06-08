@@ -1,14 +1,15 @@
 # Brew Draft Recovery
 
-Roastnode keeps unsaved espresso form values in the browser while a user is logging a new brew.
+Roastnode keeps unsaved form values in the browser while a user is logging a new brew.
 
 ## Included Now
 
-- The new espresso form uses the `brew-draft` Stimulus controller.
-- Drafts are stored in `localStorage` under `roastnode:brew:new:<workspace-id>:<user-id>`.
+- The new brew form uses the `brew-draft` Stimulus controller.
+- Normal drafts are stored in `localStorage` under `roastnode:brew:new:<method>:<workspace-id>:<user-id>`.
 - The key is scoped to the active workspace and current user so shared browsers do not reuse another user's draft by accident.
-- Repeat Good Brew uses a separate key, `roastnode:brew:repeat:<workspace-id>:<user-id>:<source-brew-id>`, so a browser draft from normal logging does not overwrite a deliberate repeat form.
-- Drafts restore automatically when the new espresso form opens again.
+- The key includes the brew method so espresso and Quick Drip drafts do not overwrite each other.
+- Repeat Good Brew uses a separate key, `roastnode:brew:repeat:<source-method>:<workspace-id>:<user-id>:<source-brew-id>`, so a browser draft from normal logging does not overwrite a deliberate repeat form and repeat drafts stay tied to the source method and source brew.
+- Drafts restore automatically when the matching new brew form opens again.
 - Restored drafts show a compact notice with a discard button.
 - Drafts clear when the form is submitted.
 
@@ -27,4 +28,4 @@ Photos are not stored in browser drafts. Users should attach them again after re
 
 ## Boundaries
 
-Draft recovery applies to new espresso logging only. Brew edit/correction forms do not use browser draft recovery because they start from persisted data and should stay review-oriented.
+Draft recovery applies to new brew logging only. Brew edit/correction forms do not use browser draft recovery because they start from persisted data and should stay review-oriented.

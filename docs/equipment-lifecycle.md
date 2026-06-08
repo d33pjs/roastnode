@@ -1,6 +1,6 @@
 # Equipment Lifecycle
 
-Equipment now has the same basic lifecycle shape as bean bags, but with "archive" language instead of "close".
+Equipment now has the same basic lifecycle shape as bean bags, but with "archive" language instead of "close". Equipment kinds include grinders, machines, and brewers.
 
 ## Editing And Photos
 
@@ -12,9 +12,9 @@ The equipment index shows each item's primary photo when one is selected, fallin
 
 ## Archive And Reopen
 
-`Equipment#archived_at` marks archived grinders and machines. Archived equipment remains visible on its detail page and in historical brews/events, but it is excluded from new brew logging and new equipment-event selection.
+`Equipment#archived_at` marks archived grinders, machines, and brewers. Archived equipment remains visible on its detail page and in historical brews/events, but it is excluded from new brew logging and new equipment-event selection.
 
-Existing brew correction forms include the currently selected grinder or machine even if it has since been archived, so historical corrections can be saved without losing the old reference.
+Existing brew correction forms include the currently selected grinder, machine, or brewer even if it has since been archived, so historical corrections can be saved without losing the old reference.
 
 ## Delete
 
@@ -22,6 +22,7 @@ Equipment deletion lives in the equipment detail danger zone. It deletes the equ
 
 - `grinder_brews` are kept and their `grinder_id` is cleared.
 - `machine_brews` are kept and their `machine_id` is cleared.
+- `brewer_brews` are kept and their `brewer_id` is cleared.
 - `equipment_event_items` are removed through the existing dependent association.
 
 Use `Equipment#destroy_with_history!` for destructive deletes so this behavior stays centralized.

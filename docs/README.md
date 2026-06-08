@@ -10,10 +10,10 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/workspace-settings.md` describes active-workspace settings for household name and currency.
 - `docs/landing-preferences.md` describes preferred start screens and the stable dashboard route.
 - `docs/account-privacy.md` describes where to use display labels instead of email addresses.
-- `docs/brew-form-preferences.md` describes per-user espresso form focus behavior.
-- `docs/brew-draft-recovery.md` describes browser-local unsaved espresso draft recovery.
+- `docs/brew-form-preferences.md` describes per-user brew-method, spoon estimate, and espresso form focus behavior.
+- `docs/brew-draft-recovery.md` describes browser-local unsaved method-aware brew draft recovery.
 - `docs/formatting.md` describes comma-friendly decimal entry and pending profile-formatting decisions.
-- `docs/coffee-core.md` describes beans, equipment, required-bean espresso logging, inventory deduction, and current coffee workflow scope.
+- `docs/coffee-core.md` describes beans, equipment, espresso and Quick Drip logging, inventory deduction, and current coffee workflow scope.
 - `docs/recipe-profiles.md` describes workspace recipe profiles, exact brew targets, guided logging, public recipe sharing, and snapshot privacy.
 - `docs/inventory-adjustments.md` describes manual bean inventory corrections.
 - `docs/bean-analytics.md` describes the bean detail drill-down analytics slice.

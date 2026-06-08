@@ -5,11 +5,12 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 ## Included Now
 
 - Workspace-scoped beans as private bag/lot records.
-- Workspace-scoped equipment for grinders and machines.
+- Workspace-scoped equipment for grinders, machines, and brewers.
 - Workspace-scoped preparation tools for brew checklists.
 - Basic private photos for beans, brews, equipment, and equipment events.
 - Workspace writer photo removal through the private media controller.
 - Espresso brew logging with a required bean.
+- Quick Drip logging as Roastnode's first non-espresso brew method for private automatic drip/filter-style daily coffee.
 - Automatic inventory deduction when a brew is saved.
 - Manual bean inventory adjustments for count corrections.
 - Brew correction flows for edit/delete with inventory adjustment.
@@ -27,9 +28,10 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Bean detail analytics for brew history, best brews, taste balance, and retention markers.
 - Search-while-type roaster suggestions on bean entry, sourced from existing active-workspace bean history.
 - Equipment detail analytics for usage totals, service counters, and maintenance markers.
-- User landing preference for opening Roastnode directly on the espresso form.
+- User landing preference for opening Roastnode directly on the log form.
+- User enabled brew methods and grams-per-coffee-spoon preference in Profile.
 - User espresso form focus preference for fast daily logging.
-- Browser-local unsaved draft recovery for new espresso logs.
+- Browser-local unsaved draft recovery for new brew logs.
 - One-way ground-out to dose prefill while logging espresso.
 - Dashboard open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
 - Repeat Good Brew flow from private brew details and dashboard cockpit best brews, pre-filling targetable shot/setup values from the source brew while keeping taste, notes, media, and sharing fields fresh.
@@ -39,6 +41,9 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 - Public overview pages for all shared brews.
 - Public overview pages for all shared recipes.
+- Quick Drip recipes and public Quick Drip sharing.
+- Beanconqueror Quick Drip import.
+- Brewer cup/water calibration and professional filter method templates.
 - Fediverse publishing for brew shares.
 - Advanced media handling beyond current private/public thumbnails, including object storage.
 - Beanconqueror media import and full round-trip compatibility.
@@ -46,7 +51,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 ## Brew Bean Selection
 
-Espresso logging always requires an open bean.
+Espresso and Quick Drip logging always require an open bean.
 
 Default selection order:
 
@@ -56,13 +61,28 @@ Default selection order:
 
 Archived or depleted beans are not valid brew choices in this slice.
 
+## Quick Drip Logging
+
+Quick Drip is the first non-espresso brew method. It is a private daily logging flow for automatic drip/filter-style coffee, not a broad professional filter-method suite.
+
+Quick Drip requires:
+
+- open bean
+- Brewer equipment
+- Machine cups
+- either Coffee spoons or measured Ground coffee
+
+Measured Ground coffee takes precedence for inventory. Spoon-only logs estimate consumed grams from the user's Profile `grams_per_coffee_spoon`, falling back to 5g per spoon, and store the calculated value in `bean_weight_grams` for normal inventory deduction.
+
+Quick Drip omits espresso-only fields: temperature, preinfusion, first drip, and channeling. Quick Drip taste labels are Weak, Balanced, and Harsh for the existing sour/neutral/bitter values.
+
 ## Last-Brew Defaults
 
-The espresso form pre-fills setup fields from the current user's most recent brew in the active workspace. If the current user has not logged a brew in that workspace yet, it falls back to the workspace's most recent brew so new household members start from the shared setup.
+The log form pre-fills setup fields from the current user's most recent brew for the selected method in the active workspace. If the current user has not logged that method in that workspace yet, it falls back to the workspace's most recent brew for that method so new household members start from the shared setup.
 
 Users can hide optional fields from the new espresso form through Profile. Brew edit/correction screens always show the full log.
 
-Copied fields:
+Espresso copied fields:
 
 - bean, if still open
 - grinder
@@ -85,11 +105,31 @@ Fresh fields:
 - channeling
 - taste balance
 
+Quick Drip copied fields:
+
+- bean, if still open
+- brewer
+- grinder, unless the bean is pre-ground
+- active Quick Drip preparation tools from the previous Quick Drip brew
+- machine cups
+- coffee spoons
+- grams per coffee spoon
+
+Quick Drip fresh fields:
+
+- measured ground coffee
+- beverage yield
+- total time
+- rating
+- taste balance
+- notes
+- photos
+
 ## Repeat Good Brew
 
-Repeat mode opens the normal new espresso form with `repeat_brew_id`. It is distinct from normal last-brew defaults: it intentionally copies targetable values from the selected source brew so the user can try to reproduce that shot.
+Repeat mode opens the normal new brew form with `repeat_brew_id` and the source brew's method. It is distinct from normal last-brew defaults: it intentionally copies targetable values from the selected source brew so the user can try to reproduce that brew.
 
-Copied fields:
+Espresso copied fields:
 
 - bean, if still open
 - newest open duplicated follow-up bag from the same duplicate family when the source bean is no longer open
@@ -106,6 +146,16 @@ Copied fields:
 - first-drip seconds
 - total time seconds
 
+Quick Drip copied fields:
+
+- bean, if still open
+- brewer, if still active
+- grinder, if still active and relevant
+- active Quick Drip preparation tools
+- machine cups
+- coffee spoons
+- grams per coffee spoon
+
 Fresh fields:
 
 - rating
@@ -116,7 +166,7 @@ Fresh fields:
 - photos
 - record links
 
-If neither the source bean nor a duplicated follow-up bag is open, repeat redirects to normal new espresso logging with an alert instead of silently choosing an unrelated open bean.
+If neither the source bean nor a duplicated follow-up bag is open, repeat redirects to normal new logging for that method with an alert instead of silently choosing an unrelated open bean.
 
 ## Espresso Form Helpers
 
