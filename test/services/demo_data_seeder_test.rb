@@ -18,6 +18,12 @@ class DemoDataSeederTest < ActiveSupport::TestCase
     assert_equal "brewer", workspace.equipment.find_by!(name: "Demo Quick Drip Brewer").kind
     assert_equal "quick_drip", workspace.preparation_tools.find_by!(name: "Demo Paper Filter").brew_method
     assert_equal 1, workspace.brews.quick_drip.count
+    workspace.brews.espresso.includes(:brew_preparation_tools).find_each do |brew|
+      assert_empty brew.brew_preparation_tools.where(brew_method: "quick_drip")
+    end
+    quick_drip = workspace.brews.quick_drip.first!
+    assert_equal [ "Demo Paper Filter" ], quick_drip.brew_preparation_tools.order(:position).pluck(:tool_name)
+    assert_empty quick_drip.brew_preparation_tools.where(brew_method: "espresso")
     assert_equal "created", result.fetch(:status)
   end
 

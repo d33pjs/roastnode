@@ -152,6 +152,13 @@ class DemoDataSeeder
     end
 
     def ensure_brews!
+      espresso_tools = [
+        preparation_tools.fetch(:basket),
+        preparation_tools.fetch(:tamper),
+        preparation_tools.fetch(:wdt),
+        preparation_tools.fetch(:puck_screen)
+      ]
+
       create_brew_once!(
         occurred_at: Time.zone.local(2026, 5, 26, 8, 15, 0),
         bean: beans.fetch(:house_blend),
@@ -164,7 +171,7 @@ class DemoDataSeeder
         taste_balance: "neutral",
         rating: 4,
         notes: "Balanced seeded morning shot.",
-        tools: preparation_tools.values
+        tools: espresso_tools
       )
 
       create_brew_once!(
@@ -179,7 +186,7 @@ class DemoDataSeeder
         taste_balance: "sour",
         rating: 5,
         notes: "Bright seeded afternoon shot.",
-        tools: [ preparation_tools.fetch(:basket), preparation_tools.fetch(:tamper), preparation_tools.fetch(:wdt) ]
+        tools: espresso_tools.first(3)
       )
 
       create_quick_drip_once!(
