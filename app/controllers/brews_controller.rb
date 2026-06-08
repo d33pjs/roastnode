@@ -254,6 +254,12 @@ class BrewsController < ApplicationController
     end
 
     def repeat_brew_attributes(source_brew)
+      return repeat_quick_drip_attributes(source_brew) if source_brew.quick_drip?
+
+      repeat_espresso_attributes(source_brew)
+    end
+
+    def repeat_espresso_attributes(source_brew)
       bean = repeat_brew_bean(source_brew.bean)
       return { bean: nil } unless bean
 
@@ -274,6 +280,28 @@ class BrewsController < ApplicationController
         preinfusion_seconds: source_brew.preinfusion_seconds,
         first_drip_seconds: source_brew.first_drip_seconds
       }
+    end
+
+    def repeat_quick_drip_attributes(source_brew)
+      bean = repeat_brew_bean(source_brew.bean)
+      return { bean: nil } unless bean
+
+      @repeat_target_bean = bean
+      @selected_preparation_tools = default_preparation_tools(source_brew, method: source_brew.method)
+      attributes = {
+        bean:,
+        occurred_at: Time.current,
+        brewer: default_equipment(source_brew.brewer),
+        grinder: bean.pre_ground? ? nil : default_equipment(source_brew.grinder),
+        machine_cups: source_brew.machine_cups,
+        coffee_spoons: source_brew.coffee_spoons,
+        grams_per_coffee_spoon: source_brew.grams_per_coffee_spoon,
+        beverage_grams: source_brew.beverage_grams,
+        total_time_seconds: source_brew.total_time_seconds,
+        grind_setting: source_brew.grind_setting
+      }
+      attributes[:bean_weight_grams] = source_brew.bean_weight_grams unless source_brew.coffee_amount_estimated_spoons?
+      attributes
     end
 
     def repeat_brew_bean(source_bean)

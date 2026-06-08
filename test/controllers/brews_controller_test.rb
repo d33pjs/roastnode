@@ -195,6 +195,31 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-form-section][data-section=batch]", count: 0
   end
 
+  test "new with repeat quick drip copies batch setup without measured coffee" do
+    user = users(:one)
+    source = create_spoon_estimated_quick_drip_brew_for(user)
+    sign_in_as(user)
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_response :success
+    assert_equal "estimated_spoons", source.coffee_amount_source
+    assert_select "[data-testid=repeat-brew-notice]", text: /Repeating/
+    assert_select "input[type=hidden][name=?][value=?]", "brew[method]", "quick_drip"
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[brewer_id]", source.brewer.id.to_s
+    assert_select "input[name=?][value=?]", "brew[machine_cups]", source.machine_cups.to_s
+    assert_select "input[name=?][value=?]", "brew[coffee_spoons]", source.coffee_spoons.to_s
+    assert_select "input[type=hidden][name=?][value=?]", "brew[grams_per_coffee_spoon]", source.grams_per_coffee_spoon.to_s
+    assert_select "input[name=?][value]", "brew[bean_weight_grams]", count: 0
+    assert_select "input[name=?]", "brew[brew_temperature_celsius]", count: 0
+    assert_select "input[name=?]", "brew[preinfusion_seconds]", count: 0
+    assert_select "input[name=?]", "brew[first_drip_seconds]", count: 0
+    assert_select "input[name=?][value=?][checked]", "brew[rating]", source.rating.to_s, count: 0
+    assert_select "input[name=?][value=?][checked]", "brew[taste_balance]", source.taste_balance, count: 0
+    assert_select "textarea[name=?]", "brew[notes]", text: ""
+    assert_select "[data-testid=brew-form-section][data-section=batch]"
+  end
+
   test "new with repeat brew uses newest open duplicated follow-up bag when source bean is closed" do
     source = brews(:morning_espresso)
     original = source.bean
@@ -1060,6 +1085,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", brew_path(brews(:morning_espresso))
   end
 
+  test "writer does not see save as recipe action on quick drip brew" do
+    user = users(:one)
+    brew = create_spoon_estimated_quick_drip_brew_for(user)
+    sign_in_as(user)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "a[href=?]", new_brew_path(repeat_brew_id: brew.id), text: I18n.t("brews.show.repeat")
+    assert_select "a[href=?]", new_recipe_path(source_brew_id: brew.id), text: I18n.t("brews.show.save_as_recipe"), count: 0
+  end
+
   test "writer sees public share action on brew detail" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
@@ -1422,6 +1459,26 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
         beverage_grams: 900,
         total_time_seconds: 320,
         taste_balance: "neutral"
+      )
+    end
+
+    def create_spoon_estimated_quick_drip_brew_for(user)
+      workspaces(:household).brews.create!(
+        user:,
+        bean: beans(:second_open_household),
+        brewer: equipment(:household_brewer),
+        grinder: equipment(:household_grinder),
+        method: "quick_drip",
+        occurred_at: Time.current + 1.minute,
+        machine_cups: 6.5,
+        coffee_spoons: 5.5,
+        grams_per_coffee_spoon: 4.25,
+        beverage_grams: 900,
+        total_time_seconds: 320,
+        grind_setting: "medium",
+        taste_balance: "bitter",
+        rating: 5,
+        notes: "Do not copy."
       )
     end
 end

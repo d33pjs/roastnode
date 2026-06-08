@@ -139,10 +139,13 @@ class RecipesController < ApplicationController
 
     def source_brew_from_params!
       source_brew_id = recipe_params[:source_brew_id].presence || params[:source_brew_id].presence
-      current_workspace
+      source_brew = current_workspace
         .brews
         .includes(:bean, :grinder, :machine, :record_links, :primary_photo_record, photos_attachments: :blob, brew_preparation_tools: :preparation_tool)
         .find(source_brew_id)
+      raise ActiveRecord::RecordNotFound unless source_brew.espresso?
+
+      source_brew
     end
 
     def default_title(source_brew)

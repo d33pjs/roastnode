@@ -19,7 +19,9 @@
               text: t("brews.native_share.text", title: public_share_title),
               testid: "brew-native-share-button-#{@brew.id}" %>
           <% end %>
-          <%= link_to t(".save_as_recipe"), new_recipe_path(source_brew_id: @brew.id), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <% if @brew.espresso? %>
+            <%= link_to t(".save_as_recipe"), new_recipe_path(source_brew_id: @brew.id), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <% end %>
           <%= link_to t(".repeat"), new_brew_path(repeat_brew_id: @brew.id), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <%= link_to t(".edit"), edit_brew_path(@brew), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <%= button_to t(".delete"), brew_path(@brew), method: :delete, class: "rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>

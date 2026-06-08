@@ -129,6 +129,15 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "recipe[targets][grind_setting]", "12"
   end
 
+  test "writer cannot open new recipe form from quick drip brew" do
+    sign_in_as(users(:one))
+    source_brew = create_quick_drip_source_brew
+
+    get new_recipe_path(source_brew_id: source_brew.id)
+
+    assert_response :not_found
+  end
+
   test "new recipe form suggests source brew primary photo without selecting it" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
@@ -175,6 +184,22 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 30, recipe.profile.dig("targets", "total_time_seconds")
     assert_equal "Stop as soon as blonding starts.", recipe.profile.dig("guide", "note")
     assert_equal "Full pressure, stable gauge.", recipe.profile.dig("guide", "pressure_note")
+  end
+
+  test "writer cannot create recipe from quick drip brew" do
+    sign_in_as(users(:one))
+    source_brew = create_quick_drip_source_brew
+
+    assert_no_difference -> { workspaces(:household).recipes.count } do
+      post recipes_path, params: {
+        recipe: {
+          source_brew_id: source_brew.id,
+          title: "Quick Drip recipe"
+        }
+      }
+    end
+
+    assert_response :not_found
   end
 
   test "writer can reuse source brew primary photo for recipe" do
@@ -509,4 +534,20 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
+
+  private
+    def create_quick_drip_source_brew
+      workspaces(:household).brews.create!(
+        user: users(:one),
+        bean: beans(:second_open_household),
+        brewer: equipment(:household_brewer),
+        method: "quick_drip",
+        occurred_at: Time.current,
+        machine_cups: 6,
+        coffee_spoons: 5,
+        beverage_grams: 900,
+        total_time_seconds: 320,
+        taste_balance: "neutral"
+      )
+    end
 end
