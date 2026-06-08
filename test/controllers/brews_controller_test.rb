@@ -962,6 +962,27 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", download_media_attachment_path(tool_photo), text: I18n.t("shared.related_photo_group.download")
   end
 
+  test "quick drip show renders related brewer photos" do
+    sign_in_as(users(:one))
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 30,
+      taste_balance: "neutral"
+    )
+    brewer_photo = attach_photo(brew.brewer)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-related-photos]"
+    assert_select "[data-testid=brew-related-photo-group]", text: /#{Regexp.escape(brew.brewer.name)}/
+    assert_select "img[data-testid=brew-related-photo][src=?]", media_attachment_path(brewer_photo, variant: :thumbnail)
+  end
+
   test "show renders compact hero brew card" do
     users(:one).update!(display_name: "Jens")
     sign_in_as(users(:one))

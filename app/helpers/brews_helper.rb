@@ -100,6 +100,7 @@ module BrewsHelper
   end
 
   def quick_drip_estimate_calculation(brew)
+    return unless brew.coffee_amount_estimated_spoons?
     return unless brew.coffee_spoons.present? && brew.grams_per_coffee_spoon.present?
 
     t(
@@ -172,7 +173,7 @@ module BrewsHelper
     end
 
     def related_equipment_photo_groups(brew)
-      [ brew.grinder, brew.machine ].compact.uniq.map do |equipment|
+      [ brew.grinder, brew.machine, brew.brewer ].compact.uniq.map do |equipment|
         related_photo_group(t("brews.show.related_equipment_photos"), equipment.name, equipment)
       end
     end
