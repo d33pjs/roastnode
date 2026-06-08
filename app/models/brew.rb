@@ -49,19 +49,24 @@ class Brew < ApplicationRecord
   has_many_attached :photos
 
   before_validation :set_defaults
+  before_validation :set_quick_drip_consumed_grams
   before_validation :set_retention_marker
   after_create :record_inventory_consumption
 
   validates :bean_weight_grams, numericality: { greater_than: 0 }
   validates :ground_weight_grams, :dose_grams, :beverage_grams, numericality: { greater_than: 0 }, allow_nil: true
+  validates :machine_cups, numericality: { greater_than: 0 }, allow_nil: true
+  validates :coffee_spoons, :grams_per_coffee_spoon, numericality: { greater_than: 0 }, allow_nil: true
   validates :brew_temperature_celsius, numericality: { greater_than: 0 }, allow_nil: true
   validates :total_time_seconds, :preinfusion_seconds, :first_drip_seconds,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :rating, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
+  validate :quick_drip_required_fields
   validate :bean_belongs_to_workspace
   validate :equipment_belongs_to_workspace
   validate :equipment_matches_expected_kind
+  validate :method_specific_equipment
   validate :recipe_belongs_to_workspace
 
   def snapshot_preparation_tools!(tools)
@@ -108,7 +113,29 @@ class Brew < ApplicationRecord
       self.retention_marker = calculated_retention_marker
     end
 
+    def set_quick_drip_consumed_grams
+      return unless quick_drip?
+
+      if bean_weight_grams.present?
+        self.coffee_amount_source = "measured"
+        self.grams_per_coffee_spoon = spoon_grams_for_snapshot if coffee_spoons.present? && grams_per_coffee_spoon.blank?
+        return
+      end
+
+      return if coffee_spoons.blank?
+
+      spoon_grams = spoon_grams_for_snapshot
+      self.grams_per_coffee_spoon = spoon_grams
+      self.bean_weight_grams = (coffee_spoons.to_d * spoon_grams).round(2)
+      self.coffee_amount_source = "estimated_spoons"
+    end
+
+    def spoon_grams_for_snapshot
+      grams_per_coffee_spoon.presence || user&.grams_per_coffee_spoon.presence || TYPICAL_GRAMS_PER_COFFEE_SPOON
+    end
+
     def calculated_retention_marker
+      return "unknown" unless espresso?
       return "unknown" if bean_weight_grams.blank? || ground_weight_grams.blank?
 
       delta = ground_weight_grams - bean_weight_grams
@@ -168,7 +195,26 @@ class Brew < ApplicationRecord
     def equipment_matches_expected_kind
       errors.add(:grinder, "must be a grinder") if grinder.present? && !grinder.grinder?
       errors.add(:machine, "must be a machine") if machine.present? && !machine.machine?
-      errors.add(:brewer, "must be a brewer") if brewer.present? && !brewer.brewer?
+    end
+
+    def quick_drip_required_fields
+      return unless quick_drip?
+
+      errors.add(:brewer, "must be selected") if brewer.blank?
+      errors.add(:machine_cups, "must be greater than 0") if machine_cups.blank? || machine_cups.to_d <= 0
+      if bean_weight_grams.blank? && coffee_spoons.blank?
+        errors.add(:base, "Quick Drip requires coffee spoons or measured ground coffee")
+      end
+    end
+
+    def method_specific_equipment
+      if quick_drip?
+        errors.add(:brewer, "must be a brewer") if brewer.present? && !brewer.brewer?
+        errors.add(:machine, "is only used for espresso") if machine.present?
+      elsif espresso?
+        errors.add(:brewer, "must be a brewer") if brewer.present? && !brewer.brewer?
+        errors.add(:brewer, "is only used for Quick Drip") if brewer.present?
+      end
     end
 
     def recipe_belongs_to_workspace

@@ -99,6 +99,98 @@ class BrewTest < ActiveSupport::TestCase
     assert_includes brew.errors[:brewer], "must be a brewer"
   end
 
+  test "quick drip with spoons estimates consumed grams and records adjustment" do
+    user = users(:one)
+    user.update!(grams_per_coffee_spoon: 4.5)
+    bean = beans(:second_open_household)
+
+    brew = workspaces(:household).brews.create!(
+      user:,
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 5.5,
+      taste_balance: "neutral"
+    )
+
+    assert_equal 24.75.to_d, brew.bean_weight_grams
+    assert_equal 4.5.to_d, brew.grams_per_coffee_spoon
+    assert_predicate brew, :coffee_amount_estimated_spoons?
+    assert_equal(-24.75.to_d, brew.inventory_adjustment.delta_grams)
+    assert_equal 195.25.to_d, bean.reload.remaining_grams
+  end
+
+  test "quick drip uses five gram fallback when user spoon preference is blank" do
+    user = users(:one)
+    user.update!(grams_per_coffee_spoon: nil)
+
+    brew = workspaces(:household).brews.create!(
+      user:,
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 4,
+      coffee_spoons: 6
+    )
+
+    assert_equal 30.to_d, brew.bean_weight_grams
+    assert_equal 5.to_d, brew.grams_per_coffee_spoon
+    assert_predicate brew, :coffee_amount_estimated_spoons?
+  end
+
+  test "quick drip measured grams override spoon estimate" do
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      grams_per_coffee_spoon: 5,
+      bean_weight_grams: 28
+    )
+
+    assert_equal 28.to_d, brew.bean_weight_grams
+    assert_predicate brew, :coffee_amount_measured?
+  end
+
+  test "quick drip requires brewer machine cups and a coffee amount source" do
+    brew = workspaces(:household).brews.new(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household)
+    )
+
+    assert_not brew.valid?
+    assert_includes brew.errors[:brewer], "must be selected"
+    assert_includes brew.errors[:machine_cups], "must be greater than 0"
+    assert_includes brew.errors[:base], "Quick Drip requires coffee spoons or measured ground coffee"
+  end
+
+  test "quick drip rejects espresso machine as brewer and espresso rejects brewer" do
+    quick_drip = workspaces(:household).brews.new(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_machine),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+    assert_not quick_drip.valid?
+    assert_includes quick_drip.errors[:brewer], "must be a brewer"
+
+    espresso = workspaces(:household).brews.new(
+      user: users(:one),
+      method: "espresso",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      bean_weight_grams: 18
+    )
+    assert_not espresso.valid?
+    assert_includes espresso.errors[:brewer], "is only used for Quick Drip"
+  end
+
   test "rating accepts blank and one through five only" do
     brew = brews(:morning_espresso)
 

@@ -130,6 +130,7 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
       brewer:,
       method: "quick_drip",
       occurred_at: Time.zone.local(2026, 5, 25, 8, 0, 0),
+      machine_cups: 6,
       bean_weight_grams: 32,
       ground_weight_grams: 32,
       rating: 5
