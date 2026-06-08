@@ -266,6 +266,33 @@ jobs:
             gh release edit "$RELEASE_TAG" --draft=false
           fi
 
+      - name: Notify private deploy webhook
+        env:
+          GITEA_DEPLOY_WEBHOOK_URL: ${{ secrets.GITEA_DEPLOY_WEBHOOK_URL }}
+          GITEA_TOKEN: ${{ secrets.GITEA_TOKEN }}
+          GITEA_DEPLOY_REF: ${{ secrets.GITEA_DEPLOY_REF }}
+          IMAGE_REF: ${{ steps.image.outputs.ref }}
+          IMAGE_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$GITEA_DEPLOY_WEBHOOK_URL" || -z "$GITEA_TOKEN" || -z "$GITEA_DEPLOY_REF" ]]; then
+            echo "Skipping private deploy webhook because GITEA_DEPLOY_WEBHOOK_URL, GITEA_TOKEN, or GITEA_DEPLOY_REF is not configured."
+            exit 0
+          fi
+
+          image="${IMAGE_REF}:${RELEASE_TAG}@${IMAGE_DIGEST}"
+          payload="$(jq -n \
+            --arg ref "$GITEA_DEPLOY_REF" \
+            --arg image "$image" \
+            '{ref: $ref, inputs: {roastnode_image: $image}}')"
+
+          curl -fsS -X POST \
+            -H "Authorization: token ${GITEA_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$GITEA_DEPLOY_WEBHOOK_URL"
+
       - name: Upload container CycloneDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_CDX_ID != '' }}
         env:

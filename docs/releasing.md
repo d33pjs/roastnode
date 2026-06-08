@@ -20,6 +20,14 @@ Configure these in the mirrored GitHub repository:
 - Variable `EXODOS_INVENTORYROOT_CDX_ID`: exodos.io inventory root UUID for CycloneDX uploads.
 - Optional variable `EXODOS_API_URL`: defaults to `https://api.exodos.io`.
 
+Optional private deploy webhook:
+
+- Secret `GITEA_DEPLOY_WEBHOOK_URL`: private downstream workflow webhook URL.
+- Secret `GITEA_TOKEN`: token sent as `Authorization: token ${GITEA_TOKEN}`.
+- Secret `GITEA_DEPLOY_REF`: downstream ref to dispatch, for example `master`.
+
+When all three secrets are configured, the release workflow posts the digest-pinned image as `inputs.roastnode_image` after the GHCR image and GitHub Release assets exist. The image value includes both tag and digest, for example `ghcr.io/d33pjs/roastnode:v1.2.3@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`. If any secret is missing, release publishing continues and the webhook step logs only a safe skip message.
+
 GHCR publishing uses the built-in `GITHUB_TOKEN`. Keyless cosign signing and GitHub artifact attestations use GitHub OIDC, so no cosign private key is required.
 
 The Gitea push mirror token for GitHub needs permission to update workflow files. For a classic GitHub token this means including the `workflow` scope in addition to repository write access.

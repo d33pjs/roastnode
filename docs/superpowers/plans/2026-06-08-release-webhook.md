@@ -25,7 +25,7 @@
 - Modify: `.github/workflows/release-container.yml`
 - Modify: `docs/releasing.md`
 
-- [ ] **Step 1: Run the failing workflow-structure check**
+- [x] **Step 1: Run the failing workflow-structure check**
 
 Run:
 
@@ -35,7 +35,7 @@ ruby -ryaml -e 'workflow = YAML.load_file(".github/workflows/release-container.y
 
 Expected: FAIL with `missing deploy webhook step`.
 
-- [ ] **Step 2: Insert the webhook step**
+- [x] **Step 2: Insert the webhook step**
 
 In `.github/workflows/release-container.yml`, insert this step immediately after the existing `Attach SBOM and digest to GitHub Release` step and before the first exodos.io upload step:
 
@@ -68,7 +68,7 @@ In `.github/workflows/release-container.yml`, insert this step immediately after
             "$GITEA_DEPLOY_WEBHOOK_URL"
 ```
 
-- [ ] **Step 3: Update release documentation**
+- [x] **Step 3: Update release documentation**
 
 In `docs/releasing.md`, add this text under `## Required GitHub Settings`, after the existing exodos.io configuration list:
 
@@ -82,13 +82,13 @@ Optional private deploy webhook:
 When all three secrets are configured, the release workflow posts the digest-pinned image as `inputs.roastnode_image` after the GHCR image and GitHub Release assets exist. The image value includes both tag and digest, for example `ghcr.io/d33pjs/roastnode:v1.2.3@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`. If any secret is missing, release publishing continues and the webhook step logs only a safe skip message.
 ```
 
-- [ ] **Step 4: Run the workflow-structure check again**
+- [x] **Step 4: Run the workflow-structure check again**
 
 Run the same Ruby command from Step 1.
 
 Expected: PASS with exit code `0`.
 
-- [ ] **Step 5: Run the documentation check**
+- [x] **Step 5: Run the documentation check**
 
 Run:
 
@@ -98,7 +98,7 @@ ruby -e 'text = File.read("docs/releasing.md"); %w[GITEA_DEPLOY_WEBHOOK_URL GITE
 
 Expected: PASS with exit code `0`.
 
-- [ ] **Step 6: Parse the workflow YAML**
+- [x] **Step 6: Parse the workflow YAML**
 
 Run:
 
@@ -108,7 +108,7 @@ ruby -ryaml -e 'YAML.load_file(".github/workflows/release-container.yml"); puts 
 
 Expected: prints `workflow yaml ok`.
 
-- [ ] **Step 7: Inspect the implementation diff**
+- [x] **Step 7: Inspect the implementation diff**
 
 Run:
 
@@ -118,11 +118,11 @@ git diff -- .github/workflows/release-container.yml docs/releasing.md
 
 Expected: the diff only adds the private deploy webhook step and release documentation. It should not change image build, signing, attestation, release upload, or exodos.io behavior.
 
-- [ ] **Step 8: Commit the implementation**
+- [x] **Step 8: Commit the implementation**
 
 Run:
 
 ```bash
-git add .github/workflows/release-container.yml docs/releasing.md
+git add .github/workflows/release-container.yml docs/releasing.md docs/superpowers/plans/2026-06-08-release-webhook.md
 git commit -m "Notify deploy webhook after release image build"
 ```
