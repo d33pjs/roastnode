@@ -340,6 +340,33 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-latest-best-brew-card] [data-testid=brew-rating][aria-label=?]", "Rating 5 of 5 beans"
   end
 
+  test "workspace dashboard renders latest quick drip hero card" do
+    workspace = workspaces(:household)
+    user = users(:one)
+    brew = workspace.brews.create!(
+      user:,
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      occurred_at: Time.current + 1.day,
+      machine_cups: 6,
+      coffee_spoons: 6,
+      grams_per_coffee_spoon: 5,
+      total_time_seconds: 320,
+      taste_balance: "neutral",
+      rating: 4
+    )
+    sign_in_as(user)
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", brew_path(brew)
+    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-hero-card][data-method=quick_drip]"
+    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=quick-drip-machine-cups]", "6"
+    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-chart-grid]", count: 0
+  end
+
   test "shows onboarding for signed-in user without workspace" do
     user = User.create!(email_address: "workspace-needed@example.com", password: "password")
     sign_in_as(user)

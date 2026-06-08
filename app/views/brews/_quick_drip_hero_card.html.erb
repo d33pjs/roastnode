@@ -1,0 +1,100 @@
+<% brew_photo = brew_card_photo_attachment(brew) %>
+<% brewer_photo = brew.brewer&.primary_photo_attachment %>
+<% grinder_photo = brew.grinder&.primary_photo_attachment %>
+<% user_avatar = brew.user.avatar.attachment if brew.user.avatar.attached? %>
+<% workspace_logo = current_workspace.logo.attachment if current_workspace.logo.attached? %>
+
+<article data-testid="brew-hero-card" data-method="quick_drip" class="relative overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
+  <div class="bg-stone-950 p-5">
+    <div data-testid="brew-card-header" class="flex flex-nowrap items-center gap-1 overflow-hidden sm:gap-2">
+      <span data-testid="brew-timestamp" class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= brew_card_timestamp(brew) %></span>
+      <span data-testid="brew-workspace" class="inline-flex min-w-0 max-w-[7.5rem] items-center gap-1 truncate whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs">
+        <% if workspace_logo.present? %>
+          <%= image_tag media_attachment_path(workspace_logo, variant: :thumbnail), alt: "", data: { testid: "brew-workspace-logo" }, class: "h-3 w-3 shrink-0 rounded-full object-contain ring-1 ring-white/20 sm:h-4 sm:w-4" %>
+        <% end %>
+        <span class="min-w-0 truncate"><%= current_workspace.name %></span>
+      </span>
+      <span data-testid="brew-method" class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= t("brews.methods.quick_drip") %></span>
+      <%= render "shared/brand_mark",
+        testid: "brew-card-brand-mark",
+        container_class: "ml-auto h-7 w-7 shrink-0 sm:h-12 sm:w-12",
+        image_class: "h-full w-full object-contain drop-shadow-sm" %>
+    </div>
+
+    <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.9fr_1.1fr] lg:items-end" unless compact %>">
+      <div class="flex items-start justify-between gap-3">
+        <div data-testid="brew-title-block" class="min-w-0">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
+          <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
+          <% if brew_card_bean_descriptor(brew.bean).present? %>
+            <p class="mt-2 text-sm text-stone-300"><%= brew_card_bean_descriptor(brew.bean) %></p>
+          <% end %>
+          <div data-testid="brew-byline" class="mt-2 flex items-center gap-1.5 text-xs text-stone-400">
+            <% if user_avatar.present? %>
+              <%= image_tag media_attachment_path(user_avatar, variant: :thumbnail), alt: "", data: { testid: "brew-user-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
+            <% end %>
+            <span><%= t("brews.show.byline", user: brew.user.display_label) %></span>
+          </div>
+        </div>
+
+        <% if brew_photo.present? %>
+          <div data-testid="brew-bean-photo-frame" class="h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10 sm:h-16 sm:w-14">
+            <%= image_tag media_attachment_path(brew_photo, variant: :thumbnail), alt: brew.bean.name, data: { testid: "brew-bean-photo" }, class: "h-full w-full object-contain" %>
+          </div>
+        <% end %>
+      </div>
+
+      <div data-testid="brew-metrics" class="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-2 lg:grid-cols-6">
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.machine_cups") %></p>
+          <p data-testid="quick-drip-machine-cups" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew.machine_cups.present? ? profile_number(brew.machine_cups, precision: 2) : t("brews.show.unknown") %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.coffee_amount") %></p>
+          <p data-testid="quick-drip-coffee" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= quick_drip_coffee_amount_label(brew) %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.consumed") %></p>
+          <p data-testid="quick-drip-consumed" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= quick_drip_consumed_grams(brew) %></p>
+        </div>
+        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.time") %></p>
+          <p data-testid="quick-drip-duration" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_seconds(brew.total_time_seconds) %></p>
+        </div>
+        <div data-testid="brew-rating-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.rating") %></p>
+          <div data-testid="brew-rating" aria-label="<%= brew_card_rating_label(brew.rating) %>" class="mt-1 flex gap-0.5 sm:gap-1">
+            <% 5.times do |index| %>
+              <% filled = brew.rating.present? && index < brew.rating %>
+              <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-stone-400" %>"></span>
+            <% end %>
+          </div>
+        </div>
+        <div data-testid="brew-balance-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.taste") %></p>
+          <p data-testid="brew-balance" class="mt-1 overflow-hidden text-ellipsis text-[0.75rem] font-bold leading-tight text-green-300 sm:text-sm"><%= brew_taste_label(brew.taste_balance, method: brew.method) %></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-stone-900 px-5 py-3">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100">
+        <% if brewer_photo.present? %>
+          <%= image_tag media_attachment_path(brewer_photo, variant: :thumbnail), alt: "", data: { testid: "brew-brewer-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
+        <% end %>
+        <span class="truncate"><%= t("brews.show.brewer") %>: <%= brew.brewer&.name || t("brews.show.unknown") %></span>
+      </span>
+      <span class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100">
+        <% if grinder_photo.present? %>
+          <%= image_tag media_attachment_path(grinder_photo, variant: :thumbnail), alt: "", data: { testid: "brew-grinder-photo" }, class: "h-4 w-4 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
+        <% end %>
+        <span class="truncate"><%= t("brews.show.grinder") %>: <%= brew.grinder&.name || t("brews.show.unknown") %></span>
+      </span>
+      <% brew_card_tools(brew).each do |tool| %>
+        <span data-testid="brew-tool" class="rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200"><%= tool.tool_name %></span>
+      <% end %>
+    </div>
+  </div>
+</article>

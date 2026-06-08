@@ -387,6 +387,9 @@ en:
     native_share:
       text: "Shared brew: %{title}"
     shared_marker: "Shared"
+    compact:
+      cups: "%{count} cups"
+      quick_drip_summary: "%{cups} cups · %{coffee}"
     edit:
       back: "Back to brew"
       photos: "Current photos"
@@ -488,6 +491,7 @@ en:
       channeling: "Channeling"
       coffee_amount: "Coffee"
       coffee_spoons: "%{count} spoons"
+      consumed: "Consumed"
       delete: "Delete"
       details: "Details"
       dose: "Dose"
@@ -535,6 +539,7 @@ en:
       yield: "Beverage"
       yes: "Yes"
   public_brew_shares:
+    unsupported_method: "Public sharing is only available for espresso brews right now."
     create:
       created: "Public share saved."
     destroy:

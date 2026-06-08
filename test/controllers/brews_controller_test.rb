@@ -1183,6 +1183,34 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-detail-taste]", "Weak"
   end
 
+  test "quick drip hero card renders metric first batch facts without espresso chart" do
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      grams_per_coffee_spoon: 5,
+      taste_balance: "neutral",
+      rating: 4,
+      total_time_seconds: 320
+    )
+    sign_in_as(users(:one))
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-hero-card][data-method=quick_drip]"
+    assert_select "[data-testid=brew-method]", "Quick Drip"
+    assert_select "[data-testid=quick-drip-machine-cups]", "6"
+    assert_select "[data-testid=quick-drip-coffee]", "6 spoons"
+    assert_select "[data-testid=quick-drip-consumed]", "~30g"
+    assert_select "[data-testid=quick-drip-duration]", "320s"
+    assert_select "[data-testid=brew-chart-grid]", count: 0
+    assert_select "[data-testid=brew-retention-card]", count: 0
+  end
+
   test "show renders unknown username when display name is blank" do
     sign_in_as(users(:one))
 
@@ -1225,6 +1253,23 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", new_brew_public_brew_share_path(brew), text: I18n.t("brews.show.share_publicly")
+  end
+
+  test "quick drip public sharing is not exposed in v1" do
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+    sign_in_as(users(:one))
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "a[href=?]", new_brew_public_brew_share_path(brew), count: 0
   end
 
   test "writer sees edit public share action when brew already has a share" do
@@ -1491,6 +1536,25 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?]", "brew-history-compact-card-link-#{older.id}"
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
     assert_appears_before newest.bean.name, older.bean.name
+  end
+
+  test "compact brew card is method aware for quick drip" do
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+    sign_in_as(users(:one))
+
+    get brews_path
+
+    assert_response :success
+    assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /Quick Drip/
+    assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /6 cups/
+    assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /Moccamaster/
   end
 
   test "index can render hero cards" do

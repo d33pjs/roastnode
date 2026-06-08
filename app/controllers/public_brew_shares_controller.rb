@@ -1,5 +1,6 @@
 class PublicBrewSharesController < ApplicationController
   before_action :set_brew
+  before_action :ensure_espresso_brew!, only: %i[new create edit update]
   before_action :set_or_build_share
   before_action :authorize_share_management!
 
@@ -42,6 +43,12 @@ class PublicBrewSharesController < ApplicationController
         .brews
         .includes(:bean, :grinder, :machine, :user, brew_preparation_tools: :preparation_tool)
         .find(params[:brew_id])
+    end
+
+    def ensure_espresso_brew!
+      return if @brew.espresso?
+
+      redirect_to @brew, alert: t("public_brew_shares.unsupported_method")
     end
 
     def set_or_build_share

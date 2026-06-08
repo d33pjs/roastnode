@@ -7,11 +7,11 @@
 
       <% if current_workspace_policy.write? %>
         <div class="flex flex-wrap gap-2">
-          <% if current_workspace_policy.manage? || @brew.user_id == Current.user.id %>
+          <% if @brew.espresso? && (current_workspace_policy.manage? || @brew.user_id == Current.user.id) %>
             <% share_path = @brew.public_brew_share ? edit_brew_public_brew_share_path(@brew) : new_brew_public_brew_share_path(@brew) %>
             <%= link_to t(".share_publicly"), share_path, class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <% end %>
-          <% if @brew.public_brew_share&.enabled? %>
+          <% if @brew.espresso? && @brew.public_brew_share&.enabled? %>
             <% public_share_title = @brew.public_brew_share.title.presence || PublicBrewShare.default_title_for(@brew) %>
             <%= render "shared/native_share_button",
               url: public_brew_page_url(@brew.public_brew_share.token),

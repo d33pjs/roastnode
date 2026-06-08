@@ -153,6 +153,48 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
+  test "new redirects quick drip brews because public sharing is espresso only" do
+    user = users(:one)
+    brew = create_quick_drip_brew_for(user)
+    sign_in_as(user)
+
+    get new_brew_public_brew_share_path(brew)
+
+    assert_redirected_to brew_path(brew)
+    assert_equal I18n.t("public_brew_shares.unsupported_method"), flash[:alert]
+  end
+
+  test "create redirects quick drip brews because public sharing is espresso only" do
+    user = users(:one)
+    brew = create_quick_drip_brew_for(user)
+    sign_in_as(user)
+
+    assert_no_difference -> { PublicBrewShare.count } do
+      post brew_public_brew_share_path(brew), params: {
+        public_brew_share: {
+          enabled: "1",
+          title: "Shared batch",
+          selected_photo_attachment_ids: []
+        }
+      }
+    end
+
+    assert_redirected_to brew_path(brew)
+    assert_equal I18n.t("public_brew_shares.unsupported_method"), flash[:alert]
+  end
+
+  test "edit redirects existing quick drip shares because public sharing is espresso only" do
+    user = users(:one)
+    brew = create_quick_drip_brew_for(user)
+    create_share_for(brew, user:)
+    sign_in_as(user)
+
+    get edit_brew_public_brew_share_path(brew)
+
+    assert_redirected_to brew_path(brew)
+    assert_equal I18n.t("public_brew_shares.unsupported_method"), flash[:alert]
+  end
+
   test "update can enable share and clear password" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -177,6 +219,25 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Enabled shot", share.title
     assert_not share.password_protected?
     assert_equal user, share.updated_by
+  end
+
+  test "update redirects existing quick drip shares because public sharing is espresso only" do
+    user = users(:one)
+    brew = create_quick_drip_brew_for(user)
+    share = create_share_for(brew, user:, title: "Old batch")
+    sign_in_as(user)
+
+    patch brew_public_brew_share_path(brew), params: {
+      public_brew_share: {
+        enabled: "1",
+        title: "Updated batch",
+        selected_photo_attachment_ids: []
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_equal I18n.t("public_brew_shares.unsupported_method"), flash[:alert]
+    assert_equal "Old batch", share.reload.title
   end
 
   test "blank password keeps existing password" do
@@ -271,6 +332,18 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
         beverage_grams: 42,
         taste_balance: "neutral",
         public_note:
+      )
+    end
+
+    def create_quick_drip_brew_for(user)
+      workspaces(:household).brews.create!(
+        user:,
+        method: "quick_drip",
+        bean: beans(:second_open_household),
+        brewer: equipment(:household_brewer),
+        machine_cups: 6,
+        coffee_spoons: 6,
+        taste_balance: "neutral"
       )
     end
 
