@@ -47,7 +47,7 @@ It deliberately hides automatic brew inventory adjustments because the brew itse
 - An event must include at least one affected equipment item.
 - An event must include at least one event type.
 - All selected equipment must belong to the event workspace.
-- `EquipmentStatistics` owns grinder/machine usage analytics for equipment detail pages. Keep it scoped through `current_workspace.equipment.find(params[:id])`.
+- `EquipmentStatistics` owns grinder/machine/brewer usage analytics for equipment detail pages. Keep it scoped through `current_workspace.equipment.find(params[:id])`.
 
 ## Corrections And Delete
 

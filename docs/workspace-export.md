@@ -15,7 +15,7 @@ Workspace Export is the first Roastnode data portability feature.
 - Beans, equipment, preparation tools, brews, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
 - Rich bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
 - Brew method fields, including Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, and coffee amount source.
-- User method preferences and grams-per-coffee-spoon preferences in instance backup/readable export payloads.
+- Quick Drip profile preferences are account-level data. Active workspace exports do not include enabled-method or grams-per-coffee-spoon preferences; full instance backup/readable export payloads include them so restores can rebuild user logging defaults.
 - Photo metadata for photo-enabled records.
 - Preparation tool lifecycle fields, including active status, position, and photo metadata.
 
