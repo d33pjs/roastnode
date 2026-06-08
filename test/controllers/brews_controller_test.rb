@@ -54,6 +54,70 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
   end
 
+  test "new renders stable method tabs and defaults to last enabled method" do
+    user = users(:one)
+    sign_in_as(user)
+
+    get new_brew_path(method: "quick_drip")
+
+    assert_response :success
+    assert_select "a[href=?]", new_brew_path(method: "espresso"), text: "Espresso"
+    assert_select "a[href=?][aria-current=page]", new_brew_path(method: "quick_drip"), text: "Quick Drip"
+  end
+
+  test "espresso new carries selected method for create" do
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "input[type=hidden][name=?][value=?]", "brew[method]", "espresso"
+  end
+
+  test "disabled method tab is hidden but history remains visible" do
+    users(:one).update!(enabled_brew_methods: %w[espresso])
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "quick_drip")
+
+    assert_response :success
+    assert_select "a[href=?]", new_brew_path(method: "quick_drip"), count: 0
+    assert_select "a[href=?][aria-current=page]", new_brew_path(method: "espresso")
+
+    get brew_path(brews(:morning_espresso))
+    assert_response :success
+  end
+
+  test "quick drip new redirects to add brewer when no brewer exists" do
+    workspaces(:household).equipment.brewer.destroy_all
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "quick_drip")
+
+    assert_redirected_to new_equipment_path(kind: "brewer")
+    assert_equal I18n.t("brews.new.needs_brewer"), flash[:alert]
+  end
+
+  test "quick drip new renders batch fields and quick drip tools" do
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "quick_drip")
+
+    assert_response :success
+    assert_select "input[name=?][autofocus]", "brew[machine_cups]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[machine_cups]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[coffee_spoons]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[bean_weight_grams]"
+    assert_select "input[type=text][inputmode=decimal][name=?]", "brew[beverage_grams]"
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[brewer_id]", equipment(:household_brewer).id.to_s
+    assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:paper_filter).id.to_s
+    assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s, count: 0
+    assert_select "input[name=?]", "brew[brew_temperature_celsius]", count: 0
+    assert_select "input[name=?]", "brew[preinfusion_seconds]", count: 0
+    assert_select "input[name=?]", "brew[first_drip_seconds]", count: 0
+    assert_select "input[name=?]", "brew[channeling]", count: 0
+  end
+
   test "new with repeat brew copies targetable values and keeps outcome fields fresh" do
     source = brews(:morning_espresso)
     source.update!(
@@ -86,7 +150,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=repeat-brew-notice]", text: /Repeating/
     assert_select "form[data-controller~=?][data-brew-draft-storage-key-value=?]",
       "brew-draft",
-      "roastnode:brew:repeat:#{workspaces(:household).id}:#{users(:one).id}:#{source.id}"
+      "roastnode:brew:repeat:#{source.method}:#{workspaces(:household).id}:#{users(:one).id}:#{source.id}"
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", source.bean.id.to_s
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[grinder_id]", source.grinder.id.to_s
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[machine_id]", source.machine.id.to_s
@@ -395,7 +459,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "form[data-controller~=?][data-brew-draft-storage-key-value=?]",
       "brew-draft",
-      "roastnode:brew:new:#{workspace.id}:#{user.id}"
+      "roastnode:brew:new:espresso:#{workspace.id}:#{user.id}"
     assert_select "[data-brew-draft-target=?].hidden", "notice"
     assert_select "button[type=button][data-action=?]", "brew-draft#discard", text: I18n.t("brews.form.discard_draft")
   end
@@ -570,6 +634,38 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 42.7.to_d, brew.beverage_grams
     assert_equal 93.5.to_d, brew.brew_temperature_celsius
     assert_equal 201.5.to_d, bean.reload.remaining_grams
+  end
+
+  test "member can create spoon estimated quick drip brew with comma decimals" do
+    user = users(:one)
+    user.update!(grams_per_coffee_spoon: 4.5)
+    sign_in_as(user)
+    bean = beans(:second_open_household)
+
+    assert_difference -> { workspaces(:household).brews.quick_drip.count }, 1 do
+      post brews_path, params: {
+        brew: {
+          method: "quick_drip",
+          bean_id: bean.id,
+          brewer_id: equipment(:household_brewer).id,
+          machine_cups: "6,5",
+          coffee_spoons: "5,5",
+          beverage_grams: "900,0",
+          total_time_seconds: "320",
+          taste_balance: "neutral",
+          rating: "4",
+          preparation_tool_ids: [ preparation_tools(:paper_filter).id, preparation_tools(:wdt).id ]
+        }
+      }
+    end
+
+    brew = workspaces(:household).brews.order(:created_at).last
+    assert_redirected_to brew_path(brew)
+    assert_equal 6.5.to_d, brew.machine_cups
+    assert_equal 5.5.to_d, brew.coffee_spoons
+    assert_equal 24.75.to_d, brew.bean_weight_grams
+    assert_equal "estimated_spoons", brew.coffee_amount_source
+    assert_equal [ "Paper filter" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
   end
 
   test "create with recipe stores recipe reference and brew time snapshot" do

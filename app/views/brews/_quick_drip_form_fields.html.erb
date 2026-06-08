@@ -1,0 +1,152 @@
+<%= form.hidden_field :method, value: "quick_drip" %>
+
+<section data-testid="brew-form-section" data-section="bean" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.bean") %></h2>
+  <div class="mt-3 grid gap-3">
+    <% @beans.each do |bean| %>
+      <label for="brew_bean_id_<%= bean.id %>" class="grid cursor-pointer grid-cols-[3.5rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
+        <%= render "shared/record_photo_thumb",
+          record: bean,
+          testid: "brew-bean-option-photo",
+          class_name: "h-14 w-14 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
+        <span class="min-w-0">
+          <span class="block truncate font-extrabold text-rn-ink"><%= bean.display_name_for_collection(@beans) %></span>
+          <span class="mt-1 block text-sm font-semibold text-rn-muted"><%= profile_grams(bean.remaining_grams) %></span>
+        </span>
+        <%= form.radio_button :bean_id, bean.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+      </label>
+    <% end %>
+  </div>
+</section>
+
+<section data-testid="brew-form-section" data-section="batch" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.batch") %></h2>
+  <div class="mt-3 grid gap-3 sm:grid-cols-2">
+    <div>
+      <%= form.label :machine_cups, t("brews.form.machine_cups"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_field :machine_cups, inputmode: "decimal", autofocus: true, class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :coffee_spoons, t("brews.form.coffee_spoons"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_field :coffee_spoons, inputmode: "decimal", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :bean_weight_grams, t("brews.form.ground_coffee"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_field :bean_weight_grams, inputmode: "decimal", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :beverage_grams, t("brews.form.beverage"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_field :beverage_grams, inputmode: "decimal", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :total_time_seconds, t("brews.form.total_time"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.number_field :total_time_seconds, inputmode: "numeric", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    </div>
+  </div>
+</section>
+
+<section data-testid="brew-form-section" data-section="setup" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.setup") %></h2>
+
+  <fieldset class="mt-3">
+    <legend class="text-sm font-bold text-rn-muted"><%= t("brews.form.brewer") %></legend>
+    <div class="mt-2 grid gap-2 sm:grid-cols-2">
+      <% @brewers.each do |item| %>
+        <label for="brew_brewer_id_<%= item.id %>" class="grid cursor-pointer grid-cols-[2.75rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
+          <%= render "shared/record_photo_thumb", record: item, testid: "brew-brewer-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
+          <span class="truncate text-sm font-extrabold text-rn-ink"><%= item.name %></span>
+          <%= form.radio_button :brewer_id, item.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <fieldset class="mt-4">
+    <legend class="text-sm font-bold text-rn-muted"><%= t("brews.form.grinder") %></legend>
+    <div class="mt-2 grid gap-2 sm:grid-cols-2">
+      <label for="brew_grinder_id_none" class="flex cursor-pointer items-center justify-between rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
+        <span><%= t("brews.form.none") %></span>
+        <%= form.radio_button :grinder_id, "", id: "brew_grinder_id_none", class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+      </label>
+      <% @grinders.each do |item| %>
+        <label for="brew_grinder_id_<%= item.id %>" class="grid cursor-pointer grid-cols-[2.75rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
+          <%= render "shared/record_photo_thumb", record: item, testid: "brew-grinder-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
+          <span class="truncate text-sm font-extrabold text-rn-ink"><%= item.name %></span>
+          <%= form.radio_button :grinder_id, item.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
+
+  <div class="mt-4">
+    <%= form.label :grind_setting, t("brews.form.grind_setting"), class: "block text-sm font-bold text-rn-muted" %>
+    <%= form.text_field :grind_setting, class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+  </div>
+
+  <fieldset class="mt-4">
+    <legend class="text-sm font-bold text-rn-muted"><%= t("brews.form.preparation_tools") %></legend>
+    <% if @preparation_tools.any? %>
+      <div class="mt-2 grid gap-2 sm:grid-cols-2">
+        <% @preparation_tools.each do |tool| %>
+          <label for="<%= dom_id(tool, :brew) %>" class="grid cursor-pointer grid-cols-[2.5rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
+            <%= render "shared/record_photo_thumb", record: tool, testid: "brew-tool-option-photo", class_name: "h-10 w-10 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
+            <span class="truncate"><%= tool.name %></span>
+            <%= check_box_tag "brew[preparation_tool_ids][]", tool.id, Array(@selected_preparation_tools).include?(tool), id: dom_id(tool, :brew), class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
+          </label>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="mt-2 text-sm text-rn-muted"><%= t("brews.form.no_preparation_tools") %></p>
+    <% end %>
+  </fieldset>
+</section>
+
+<section data-testid="brew-form-section" data-section="taste" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.taste") %></h2>
+  <div class="mt-3 grid gap-3 sm:grid-cols-2">
+    <div class="sm:col-span-2">
+      <%= form.label :taste_balance, t("brews.form.taste"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= render "brews/taste_balance_choices", form: form %>
+    </div>
+
+    <div>
+      <%= form.label :rating, t("brews.form.rating"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= render "brews/rating_choices", form: form %>
+    </div>
+  </div>
+</section>
+
+<section data-testid="brew-form-section" data-section="notes" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.notes") %></h2>
+  <div class="mt-3 grid gap-4">
+    <div>
+      <%= form.label :notes, t("brews.form.notes"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_area :notes, rows: 4, class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    </div>
+
+    <div>
+      <%= form.label :photos, t("brews.form.photos"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm font-semibold text-rn-muted file:mr-4 file:rounded-full file:border-0 file:bg-[var(--rn-coffee)] file:px-4 file:py-2 file:text-sm file:font-extrabold file:text-[#fff8e8] hover:file:opacity-90" %>
+    </div>
+  </div>
+</section>
+
+<section data-testid="brew-form-section" data-section="public-note" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.public_sharing") %></h2>
+  <div class="mt-3">
+    <%= form.label :public_note, t("brews.form.public_note"), class: "block text-sm font-bold text-rn-muted" %>
+    <%= form.text_area :public_note, rows: 4, class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+  </div>
+</section>
+
+<%= render "shared/record_links_fields",
+  form:,
+  record: brew,
+  section_class: "grid gap-4 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5",
+  section_title_class: "text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted",
+  label_class: "block text-sm font-bold text-rn-muted",
+  input_class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
