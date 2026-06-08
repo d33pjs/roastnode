@@ -1,10 +1,10 @@
 # Public Brew Sharing
 
-Public Brew Sharing lets a workspace writer publish one curated brew page without opening the private workspace.
+Public Brew Sharing lets a workspace writer publish one curated espresso brew page without opening the private workspace. Quick Drip public sharing is deferred.
 
 ## Included Now
 
-- One public share per brew.
+- One public share per espresso brew.
 - Unlisted public URL at `/s/:token` for enabled shares.
 - Optional per-share password gate.
 - Private share editor from the brew detail page.
@@ -14,7 +14,7 @@ Public Brew Sharing lets a workspace writer publish one curated brew page withou
 - Link kinds: `info`, `buy`, and `affiliate`.
 - Link visibility: `private` or `public`.
 - Selected brew/bean/equipment/tool photos on the public page, with contained thumbnails and a next/previous/swipe fullscreen viewer.
-- Snapshot-driven public Hero Brew Card plus bean, grinder, machine, and preparation-tool sections.
+- Snapshot-driven public espresso Hero Brew Card plus bean, grinder, machine, and preparation-tool sections.
 - Public media route with opaque handles for selected share media and public identity images.
 - Automatic snapshot refresh for public-safe brew, bean, gear, tool, public-link, workspace-logo, and user-avatar changes.
 - Public page view counts plus a capped recent list of full viewer IP addresses and viewed-at timestamps.
@@ -58,7 +58,7 @@ The public Hero Brew Card mirrors the private card's brew curve, timing guides, 
 
 ## Share Management
 
-Workspace writers can create and manage public shares for brews they logged. Owners and admins can manage any public brew share in the workspace. Viewers cannot create or manage shares.
+Workspace writers can create and manage public shares for espresso brews they logged. Owners and admins can manage any public espresso brew share in the workspace. Viewers cannot create or manage shares.
 
 The private share editor controls:
 

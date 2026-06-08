@@ -10,7 +10,7 @@ Beanconqueror Import brings the first practical subset of a Beanconqueror JSON e
 - Idempotent repeat imports by Beanconqueror `config.uuid`.
 - Beans from `BEANS`.
 - Grinders from `MILL`.
-- Preparation methods from `PREPARATION` as machine/brewer equipment.
+- Espresso-compatible preparation methods from `PREPARATION` as machine equipment.
 - Nested preparation `tools` as Roastnode preparation tools.
 - Espresso-compatible brews from `BREWS`. Quick Drip brew import is deferred.
 - Brew inventory adjustments through the normal brew creation path.

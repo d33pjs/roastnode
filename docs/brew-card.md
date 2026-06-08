@@ -22,11 +22,11 @@ The brew detail page and dashboard use compact Hero Brew Cards for screenshot-wo
 - Target temperature lines render above the current temperature line when the target is hotter, and below it when the target is cooler or the current temperature is unknown.
 - Recipe snapshot targets for dose, yield/time, and grind appear as smaller target sub-values inside the matching metric rectangles.
 - The beverage y-axis label rounds above the actual beverage yield, for example `45.2g` displays against a `50g` axis marker.
-- Grinder, machine, and brew preparation tool snapshots in one compact row, with tiny primary equipment photos when available.
+- Grinder, machine, brewer, and brew preparation tool snapshots in one compact row, with tiny primary equipment photos when available.
 - Hero card internals are intentionally not links. On the dashboard the whole card is wrapped in a single brew-detail link, and nested anchors break browser rendering.
 - Edit/delete actions remain available to workspace writers.
 - Brew detail pages show the full log below the hero card, including channeling, notes, inventory weights, and timing fields that do not belong in the hero.
-- Existing private brew photos remain below the full log, followed by read-only related photos from the bean, grinder, machine, and selected preparation tools when those records have photos.
+- Existing private brew photos remain below the full log, followed by read-only related photos from the bean, grinder, machine, brewer, and selected preparation tools when those records have photos.
 - The card does not expose the user's email address.
 - The dashboard renders the latest brew and the latest highest-rated brew as hero cards after login.
 - Public brew share pages render a snapshot-driven public Hero Brew Card adapted from the private card's visual language. Its bottom gear/tool pills anchor to public product sections instead of private record routes.
@@ -51,7 +51,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - Public share pages use `public_brew_pages/_hero_card` because they render snapshot data and public media routes without `current_workspace`. Public Quick Drip sharing is deferred, so public shares only resolve espresso brews.
 - Keep cross-links in the full brew details below the hero card, not inside the hero card partial.
 - Use `brew_card_photo_attachment`, which prefers the bean's primary package photo and falls back through the normal primary-photo helper.
-- Keep grinder and machine primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.
+- Keep grinder, machine, and brewer primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.
 - Keep user avatars and household logos small; they should act like identity marks, not extra content blocks.
 - Keep the card dense; avoid adding explanatory headings inside the chart.
 - Keep recipe target ghosts subtle; the live brew remains the primary chart.

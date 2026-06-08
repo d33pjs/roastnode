@@ -17,7 +17,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Inventory adjustment history for brew consumption.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
-- Curated public brew sharing with optional passwords, selected photos, and public buy/affiliate links.
+- Curated public espresso brew sharing with optional passwords, selected photos, and public buy/affiliate links.
 - Private recipe profiles created from workspace brews, with editable exact espresso targets and prominent target markers.
 - Recipe-guided espresso logging that shows recipe targets without overwriting normal last-brew defaults.
 - Recipe JSON import/export for portable unlinked recipe snapshots, including finish ingredients and finish notes while excluding media internals.
@@ -113,7 +113,8 @@ Quick Drip copied fields:
 - active Quick Drip preparation tools from the previous Quick Drip brew
 - machine cups
 - coffee spoons
-- grams per coffee spoon
+
+Quick Drip spoon grams are not copied from the last brew during normal logging. The form uses the user's Profile preference, and the model falls back to 5g per spoon when that preference is blank. Repeat Good Brew snapshots the source brew's spoon grams instead.
 
 Quick Drip fresh fields:
 
@@ -152,15 +153,28 @@ Quick Drip copied fields:
 - brewer, if still active
 - grinder, if still active and relevant
 - active Quick Drip preparation tools
+- grind setting
 - machine cups
 - coffee spoons
 - grams per coffee spoon
+- measured ground coffee, when the source used measured coffee
+- beverage yield
+- total time seconds
 
-Fresh fields:
+Espresso fresh fields:
 
 - rating
 - taste balance
 - channeling
+- private notes
+- public note
+- photos
+- record links
+
+Quick Drip fresh fields:
+
+- rating
+- taste balance
 - private notes
 - public note
 - photos
