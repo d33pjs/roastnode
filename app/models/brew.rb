@@ -51,6 +51,7 @@ class Brew < ApplicationRecord
   before_validation :set_defaults
   before_validation :set_quick_drip_consumed_grams
   before_validation :set_retention_marker
+  after_save :clear_quick_drip_amount_assignment_flags
   after_create :record_inventory_consumption
 
   validates :bean_weight_grams, numericality: { greater_than: 0 }
@@ -103,6 +104,11 @@ class Brew < ApplicationRecord
     end
   end
 
+  def bean_weight_grams=(value)
+    @quick_drip_explicit_bean_weight_grams_assignment = true unless @assigning_quick_drip_spoon_estimate
+    super
+  end
+
   private
     def set_defaults
       self.method ||= "espresso"
@@ -116,18 +122,40 @@ class Brew < ApplicationRecord
     def set_quick_drip_consumed_grams
       return unless quick_drip?
 
-      if bean_weight_grams.present?
+      if quick_drip_measured_amount?
         self.coffee_amount_source = "measured"
         self.grams_per_coffee_spoon = spoon_grams_for_snapshot if coffee_spoons.present? && grams_per_coffee_spoon.blank?
         return
       end
 
+      return if preserve_quick_drip_spoon_estimate?
       return if coffee_spoons.blank?
 
       spoon_grams = spoon_grams_for_snapshot
       self.grams_per_coffee_spoon = spoon_grams
-      self.bean_weight_grams = (coffee_spoons.to_d * spoon_grams).round(2)
+      assign_quick_drip_spoon_estimate!(coffee_spoons.to_d * spoon_grams)
       self.coffee_amount_source = "estimated_spoons"
+    end
+
+    def quick_drip_measured_amount?
+      return false if bean_weight_grams.blank?
+
+      @quick_drip_explicit_bean_weight_grams_assignment || coffee_amount_measured?
+    end
+
+    def preserve_quick_drip_spoon_estimate?
+      persisted? && coffee_amount_estimated_spoons? && !quick_drip_spoon_fields_changed?
+    end
+
+    def quick_drip_spoon_fields_changed?
+      will_save_change_to_coffee_spoons? || will_save_change_to_grams_per_coffee_spoon?
+    end
+
+    def assign_quick_drip_spoon_estimate!(amount)
+      @assigning_quick_drip_spoon_estimate = true
+      self.bean_weight_grams = amount.round(2)
+    ensure
+      @assigning_quick_drip_spoon_estimate = false
     end
 
     def spoon_grams_for_snapshot
@@ -194,14 +222,14 @@ class Brew < ApplicationRecord
 
     def equipment_matches_expected_kind
       errors.add(:grinder, "must be a grinder") if grinder.present? && !grinder.grinder?
-      errors.add(:machine, "must be a machine") if machine.present? && !machine.machine?
+      errors.add(:machine, "must be a machine") if machine.present? && !quick_drip? && !machine.machine?
     end
 
     def quick_drip_required_fields
       return unless quick_drip?
 
       errors.add(:brewer, "must be selected") if brewer.blank?
-      errors.add(:machine_cups, "must be greater than 0") if machine_cups.blank? || machine_cups.to_d <= 0
+      errors.add(:machine_cups, "must be greater than 0") if machine_cups.blank?
       if bean_weight_grams.blank? && coffee_spoons.blank?
         errors.add(:base, "Quick Drip requires coffee spoons or measured ground coffee")
       end
@@ -221,5 +249,10 @@ class Brew < ApplicationRecord
       return if recipe.blank? || workspace.blank? || recipe.workspace_id == workspace_id
 
       errors.add(:recipe, "must belong to the workspace")
+    end
+
+    def clear_quick_drip_amount_assignment_flags
+      @quick_drip_explicit_bean_weight_grams_assignment = false
+      @assigning_quick_drip_spoon_estimate = false
     end
 end
