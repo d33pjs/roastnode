@@ -219,6 +219,7 @@ class BeanTest < ActiveSupport::TestCase
 
   test "duplicates a bean as a new open bag with copied photos" do
     bean = beans(:open_household)
+    bean.update!(grind_state: "pre_ground")
     File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
       bean.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
     end
@@ -235,6 +236,7 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal duplicate.bag_size_grams, duplicate.remaining_grams
     assert_nil duplicate.archived_at
     assert_equal bean.roaster_name, duplicate.roaster_name
+    assert_equal "pre_ground", duplicate.grind_state
     assert_equal bean, duplicate.duplicated_from_bean
     assert_equal bean.photos.first.blob, duplicate.photos.first.blob
     assert_equal bean.primary_photo_attachment.blob, duplicate.primary_photo_attachment.blob

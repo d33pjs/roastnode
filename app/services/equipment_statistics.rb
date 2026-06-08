@@ -92,7 +92,16 @@ class EquipmentStatistics
     end
 
     def brews_scope
-      equipment.grinder? ? equipment.grinder_brews : equipment.machine_brews
+      case equipment.kind
+      when "grinder"
+        equipment.grinder_brews
+      when "machine"
+        equipment.machine_brews
+      when "brewer"
+        equipment.brewer_brews
+      else
+        Brew.none
+      end
     end
 
     def last_service_event
@@ -100,10 +109,13 @@ class EquipmentStatistics
     end
 
     def service_event_types
-      if equipment.grinder?
+      case equipment.kind
+      when "grinder"
         %w[grinder_cleaning grinder_deep_cleaning burr_change]
-      else
+      when "machine"
         %w[machine_descaling machine_backflush]
+      else
+        []
       end
     end
 

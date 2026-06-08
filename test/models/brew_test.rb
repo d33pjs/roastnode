@@ -74,6 +74,31 @@ class BrewTest < ActiveSupport::TestCase
     assert_includes brew.errors[:recipe], "must belong to the workspace"
   end
 
+  test "rejects brewer from another workspace" do
+    other_brewer = workspaces(:other_household).equipment.create!(name: "Other Brewer", kind: "brewer")
+    brew = workspaces(:household).brews.new(
+      user: users(:one),
+      bean: beans(:open_household),
+      brewer: other_brewer,
+      bean_weight_grams: 18
+    )
+
+    assert_not brew.valid?
+    assert_includes brew.errors[:base], "Other Brewer must belong to the workspace"
+  end
+
+  test "rejects non brewer equipment assigned as brewer" do
+    brew = workspaces(:household).brews.new(
+      user: users(:one),
+      bean: beans(:open_household),
+      brewer: equipment(:household_machine),
+      bean_weight_grams: 18
+    )
+
+    assert_not brew.valid?
+    assert_includes brew.errors[:brewer], "must be a brewer"
+  end
+
   test "rating accepts blank and one through five only" do
     brew = brews(:morning_espresso)
 

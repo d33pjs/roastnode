@@ -110,4 +110,37 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
     assert_equal [ 18.to_d ], statistics[:recent_brews].map(&:bean_weight_grams)
     assert_equal({ "grinder_cleaning" => 1 }, statistics[:distributions][:event_types])
   end
+
+  test "builds brewer analytics from brewer brews" do
+    brewer = equipment(:household_brewer)
+    bean = beans(:open_household)
+    machine_brew = bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 24, 8, 0, 0),
+      bean_weight_grams: 18,
+      ground_weight_grams: 18,
+      dose_grams: 18,
+      beverage_grams: 40
+    )
+    brewer_brew = bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      brewer:,
+      method: "quick_drip",
+      occurred_at: Time.zone.local(2026, 5, 25, 8, 0, 0),
+      bean_weight_grams: 32,
+      ground_weight_grams: 32,
+      rating: 5
+    )
+
+    statistics = EquipmentStatistics.new(equipment: brewer).call
+
+    assert_equal 1, statistics[:totals][:brew_count]
+    assert_equal 32.to_d, statistics[:totals][:total_bean_weight_grams]
+    assert_equal 5, statistics[:averages][:rating]
+    assert_equal [ brewer_brew ], statistics[:recent_brews]
+    assert_not_includes statistics[:recent_brews], machine_brew
+  end
 end
