@@ -58,6 +58,7 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
     assert_equal 3, statistics[:totals][:brew_count]
     assert_equal 57.to_d, statistics[:totals][:total_bean_weight_grams]
     assert_equal 3.7.to_d, statistics[:averages][:rating]
+    assert_equal 3, statistics[:rates][:channeling_brew_count]
     assert_equal 33, statistics[:rates][:channeling_percent]
     assert_equal service_event, statistics[:service][:last_event]
     assert_equal 1, statistics[:service][:brews_since_service]
@@ -103,6 +104,7 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
     assert_equal 1, statistics[:totals][:brew_count]
     assert_equal 18.to_d, statistics[:totals][:total_bean_weight_grams]
     assert_equal 4, statistics[:averages][:rating]
+    assert_equal 1, statistics[:rates][:channeling_brew_count]
     assert_equal 0, statistics[:rates][:channeling_percent]
     assert_equal 2, statistics[:service][:brews_since_service]
     assert_equal 38.to_d, statistics[:service][:grams_since_service]
@@ -141,6 +143,7 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
     assert_equal 1, statistics[:totals][:brew_count]
     assert_equal 32.to_d, statistics[:totals][:total_bean_weight_grams]
     assert_equal 5, statistics[:averages][:rating]
+    assert_equal 0, statistics[:rates][:channeling_brew_count]
     assert_equal 0, statistics[:rates][:channeling_percent]
     assert_equal [ brewer_brew ], statistics[:recent_brews]
     assert_not_includes statistics[:recent_brews], machine_brew
@@ -185,6 +188,7 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
 
     assert_equal 2, statistics[:totals][:brew_count]
     assert_equal 50.to_d, statistics[:totals][:total_bean_weight_grams]
+    assert_equal 0, statistics[:rates][:channeling_brew_count]
     assert_equal 0, statistics[:rates][:channeling_percent]
     assert_equal service_event, statistics[:service][:last_event]
     assert_equal 1, statistics[:service][:brews_since_service]

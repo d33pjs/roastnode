@@ -569,7 +569,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-brew-count]", count: 0
     assert_select "[data-testid=bean-consumed]", "37g"
     assert_select "[data-testid=bean-channeling-rate]", "50%"
-    assert_select "[data-testid=bean-channeling-count]", text: /1 of 2/
+    assert_select "[data-testid=bean-channeling-count]", text: /1 of 2 espresso brews/
     assert_select "[data-testid=bean-best-brews] a[href=?]", brew_path(brew), text: /45g/
     assert_select "[data-testid=bean-recent-brews] a[href=?]", brew_path(brew), text: /10/
     assert_select "h3", I18n.t("beans.show.taste_balance")
@@ -607,7 +607,29 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-detail-brew-count]", "2"
     assert_select "[data-testid=bean-consumed]", "38g"
     assert_select "[data-testid=bean-channeling-rate]", "50%"
-    assert_select "[data-testid=bean-channeling-count]", text: /1 of 2/
+    assert_select "[data-testid=bean-channeling-count]", text: /1 of 2 espresso brews/
+  end
+
+  test "show uses espresso brew count for bean channeling caption" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.workspace.brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      channeling: true,
+      taste_balance: "bitter"
+    )
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-detail-brew-count]", "2"
+    assert_select "[data-testid=bean-channeling-rate]", "0%"
+    assert_select "[data-testid=bean-channeling-count]", text: /0 of 1 espresso brew/
   end
 
   test "show always renders grinder tendency with no-first-brew empty state" do

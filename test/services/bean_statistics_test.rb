@@ -51,6 +51,7 @@ class BeanStatisticsTest < ActiveSupport::TestCase
       assert_equal 42.7.to_d, statistics[:averages][:beverage_grams]
       assert_equal 31, statistics[:averages][:total_time_seconds]
       assert_equal 1, statistics[:rates][:channeling_count]
+      assert_equal 3, statistics[:rates][:channeling_brew_count]
       assert_equal 33, statistics[:rates][:channeling_percent]
       assert_equal({ "neutral" => 1, "sour" => 1, "bitter" => 1 }, statistics[:distributions][:taste_balance])
       assert_equal({ "normal" => 1, "retention" => 1, "exchange" => 1 }, statistics[:distributions][:retention_marker])
@@ -91,6 +92,7 @@ class BeanStatisticsTest < ActiveSupport::TestCase
       assert_equal 18.to_d, statistics[:totals][:total_bean_weight_grams]
       assert_equal 52, statistics[:totals][:remaining_percent]
       assert_equal 0, statistics[:rates][:channeling_count]
+      assert_equal 1, statistics[:rates][:channeling_brew_count]
       assert_equal 0, statistics[:rates][:channeling_percent]
       assert_equal({ "neutral" => 1 }, statistics[:distributions][:taste_balance])
       assert_equal [ 4 ], statistics[:best_brews].map(&:rating)
@@ -127,6 +129,7 @@ class BeanStatisticsTest < ActiveSupport::TestCase
     assert_equal 2, statistics[:totals][:brew_count]
     assert_equal 48.to_d, statistics[:totals][:total_bean_weight_grams]
     assert_equal 0, statistics[:rates][:channeling_count]
+    assert_equal 1, statistics[:rates][:channeling_brew_count]
     assert_equal 0, statistics[:rates][:channeling_percent]
     assert_equal({ "normal" => 1 }, statistics[:distributions][:retention_marker])
     assert_equal({ "espresso" => 1, "quick_drip" => 1 }, statistics[:distributions][:method])

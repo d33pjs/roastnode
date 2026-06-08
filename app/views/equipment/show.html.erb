@@ -69,10 +69,12 @@
             <% end %>
           </p>
         </div>
-        <div class="rounded-md bg-stone-50 p-4">
-          <p class="text-xs font-bold uppercase text-stone-500"><%= t(".channeling_rate") %></p>
-          <p class="mt-1 text-2xl font-bold text-stone-950"><%= statistics_percent(@equipment_statistics[:rates][:channeling_percent]) %></p>
-        </div>
+        <% if @equipment_statistics[:rates][:channeling_brew_count].positive? %>
+          <div class="rounded-md bg-stone-50 p-4">
+            <p class="text-xs font-bold uppercase text-stone-500"><%= t(".channeling_rate") %></p>
+            <p data-testid="equipment-channeling-rate" class="mt-1 text-2xl font-bold text-stone-950"><%= statistics_percent(@equipment_statistics[:rates][:channeling_percent]) %></p>
+          </div>
+        <% end %>
       </div>
 
       <div class="mt-5 grid gap-5 lg:grid-cols-2">

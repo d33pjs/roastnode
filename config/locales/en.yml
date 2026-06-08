@@ -290,8 +290,8 @@ en:
       closed: "Closed"
       brew_count: "Brews"
       channeling_count:
-        one: "1 of %{total} channeled"
-        other: "%{count} of %{total} channeled"
+        one: "1 of %{total} %{brews} channeled"
+        other: "%{count} of %{total} %{brews} channeled"
       channeling_rate: "Channeling"
       country: "Country"
       consumed: "Consumed"
@@ -309,6 +309,9 @@ en:
       edit: "Edit"
       elevation: "Elevation"
       end_date: "End date"
+      espresso_brews:
+        one: "espresso brew"
+        other: "espresso brews"
       farm: "Farm"
       farmer: "Farmer"
       finish: "Mark as finished"

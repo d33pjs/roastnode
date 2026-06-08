@@ -116,6 +116,39 @@ class PreparationToolStatisticsTest < ActiveSupport::TestCase
     assert_equal [ "12" ], statistics[:recent_brews].map(&:grind_setting)
   end
 
+  test "includes quick drip in totals but excludes from espresso specific channeling and retention" do
+    tool = preparation_tools(:paper_filter)
+    bean = beans(:open_household)
+    user = users(:one)
+    quick_drip = bean.brews.create!(
+      workspace: bean.workspace,
+      user:,
+      method: "quick_drip",
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      channeling: true,
+      taste_balance: "bitter"
+    )
+    quick_drip.update_columns(retention_marker: "retention")
+    quick_drip.brew_preparation_tools.create!(
+      preparation_tool: tool,
+      tool_name: tool.name,
+      brew_method: tool.brew_method,
+      position: 0
+    )
+
+    statistics = PreparationToolStatistics.new(preparation_tool: tool).call
+
+    assert_equal 1, statistics[:totals][:brew_count]
+    assert_equal 30.to_d, statistics[:totals][:total_bean_weight_grams]
+    assert_equal 0, statistics[:rates][:channeling_count]
+    assert_equal 0, statistics[:rates][:channeling_brew_count]
+    assert_equal 0, statistics[:rates][:channeling_percent]
+    assert_equal({}, statistics[:distributions][:retention_marker])
+    assert_equal({ "bitter" => 1 }, statistics[:distributions][:taste_balance])
+  end
+
   private
     def create_brew_with_tool!(tool:, bean:, user:, **attributes)
       brew = bean.brews.create!(

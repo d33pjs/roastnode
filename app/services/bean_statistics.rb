@@ -63,6 +63,7 @@ class BeanStatistics
 
       {
         channeling_count:,
+        channeling_brew_count: espresso_brews.size,
         channeling_percent: percentage(channeling_count, espresso_brews.size)
       }
     end

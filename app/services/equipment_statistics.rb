@@ -56,6 +56,7 @@ class EquipmentStatistics
       channeling_brews = brews.select(&:espresso?)
 
       {
+        channeling_brew_count: channeling_brews.size,
         channeling_percent: percentage(channeling_brews.count(&:channeling?), channeling_brews.size)
       }
     end
