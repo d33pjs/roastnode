@@ -22,6 +22,14 @@ archived_tool:
   position: 30
   notes:
 
+paper_filter:
+  workspace: household
+  name: Paper filter
+  brew_method: quick_drip
+  active: true
+  position: 40
+  notes: Size 4 paper filter.
+
 other_workspace_tool:
   workspace: other_household
   name: Other WDT

@@ -2,6 +2,8 @@ class PreparationTool < ApplicationRecord
   include HasPrimaryPhoto
   include HasRecordLinks
 
+  BREW_METHODS = %w[espresso quick_drip].freeze
+
   belongs_to :workspace
   belongs_to :data_import, optional: true
 
@@ -14,10 +16,12 @@ class PreparationTool < ApplicationRecord
 
   scope :active, -> { where(active: true) }
   scope :espresso, -> { where(brew_method: "espresso") }
+  scope :quick_drip, -> { where(brew_method: "quick_drip") }
   scope :ordered, -> { order(active: :desc, position: :asc, name: :asc) }
 
   validates :name, presence: true
   validates :brew_method, presence: true
+  validates :brew_method, inclusion: { in: BREW_METHODS }
   validates :position, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_04_165000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,6 +56,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_165000) do
     t.string "farm"
     t.string "farmer"
     t.datetime "finished_at"
+    t.string "grind_state", default: "whole_bean", null: false
     t.string "harvested"
     t.string "import_source"
     t.string "import_source_id"
@@ -110,16 +111,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_165000) do
     t.decimal "bean_weight_grams", precision: 8, scale: 2, null: false
     t.decimal "beverage_grams", precision: 8, scale: 2
     t.decimal "brew_temperature_celsius", precision: 5, scale: 2
+    t.bigint "brewer_id"
     t.boolean "channeling"
+    t.string "coffee_amount_source", default: "measured", null: false
+    t.decimal "coffee_spoons", precision: 8, scale: 2
     t.datetime "created_at", null: false
     t.bigint "data_import_id"
     t.decimal "dose_grams", precision: 8, scale: 2
     t.integer "first_drip_seconds"
+    t.decimal "grams_per_coffee_spoon", precision: 8, scale: 2
     t.string "grind_setting"
     t.bigint "grinder_id"
     t.decimal "ground_weight_grams", precision: 8, scale: 2
     t.string "import_source"
     t.string "import_source_id"
+    t.decimal "machine_cups", precision: 8, scale: 2
     t.bigint "machine_id"
     t.string "method", default: "espresso", null: false
     t.text "notes"
@@ -138,6 +144,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_165000) do
     t.bigint "user_id", null: false
     t.bigint "workspace_id", null: false
     t.index ["bean_id"], name: "index_brews_on_bean_id"
+    t.index ["brewer_id"], name: "index_brews_on_brewer_id"
     t.index ["data_import_id"], name: "index_brews_on_data_import_id"
     t.index ["grinder_id"], name: "index_brews_on_grinder_id"
     t.index ["machine_id"], name: "index_brews_on_machine_id"
@@ -438,6 +445,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_165000) do
     t.string "default_landing_screen", default: "dashboard", null: false
     t.string "display_name"
     t.string "email_address", null: false
+    t.jsonb "enabled_brew_methods", default: ["espresso", "quick_drip"], null: false
+    t.decimal "grams_per_coffee_spoon", precision: 6, scale: 2
     t.jsonb "hidden_brew_field_names", default: [], null: false
     t.boolean "instance_admin", default: false, null: false
     t.string "number_format", default: "comma_decimal", null: false
@@ -491,6 +500,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_165000) do
   add_foreign_key "brew_preparation_tools", "preparation_tools"
   add_foreign_key "brews", "beans"
   add_foreign_key "brews", "data_imports"
+  add_foreign_key "brews", "equipment", column: "brewer_id"
   add_foreign_key "brews", "equipment", column: "grinder_id"
   add_foreign_key "brews", "equipment", column: "machine_id"
   add_foreign_key "brews", "recipes"

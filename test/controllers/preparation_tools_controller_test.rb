@@ -129,6 +129,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     Membership.create!(workspace: workspaces(:household), user: admin, role: :admin)
     admin.update!(active_workspace: workspaces(:household))
     sign_in_as(admin)
+    expected_position = workspaces(:household).preparation_tools.maximum(:position).to_i + 10
 
     assert_difference -> { workspaces(:household).preparation_tools.count }, 1 do
       post preparation_tools_path, params: {
@@ -145,7 +146,7 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     tool = workspaces(:household).preparation_tools.order(:created_at).last
     assert_equal "Paper filter", tool.name
     assert_equal 1, tool.photos.count
-    assert_equal 30, tool.position
+    assert_equal expected_position, tool.position
   end
 
   test "member can view preparation tools but cannot manage them" do

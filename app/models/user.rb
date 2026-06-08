@@ -4,6 +4,7 @@ class User < ApplicationRecord
   THEMES = %w[light dark].freeze
   NUMBER_FORMATS = %w[comma_decimal dot_decimal].freeze
   TIME_FORMATS = %w[european_24h_seconds us_12h_seconds].freeze
+  ENABLED_BREW_METHODS = Brew::BREW_METHODS.freeze
   DEFAULT_BREW_FOCUS_FIELDS = %w[
     bean_weight_grams
     ground_weight_grams
@@ -65,7 +66,9 @@ class User < ApplicationRecord
   validates :number_format, inclusion: { in: NUMBER_FORMATS }
   validates :time_format, inclusion: { in: TIME_FORMATS }
   validates :default_brew_focus_field, inclusion: { in: DEFAULT_BREW_FOCUS_FIELDS }
+  validates :grams_per_coffee_spoon, numericality: { greater_than: 0 }, allow_nil: true
   validate :hidden_brew_field_names_supported
+  validate :enabled_brew_methods_supported
   validate :passkey_second_factor_requires_passkey
 
   def default_landing_log_espresso?
@@ -92,6 +95,16 @@ class User < ApplicationRecord
     self[:hidden_brew_field_names] = Array(values).compact_blank.uniq & HIDEABLE_BREW_FIELDS
   end
 
+  def enabled_brew_methods
+    values = self[:enabled_brew_methods]
+    values = %w[espresso quick_drip] if values.nil?
+    Array(values) & ENABLED_BREW_METHODS
+  end
+
+  def enabled_brew_methods=(values)
+    self[:enabled_brew_methods] = Array(values).compact_blank.uniq & ENABLED_BREW_METHODS
+  end
+
   def ensure_active_workspace!
     return active_workspace if active_workspace.present? && memberships.exists?(workspace: active_workspace)
 
@@ -115,6 +128,10 @@ class User < ApplicationRecord
       return if unsupported_fields.empty?
 
       errors.add(:hidden_brew_field_names, "contains unsupported fields")
+    end
+
+    def enabled_brew_methods_supported
+      errors.add(:enabled_brew_methods, "must include at least one method") if enabled_brew_methods.empty?
     end
 
     def passkey_second_factor_requires_passkey

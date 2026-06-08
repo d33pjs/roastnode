@@ -8,6 +8,14 @@ class PreparationToolTest < ActiveSupport::TestCase
     assert tool.active?
   end
 
+  test "preparation tools support quick drip method" do
+    tool = workspaces(:household).preparation_tools.new(name: "Paper filter", brew_method: "quick_drip")
+
+    assert_predicate tool, :valid?
+    tool.save!
+    assert_includes workspaces(:household).preparation_tools.quick_drip, tool
+  end
+
   test "requires a name" do
     tool = PreparationTool.new(workspace: workspaces(:household), brew_method: "espresso")
 
@@ -19,7 +27,7 @@ class PreparationToolTest < ActiveSupport::TestCase
     preparation_tools(:wdt).update!(position: 20)
     preparation_tools(:puck_screen).update!(position: 10)
 
-    assert_equal [ preparation_tools(:puck_screen), preparation_tools(:wdt), preparation_tools(:archived_tool) ],
+    assert_equal [ preparation_tools(:puck_screen), preparation_tools(:wdt), preparation_tools(:paper_filter), preparation_tools(:archived_tool) ],
       workspaces(:household).preparation_tools.ordered.to_a
   end
 

@@ -3,10 +3,19 @@ class Brew < ApplicationRecord
   include HasRecordLinks
 
   RETENTION_TOLERANCE_GRAMS = BigDecimal("0.2")
+  TYPICAL_GRAMS_PER_COFFEE_SPOON = BigDecimal("5")
 
   enum :method, {
-    espresso: "espresso"
+    espresso: "espresso",
+    quick_drip: "quick_drip"
   }
+
+  BREW_METHODS = %w[espresso quick_drip].freeze
+
+  enum :coffee_amount_source, {
+    measured: "measured",
+    estimated_spoons: "estimated_spoons"
+  }, prefix: :coffee_amount
 
   enum :taste_balance, {
     unknown: "unknown",
@@ -30,6 +39,7 @@ class Brew < ApplicationRecord
   belongs_to :bean
   belongs_to :grinder, class_name: "Equipment", optional: true
   belongs_to :machine, class_name: "Equipment", optional: true
+  belongs_to :brewer, class_name: "Equipment", optional: true
   belongs_to :recipe, optional: true
 
   has_one :inventory_adjustment, dependent: :restrict_with_exception
@@ -150,7 +160,7 @@ class Brew < ApplicationRecord
     end
 
     def equipment_belongs_to_workspace
-      [ grinder, machine ].compact.each do |item|
+      [ grinder, machine, brewer ].compact.each do |item|
         errors.add(:base, "#{item.name} must belong to the workspace") if item.workspace_id != workspace_id
       end
     end
@@ -158,6 +168,7 @@ class Brew < ApplicationRecord
     def equipment_matches_expected_kind
       errors.add(:grinder, "must be a grinder") if grinder.present? && !grinder.grinder?
       errors.add(:machine, "must be a machine") if machine.present? && !machine.machine?
+      errors.add(:brewer, "must be a brewer") if brewer.present? && !brewer.brewer?
     end
 
     def recipe_belongs_to_workspace

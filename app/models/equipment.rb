@@ -4,7 +4,8 @@ class Equipment < ApplicationRecord
 
   enum :kind, {
     grinder: "grinder",
-    machine: "machine"
+    machine: "machine",
+    brewer: "brewer"
   }
 
   belongs_to :workspace
@@ -12,6 +13,7 @@ class Equipment < ApplicationRecord
 
   has_many :grinder_brews, class_name: "Brew", foreign_key: :grinder_id, dependent: :nullify, inverse_of: :grinder
   has_many :machine_brews, class_name: "Brew", foreign_key: :machine_id, dependent: :nullify, inverse_of: :machine
+  has_many :brewer_brews, class_name: "Brew", foreign_key: :brewer_id, dependent: :nullify, inverse_of: :brewer
   has_many :equipment_event_items, dependent: :destroy
   has_many :equipment_events, through: :equipment_event_items
   has_many_attached :photos
@@ -38,6 +40,7 @@ class Equipment < ApplicationRecord
     transaction do
       grinder_brews.update_all(grinder_id: nil)
       machine_brews.update_all(machine_id: nil)
+      brewer_brews.update_all(brewer_id: nil)
       destroy!
     end
   end

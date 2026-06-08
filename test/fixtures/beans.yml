@@ -11,6 +11,7 @@ open_household:
   tasting_notes: Chocolate, cherry
   bag_size_grams: 250.0
   remaining_grams: 150.0
+  grind_state: whole_bean
   opened_on: 2026-05-10
   archived_at:
   blend_type: blend
@@ -41,6 +42,7 @@ second_open_household:
   tasting_notes: Berry, florals
   bag_size_grams: 250.0
   remaining_grams: 220.0
+  grind_state: pre_ground
   opened_on: 2026-05-12
   archived_at:
   purchase_source:
@@ -61,6 +63,7 @@ archived_household:
   tasting_notes:
   bag_size_grams: 250.0
   remaining_grams: 0.0
+  grind_state: whole_bean
   opened_on: 2026-04-08
   archived_at: <%= 1.day.ago %>
   purchase_source:
@@ -81,6 +84,7 @@ other_workspace_open:
   tasting_notes:
   bag_size_grams: 250.0
   remaining_grams: 200.0
+  grind_state: whole_bean
   opened_on: 2026-05-09
   archived_at:
   purchase_source:

@@ -12,6 +12,13 @@ household_machine:
   model: Lelit Bianca
   notes: Main espresso machine.
 
+household_brewer:
+  workspace: household
+  name: Moccamaster
+  kind: brewer
+  model: KBG Select
+  notes: Main Quick Drip brewer.
+
 other_workspace_grinder:
   workspace: other_household
   name: Other Grinder

@@ -84,6 +84,33 @@ class UserTest < ActiveSupport::TestCase
     assert_equal %w[notes rating], user.hidden_brew_field_names
   end
 
+  test "enabled brew methods default to espresso and quick drip and require one method" do
+    user = User.new(email_address: "methods@example.com", password: "secret123")
+
+    assert_equal %w[espresso quick_drip], user.enabled_brew_methods
+
+    user.enabled_brew_methods = [ "quick_drip", "unsupported", "", "quick_drip" ]
+    assert_equal %w[quick_drip], user.enabled_brew_methods
+    assert_predicate user, :valid?
+
+    user.enabled_brew_methods = []
+    assert_not_predicate user, :valid?
+    assert_includes user.errors[:enabled_brew_methods], "must include at least one method"
+  end
+
+  test "grams per coffee spoon accepts blank or positive decimal values" do
+    user = users(:one)
+
+    user.grams_per_coffee_spoon = nil
+    assert_predicate user, :valid?
+
+    user.grams_per_coffee_spoon = 4.5
+    assert_predicate user, :valid?
+
+    user.grams_per_coffee_spoon = 0
+    assert_not_predicate user, :valid?
+  end
+
   test "generates stable webauthn user id on demand" do
     user = users(:one)
     assert_nil user.webauthn_user_id

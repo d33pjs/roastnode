@@ -147,6 +147,23 @@ class BeanTest < ActiveSupport::TestCase
     assert_includes bean.errors[:rating], "must be less than or equal to 5"
   end
 
+  test "grind state defaults to whole bean and supports pre ground" do
+    bean = workspaces(:household).beans.new(
+      name: "Ground filter",
+      bag_size_grams: 250,
+      remaining_grams: 250
+    )
+
+    assert_equal "whole_bean", bean.grind_state
+    assert_predicate bean, :valid?
+
+    bean.grind_state = "pre_ground"
+    assert_predicate bean, :valid?
+
+    bean.grind_state = "powder_cloud"
+    assert_not_predicate bean, :valid?
+  end
+
   test "can close and reopen a bean bag" do
     bean = beans(:archived_household)
 

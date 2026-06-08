@@ -5,6 +5,7 @@ class Bean < ApplicationRecord
   ROAST_TYPES = %w[unknown espresso filter omni].freeze
   BLEND_TYPES = %w[unknown single_origin blend].freeze
   BAG_STATUSES = %w[stock open finished used_up archived].freeze
+  GRIND_STATES = %w[whole_bean pre_ground].freeze
   DUPLICATE_DISPLAY_DATE_FORMAT = "%d.%m.%Y"
   LOW_REMAINING_GRAMS = BigDecimal("18")
 
@@ -29,6 +30,7 @@ class Bean < ApplicationRecord
   validates :rating, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
   validates :roast_type, inclusion: { in: ROAST_TYPES }
   validates :blend_type, inclusion: { in: BLEND_TYPES }
+  validates :grind_state, inclusion: { in: GRIND_STATES }
   validates :roast_degree, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
   validate :roast_degree_half_step
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
@@ -51,6 +53,10 @@ class Bean < ApplicationRecord
 
   def archived?
     bag_status == "archived"
+  end
+
+  def pre_ground?
+    grind_state == "pre_ground"
   end
 
   def bag_status
@@ -238,6 +244,7 @@ class Bean < ApplicationRecord
         roast_degree:,
         blend_type:,
         decaffeinated:,
+        grind_state:,
         country:,
         region:,
         farm:,
