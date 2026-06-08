@@ -54,6 +54,26 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "rejects media for stale enabled quick drip share" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
+    quick_drip = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 30,
+      taste_balance: "neutral"
+    )
+    share.update_columns(brew_id: quick_drip.id)
+
+    get public_media_path_for(share, photo)
+
+    assert_response :not_found
+  end
+
   test "rejects unknown public media variant" do
     brew = brews(:morning_espresso)
     photo = attach_photo(brew)

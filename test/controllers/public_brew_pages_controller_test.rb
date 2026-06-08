@@ -34,6 +34,18 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "/media_attachments", response.body
   end
 
+  test "stale enabled quick drip share returns not found" do
+    share = create_share(enabled: true)
+    quick_drip = create_quick_drip_brew
+    share.update_columns(brew_id: quick_drip.id)
+
+    assert_no_difference -> { PublicBrewShareView.count } do
+      get public_brew_page_path(share.token)
+    end
+
+    assert_response :not_found
+  end
+
   test "enabled share renders official buy me a coffee badge script when configured" do
     share = create_share(enabled: true)
     share.workspace.update!(
@@ -401,6 +413,18 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
         password:,
         selected_photo_attachment_ids:,
         snapshot:
+      )
+    end
+
+    def create_quick_drip_brew
+      workspaces(:household).brews.create!(
+        user: users(:one),
+        method: "quick_drip",
+        bean: beans(:second_open_household),
+        brewer: equipment(:household_brewer),
+        machine_cups: 6,
+        bean_weight_grams: 30,
+        taste_balance: "neutral"
       )
     end
 

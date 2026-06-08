@@ -42,12 +42,13 @@ class PublicBrewShare < ApplicationRecord
   validates :token, presence: true, uniqueness: true
   validates :token_digest, presence: true, uniqueness: true
   validate :brew_belongs_to_workspace
+  validate :brew_must_be_espresso
 
   validates :brew_id, uniqueness: true
   validates :password, length: { maximum: ActiveModel::SecurePassword::MAX_PASSWORD_LENGTH_ALLOWED }, allow_blank: true
 
   def self.find_enabled_by_token!(token)
-    find_by!(token_digest: token_digest_for(token), enabled: true)
+    joins(:brew).find_by!(token_digest: token_digest_for(token), enabled: true, brews: { method: "espresso" })
   end
 
   def self.token_digest_for(token)
@@ -133,6 +134,12 @@ class PublicBrewShare < ApplicationRecord
       return if brew.blank? || workspace.blank? || brew.workspace_id == workspace_id
 
       errors.add(:brew, "must belong to the workspace")
+    end
+
+    def brew_must_be_espresso
+      return if brew.blank? || brew.espresso?
+
+      errors.add(:brew, "must be an espresso brew")
     end
 
     def allowed_public_attachment_ids

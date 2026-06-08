@@ -1211,6 +1211,27 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-retention-card]", count: 0
   end
 
+  test "measured quick drip hero card renders grams as coffee amount" do
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 32,
+      taste_balance: "neutral",
+      rating: 4
+    )
+    sign_in_as(users(:one))
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=quick-drip-coffee]", "32g"
+    assert_select "[data-testid=quick-drip-consumed]", "32g"
+    assert_select "[data-testid=quick-drip-coffee]", text: /Unknown/, count: 0
+  end
+
   test "show renders unknown username when display name is blank" do
     sign_in_as(users(:one))
 
@@ -1524,7 +1545,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("brews.index.title")
-    assert_select "[data-testid=brew-history-compact-card]", count: 2
+    assert_select "[data-testid=brew-history-compact-card].overflow-hidden", count: 2
+    assert_select "[data-testid=brew-compact-card][data-method=espresso].overflow-hidden", count: 2
     assert_select "[data-testid=brew-history-hero-card]", count: 0
     assert_select "a[href=?]", brew_path(newest), text: /#{newest.bean.name}/
     assert_select "a[href=?]", brew_path(older), text: /#{older.bean.name}/
@@ -1555,6 +1577,26 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /Quick Drip/
     assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /6 cups/
     assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /Moccamaster/
+  end
+
+  test "compact brew card shows measured quick drip grams" do
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 32,
+      taste_balance: "neutral",
+      rating: 4
+    )
+    sign_in_as(users(:one))
+
+    get brews_path
+
+    assert_response :success
+    assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /32g/
+    assert_select "[data-testid=brew-compact-card][data-method=quick_drip]", text: /Unknown/, count: 0
   end
 
   test "index can render hero cards" do

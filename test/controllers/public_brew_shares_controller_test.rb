@@ -348,8 +348,9 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     end
 
     def create_share_for(brew, user:, enabled: true, password: nil, title: "Shared shot")
-      brew.create_public_brew_share!(
-        workspace: brew.workspace,
+      share_brew = brew.espresso? ? brew : brews(:morning_espresso)
+      share = share_brew.create_public_brew_share!(
+        workspace: share_brew.workspace,
         created_by: user,
         updated_by: user,
         enabled:,
@@ -357,10 +358,12 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
         password:,
         selected_photo_attachment_ids: [],
         snapshot: PublicBrewShareSnapshotBuilder.new(
-          brew:,
+          brew: share_brew,
           title:,
           selected_photo_attachment_ids: []
         ).call
       )
+      share.update_columns(brew_id: brew.id) if brew.quick_drip?
+      share
     end
 end

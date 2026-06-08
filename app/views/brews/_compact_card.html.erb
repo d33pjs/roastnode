@@ -1,8 +1,8 @@
 <% public_share = brew.public_brew_share if brew.espresso? && brew.public_brew_share&.enabled? %>
 <% public_share_title = public_share.title.presence || PublicBrewShare.default_title_for(brew) if public_share %>
 
-<article data-testid="brew-compact-card" data-method="<%= brew.method %>" class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
-  <span data-testid="brew-history-compact-card" class="sr-only"></span>
+<article data-testid="brew-history-compact-card" class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+  <div data-testid="brew-compact-card" data-method="<%= brew.method %>" class="overflow-hidden">
   <%= link_to brew_path(brew),
     data: { testid: "brew-history-compact-card-link-#{brew.id}" },
     class: "block p-4 hover:bg-[var(--rn-surface-muted)]" do %>
@@ -60,7 +60,9 @@
     <div class="mt-3 flex flex-wrap gap-2 text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted">
       <% if brew.quick_drip? %>
         <span><%= brew.brewer&.name || t("brews.show.unknown") %></span>
-        <span><%= brew.grinder&.name || t("brews.show.unknown") %></span>
+        <% if brew.grinder.present? %>
+          <span><%= brew.grinder.name %></span>
+        <% end %>
         <span><%= brew_taste_label(brew.taste_balance, method: brew.method) %></span>
       <% else %>
         <span><%= brew.grinder&.name || t("brews.show.unknown") %></span>
@@ -80,4 +82,5 @@
         button_class: "inline-flex h-9 w-9 items-center justify-center rounded-full text-rn-muted hover:bg-[var(--rn-surface-muted)] hover:text-rn-ink focus:outline-none focus:ring-2 focus:ring-[var(--rn-accent-strong)]" %>
     </div>
   <% end %>
+  </div>
 </article>

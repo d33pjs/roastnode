@@ -62,6 +62,27 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?]", "workspace-public-share-#{other_share.id}", count: 0
   end
 
+  test "workspace public share management excludes stale quick drip shares" do
+    share = create_public_brew_share_for(brews(:morning_espresso), enabled: true)
+    quick_drip = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 30,
+      taste_balance: "neutral"
+    )
+    share.update_columns(brew_id: quick_drip.id)
+    sign_in_as(users(:one))
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "[data-testid=?]", "workspace-public-share-#{share.id}", count: 0
+    assert_select "a[href=?]", public_brew_page_path(share.token), count: 0
+  end
+
   test "member cannot see public share management full ip data" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

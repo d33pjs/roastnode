@@ -79,7 +79,9 @@ class WorkspacesController < ApplicationController
     def load_public_brew_shares
       @public_brew_shares = current_workspace
         .public_brew_shares
+        .joins(:brew)
         .includes(:public_brew_share_views, brew: [ :bean, :user ])
+        .where(brews: { method: "espresso" })
         .order(updated_at: :desc, created_at: :desc)
     end
 end

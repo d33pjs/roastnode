@@ -31,6 +31,50 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     assert_raises(ActiveRecord::RecordNotFound) { PublicBrewShare.find_enabled_by_token!("wrong") }
   end
 
+  test "requires espresso brew" do
+    quick_drip = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 30,
+      taste_balance: "neutral"
+    )
+    share = PublicBrewShare.new(
+      workspace: quick_drip.workspace,
+      brew: quick_drip,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true
+    )
+
+    assert_not share.valid?
+    assert_includes share.errors[:brew], "must be an espresso brew"
+  end
+
+  test "enabled token lookup ignores stale quick drip shares" do
+    quick_drip = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 30,
+      taste_balance: "neutral"
+    )
+    share = PublicBrewShare.create!(
+      workspace: workspaces(:household),
+      brew: brews(:morning_espresso),
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true
+    )
+    share.update_columns(brew_id: quick_drip.id)
+
+    assert_raises(ActiveRecord::RecordNotFound) { PublicBrewShare.find_enabled_by_token!(share.token) }
+  end
+
   test "optional password protection works" do
     share = PublicBrewShare.create!(
       workspace: workspaces(:household),

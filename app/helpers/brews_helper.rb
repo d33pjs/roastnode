@@ -112,9 +112,10 @@ module BrewsHelper
   end
 
   def quick_drip_coffee_amount_label(brew)
-    return t("brews.show.unknown") if brew.coffee_spoons.blank?
+    return t("brews.show.coffee_spoons", count: profile_number(brew.coffee_spoons, precision: 2)) if brew.coffee_spoons.present?
+    return quick_drip_consumed_grams(brew) if brew.bean_weight_grams.present?
 
-    t("brews.show.coffee_spoons", count: profile_number(brew.coffee_spoons, precision: 2))
+    t("brews.show.unknown")
   end
 
   def brew_taste_label(value, method: "espresso")
