@@ -94,6 +94,38 @@ module BrewsHelper
     preparation_tool_path(tool)
   end
 
+  def quick_drip_consumed_grams(brew)
+    grams = brew_card_grams(brew.bean_weight_grams)
+    brew.coffee_amount_estimated_spoons? ? "~#{grams}" : grams
+  end
+
+  def quick_drip_estimate_calculation(brew)
+    return unless brew.coffee_spoons.present? && brew.grams_per_coffee_spoon.present?
+
+    t(
+      "brews.show.quick_drip_estimate",
+      spoons: profile_number(brew.coffee_spoons, precision: 2),
+      grams_per_spoon: profile_grams(brew.grams_per_coffee_spoon),
+      grams: quick_drip_consumed_grams(brew)
+    )
+  end
+
+  def quick_drip_coffee_amount_label(brew)
+    return t("brews.show.unknown") if brew.coffee_spoons.blank?
+
+    t("brews.show.coffee_spoons", count: profile_number(brew.coffee_spoons, precision: 2))
+  end
+
+  def brew_taste_label(value, method: "espresso")
+    return t("brews.show.unknown") if value.blank? || value == "unknown"
+
+    if method == "quick_drip"
+      t("brews.taste.quick_drip.#{value}", default: value.humanize)
+    else
+      value.humanize
+    end
+  end
+
   def brew_card_photo_attachment(brew)
     brew.bean.primary_photo_attachment || brew.primary_photo_attachment
   end

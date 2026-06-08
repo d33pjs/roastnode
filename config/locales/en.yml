@@ -470,6 +470,10 @@ en:
     update:
       updated: "Brew corrected."
     taste:
+      quick_drip:
+        sour: "Weak"
+        neutral: "Balanced"
+        bitter: "Harsh"
       updated: "Taste updated."
     show:
       adjust_taste: "Adjust taste"
@@ -479,8 +483,11 @@ en:
       byline: "Logged by %{user}"
       bean: "Bean"
       bean_weight: "Bean in"
+      brewer: "Brewer"
       card_method: "Espresso"
       channeling: "Channeling"
+      coffee_amount: "Coffee"
+      coffee_spoons: "%{count} spoons"
       delete: "Delete"
       details: "Details"
       dose: "Dose"
@@ -493,12 +500,14 @@ en:
       logged_at: "Logged at"
       logged_by: "Logged by"
       machine: "Machine"
+      machine_cups: "Machine cups"
       no: "No"
       no_notes: "No notes."
       no_preparation_tools: "No preparation tools"
       notes: "Notes"
       photos: "Photos"
       preinfusion: "Preinfusion"
+      quick_drip_estimate: "%{spoons} spoons x %{grams_per_spoon} = %{grams}"
       rating: "Rating"
       rating_beans: "Rating %{rating} of %{maximum} beans"
       recipe_target_chart_value: "%{value} target"

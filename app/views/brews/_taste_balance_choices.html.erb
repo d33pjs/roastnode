@@ -1,17 +1,19 @@
+<% brew_method = local_assigns.fetch(:method, form.object.method || "espresso") %>
+<% values = brew_method == "quick_drip" ? %w[unknown sour neutral bitter] : Brew.taste_balances.keys %>
 <% unknown_balance = "unknown" %>
-<% balance_scale = Brew.taste_balances.keys - [ unknown_balance ] %>
+<% balance_scale = values - [ unknown_balance ] %>
 
 <div data-testid="brew-taste-balance-options" class="rn-taste-balance mt-2">
   <label data-testid="brew-taste-unknown-choice" class="rn-choice rn-choice-unknown">
     <%= form.radio_button :taste_balance, unknown_balance, class: "rn-choice-input" %>
-    <span class="rn-choice-label rn-choice-label-muted"><%= unknown_balance.humanize %></span>
+    <span class="rn-choice-label rn-choice-label-muted"><%= brew_taste_label(unknown_balance, method: brew_method) %></span>
   </label>
 
   <div data-testid="brew-taste-balance-scale" class="rn-balance-scale" aria-label="Taste balance scale">
     <% balance_scale.each do |balance| %>
       <label class="rn-choice rn-balance-choice">
         <%= form.radio_button :taste_balance, balance, class: "rn-choice-input" %>
-        <span class="rn-choice-label rn-balance-label"><%= balance.humanize %></span>
+        <span class="rn-choice-label rn-balance-label"><%= brew_taste_label(balance, method: brew_method) %></span>
       </label>
     <% end %>
   </div>

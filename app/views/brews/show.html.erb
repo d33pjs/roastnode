@@ -45,7 +45,7 @@
 
           <div class="sm:col-span-3">
             <%= form.label :taste_balance, t(".taste"), class: taste_correction_label_class %>
-            <%= render "brews/taste_balance_choices", form: form %>
+            <%= render "brews/taste_balance_choices", form: form, method: @brew.method %>
           </div>
 
           <div>
@@ -76,94 +76,159 @@
             <%= link_to @brew.bean.display_name, bean_path(@brew.bean), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
           </dd>
         </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".bean_weight") %></dt>
-          <dd data-testid="brew-detail-bean-weight" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.bean_weight_grams) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".ground_weight") %></dt>
-          <dd data-testid="brew-detail-ground-weight" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.ground_weight_grams) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".dose") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.dose_grams) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".yield") %></dt>
-          <dd data-testid="brew-detail-beverage" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.beverage_grams) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".ratio") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_ratio(@brew) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".grind_setting") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.grind_setting.presence || t(".unknown") %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".temperature") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_temperature(@brew.brew_temperature_celsius) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".preinfusion") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.preinfusion_seconds) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".first_drip") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.first_drip_seconds) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".total_time") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.total_time_seconds) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".rating") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_rating_label(@brew.rating) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".taste") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.taste_balance.humanize %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".channeling") %></dt>
-          <dd data-testid="brew-detail-channeling" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_boolean(@brew.channeling) %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".retention") %></dt>
-          <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.retention_marker.humanize %></dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".grinder") %></dt>
-          <dd data-testid="brew-detail-grinder" class="mt-1 text-sm font-semibold text-stone-950">
-            <% if @brew.grinder.present? %>
-              <%= link_to @brew.grinder.name, equipment_path(@brew.grinder), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
-            <% else %>
-              <%= t(".unknown") %>
-            <% end %>
-          </dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".machine") %></dt>
-          <dd data-testid="brew-detail-machine" class="mt-1 text-sm font-semibold text-stone-950">
-            <% if @brew.machine.present? %>
-              <%= link_to @brew.machine.name, equipment_path(@brew.machine), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
-            <% else %>
-              <%= t(".unknown") %>
-            <% end %>
-          </dd>
-        </div>
-        <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".tools") %></dt>
-          <dd data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
-            <% if brew_card_tools(@brew).any? %>
-              <% brew_card_tools(@brew).each do |tool| %>
-                <%= link_to tool.tool_name, brew_card_tool_path(tool), data: { testid: "brew-detail-tool" }, class: "rounded-full bg-stone-100 px-2.5 py-1 text-stone-800 hover:bg-stone-200" %>
+        <% if @brew.quick_drip? %>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".brewer") %></dt>
+            <dd data-testid="brew-detail-brewer" class="mt-1 text-sm font-semibold text-stone-950">
+              <% if @brew.brewer.present? %>
+                <%= link_to @brew.brewer.name, equipment_path(@brew.brewer), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+              <% else %>
+                <%= t(".unknown") %>
               <% end %>
-            <% else %>
-              <%= t(".no_preparation_tools") %>
-            <% end %>
-          </dd>
-        </div>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".machine_cups") %></dt>
+            <dd data-testid="brew-detail-machine-cups" class="mt-1 text-sm font-semibold text-stone-950">
+              <%= @brew.machine_cups.present? ? profile_number(@brew.machine_cups, precision: 2) : t(".unknown") %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".coffee_amount") %></dt>
+            <dd data-testid="brew-detail-estimate" class="mt-1 text-sm font-semibold text-stone-950"><%= quick_drip_estimate_calculation(@brew) || quick_drip_consumed_grams(@brew) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".yield") %></dt>
+            <dd data-testid="brew-detail-beverage" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.beverage_grams) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".total_time") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.total_time_seconds) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".grind_setting") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.grind_setting.presence || t(".unknown") %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".grinder") %></dt>
+            <dd data-testid="brew-detail-grinder" class="mt-1 text-sm font-semibold text-stone-950">
+              <% if @brew.grinder.present? %>
+                <%= link_to @brew.grinder.name, equipment_path(@brew.grinder), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+              <% else %>
+                <%= t(".unknown") %>
+              <% end %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".rating") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_rating_label(@brew.rating) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".taste") %></dt>
+            <dd data-testid="brew-detail-taste" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_taste_label(@brew.taste_balance, method: @brew.method) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".tools") %></dt>
+            <dd data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
+              <% if brew_card_tools(@brew).any? %>
+                <% brew_card_tools(@brew).each do |tool| %>
+                  <%= link_to tool.tool_name, brew_card_tool_path(tool), data: { testid: "brew-detail-tool" }, class: "rounded-full bg-stone-100 px-2.5 py-1 text-stone-800 hover:bg-stone-200" %>
+                <% end %>
+              <% else %>
+                <%= t(".no_preparation_tools") %>
+              <% end %>
+            </dd>
+          </div>
+        <% else %>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".bean_weight") %></dt>
+            <dd data-testid="brew-detail-bean-weight" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.bean_weight_grams) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".ground_weight") %></dt>
+            <dd data-testid="brew-detail-ground-weight" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.ground_weight_grams) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".dose") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.dose_grams) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".yield") %></dt>
+            <dd data-testid="brew-detail-beverage" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_grams(@brew.beverage_grams) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".ratio") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_ratio(@brew) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".grind_setting") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.grind_setting.presence || t(".unknown") %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".temperature") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_temperature(@brew.brew_temperature_celsius) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".preinfusion") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.preinfusion_seconds) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".first_drip") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.first_drip_seconds) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".total_time") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.total_time_seconds) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".rating") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_rating_label(@brew.rating) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".taste") %></dt>
+            <dd data-testid="brew-detail-taste" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_taste_label(@brew.taste_balance, method: @brew.method) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".channeling") %></dt>
+            <dd data-testid="brew-detail-channeling" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_boolean(@brew.channeling) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".retention") %></dt>
+            <dd class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.retention_marker.humanize %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".grinder") %></dt>
+            <dd data-testid="brew-detail-grinder" class="mt-1 text-sm font-semibold text-stone-950">
+              <% if @brew.grinder.present? %>
+                <%= link_to @brew.grinder.name, equipment_path(@brew.grinder), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+              <% else %>
+                <%= t(".unknown") %>
+              <% end %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".machine") %></dt>
+            <dd data-testid="brew-detail-machine" class="mt-1 text-sm font-semibold text-stone-950">
+              <% if @brew.machine.present? %>
+                <%= link_to @brew.machine.name, equipment_path(@brew.machine), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+              <% else %>
+                <%= t(".unknown") %>
+              <% end %>
+            </dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".tools") %></dt>
+            <dd data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
+              <% if brew_card_tools(@brew).any? %>
+                <% brew_card_tools(@brew).each do |tool| %>
+                  <%= link_to tool.tool_name, brew_card_tool_path(tool), data: { testid: "brew-detail-tool" }, class: "rounded-full bg-stone-100 px-2.5 py-1 text-stone-800 hover:bg-stone-200" %>
+                <% end %>
+              <% else %>
+                <%= t(".no_preparation_tools") %>
+              <% end %>
+            </dd>
+          </div>
+        <% end %>
       </dl>
 
       <div class="mt-5 border-t border-stone-100 pt-4">

@@ -175,7 +175,7 @@
       <% unless hide_brew_field.call(:taste_balance) %>
         <div class="sm:col-span-2">
           <%= form.label :taste_balance, t("brews.form.taste"), class: "block text-sm font-bold text-rn-muted" %>
-          <%= render "brews/taste_balance_choices", form: form %>
+          <%= render "brews/taste_balance_choices", form: form, method: "espresso" %>
         </div>
       <% end %>
 

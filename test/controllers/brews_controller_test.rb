@@ -117,6 +117,11 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[brewer_id]", equipment(:household_brewer).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:paper_filter).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s, count: 0
+    assert_select "[data-testid=brew-taste-balance-options]", text: /Weak/
+    assert_select "[data-testid=brew-taste-balance-options]", text: /Balanced/
+    assert_select "[data-testid=brew-taste-balance-options]", text: /Harsh/
+    assert_select "input[type=radio][name=?][value=?]", "brew[taste_balance]", "very_sour", count: 0
+    assert_select "input[type=radio][name=?][value=?]", "brew[taste_balance]", "very_bitter", count: 0
     assert_select "input[name=?]", "brew[brew_temperature_celsius]", count: 0
     assert_select "input[name=?]", "brew[preinfusion_seconds]", count: 0
     assert_select "input[name=?]", "brew[first_drip_seconds]", count: 0
@@ -218,6 +223,42 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?][checked]", "brew[taste_balance]", source.taste_balance, count: 0
     assert_select "textarea[name=?]", "brew[notes]", text: ""
     assert_select "[data-testid=brew-form-section][data-section=batch]"
+  end
+
+  test "quick drip repeat copies method target fields and keeps subjective fields fresh" do
+    source = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      grinder: equipment(:household_grinder),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      bean_weight_grams: 31,
+      beverage_grams: 900,
+      total_time_seconds: 320,
+      grind_setting: "filter 8",
+      taste_balance: "bitter",
+      rating: 5,
+      notes: "Do not copy."
+    )
+    source.snapshot_preparation_tools!([ preparation_tools(:paper_filter) ])
+    sign_in_as(users(:one))
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_response :success
+    assert_select "input[type=hidden][name=?][value=?]", "brew[method]", "quick_drip"
+    assert_select "input[name=?][value=?]", "brew[machine_cups]", "6.0"
+    assert_select "input[name=?][value=?]", "brew[coffee_spoons]", "6.0"
+    assert_select "input[name=?][value=?]", "brew[bean_weight_grams]", "31.0"
+    assert_select "input[name=?][value=?]", "brew[beverage_grams]", "900.0"
+    assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "320"
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", "filter 8"
+    assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:paper_filter).id.to_s
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[taste_balance]", "bitter", count: 0
+    assert_select "input[type=radio][name=?][value=?][checked]", "brew[rating]", "5", count: 0
+    assert_select "textarea[name=?]", "brew[notes]", text: ""
   end
 
   test "new with repeat brew uses newest open duplicated follow-up bag when source bean is closed" do
@@ -736,6 +777,40 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Paper filter" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
   end
 
+  test "repeated spoon estimated quick drip create persists estimated spoon source" do
+    user = users(:one)
+    source = create_spoon_estimated_quick_drip_brew_for(user)
+    sign_in_as(user)
+
+    assert_difference -> { workspaces(:household).brews.quick_drip.count }, 1 do
+      post brews_path, params: {
+        brew: {
+          method: "quick_drip",
+          bean_id: source.bean_id,
+          brewer_id: source.brewer_id,
+          grinder_id: source.grinder_id,
+          machine_cups: source.machine_cups.to_s,
+          coffee_spoons: source.coffee_spoons.to_s,
+          bean_weight_grams: "",
+          grams_per_coffee_spoon: source.grams_per_coffee_spoon.to_s,
+          beverage_grams: source.beverage_grams.to_s,
+          total_time_seconds: source.total_time_seconds.to_s,
+          grind_setting: source.grind_setting,
+          taste_balance: "unknown",
+          preparation_tool_ids: [ preparation_tools(:paper_filter).id ]
+        }
+      }
+    end
+
+    brew = workspaces(:household).brews.order(:created_at).last
+    assert_redirected_to brew_path(brew)
+    assert_equal "quick_drip", brew.method
+    assert_equal "estimated_spoons", brew.coffee_amount_source
+    assert_equal source.coffee_spoons, brew.coffee_spoons
+    assert_equal source.grams_per_coffee_spoon, brew.grams_per_coffee_spoon
+    assert_equal source.bean_weight_grams, brew.bean_weight_grams
+  end
+
   test "invalid quick drip create does not render cross workspace selected records" do
     sign_in_as(users(:one))
     other_bean = beans(:other_workspace_open)
@@ -1061,6 +1136,28 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "img[data-testid=brew-grinder-photo][src=?]", media_attachment_path(grinder_photo, variant: :thumbnail)
     assert_select "img[data-testid=brew-machine-photo][src=?]", media_attachment_path(machine_photo, variant: :thumbnail)
+  end
+
+  test "quick drip detail shows estimate calculation and brewer" do
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      grams_per_coffee_spoon: 5,
+      taste_balance: "sour"
+    )
+    sign_in_as(users(:one))
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-detail-brewer] a[href=?]", equipment_path(equipment(:household_brewer)), text: "Moccamaster"
+    assert_select "[data-testid=brew-detail-machine-cups]", "6"
+    assert_select "[data-testid=brew-detail-estimate]", "6 spoons x 5g = ~30g"
+    assert_select "[data-testid=brew-detail-taste]", "Weak"
   end
 
   test "show renders unknown username when display name is blank" do
