@@ -1,11 +1,17 @@
-<nav data-testid="brew-method-tabs" class="flex gap-2 overflow-x-auto rounded-2xl border border-rn-line bg-rn-surface p-1">
-  <% Current.user.enabled_brew_methods.each do |method| %>
+<% enabled_methods = Current.user.enabled_brew_methods %>
+
+<nav
+  data-testid="brew-method-tabs"
+  class="grid gap-1 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface p-1"
+  style="grid-template-columns: repeat(<%= enabled_methods.size %>, minmax(0, 1fr));"
+>
+  <% enabled_methods.each do |method| %>
     <% active = method == selected_method %>
     <%= link_to t("brews.methods.#{method}"),
       new_brew_path(method: method),
       aria: (active ? { current: "page" } : {}),
       class: [
-        "whitespace-nowrap rounded-xl px-4 py-2 text-sm font-extrabold",
+        "min-w-0 truncate rounded-xl px-3 py-2 text-center text-sm font-extrabold",
         active ? "bg-rn-ink text-white" : "text-rn-muted hover:bg-[var(--rn-surface-muted)]"
       ].join(" ") %>
   <% end %>

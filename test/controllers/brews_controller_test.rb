@@ -61,8 +61,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path(method: "quick_drip")
 
     assert_response :success
+    assert_select "[data-testid=brew-method-tabs].grid.overflow-hidden[style=?]", "grid-template-columns: repeat(2, minmax(0, 1fr));"
     assert_select "a[href=?]", new_brew_path(method: "espresso"), text: "Espresso"
     assert_select "a[href=?][aria-current=page]", new_brew_path(method: "quick_drip"), text: "Quick Drip"
+    assert_select "[data-testid=brew-method-tabs] a.min-w-0.text-center", count: 2
   end
 
   test "espresso new carries selected method for create" do
