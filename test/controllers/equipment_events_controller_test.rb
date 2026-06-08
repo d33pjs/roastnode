@@ -10,6 +10,9 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("equipment_events.new.title")
     assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "grinder_cleaning"
     assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "machine_backflush"
+    assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "brewer_cleaning"
+    assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "brewer_descaling"
+    assert_select "input[type=checkbox][name=?][value=?]", "equipment_event[event_types][]", "filter_change"
     assert_select "label", text: equipment(:household_grinder).name
     assert_select "label", text: equipment(:other_workspace_grinder).name, count: 0
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment_event[photos][]"
@@ -119,6 +122,31 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "grinder_cleaning", "machine_backflush" ], event.event_types
     assert_equal "grinder_cleaning", event.event_type
     assert_equal [ equipment(:household_grinder).id, equipment(:household_machine).id ].sort, event.equipment.ids.sort
+  end
+
+  test "member can create brewer equipment event" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    assert_difference -> { workspaces(:household).equipment_events.count }, 1 do
+      assert_difference -> { EquipmentEventItem.count }, 1 do
+        post equipment_events_path, params: {
+          equipment_event: {
+            event_types: [ "brewer_cleaning", "filter_change" ],
+            occurred_at: "2026-05-26 08:30",
+            notes: "Fresh filter and brewer rinse.",
+            equipment_ids: [ equipment(:household_brewer).id ]
+          }
+        }
+      end
+    end
+
+    event = workspaces(:household).equipment_events.order(:created_at).last
+    assert_redirected_to equipment_event_path(event)
+    assert_equal [ "brewer_cleaning", "filter_change" ], event.event_types
+    assert_equal "brewer_cleaning", event.event_type
+    assert_equal [ equipment(:household_brewer).id ], event.equipment.ids
   end
 
   test "edit renders current event values photos and affected equipment" do

@@ -48,7 +48,7 @@ class GrinderSettingSuggestion
     end
 
     def calibration_candidate
-      brew = bean.brews.includes(:grinder).order(:occurred_at, :created_at).first
+      brew = bean.brews.espresso.includes(:grinder).order(:occurred_at, :created_at).first
       candidate_for(brew)
     end
 
@@ -83,6 +83,7 @@ class GrinderSettingSuggestion
 
     def brew_scope(calibration_brew)
       bean.workspace.brews
+        .espresso
         .includes(:grinder)
         .where(grinder: calibration_brew.grinder)
         .where.not(bean_id: bean.id)

@@ -98,6 +98,40 @@ class BeanStatisticsTest < ActiveSupport::TestCase
     end
   end
 
+  test "includes quick drip in bean totals but excludes from espresso specific channeling and retention" do
+    bean = beans(:open_household)
+    brews(:morning_espresso).update!(
+      occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0),
+      channeling: false,
+      retention_marker: "normal"
+    )
+    quick_drip = bean.workspace.brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      occurred_at: Time.zone.local(2026, 5, 26, 9, 0, 0),
+      channeling: true,
+      taste_balance: "bitter"
+    )
+    quick_drip.update_columns(retention_marker: "retention")
+
+    statistics = BeanStatistics.new(
+      bean:,
+      start_date: Date.new(2026, 5, 26),
+      end_date: Date.new(2026, 5, 26)
+    ).call
+
+    assert_equal 2, statistics[:totals][:brew_count]
+    assert_equal 48.to_d, statistics[:totals][:total_bean_weight_grams]
+    assert_equal 0, statistics[:rates][:channeling_count]
+    assert_equal 0, statistics[:rates][:channeling_percent]
+    assert_equal({ "normal" => 1 }, statistics[:distributions][:retention_marker])
+    assert_equal({ "espresso" => 1, "quick_drip" => 1 }, statistics[:distributions][:method])
+  end
+
   test "adds finished bag totals and grind setting distribution" do
     bean = workspaces(:household).beans.create!(
       name: "Finished Stats",

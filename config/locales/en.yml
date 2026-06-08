@@ -756,6 +756,16 @@ en:
       photos: "Current photos"
       title: "Edit equipment event"
       update: "Save event"
+    event_types:
+      brewer_cleaning: "Brewer cleaning"
+      brewer_descaling: "Brewer descaling"
+      burr_change: "Burr change"
+      filter_change: "Filter change"
+      grinder_cleaning: "Grinder cleaning"
+      grinder_deep_cleaning: "Grinder deep cleaning"
+      machine_backflush: "Machine backflush"
+      machine_descaling: "Machine descaling"
+      other: "Other"
     form:
       equipment: "Affected equipment"
       event_types: "Event types"

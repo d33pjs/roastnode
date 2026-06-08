@@ -6,6 +6,9 @@ class EquipmentEvent < ApplicationRecord
     grinder_deep_cleaning: "grinder_deep_cleaning",
     machine_descaling: "machine_descaling",
     machine_backflush: "machine_backflush",
+    brewer_cleaning: "brewer_cleaning",
+    brewer_descaling: "brewer_descaling",
+    filter_change: "filter_change",
     burr_change: "burr_change",
     other: "other"
   }
@@ -33,7 +36,15 @@ class EquipmentEvent < ApplicationRecord
   end
 
   def event_type_summary
-    event_type_names.map(&:humanize).to_sentence
+    event_type_names.map { |name| event_type_label(name) }.to_sentence
+  end
+
+  def self.event_type_label(name)
+    I18n.t("equipment_events.event_types.#{name}", default: name.to_s.humanize)
+  end
+
+  def event_type_label(name)
+    self.class.event_type_label(name)
   end
 
   private

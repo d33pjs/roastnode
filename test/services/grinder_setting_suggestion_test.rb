@@ -27,6 +27,30 @@ class GrinderSettingSuggestionTest < ActiveSupport::TestCase
     assert_empty GrinderSettingSuggestion.new(bean:).call
   end
 
+  test "ignores quick drip brews for grinder tendency" do
+    bean = beans(:second_open_household)
+    grinder = equipment(:household_grinder)
+    workspace = workspaces(:household)
+
+    create_history_brew(workspace:, grinder:, grind_setting: "6", dose: 18, beverage: 45, total_time: 28, rating: 5)
+    create_history_brew(workspace:, grinder:, grind_setting: "7", dose: 18, beverage: 45, total_time: 29, rating: 4)
+    workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      grinder:,
+      machine_cups: 6,
+      coffee_spoons: 6,
+      dose_grams: 30,
+      beverage_grams: 180,
+      total_time_seconds: 120,
+      grind_setting: "8"
+    )
+
+    assert_empty GrinderSettingSuggestion.new(bean:).call
+  end
+
   test "suggests a relative coarser adjustment from a slow first brew" do
     bean = beans(:second_open_household)
     workspace = bean.workspace

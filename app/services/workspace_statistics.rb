@@ -33,9 +33,13 @@ class WorkspaceStatistics
     def brews
       @brews ||= workspace
         .brews
-        .includes(:bean, :grinder, :machine)
+        .includes(:bean, :grinder, :machine, :brewer)
         .where(occurred_at: start_date.beginning_of_day..end_date.end_of_day)
         .to_a
+    end
+
+    def espresso_brews
+      @espresso_brews ||= brews.select(&:espresso?)
     end
 
     def beans
@@ -77,13 +81,14 @@ class WorkspaceStatistics
     def distributions
       {
         taste_balance: count_by_present_value(brews, :taste_balance),
-        retention_marker: count_by_present_value(brews, :retention_marker)
+        retention_marker: count_by_present_value(espresso_brews, :retention_marker),
+        method: count_by_present_value(brews, :method)
       }
     end
 
     def rates
       {
-        channeling_percent: percentage(brews.count(&:channeling?), brews.size)
+        channeling_percent: percentage(espresso_brews.count(&:channeling?), espresso_brews.size)
       }
     end
 

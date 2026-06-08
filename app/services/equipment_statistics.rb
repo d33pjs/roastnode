@@ -53,8 +53,10 @@ class EquipmentStatistics
     end
 
     def rates
+      channeling_brews = brews.select(&:espresso?)
+
       {
-        channeling_percent: percentage(brews.count(&:channeling?), brews.size)
+        channeling_percent: percentage(channeling_brews.count(&:channeling?), channeling_brews.size)
       }
     end
 
@@ -114,6 +116,8 @@ class EquipmentStatistics
         %w[grinder_cleaning grinder_deep_cleaning burr_change]
       when "machine"
         %w[machine_descaling machine_backflush]
+      when "brewer"
+        %w[brewer_cleaning brewer_descaling filter_change]
       else
         []
       end

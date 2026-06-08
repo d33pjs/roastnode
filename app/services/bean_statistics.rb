@@ -27,11 +27,15 @@ class BeanStatistics
 
     def brews
       @brews ||= begin
-        scope = bean.brews.includes(:grinder, :machine)
+        scope = bean.brews.includes(:grinder, :machine, :brewer)
         scope = scope.where(occurred_at: start_date.beginning_of_day..) if start_date.present?
         scope = scope.where(occurred_at: ..end_date.end_of_day) if end_date.present?
         scope.order(occurred_at: :desc).to_a
       end
+    end
+
+    def espresso_brews
+      @espresso_brews ||= brews.select(&:espresso?)
     end
 
     def totals
@@ -55,19 +59,20 @@ class BeanStatistics
     end
 
     def rates
-      channeling_count = brews.count(&:channeling?)
+      channeling_count = espresso_brews.count(&:channeling?)
 
       {
         channeling_count:,
-        channeling_percent: percentage(channeling_count, brews.size)
+        channeling_percent: percentage(channeling_count, espresso_brews.size)
       }
     end
 
     def distributions
       {
         taste_balance: count_by_present_value(:taste_balance),
-        retention_marker: count_by_present_value(:retention_marker),
-        grind_setting: count_by_present_value(:grind_setting)
+        retention_marker: count_by_present_value(:retention_marker, records: espresso_brews),
+        grind_setting: count_by_present_value(:grind_setting),
+        method: count_by_present_value(:method)
       }
     end
 
@@ -107,8 +112,8 @@ class BeanStatistics
       ((part.to_d / whole.to_d) * 100).round
     end
 
-    def count_by_present_value(method_name)
-      brews
+    def count_by_present_value(method_name, records: brews)
+      records
         .map { |brew| brew.public_send(method_name) }
         .compact_blank
         .tally

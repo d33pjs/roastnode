@@ -141,7 +141,95 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
     assert_equal 1, statistics[:totals][:brew_count]
     assert_equal 32.to_d, statistics[:totals][:total_bean_weight_grams]
     assert_equal 5, statistics[:averages][:rating]
+    assert_equal 0, statistics[:rates][:channeling_percent]
     assert_equal [ brewer_brew ], statistics[:recent_brews]
     assert_not_includes statistics[:recent_brews], machine_brew
+  end
+
+  test "uses brewer service events for brewer service counters" do
+    brewer = equipment(:household_brewer)
+    bean = beans(:open_household)
+    user = users(:one)
+
+    old_brew = bean.brews.create!(
+      workspace: bean.workspace,
+      user:,
+      brewer:,
+      method: "quick_drip",
+      occurred_at: Time.zone.local(2026, 5, 24, 8, 0, 0),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      rating: 3,
+      channeling: true
+    )
+    service_event = EquipmentEvent.new(
+      workspace: brewer.workspace,
+      user:,
+      event_types: %w[brewer_cleaning filter_change],
+      occurred_at: Time.zone.local(2026, 5, 25, 8, 0, 0)
+    )
+    service_event.equipment << brewer
+    service_event.save!
+    fresh_brew = bean.brews.create!(
+      workspace: bean.workspace,
+      user:,
+      brewer:,
+      method: "quick_drip",
+      occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0),
+      machine_cups: 4,
+      coffee_spoons: 4,
+      rating: 5
+    )
+
+    statistics = EquipmentStatistics.new(equipment: brewer).call
+
+    assert_equal 2, statistics[:totals][:brew_count]
+    assert_equal 50.to_d, statistics[:totals][:total_bean_weight_grams]
+    assert_equal 0, statistics[:rates][:channeling_percent]
+    assert_equal service_event, statistics[:service][:last_event]
+    assert_equal 1, statistics[:service][:brews_since_service]
+    assert_equal 20.to_d, statistics[:service][:grams_since_service]
+    assert_equal({ "brewer_cleaning" => 1, "filter_change" => 1 }, statistics[:distributions][:event_types])
+    assert_equal [ fresh_brew, old_brew ], statistics[:recent_brews].first(2)
+  end
+
+  test "does not reset brewer service counters for non brewer service events" do
+    brewer = equipment(:household_brewer)
+    bean = beans(:open_household)
+    user = users(:one)
+
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user:,
+      brewer:,
+      method: "quick_drip",
+      occurred_at: Time.zone.local(2026, 5, 24, 8, 0, 0),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+    non_brewer_event = EquipmentEvent.new(
+      workspace: brewer.workspace,
+      user:,
+      event_types: %w[machine_backflush],
+      occurred_at: Time.zone.local(2026, 5, 25, 8, 0, 0)
+    )
+    non_brewer_event.equipment << brewer
+    non_brewer_event.save!
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user:,
+      brewer:,
+      method: "quick_drip",
+      occurred_at: Time.zone.local(2026, 5, 26, 8, 0, 0),
+      machine_cups: 4,
+      coffee_spoons: 4
+    )
+
+    statistics = EquipmentStatistics.new(equipment: brewer).call
+
+    assert_nil statistics[:service][:last_event]
+    assert_equal 2, statistics[:service][:brews_since_service]
+    assert_equal 50.to_d, statistics[:service][:grams_since_service]
+    assert_equal({ "machine_backflush" => 1 }, statistics[:distributions][:event_types])
   end
 end
