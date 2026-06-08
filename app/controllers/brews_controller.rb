@@ -52,6 +52,7 @@ class BrewsController < ApplicationController
 
   def create
     attributes = brew_params
+    scope_brew_reference_ids!(attributes)
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     attributes[:method] = @selected_method
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
@@ -75,6 +76,7 @@ class BrewsController < ApplicationController
     @selected_method = @brew.method
     @hidden_brew_fields = []
     attributes = brew_params
+    scope_brew_reference_ids!(attributes)
     attributes[:method] = @brew.method
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
@@ -141,6 +143,11 @@ class BrewsController < ApplicationController
     end
 
     def load_form_options(selected_bean: nil, selected_grinder: nil, selected_machine: nil, selected_brewer: nil)
+      selected_bean = selected_workspace_record(selected_bean)
+      selected_grinder = selected_workspace_record(selected_grinder)
+      selected_machine = selected_workspace_record(selected_machine)
+      selected_brewer = selected_workspace_record(selected_brewer)
+
       @beans = current_workspace.beans.open.includes(:primary_photo_record, photos_attachments: :blob).to_a
       @beans << selected_bean if selected_bean && @beans.exclude?(selected_bean)
       sort_beans_for_method!
@@ -316,6 +323,7 @@ class BrewsController < ApplicationController
     end
 
     def equipment_options(kind:, selected_equipment: nil)
+      selected_equipment = selected_workspace_record(selected_equipment)
       options = current_workspace.equipment.active.public_send(kind).includes(:primary_photo_record, photos_attachments: :blob).order(:name).to_a
       options << selected_equipment if selected_equipment && options.exclude?(selected_equipment)
       options.sort_by(&:name)
@@ -332,6 +340,27 @@ class BrewsController < ApplicationController
     def preparation_tools_from_ids(ids)
       tools_by_id = current_workspace.preparation_tools.active.where(brew_method: @selected_method).where(id: ids).index_by(&:id)
       ids.map { |id| tools_by_id[id.to_i] }.compact
+    end
+
+    def selected_workspace_record(record)
+      record if workspace_record?(record)
+    end
+
+    def workspace_record?(record)
+      record.present? && record.respond_to?(:workspace_id) && record.workspace_id == current_workspace.id
+    end
+
+    def scope_brew_reference_ids!(attributes)
+      scope_reference_id!(attributes, :bean_id, current_workspace.beans)
+      scope_reference_id!(attributes, :grinder_id, current_workspace.equipment)
+      scope_reference_id!(attributes, :machine_id, current_workspace.equipment)
+      scope_reference_id!(attributes, :brewer_id, current_workspace.equipment)
+    end
+
+    def scope_reference_id!(attributes, key, scope)
+      return unless attributes.key?(key) && attributes[key].present?
+
+      attributes[key] = nil unless scope.exists?(id: attributes[key])
     end
 
     def save_brew_with_preparation_tools

@@ -84,6 +84,11 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_brew_path(method: "quick_drip"), count: 0
     assert_select "a[href=?][aria-current=page]", new_brew_path(method: "espresso")
 
+    get brews_path
+    assert_response :success
+    assert_select "h1", I18n.t("brews.index.title")
+    assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{Regexp.escape(brews(:morning_espresso).bean.name)}/
+
     get brew_path(brews(:morning_espresso))
     assert_response :success
   end
@@ -637,7 +642,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "member can create spoon estimated quick drip brew with comma decimals" do
-    user = users(:one)
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
     user.update!(grams_per_coffee_spoon: 4.5)
     sign_in_as(user)
     bean = beans(:second_open_household)
@@ -666,6 +672,38 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 24.75.to_d, brew.bean_weight_grams
     assert_equal "estimated_spoons", brew.coffee_amount_source
     assert_equal [ "Paper filter" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+  end
+
+  test "invalid quick drip create does not render cross workspace selected records" do
+    sign_in_as(users(:one))
+    other_bean = beans(:other_workspace_open)
+    other_grinder = equipment(:other_workspace_grinder)
+    other_brewer = workspaces(:other_household).equipment.create!(
+      name: "Other Workspace Brewer",
+      kind: "brewer"
+    )
+
+    post brews_path, params: {
+      brew: {
+        method: "quick_drip",
+        bean_id: other_bean.id,
+        grinder_id: other_grinder.id,
+        brewer_id: other_brewer.id,
+        machine_cups: "",
+        coffee_spoons: "",
+        beverage_grams: "900",
+        total_time_seconds: "320",
+        taste_balance: "neutral"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_no_match other_bean.name, response.body
+    assert_no_match other_brewer.name, response.body
+    assert_no_match other_grinder.name, response.body
+    assert_select "input[type=radio][name=?][value=?]", "brew[bean_id]", other_bean.id.to_s, count: 0
+    assert_select "input[type=radio][name=?][value=?]", "brew[brewer_id]", other_brewer.id.to_s, count: 0
+    assert_select "input[type=radio][name=?][value=?]", "brew[grinder_id]", other_grinder.id.to_s, count: 0
   end
 
   test "create with recipe stores recipe reference and brew time snapshot" do
