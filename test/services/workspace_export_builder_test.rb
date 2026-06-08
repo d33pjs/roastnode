@@ -62,6 +62,30 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_equal beans(:open_household).id, duplicate_payload[:duplicated_from_bean_id]
   end
 
+  test "exports quick drip fields and bean grind state" do
+    beans(:second_open_household).update!(grind_state: "pre_ground")
+    brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
+
+    payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at: Time.current).call
+
+    bean_payload = payload[:beans].find { |row| row[:id] == beans(:second_open_household).id }
+    assert_equal "pre_ground", bean_payload[:grind_state]
+
+    brew_payload = payload[:brews].find { |row| row[:id] == brew.id }
+    assert_equal equipment(:household_brewer).id, brew_payload[:brewer_id]
+    assert_equal "6.0", brew_payload[:machine_cups]
+    assert_equal "6.0", brew_payload[:coffee_spoons]
+    assert_equal "5.0", brew_payload[:grams_per_coffee_spoon]
+    assert_equal "estimated_spoons", brew_payload[:coffee_amount_source]
+  end
+
   test "includes import batches and per-record import metadata" do
     import = DataImport.create!(
       workspace: workspaces(:household),

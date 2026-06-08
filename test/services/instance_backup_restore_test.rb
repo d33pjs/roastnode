@@ -53,11 +53,23 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     users(:one).update!(
       display_name: "Restore Admin",
       instance_admin: true,
-      active_workspace: workspaces(:household)
+      active_workspace: workspaces(:household),
+      enabled_brew_methods: [ "quick_drip" ],
+      grams_per_coffee_spoon: 4.5
     )
     source_bean = beans(:open_household)
     source_bean_finished_at = Time.zone.parse("2026-05-24 18:30:00")
     source_bean.update!(remaining_grams: 14, finished_at: source_bean_finished_at)
+    quick_drip_bean = beans(:second_open_household)
+    quick_drip_bean.update!(grind_state: "pre_ground")
+    quick_drip_brew = workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: quick_drip_bean,
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6
+    )
     duplicated_bean = source_bean.duplicate_for_new_bag!
     duplicated_bean.update!(name: "Restored duplicate bag")
     attachment = attach_photo(beans(:open_household))
@@ -76,6 +88,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       password_digest: users(:one).password_digest,
       bean_name: source_bean.name,
       bean_finished_at: source_bean_finished_at,
+      quick_drip_bean_name: quick_drip_bean.name,
+      brewer_name: equipment(:household_brewer).name,
       duplicated_bean_name: duplicated_bean.name,
       photo_filename: attachment.blob.filename.to_s
     }
@@ -87,7 +101,9 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     restored_user = User.find_by!(email_address: original.fetch(:user_email))
     restored_workspace = Workspace.find_by!(name: original.fetch(:workspace_name))
     restored_bean = Bean.find_by!(name: original.fetch(:bean_name))
+    restored_quick_drip_bean = Bean.find_by!(name: original.fetch(:quick_drip_bean_name))
     restored_duplicate_bean = Bean.find_by!(name: original.fetch(:duplicated_bean_name))
+    restored_quick_drip_brew = restored_workspace.brews.find_by!(method: "quick_drip", bean: restored_quick_drip_bean)
 
     assert_equal original.fetch(:users), User.count
     assert_equal original.fetch(:workspaces), Workspace.count
@@ -101,9 +117,19 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_not_equal original.fetch(:password_digest), restored_user.password_digest
     assert_equal "Restore Admin", restored_user.display_name
     assert_predicate restored_user, :instance_admin?
+    assert_equal [ "quick_drip" ], restored_user.enabled_brew_methods
+    assert_equal 4.5.to_d, restored_user.grams_per_coffee_spoon
     assert_equal restored_workspace, restored_user.active_workspace
     assert_equal original.fetch(:bean_finished_at).to_i, restored_bean.finished_at.to_i
     assert_equal "finished", restored_bean.bag_status
+    assert_equal "pre_ground", restored_quick_drip_bean.grind_state
+    assert_equal "quick_drip", restored_quick_drip_brew.method
+    assert_equal restored_quick_drip_bean, restored_quick_drip_brew.bean
+    assert_equal original.fetch(:brewer_name), restored_quick_drip_brew.brewer.name
+    assert_equal 6.to_d, restored_quick_drip_brew.machine_cups
+    assert_equal 6.to_d, restored_quick_drip_brew.coffee_spoons
+    assert_equal 4.5.to_d, restored_quick_drip_brew.grams_per_coffee_spoon
+    assert_equal "estimated_spoons", restored_quick_drip_brew.coffee_amount_source
     assert_equal original.fetch(:photo_filename), restored_bean.photos.first.filename.to_s
     assert_equal restored_bean, restored_duplicate_bean.duplicated_from_bean
     assert_equal(

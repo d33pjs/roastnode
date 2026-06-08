@@ -9,11 +9,15 @@ class DemoDataSeederTest < ActiveSupport::TestCase
 
     assert_equal workspace, user.active_workspace
     assert_equal "owner", user.membership_for(workspace).role
-    assert_equal 2, workspace.beans.count
-    assert_equal 2, workspace.equipment.count
-    assert_equal 4, workspace.preparation_tools.count
-    assert_equal 2, workspace.brews.count
+    assert_equal 3, workspace.beans.count
+    assert_equal 3, workspace.equipment.count
+    assert_equal 5, workspace.preparation_tools.count
+    assert_equal 3, workspace.brews.count
     assert_equal 1, workspace.equipment_events.count
+    assert_predicate workspace.beans.find_by!(name: "Demo Filter Ground"), :pre_ground?
+    assert_equal "brewer", workspace.equipment.find_by!(name: "Demo Quick Drip Brewer").kind
+    assert_equal "quick_drip", workspace.preparation_tools.find_by!(name: "Demo Paper Filter").brew_method
+    assert_equal 1, workspace.brews.quick_drip.count
     assert_equal "created", result.fetch(:status)
   end
 

@@ -106,6 +106,29 @@ class DemoDataSeeder
           purchase_price_cents: 1490,
           rating: 5,
           notes: "Seeded demo bright bean."
+        ),
+        filter_ground: find_or_create_bean!(
+          name: "Demo Filter Ground",
+          roaster_name: "Roastnode Samples",
+          origin: "Guatemala",
+          country: "Guatemala",
+          region: "Antigua",
+          process: "washed",
+          variety: "Bourbon",
+          harvested: "2025",
+          roast_date: Date.new(2026, 5, 14),
+          roast_type: "filter",
+          grind_state: "pre_ground",
+          roast_degree: 2.0,
+          blend_type: "single_origin",
+          tasting_notes: "Cocoa, orange, almond",
+          bag_size_grams: 500,
+          remaining_grams: 500,
+          opened_on: Date.new(2026, 5, 24),
+          purchase_source: "Local demo roaster",
+          purchase_price_cents: 1690,
+          rating: 4,
+          notes: "Seeded pre-ground filter bean for Quick Drip demos."
         )
       }
     end
@@ -113,7 +136,8 @@ class DemoDataSeeder
     def ensure_equipment!
       @equipment = {
         grinder: find_or_create_equipment!("Demo Grinder", "grinder", "Single dose"),
-        machine: find_or_create_equipment!("Demo Espresso Machine", "machine", "Dual boiler")
+        machine: find_or_create_equipment!("Demo Espresso Machine", "machine", "Dual boiler"),
+        brewer: find_or_create_equipment!("Demo Quick Drip Brewer", "brewer", "Thermos drip")
       }
     end
 
@@ -122,7 +146,8 @@ class DemoDataSeeder
         basket: find_or_create_preparation_tool!("Demo Double Basket"),
         tamper: find_or_create_preparation_tool!("Demo Tamper"),
         wdt: find_or_create_preparation_tool!("Demo WDT"),
-        puck_screen: find_or_create_preparation_tool!("Demo Puck Screen")
+        puck_screen: find_or_create_preparation_tool!("Demo Puck Screen"),
+        paper_filter: find_or_create_preparation_tool!("Demo Paper Filter", brew_method: "quick_drip")
       }
     end
 
@@ -156,6 +181,19 @@ class DemoDataSeeder
         notes: "Bright seeded afternoon shot.",
         tools: [ preparation_tools.fetch(:basket), preparation_tools.fetch(:tamper), preparation_tools.fetch(:wdt) ]
       )
+
+      create_quick_drip_once!(
+        occurred_at: Time.zone.local(2026, 5, 27, 9, 0, 0),
+        bean: beans.fetch(:filter_ground),
+        machine_cups: 6,
+        coffee_spoons: 6,
+        beverage_grams: 900,
+        total_time_seconds: 360,
+        taste_balance: "neutral",
+        rating: 4,
+        notes: "Easy seeded Quick Drip batch.",
+        tools: [ preparation_tools.fetch(:paper_filter) ]
+      )
     end
 
     def ensure_equipment_event!
@@ -182,9 +220,9 @@ class DemoDataSeeder
       end
     end
 
-    def find_or_create_preparation_tool!(name)
+    def find_or_create_preparation_tool!(name, brew_method: "espresso")
       workspace.preparation_tools.find_or_create_by!(name:) do |tool|
-        tool.brew_method = "espresso"
+        tool.brew_method = brew_method
         tool.active = true
       end
     end
@@ -205,6 +243,25 @@ class DemoDataSeeder
         ground_weight_grams: 17.8,
         dose_grams: 18,
         channeling: false,
+        **attributes.except(:bean)
+      )
+      brew.save!
+      brew.snapshot_preparation_tools!(tools)
+      brew
+    end
+
+    def create_quick_drip_once!(attributes)
+      brew = workspace.brews.find_or_initialize_by(
+        user:,
+        bean: attributes.fetch(:bean),
+        occurred_at: attributes.fetch(:occurred_at)
+      )
+      return brew if brew.persisted?
+
+      tools = attributes.delete(:tools)
+      brew.assign_attributes(
+        method: "quick_drip",
+        brewer: equipment.fetch(:brewer),
         **attributes.except(:bean)
       )
       brew.save!

@@ -38,6 +38,8 @@ class InstanceReadableExportBuilder
           default_landing_screen: user.default_landing_screen,
           default_brew_focus_field: user.default_brew_focus_field,
           hidden_brew_field_names: user.hidden_brew_field_names,
+          enabled_brew_methods: user.enabled_brew_methods,
+          grams_per_coffee_spoon: decimal(user.grams_per_coffee_spoon),
           number_format: user.number_format,
           time_format: user.time_format,
           theme: user.theme,
@@ -138,5 +140,9 @@ class InstanceReadableExportBuilder
 
     def timestamp(value)
       value&.iso8601
+    end
+
+    def decimal(value)
+      value&.to_s("F")
     end
 end

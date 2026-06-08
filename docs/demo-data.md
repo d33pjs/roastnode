@@ -22,10 +22,10 @@ The demo household includes:
 
 - one owner user
 - one household workspace
-- two open beans
-- one grinder and one espresso machine
-- four preparation tools
-- two espresso brews with preparation tool snapshots
+- three open beans, including one pre-ground filter bean
+- one grinder, one espresso machine, and one Quick Drip brewer
+- five preparation tools, including one Quick Drip paper filter
+- two espresso brews and one Quick Drip brew with preparation tool snapshots
 - one equipment event covering grinder cleaning and machine backflush
 
 Creating the demo brews uses the normal `Brew` model callbacks, so inventory adjustments and remaining bean inventory behave like real logged brews.

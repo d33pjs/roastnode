@@ -82,6 +82,8 @@ class InstanceBackupRestorer
           default_landing_screen: row["default_landing_screen"],
           default_brew_focus_field: row["default_brew_focus_field"],
           hidden_brew_field_names: row["hidden_brew_field_names"],
+          enabled_brew_methods: row["enabled_brew_methods"].presence || %w[espresso quick_drip],
+          grams_per_coffee_spoon: row["grams_per_coffee_spoon"],
           number_format: row["number_format"],
           time_format: row["time_format"],
           theme: row["theme"],
@@ -177,6 +179,7 @@ class InstanceBackupRestorer
             roast_date: date(row["roast_date"]),
             roast_level: row["roast_level"],
             roast_type: row["roast_type"],
+            grind_state: row["grind_state"].presence || "whole_bean",
             roast_degree: row["roast_degree"],
             tasting_notes: row["tasting_notes"],
             bag_size_grams: row["bag_size_grams"],
@@ -280,6 +283,7 @@ class InstanceBackupRestorer
             bean: @bean_map.fetch(row.fetch("bean_id")),
             grinder: optional_lookup(@equipment_map, row["grinder_id"]),
             machine: optional_lookup(@equipment_map, row["machine_id"]),
+            brewer: optional_lookup(@equipment_map, row["brewer_id"]),
             data_import: optional_lookup(@data_import_map, row["data_import_id"]),
             method: row["method"],
             occurred_at: time(row["occurred_at"]),
@@ -287,6 +291,10 @@ class InstanceBackupRestorer
             ground_weight_grams: row["ground_weight_grams"],
             dose_grams: row["dose_grams"],
             beverage_grams: row["beverage_grams"],
+            machine_cups: row["machine_cups"],
+            coffee_spoons: row["coffee_spoons"],
+            grams_per_coffee_spoon: row["grams_per_coffee_spoon"],
+            coffee_amount_source: row["coffee_amount_source"] || "measured",
             grind_setting: row["grind_setting"],
             brew_temperature_celsius: row["brew_temperature_celsius"],
             total_time_seconds: row["total_time_seconds"],
@@ -304,6 +312,7 @@ class InstanceBackupRestorer
             updated_at: time(row["updated_at"])
           )
           brew.inventory_adjustment&.destroy!
+          brew.update_columns(coffee_amount_source: row["coffee_amount_source"]) if row["coffee_amount_source"].present?
           @brew_map[old_id(row)] = brew
         end
       end

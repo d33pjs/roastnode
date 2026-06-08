@@ -3,15 +3,16 @@ require "csv"
 class WorkspaceCsvExportBuilder
   BEAN_COLUMNS = %w[
     id name roaster_name status remaining_grams bag_size_grams opened_on finished_at archived_at
-    roast_date roast_type roast_degree blend_type decaffeinated country region farm farmer
+    roast_date roast_type grind_state roast_degree blend_type decaffeinated country region farm farmer
     elevation variety process harvested blend_percentage tasting_notes rating purchase_source
     purchase_url purchased_on purchase_price notes created_at updated_at
   ].freeze
 
   BREW_COLUMNS = %w[
     id occurred_at method user_display_name user_email_address bean_id bean_name bean_roaster_name
-    grinder_id grinder_name machine_id machine_name preparation_tools bean_weight_grams
-    ground_weight_grams dose_grams beverage_grams brew_ratio grind_setting brew_temperature_celsius
+    grinder_id grinder_name machine_id machine_name brewer_id brewer_name preparation_tools bean_weight_grams
+    ground_weight_grams dose_grams beverage_grams machine_cups coffee_spoons grams_per_coffee_spoon
+    coffee_amount_source brew_ratio grind_setting brew_temperature_celsius
     total_time_seconds preinfusion_seconds first_drip_seconds channeling taste_balance rating
     retention_marker notes created_at updated_at
   ].freeze
@@ -34,7 +35,7 @@ class WorkspaceCsvExportBuilder
     CSV.generate(headers: true) do |csv|
       csv << BREW_COLUMNS
 
-      workspace.brews.includes(:user, :bean, :grinder, :machine, :brew_preparation_tools).order(:id).each do |brew|
+      workspace.brews.includes(:user, :bean, :grinder, :machine, :brewer, :brew_preparation_tools).order(:id).each do |brew|
         csv << BREW_COLUMNS.map { |column| brew_value(brew, column) }
       end
     end
@@ -63,9 +64,11 @@ class WorkspaceCsvExportBuilder
       when "bean_roaster_name" then brew.bean.roaster_name
       when "grinder_name" then brew.grinder&.name
       when "machine_name" then brew.machine&.name
+      when "brewer_name" then brew.brewer&.name
       when "preparation_tools" then brew.brew_preparation_tools.order(:position, :id).pluck(:tool_name).join("; ")
       when "brew_ratio" then brew_ratio(brew)
-      when "bean_weight_grams", "ground_weight_grams", "dose_grams", "beverage_grams", "brew_temperature_celsius"
+      when "bean_weight_grams", "ground_weight_grams", "dose_grams", "beverage_grams", "machine_cups",
+        "coffee_spoons", "grams_per_coffee_spoon", "brew_temperature_celsius"
         decimal(brew.public_send(column))
       else brew.public_send(column)
       end
