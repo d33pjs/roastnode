@@ -132,7 +132,7 @@ class PublicBrewShareSnapshotBuilder
       records.compact.flat_map do |record|
         record.photos.attachments.select { |attachment| selected_photo_attachment_ids.include?(attachment.id) }.map do |attachment|
           {
-            "attachment_id" => attachment.id,
+            "attachment_id" => attachment.id
           }
         end
       end

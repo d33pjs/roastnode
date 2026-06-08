@@ -26,5 +26,4 @@ class PasskeySessionsController < ApplicationController
   rescue ActiveRecord::RecordNotFound, ActionController::ParameterMissing, WebAuthn::Error
     render json: { error: t(".failed") }, status: :unprocessable_entity
   end
-
 end
