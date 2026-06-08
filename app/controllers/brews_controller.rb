@@ -34,7 +34,13 @@ class BrewsController < ApplicationController
 
   def new
     @repeat_source_brew = repeat_source_brew_from_params
-    @selected_method = @repeat_source_brew.method if @repeat_source_brew
+    if @repeat_source_brew
+      @selected_method = @repeat_source_brew.method
+      if disabled_brew_method?(@selected_method)
+        return redirect_to new_brew_path,
+          alert: t(".repeat_method_disabled", method: t("brews.methods.#{@selected_method}"))
+      end
+    end
     load_form_options
     default_attributes = default_brew_attributes(method: @selected_method)
 
@@ -58,6 +64,10 @@ class BrewsController < ApplicationController
   end
 
   def create
+    if @disabled_requested_method.present?
+      return redirect_to new_brew_path, alert: t(".method_disabled", method: t("brews.methods.#{@disabled_requested_method}"))
+    end
+
     attributes = brew_params
     scope_brew_reference_ids!(attributes)
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
@@ -141,13 +151,22 @@ class BrewsController < ApplicationController
     end
 
     def set_selected_method
+      @disabled_requested_method = nil
+
       if @recipe
         @selected_method = @recipe.method.presence_in(Brew::BREW_METHODS) || "espresso"
         return
       end
 
       requested = params[:method].presence || params.dig(:brew, :method).presence
+      if requested.present? && Brew::BREW_METHODS.include?(requested) && disabled_brew_method?(requested)
+        @disabled_requested_method = requested
+      end
       @selected_method = requested.presence_in(Current.user.enabled_brew_methods) || default_log_method
+    end
+
+    def disabled_brew_method?(method)
+      Current.user.enabled_brew_methods.exclude?(method)
     end
 
     def default_log_method

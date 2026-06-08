@@ -201,6 +201,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=text][inputmode=decimal][name=?]", "bean[purchase_price]"
     assert_select "input[name=?]", "bean[roast_date]"
     assert_select "select[name=?]", "bean[roast_type]"
+    assert_select "select[name=?]", "bean[grind_state]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "bean[roast_degree]"
     assert_select "input[name=?]", "bean[purchase_price]"
     assert_select "input[name=?]", "bean[decaffeinated]"
@@ -318,6 +319,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
           purchased_on: "2026-05-03",
           roast_date: "2026-05-10",
           roast_type: "omni",
+          grind_state: "pre_ground",
           roast_degree: "3.5",
           rating: "5",
           blend_type: "blend",
@@ -346,11 +348,35 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal 111.5.to_d, bean.remaining_grams
     assert_equal Date.new(2026, 5, 3), bean.purchased_on
     assert_equal "omni", bean.roast_type
+    assert_equal "pre_ground", bean.grind_state
     assert_equal 3.5.to_d, bean.roast_degree
     assert_equal "blend", bean.blend_type
     assert_equal 1490, bean.purchase_price_cents
     assert_predicate bean, :decaffeinated?
     assert_equal "Colombia", bean.country
+  end
+
+  test "member can create pre-ground bean" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+
+    assert_difference -> { workspaces(:household).beans.count }, 1 do
+      post beans_path, params: {
+        bean: {
+          name: "Ground Filter",
+          roaster_name: "Calendar Coffee",
+          grind_state: "pre_ground",
+          bag_size_grams: "250",
+          remaining_grams: "250",
+          opened_on: "2026-05-26"
+        }
+      }
+    end
+
+    bean = workspaces(:household).beans.order(:created_at).last
+    assert_redirected_to bean_path(bean)
+    assert_equal "pre_ground", bean.grind_state
   end
 
   test "writer can edit bean with comma decimal values" do
@@ -660,6 +686,29 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-grinder-calibration]", text: /1:2[,.]53/
     assert_select "[data-testid=bean-grinder-calibration]", text: /42s/
     assert_select "[data-testid=bean-grinder-suggestions-empty]", text: /Not enough comparable/
+  end
+
+  test "show ignores quick drip as first brew grinder calibration" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    bean.workspace.brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      grinder: equipment(:household_grinder),
+      occurred_at: Time.zone.local(2026, 5, 25, 8, 15, 0),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      grind_setting: "filter 7",
+      taste_balance: "neutral"
+    )
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-grinder-calibration]", count: 0
+    assert_select "[data-testid=bean-grinder-suggestions-empty]", text: /Log the first brew/
   end
 
   test "show automatically renders grinder suggestions from the first brew for non duplicated beans" do

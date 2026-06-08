@@ -21,7 +21,7 @@ class BeansController < ApplicationController
 
   def show
     @bean_statistics = BeanStatistics.new(bean: @bean).call
-    @grinder_tendency_first_brew = @bean.brews.includes(:grinder).order(:occurred_at, :created_at).first
+    @grinder_tendency_first_brew = @bean.brews.espresso.includes(:grinder).order(:occurred_at, :created_at).first
     @grinder_setting_suggestions = load_grinder_setting_suggestions
   end
 
@@ -137,6 +137,7 @@ class BeansController < ApplicationController
         :process,
         :roast_date,
         :roast_type,
+        :grind_state,
         :roast_level,
         :roast_degree,
         :tasting_notes,

@@ -45,10 +45,15 @@
       <h2 class="<%= section_title_class %>"><%= t("beans.form.sections.inventory") %></h2>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <div>
         <%= form.label :bag_status, t("beans.form.status"), class: label_class %>
         <%= form.select :bag_status, Bean::BAG_STATUSES.map { |status| [ t("beans.statuses.#{status}"), status ] }, { selected: bean.bag_status }, class: input_class %>
+      </div>
+
+      <div>
+        <%= form.label :grind_state, t("beans.form.grind_state"), class: label_class %>
+        <%= form.select :grind_state, Bean::GRIND_STATES.map { |state| [ t("beans.grind_states.#{state}"), state ] }, {}, class: input_class %>
       </div>
 
       <div>

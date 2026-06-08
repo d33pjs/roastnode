@@ -225,6 +225,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-form-section][data-section=batch]"
   end
 
+  test "new with repeat quick drip redirects when quick drip is disabled" do
+    user = users(:one)
+    source = create_spoon_estimated_quick_drip_brew_for(user)
+    user.update!(enabled_brew_methods: %w[espresso])
+    sign_in_as(user)
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_redirected_to new_brew_path
+    assert_equal I18n.t("brews.new.repeat_method_disabled", method: I18n.t("brews.methods.quick_drip")), flash[:alert]
+  end
+
   test "quick drip repeat copies method target fields and keeps subjective fields fresh" do
     source = workspaces(:household).brews.create!(
       user: users(:one),
@@ -811,6 +823,28 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal source.coffee_spoons, brew.coffee_spoons
     assert_equal source.grams_per_coffee_spoon, brew.grams_per_coffee_spoon
     assert_equal source.bean_weight_grams, brew.bean_weight_grams
+  end
+
+  test "create with disabled quick drip method does not fallback to espresso" do
+    user = users(:one)
+    user.update!(enabled_brew_methods: %w[espresso])
+    sign_in_as(user)
+
+    assert_no_difference -> { workspaces(:household).brews.count } do
+      post brews_path, params: {
+        brew: {
+          method: "quick_drip",
+          bean_id: beans(:second_open_household).id,
+          brewer_id: equipment(:household_brewer).id,
+          machine_cups: "6",
+          coffee_spoons: "6",
+          taste_balance: "neutral"
+        }
+      }
+    end
+
+    assert_redirected_to new_brew_path
+    assert_equal I18n.t("brews.create.method_disabled", method: I18n.t("brews.methods.quick_drip")), flash[:alert]
   end
 
   test "invalid quick drip create does not render cross workspace selected records" do

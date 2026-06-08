@@ -207,6 +207,7 @@ en:
       elevation: "Elevation"
       farm: "Farm"
       farmer: "Farmer"
+      grind_state: "Grind state"
       harvested: "Harvested"
       name: "Coffee name"
       notes: "Private notes"
@@ -371,6 +372,9 @@ en:
       days:
         one: "1 day"
         other: "%{count} days"
+    grind_states:
+      pre_ground: "Pre-ground"
+      whole_bean: "Whole bean"
     statuses:
       archived: "Archived"
       finished: "Finished"
@@ -382,6 +386,7 @@ en:
   brews:
     create:
       created: "Brew logged."
+      method_disabled: "%{method} is disabled in your Profile."
     destroy:
       destroyed: "Brew deleted and inventory restored."
     methods:
@@ -467,6 +472,7 @@ en:
       rating: "Rating"
       repeat_follow_up_bean: "Using open follow-up bag %{bean}."
       repeat_notice: "Repeating %{bean} from %{date}."
+      repeat_method_disabled: "%{method} is disabled in your Profile. Enable it before repeating that brew."
       repeat_source_unavailable: "That brew's bean is not open, and no duplicated follow-up bag is open."
       taste: "Taste balance"
       temperature: "Temperature (C)"
