@@ -70,6 +70,37 @@
     color: var(--rn-muted);
   }
 
+  .rn-method-tab {
+    min-width: 0;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    padding: 0.5rem 0.75rem;
+    text-align: center;
+    font-size: 0.875rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .rn-method-tab-active {
+    background-color: var(--rn-accent-strong);
+    color: #f8faf6;
+  }
+
+  .rn-method-tab-inactive {
+    color: var(--rn-muted);
+  }
+
+  .rn-method-tab-inactive:hover {
+    background-color: var(--rn-surface-muted);
+    color: var(--rn-ink);
+  }
+
+  .rn-method-tab:focus-visible {
+    outline: 3px solid rgba(47, 83, 101, 0.35);
+    outline-offset: 2px;
+  }
+
   .rn-page {
     min-height: 100vh;
     background-color: var(--rn-canvas);

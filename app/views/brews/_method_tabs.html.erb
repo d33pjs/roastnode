@@ -11,8 +11,8 @@
       new_brew_path(method: method),
       aria: (active ? { current: "page" } : {}),
       class: [
-        "min-w-0 truncate rounded-xl px-3 py-2 text-center text-sm font-extrabold",
-        active ? "bg-rn-ink text-white" : "text-rn-muted hover:bg-[var(--rn-surface-muted)]"
+        "rn-method-tab",
+        active ? "rn-method-tab-active" : "rn-method-tab-inactive"
       ].join(" ") %>
   <% end %>
 </nav>
