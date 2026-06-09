@@ -18,7 +18,12 @@ class PhotoUploadFieldsTest < ActionDispatch::IntegrationTest
       get path
 
       assert_response :success
-      assert_select "input[type=file][name=?][data-testid=photo-upload-input].rn-photo-upload-input", field_name
+      assert_select "input[type=file][name=?][data-testid=photo-upload-input].rn-photo-upload-input", field_name do |inputs|
+        classes = inputs.first["class"].to_s
+        assert_includes classes, "rounded-2xl"
+        assert_includes classes, "text-rn-ink"
+        assert_no_match(/\bfile:/, classes)
+      end
     end
   end
 end

@@ -16,10 +16,10 @@ External Coffees are purchased or otherwise household-external coffee drinks log
 - Optional free-text Drink Size.
 - Optional free-text place name and place location.
 - Optional explicit current-location capture per entry, storing private coordinates only when the member asks for it. Browser geolocation requires HTTPS, or `localhost` on the same device; phone access over plain HTTP LAN hostnames should show a clear secure-context message.
-- Optional price stored as integer minor units with currency defaulting to the workspace currency.
+- Optional price stored as integer minor units with currency defaulting to the workspace currency. Private UI should prefer familiar currency symbols for known currencies, falling back to the ISO code when no symbol mapping exists.
 - Rating, private notes, public note, public/private links, and private photos in the first slice.
 - External Coffee Taste uses Brew-style choice controls with three visible choices per axis: Sour/Balanced/Bitter and Weak/Balanced/Strong, plus Unknown. Legacy stronger values remain readable for existing records.
-- Photo-forward External Coffee Hero Card that still works without a photo, rendered prominently on External Coffee detail pages and available in the Coffees hero-card history view.
+- Photo-forward External Coffee Hero Card that still works without a photo, rendered prominently on External Coffee detail pages and available in the Coffees hero-card history view. Private hero cards include the current workspace logo and logging user avatar when those identity images exist, and use a compact logged-at timestamp without seconds.
 - Dashboard recent activity includes External Coffees as concise activity rows. The dashboard's top "Latest coffee" hero can be either a Brew or an External Coffee; the "Latest best brew" hero remains Brew-only.
 - General history/activity participation, with separate External Coffee Comparison for price, rating, taste, drink type, and place.
 - Workspace JSON export, external-coffee CSV export, media ZIP export, instance backup, and empty-server restore coverage.
@@ -63,6 +63,8 @@ Public External Coffee media must use opaque public media handles and explicit p
 ## Field Rules
 
 External Coffee creation requires only Drink Type and occurred-at timestamp. Place, size, price, taste axes, rating, private notes, public note, photos, links, and location are optional.
+
+Saving an External Coffee edit without choosing a new photo must preserve existing photos. Blank file-upload params from native browser controls should be ignored, not treated as a command to detach existing media.
 
 Drink Type suggestions may combine global seeded suggestions with active-workspace history. Place name suggestions should come only from active-workspace history.
 

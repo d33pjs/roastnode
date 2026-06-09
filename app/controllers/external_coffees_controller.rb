@@ -93,7 +93,21 @@ class ExternalCoffeesController < ApplicationController
         record_links_attributes: [ [ :id, :label, :url, :kind, :visibility, :position, :_destroy ] ]
       ])
 
-      normalize_decimal_attributes(attributes, *DECIMAL_FIELDS)
+      attributes = normalize_decimal_attributes(attributes, *DECIMAL_FIELDS)
+      discard_blank_photo_params(attributes)
+    end
+
+    def discard_blank_photo_params(attributes)
+      return attributes unless attributes.key?(:photos)
+
+      photos = Array(attributes[:photos]).compact_blank
+      if photos.empty?
+        attributes.delete(:photos)
+      else
+        attributes[:photos] = photos
+      end
+
+      attributes
     end
 
     def prepare_form_options

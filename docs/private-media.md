@@ -13,7 +13,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Active Storage-backed finished-drink photo attachments for recipes.
 - Active Storage-backed identity images for users: avatar and public banner.
 - Active Storage-backed identity images for workspaces: logo and banner.
-- Shared rounded photo upload controls on create/edit forms for image-enabled records where a form exists.
+- Shared rounded photo upload controls on create/edit forms for image-enabled records where a form exists. These controls mirror the original External Coffee log input treatment and avoid hidden empty file params so saving an edit without choosing a new file does not remove existing photos.
 - Photo galleries on detail pages.
 - Contained photo thumbnails that open the private original image in an in-page lightbox, with raw view links still available.
 - Generated private thumbnail variants for in-page previews without CSS zoom/crop.

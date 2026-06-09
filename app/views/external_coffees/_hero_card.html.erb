@@ -1,5 +1,7 @@
 <% compact = local_assigns.fetch(:compact, false) %>
 <% photo = external_coffee.primary_photo_attachment %>
+<% user_avatar = external_coffee.user.avatar.attachment if external_coffee.user.avatar.attached? %>
+<% workspace_logo = current_workspace.logo.attachment if current_workspace.logo.attached? %>
 
 <article data-testid="external-coffee-hero-card" class="relative overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= compact ? "min-h-[18rem]" : "min-h-[25rem]" %>">
   <% if photo.present? %>
@@ -20,7 +22,7 @@
       </div>
       <div class="shrink-0 rounded-2xl border border-white/20 bg-black/35 px-3 py-2 text-right backdrop-blur">
         <p class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-stone-300"><%= t("external_coffees.show.price") %></p>
-        <p class="text-lg font-black text-white"><%= external_coffee_price(external_coffee) %></p>
+        <p data-testid="external-coffee-price" class="text-lg font-black text-white"><%= external_coffee_price(external_coffee) %></p>
       </div>
     </div>
 
@@ -49,13 +51,23 @@
         </div>
         <div class="rounded-2xl border border-white/15 bg-black/35 p-3 backdrop-blur">
           <p class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-stone-300"><%= t("external_coffees.show.logged_at") %></p>
-          <p class="mt-1 text-sm font-black text-white"><%= profile_timestamp(external_coffee.occurred_at) %></p>
+          <p data-testid="external-coffee-logged-at" class="mt-1 whitespace-nowrap text-xs font-black text-white sm:text-sm"><%= external_coffee_card_timestamp(external_coffee) %></p>
         </div>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-3 text-xs font-bold text-stone-300">
-        <span><%= current_workspace.name %></span>
-        <span><%= t("external_coffees.show.logged_by", user: external_coffee.user.display_label) %></span>
+        <span data-testid="external-coffee-workspace" class="inline-flex min-w-0 max-w-full items-center gap-1.5">
+          <% if workspace_logo.present? %>
+            <%= image_tag media_attachment_path(workspace_logo, variant: :thumbnail), alt: "", data: { testid: "external-coffee-workspace-logo" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
+          <% end %>
+          <span class="min-w-0 truncate"><%= current_workspace.name %></span>
+        </span>
+        <span data-testid="external-coffee-byline" class="inline-flex min-w-0 max-w-full items-center gap-1.5">
+          <% if user_avatar.present? %>
+            <%= image_tag media_attachment_path(user_avatar, variant: :thumbnail), alt: "", data: { testid: "external-coffee-user-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
+          <% end %>
+          <span class="min-w-0 truncate"><%= t("external_coffees.show.logged_by", user: external_coffee.user.display_label) %></span>
+        </span>
       </div>
     </div>
   </div>

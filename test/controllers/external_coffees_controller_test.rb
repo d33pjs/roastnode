@@ -19,10 +19,12 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "datalist#external-coffee-drink-types option[value=?]", "Orange Cappuccino"
     assert_select "input[name=?]", "external_coffee[place_name]"
     assert_select "input[name=?]", "external_coffee[price]"
-    assert_select "input[type=datetime-local][name=?].min-w-0.max-w-full", "external_coffee[occurred_at]"
+    assert_select "[data-testid=external-coffee-occurred-at-field].overflow-hidden"
+    assert_select "input[type=datetime-local][name=?].rn-datetime-input.min-w-0.max-w-full", "external_coffee[occurred_at]"
     assert_select "textarea[name=?]", "external_coffee[notes]"
     assert_select "textarea[name=?]", "external_coffee[public_note]"
     assert_select "input[type=file][name=?][multiple=multiple][data-testid=photo-upload-input]", "external_coffee[photos][]"
+    assert_select "input[type=hidden][name=?]", "external_coffee[photos][]", count: 0
     assert_select "[data-controller=external-coffee-location][data-insecure-message]"
   end
 
@@ -85,6 +87,54 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 450, coffee.price_cents
     assert_equal "EUR", coffee.currency
     assert_equal "Menu", coffee.record_links.first.label
+  end
+
+  test "update without choosing another photo keeps existing photos" do
+    sign_in_as(users(:one))
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Americano",
+      occurred_at: 1.hour.ago,
+      currency: "EUR"
+    )
+    photo = attach_photo(coffee)
+
+    patch external_coffee_path(coffee), params: {
+      external_coffee: {
+        drink_type: "Americano",
+        occurred_at: coffee.occurred_at,
+        currency: "EUR",
+        photos: [ "" ]
+      }
+    }
+
+    assert_redirected_to external_coffee_path(coffee)
+    assert_equal [ photo.id ], coffee.reload.photos.attachments.pluck(:id)
+  end
+
+  test "show hero card renders identity images compact timestamp and symbol price" do
+    workspace = workspaces(:household)
+    user = users(:one)
+    attach_named_photo(workspace, :logo, filename: "household-logo.jpg")
+    attach_named_photo(user, :avatar, filename: "user-avatar.jpg")
+    coffee = workspace.external_coffees.create!(
+      user:,
+      drink_type: "Flat White",
+      occurred_at: Time.zone.local(2026, 6, 9, 14, 5, 45),
+      price_cents: 450,
+      currency: "EUR"
+    )
+    sign_in_as(user)
+
+    get external_coffee_path(coffee)
+
+    assert_response :success
+    assert_select "[data-testid=external-coffee-workspace-logo]"
+    assert_select "[data-testid=external-coffee-user-avatar]"
+    assert_select "[data-testid=external-coffee-price]", text: "4,50 €"
+    assert_select "[data-testid=external-coffee-price]", text: /EUR/, count: 0
+    assert_select "[data-testid=external-coffee-logged-at]", text: "09.06.2026 14:05"
+    assert_select "[data-testid=external-coffee-logged-at]", text: /:45/, count: 0
   end
 
   test "viewer cannot create external coffee" do

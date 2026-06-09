@@ -29,9 +29,9 @@
         <%= form.text_field :drink_size, class: input_class %>
       </div>
 
-      <div class="min-w-0">
+      <div data-testid="external-coffee-occurred-at-field" class="min-w-0 overflow-hidden">
         <%= form.label :occurred_at, t(".occurred_at"), class: label_class %>
-        <%= form.datetime_local_field :occurred_at, required: true, class: input_class %>
+        <%= form.datetime_local_field :occurred_at, required: true, class: "#{input_class} rn-datetime-input" %>
       </div>
 
       <div class="min-w-0">

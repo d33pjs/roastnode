@@ -218,6 +218,34 @@
     max-height: 2.75rem !important;
   }
 
+  .rn-datetime-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    appearance: none;
+    overflow: hidden;
+  }
+
+  .rn-datetime-input::-webkit-date-and-time-value,
+  .rn-datetime-input::-webkit-datetime-edit {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rn-datetime-input::-webkit-calendar-picker-indicator {
+    flex-shrink: 0;
+    margin-left: 0.25rem;
+  }
+
+  @media (max-width: 640px) {
+    .rn-datetime-input {
+      font-size: 0.875rem;
+    }
+  }
+
   .rn-choice-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(7rem, 1fr));
