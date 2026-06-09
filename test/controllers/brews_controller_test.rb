@@ -1557,7 +1557,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "index shows workspace brews newest first in compact view by default" do
+  test "index shows workspace coffees newest first in compact view by default" do
     older = brews(:morning_espresso)
     older.update!(occurred_at: Time.zone.local(2026, 5, 30, 8, 0, 0))
     create_public_brew_share_for(older, enabled: true)
@@ -1576,13 +1576,26 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       rating: 5
     )
     create_public_brew_share_for(newest, enabled: false)
+    external = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Americano",
+      place_name: "Corner Cafe",
+      occurred_at: Time.zone.local(2026, 6, 1, 10, 0, 0),
+      acidity_balance: "balanced",
+      intensity: "strong",
+      rating: 4
+    )
 
     sign_in_as(users(:one))
-    get brews_path
+    get coffees_path
 
     assert_response :success
     assert_select "h1", I18n.t("brews.index.title")
+    assert_select "[data-testid=coffee-filter-all][aria-current=page]"
+    assert_select "[data-testid=coffee-filter-brews]"
+    assert_select "[data-testid=coffee-filter-external]"
     assert_select "[data-testid=brew-history-compact-card].overflow-hidden", count: 2
+    assert_select "a[href=?][data-testid=external-coffee-card]", external_coffee_path(external), text: /Americano/
     assert_select "[data-testid=brew-compact-card][data-method=espresso].overflow-hidden", count: 2
     assert_select "[data-testid=brew-history-hero-card]", count: 0
     assert_select "a[href=?]", brew_path(newest), text: /#{newest.bean.name}/
@@ -1594,7 +1607,22 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?]", "brew-native-share-button-#{newest.id}", count: 0
     assert_select "[data-testid=?]", "brew-history-compact-card-link-#{older.id}"
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
+    assert_appears_before external.drink_type, newest.bean.name
     assert_appears_before newest.bean.name, older.bean.name
+
+    get coffees_path, params: { filter: "brews" }
+
+    assert_response :success
+    assert_select "[data-testid=coffee-filter-brews][aria-current=page]"
+    assert_select "[data-testid=brew-history-compact-card].overflow-hidden", count: 2
+    assert_select "a[href=?][data-testid=external-coffee-card]", external_coffee_path(external), count: 0
+
+    get coffees_path, params: { filter: "external" }
+
+    assert_response :success
+    assert_select "[data-testid=coffee-filter-external][aria-current=page]"
+    assert_select "[data-testid=brew-history-compact-card].overflow-hidden", count: 0
+    assert_select "a[href=?][data-testid=external-coffee-card]", external_coffee_path(external), text: /Americano/
   end
 
   test "compact brew card is method aware for quick drip" do
@@ -1637,17 +1665,25 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index can render hero cards" do
+    external = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Flat White",
+      place_name: "Neighborhood Coffee",
+      occurred_at: Time.current + 5.minutes
+    )
     sign_in_as(users(:one))
 
-    get brews_path, params: { view: "hero" }
+    get coffees_path, params: { view: "hero" }
 
     assert_response :success
     assert_select "[data-testid=brew-history-hero-card]", count: 1
+    assert_select "[data-testid=external-coffee-history-hero-card] a[href=?]", external_coffee_path(external)
+    assert_select "[data-testid=external-coffee-hero-card]", text: /Flat White/
     assert_select "[data-testid=brew-history-compact-card]", count: 0
     assert_select "[data-testid=brew-history-hero-card] a[href=?]", brew_path(brews(:morning_espresso))
   end
 
-  test "index paginates brews and preserves selected view" do
+  test "index paginates coffees and preserves selected view" do
     workspace = workspaces(:household)
     21.times do |index|
       workspace.brews.create!(
@@ -1661,15 +1697,15 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     end
     sign_in_as(users(:one))
 
-    get brews_path, params: { view: "hero" }
+    get coffees_path, params: { view: "hero" }
 
     assert_response :success
-    assert_select "[data-testid=history-next-page][href=?]", brews_path(view: "hero", page: 2)
+    assert_select "[data-testid=history-next-page][href=?]", coffees_path(view: "hero", page: 2)
 
-    get brews_path, params: { view: "hero", page: 2 }
+    get coffees_path, params: { view: "hero", page: 2 }
 
     assert_response :success
-    assert_select "[data-testid=history-previous-page][href=?]", brews_path(view: "hero", page: 1)
+    assert_select "[data-testid=history-previous-page][href=?]", coffees_path(view: "hero", page: 1)
   end
 
   test "viewer can read brew history" do

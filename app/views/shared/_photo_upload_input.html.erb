@@ -1,0 +1,9 @@
+<% field = local_assigns.fetch(:field, :photos) %>
+<% multiple = local_assigns.fetch(:multiple, true) %>
+<% accept = local_assigns.fetch(:accept, "image/*") %>
+<% testid = local_assigns.fetch(:testid, "photo-upload-input") %>
+<% data = local_assigns.fetch(:data, {}).merge(testid:) %>
+<% spacing_class = local_assigns.fetch(:spacing_class, "mt-1") %>
+<% class_name = local_assigns.fetch(:class_name, "rn-photo-upload-input #{spacing_class} block min-w-0 max-w-full w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-sm font-extrabold text-rn-muted shadow-sm file:mr-4 file:rounded-full file:border-0 file:bg-[var(--rn-coffee)] file:px-4 file:py-2 file:text-sm file:font-extrabold file:text-[#fff8e8] hover:file:opacity-90 focus:border-[var(--rn-accent-strong)] focus:outline-none") %>
+
+<%= form.file_field field, multiple:, accept:, class: class_name, data: %>

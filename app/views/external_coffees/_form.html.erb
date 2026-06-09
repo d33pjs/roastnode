@@ -1,5 +1,5 @@
 <% label_class = "block text-sm font-extrabold text-rn-muted" %>
-<% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+<% input_class = "mt-1 block min-w-0 max-w-full w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
 <% section_class = "grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
 <% section_title_class = "text-lg font-black text-rn-ink" %>
 
@@ -13,8 +13,8 @@
   <section class="<%= section_class %>">
     <h2 class="<%= section_title_class %>"><%= t(".sections.drink") %></h2>
 
-    <div class="grid gap-4 sm:grid-cols-2">
-      <div>
+    <div class="grid min-w-0 gap-4 sm:grid-cols-2">
+      <div class="min-w-0">
         <%= form.label :drink_type, t(".drink_type"), class: label_class %>
         <%= form.text_field :drink_type, required: true, list: "external-coffee-drink-types", class: input_class %>
         <datalist id="external-coffee-drink-types">
@@ -24,17 +24,17 @@
         </datalist>
       </div>
 
-      <div>
+      <div class="min-w-0">
         <%= form.label :drink_size, t(".drink_size"), class: label_class %>
         <%= form.text_field :drink_size, class: input_class %>
       </div>
 
-      <div>
+      <div class="min-w-0">
         <%= form.label :occurred_at, t(".occurred_at"), class: label_class %>
         <%= form.datetime_local_field :occurred_at, required: true, class: input_class %>
       </div>
 
-      <div>
+      <div class="min-w-0">
         <%= form.label :price, t(".price"), class: label_class %>
         <div class="mt-1 grid grid-cols-[minmax(0,1fr)_5rem] gap-2">
           <%= form.text_field :price, inputmode: "decimal", class: input_class.sub("mt-1 ", "") %>
@@ -69,6 +69,7 @@
       data-unsupported-message="<%= t(".location_unsupported") %>"
       data-pending-message="<%= t(".location_pending") %>"
       data-denied-message="<%= t(".location_denied") %>"
+      data-insecure-message="<%= t(".location_insecure") %>"
       data-captured-message="<%= t(".location_captured") %>"
       class="rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3"
     >
@@ -92,29 +93,30 @@
   <section class="<%= section_class %>">
     <h2 class="<%= section_title_class %>"><%= t(".sections.taste") %></h2>
 
-    <div class="grid gap-4 sm:grid-cols-3">
-      <div>
+    <div class="grid gap-4 lg:grid-cols-3">
+      <div class="min-w-0">
         <%= form.label :acidity_balance, t(".acidity_balance"), class: label_class %>
-        <%= form.select :acidity_balance,
-          ExternalCoffee::ACIDITY_BALANCES.map { |value| [ external_coffee_acidity_label(value), value ] },
-          {},
-          class: input_class %>
+        <%= render "external_coffees/taste_axis_choices",
+          form:,
+          field: :acidity_balance,
+          values: ExternalCoffee::ACIDITY_BALANCE_CHOICES,
+          labels: ExternalCoffee::ACIDITY_BALANCE_CHOICES.index_with { |value| external_coffee_acidity_label(value) },
+          aria_label: t(".acidity_balance") %>
       </div>
 
-      <div>
+      <div class="min-w-0">
         <%= form.label :intensity, t(".intensity"), class: label_class %>
-        <%= form.select :intensity,
-          ExternalCoffee::INTENSITIES.map { |value| [ external_coffee_intensity_label(value), value ] },
-          {},
-          class: input_class %>
+        <%= render "external_coffees/taste_axis_choices",
+          form:,
+          field: :intensity,
+          values: ExternalCoffee::INTENSITY_CHOICES,
+          labels: ExternalCoffee::INTENSITY_CHOICES.index_with { |value| external_coffee_intensity_label(value) },
+          aria_label: t(".intensity") %>
       </div>
 
-      <div>
+      <div class="min-w-0">
         <%= form.label :rating, t(".rating"), class: label_class %>
-        <%= form.select :rating,
-          [[ t(".no_rating"), "" ]] + (1..5).map { |rating| [ rating, rating ] },
-          {},
-          class: input_class %>
+        <%= render "external_coffees/rating_choices", form: %>
       </div>
     </div>
   </section>
@@ -134,7 +136,7 @@
 
     <div>
       <%= form.label :photos, t(".photos"), class: label_class %>
-      <%= form.file_field :photos, multiple: true, accept: "image/*", class: input_class %>
+      <%= render "shared/photo_upload_input", form: %>
     </div>
   </section>
 

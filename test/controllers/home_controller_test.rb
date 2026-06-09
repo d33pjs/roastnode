@@ -223,7 +223,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
         assert_select "[data-testid=?]", "dashboard-open-bean-remaining-#{bean.id}", text: /132g of 250g/
         assert_select "[data-testid=?]", "dashboard-open-bean-open-age-#{bean.id}", text: "Open 28 days"
         assert_select "[data-testid=?]", "dashboard-open-bean-roast-age-#{bean.id}", text: "Roast age 37 days"
-        assert_select "a[href=?]", brew_path(latest), text: /Last brew/
+        assert_select "a[href=?]", brew_path(latest), text: /Last coffee/
         assert_select "[data-testid=?]", "dashboard-open-bean-last-setup-#{bean.id}", text: /Grind 12.5/
         assert_select "[data-testid=?]", "dashboard-open-bean-last-setup-#{bean.id}", text: /1:2,5 in 29s/
         assert_select "a[href=?]", brew_path(best), text: /Best brew/
@@ -244,8 +244,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-recent-activity].min-w-0"
     assert_select "[data-testid=dashboard-recent-activity] a.min-w-0"
     assert_select "[data-testid=dashboard-recent-activity] p.break-words"
-    assert_select "[data-testid=dashboard-latest-brew-card].min-w-0"
-    assert_select "[data-testid=dashboard-latest-brew-card] > a.min-w-0"
+    assert_select "[data-testid=dashboard-latest-coffee-card].min-w-0"
+    assert_select "[data-testid=dashboard-latest-coffee-card] > a.min-w-0"
   end
 
   test "workspace dashboard header uses household logo without repeated app identity" do
@@ -329,15 +329,39 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h2", I18n.t("workspaces.show.hero.latest")
     assert_select "h2", I18n.t("workspaces.show.hero.best")
-    assert_select "[data-testid=dashboard-latest-brew-heading] a[href=?]", brews_path, text: I18n.t("workspaces.show.view_all")
-    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", brew_path(latest)
+    assert_select "[data-testid=dashboard-latest-coffee-heading] a[href=?]", coffees_path, text: I18n.t("workspaces.show.view_all")
+    assert_select "[data-testid=dashboard-latest-coffee-card] a[href=?]", brew_path(latest)
     assert_select "[data-testid=dashboard-latest-best-brew-card] a[href=?]", brew_path(best)
-    assert_select "[data-testid=dashboard-latest-brew-card] > a", count: 1
+    assert_select "[data-testid=dashboard-latest-coffee-card] > a", count: 1
     assert_select "[data-testid=dashboard-latest-best-brew-card] > a", count: 1
-    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", bean_path(latest.bean), count: 0
-    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", equipment_path(latest.grinder), count: 0
-    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-timestamp]", "26.05.2026 12:00:00"
+    assert_select "[data-testid=dashboard-latest-coffee-card] a[href=?]", bean_path(latest.bean), count: 0
+    assert_select "[data-testid=dashboard-latest-coffee-card] a[href=?]", equipment_path(latest.grinder), count: 0
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-timestamp]", "26.05.2026 12:00:00"
     assert_select "[data-testid=dashboard-latest-best-brew-card] [data-testid=brew-rating][aria-label=?]", "Rating 5 of 5 beans"
+  end
+
+  test "workspace dashboard latest coffee can be an external coffee" do
+    workspace = workspaces(:household)
+    latest_brew = brews(:morning_espresso)
+    latest_brew.update!(occurred_at: Time.zone.local(2026, 6, 1, 8, 0, 0), rating: 5)
+    external = workspace.external_coffees.create!(
+      user: users(:one),
+      drink_type: "Iced Latte",
+      place_name: "Station Coffee",
+      occurred_at: Time.zone.local(2026, 6, 1, 9, 0, 0),
+      acidity_balance: "balanced",
+      intensity: "weak",
+      rating: 3
+    )
+    sign_in_as(users(:one))
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "h2", I18n.t("workspaces.show.hero.latest")
+    assert_select "[data-testid=dashboard-latest-coffee-card] a[href=?]", external_coffee_path(external)
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=external-coffee-hero-card]", text: /Iced Latte/
+    assert_select "[data-testid=dashboard-latest-best-brew-card] a[href=?]", brew_path(latest_brew)
   end
 
   test "workspace dashboard renders latest quick drip hero card" do
@@ -361,10 +385,10 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     get dashboard_path
 
     assert_response :success
-    assert_select "[data-testid=dashboard-latest-brew-card] a[href=?]", brew_path(brew)
-    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-hero-card][data-method=quick_drip]"
-    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=quick-drip-machine-cups]", "6"
-    assert_select "[data-testid=dashboard-latest-brew-card] [data-testid=brew-chart-grid]", count: 0
+    assert_select "[data-testid=dashboard-latest-coffee-card] a[href=?]", brew_path(brew)
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-hero-card][data-method=quick_drip]"
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=quick-drip-machine-cups]", "6"
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-chart-grid]", count: 0
   end
 
   test "shows onboarding for signed-in user without workspace" do

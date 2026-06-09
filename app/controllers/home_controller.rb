@@ -34,7 +34,7 @@ class HomeController < ApplicationController
       @brews_this_week = current_workspace.brews.where(occurred_at: Time.current.all_week).count
       @open_bean_count = current_workspace.beans.open.count
       @grams_remaining = current_workspace.beans.open.sum(:remaining_grams)
-      @latest_brew = dashboard_brews.order(occurred_at: :desc, created_at: :desc).first
+      @latest_coffee = latest_dashboard_coffee
       @latest_best_brew = dashboard_brews.where.not(rating: nil).order(rating: :desc, occurred_at: :desc, created_at: :desc).first
       @recent_brews = current_workspace.brews.includes(:bean, :user).order(occurred_at: :desc, created_at: :desc).limit(5)
       @recent_external_coffees = current_workspace.external_coffees.includes(:user).order(occurred_at: :desc, created_at: :desc).limit(5)
@@ -45,5 +45,15 @@ class HomeController < ApplicationController
 
     def dashboard_brews
       current_workspace.brews.includes(:bean, :user, :grinder, :machine, :brew_preparation_tools)
+    end
+
+    def dashboard_external_coffees
+      current_workspace.external_coffees.includes(:user, :primary_photo_record, photos_attachments: :blob)
+    end
+
+    def latest_dashboard_coffee
+      (dashboard_brews.order(occurred_at: :desc, created_at: :desc).limit(1).to_a +
+        dashboard_external_coffees.order(occurred_at: :desc, created_at: :desc).limit(1).to_a)
+        .max_by { |record| [ record.occurred_at || Time.at(0), record.created_at || Time.at(0) ] }
     end
 end

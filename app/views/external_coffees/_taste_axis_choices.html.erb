@@ -1,0 +1,27 @@
+<% field = local_assigns.fetch(:field) %>
+<% values = local_assigns.fetch(:values) %>
+<% labels = local_assigns.fetch(:labels) %>
+<% testid = "external-coffee-#{field.to_s.dasherize}" %>
+<% unknown_value = "unknown" %>
+<% scale_values = values - [ unknown_value ] %>
+
+<div data-testid="<%= testid %>-options" class="rn-taste-balance mt-2">
+  <label data-testid="<%= testid %>-unknown-choice" class="rn-choice rn-choice-unknown">
+    <%= form.radio_button field, unknown_value, class: "rn-choice-input" %>
+    <span class="rn-choice-label rn-choice-label-muted"><%= labels.fetch(unknown_value) %></span>
+  </label>
+
+  <div
+    data-testid="<%= testid %>-scale"
+    class="rn-balance-scale"
+    style="grid-template-columns: repeat(<%= scale_values.size %>, minmax(0, 1fr));"
+    aria-label="<%= local_assigns.fetch(:aria_label) %>"
+  >
+    <% scale_values.each do |value| %>
+      <label class="rn-choice rn-balance-choice">
+        <%= form.radio_button field, value, class: "rn-choice-input" %>
+        <span class="rn-choice-label rn-balance-label"><%= labels.fetch(value) %></span>
+      </label>
+    <% end %>
+  </div>
+</div>

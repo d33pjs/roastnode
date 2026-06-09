@@ -29,16 +29,20 @@
       </section>
     <% end %>
 
-    <% if @latest_brew.present? || @latest_best_brew.present? %>
+    <% if @latest_coffee.present? || @latest_best_brew.present? %>
       <section class="mt-8 grid min-w-0 gap-6 lg:grid-cols-2">
-        <% if @latest_brew.present? %>
-          <div data-testid="dashboard-latest-brew-card" class="min-w-0">
-            <div data-testid="dashboard-latest-brew-heading" class="mb-3 flex min-w-0 items-center justify-between gap-4">
+        <% if @latest_coffee.present? %>
+          <div data-testid="dashboard-latest-coffee-card" class="min-w-0">
+            <div data-testid="dashboard-latest-coffee-heading" class="mb-3 flex min-w-0 items-center justify-between gap-4">
               <h2 class="text-xl font-black text-rn-ink"><%= t(".hero.latest") %></h2>
-              <%= link_to t(".view_all"), brews_path, class: "text-sm font-bold text-rn-ink hover:underline" %>
+              <%= link_to t(".view_all"), coffees_path, class: "text-sm font-bold text-rn-ink hover:underline" %>
             </div>
-            <%= link_to brew_path(@latest_brew), class: "block min-w-0" do %>
-              <%= render "brews/hero_card", brew: @latest_brew, compact: true, chart_id: "latest-brew-shot-fill-#{@latest_brew.id}" %>
+            <%= link_to polymorphic_path(@latest_coffee), class: "block min-w-0" do %>
+              <% if @latest_coffee.is_a?(Brew) %>
+                <%= render "brews/hero_card", brew: @latest_coffee, compact: true, chart_id: "latest-brew-shot-fill-#{@latest_coffee.id}" %>
+              <% else %>
+                <%= render "external_coffees/hero_card", external_coffee: @latest_coffee, compact: true %>
+              <% end %>
             <% end %>
           </div>
         <% end %>

@@ -98,7 +98,7 @@
       <% unless hide_brew_field.call(:photos) %>
         <div class="sm:col-span-2">
           <%= form.label :photos, t("brews.form.photos"), class: "block text-sm font-bold text-rn-muted" %>
-          <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm font-semibold text-rn-muted file:mr-4 file:rounded-full file:border-0 file:bg-[var(--rn-coffee)] file:px-4 file:py-2 file:text-sm file:font-extrabold file:text-[#fff8e8] hover:file:opacity-90" %>
+          <%= render "shared/photo_upload_input", form: %>
         </div>
       <% end %>
     </div>

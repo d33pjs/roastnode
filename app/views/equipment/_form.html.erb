@@ -22,7 +22,7 @@
 
     <div>
       <%= form.label :photos, t("equipment.form.photos"), class: label_class %>
-      <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm font-bold text-rn-muted file:mr-4 file:rounded-full file:border-0 file:bg-[var(--rn-accent-strong)] file:px-4 file:py-2 file:text-sm file:font-extrabold file:text-[#f8faf6] hover:file:opacity-90" %>
+      <%= render "shared/photo_upload_input", form: %>
     </div>
   </section>
 

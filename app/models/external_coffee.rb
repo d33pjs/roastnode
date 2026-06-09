@@ -4,6 +4,50 @@ class ExternalCoffee < ApplicationRecord
 
   ACIDITY_BALANCES = %w[unknown very_sour sour balanced bitter very_bitter].freeze
   INTENSITIES = %w[unknown weak balanced strong harsh].freeze
+  ACIDITY_BALANCE_CHOICES = %w[unknown sour balanced bitter].freeze
+  INTENSITY_CHOICES = %w[unknown weak balanced strong].freeze
+  DRINK_TYPE_SUGGESTIONS = [
+    "Espresso",
+    "Ristretto",
+    "Lungo",
+    "Doppio",
+    "Americano",
+    "Long Black",
+    "Black Coffee",
+    "Filter Coffee",
+    "Batch Brew",
+    "Pour Over",
+    "V60",
+    "Chemex",
+    "AeroPress",
+    "French Press",
+    "Moka Pot",
+    "Turkish Coffee",
+    "Cappuccino",
+    "Flat White",
+    "Latte",
+    "Latte Macchiato",
+    "Caffe Macchiato",
+    "Espresso Macchiato",
+    "Cortado",
+    "Piccolo",
+    "Gibraltar",
+    "Cafe au Lait",
+    "Cafe con Leche",
+    "Mocha",
+    "White Mocha",
+    "Affogato",
+    "Cold Brew",
+    "Nitro Cold Brew",
+    "Iced Coffee",
+    "Iced Americano",
+    "Iced Latte",
+    "Iced Flat White",
+    "Iced Matcha Latte",
+    "Matcha Latte",
+    "Chai Latte",
+    "Decaf Coffee"
+  ].freeze
 
   enum :acidity_balance, ACIDITY_BALANCES.index_by(&:itself)
   enum :intensity, INTENSITIES.index_by(&:itself), prefix: true

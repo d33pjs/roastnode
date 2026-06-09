@@ -8,32 +8,61 @@
         <h1 class="mt-4 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= t(".title") %></h1>
       </div>
 
-      <div class="inline-flex rounded-xl border border-rn-line bg-rn-surface p-1 shadow-sm">
-        <%= link_to t(".compact_view"),
-          brews_path,
-          class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@brew_history_view == "compact" ? "bg-[var(--rn-coffee)] text-[#fff8e8]" : "text-rn-muted hover:text-rn-ink"}" %>
-        <%= link_to t(".hero_view"),
-          brews_path(view: "hero"),
-          class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@brew_history_view == "hero" ? "bg-[var(--rn-coffee)] text-[#fff8e8]" : "text-rn-muted hover:text-rn-ink"}" %>
+      <div class="grid gap-2">
+        <div class="inline-flex rounded-xl border border-rn-line bg-rn-surface p-1 shadow-sm">
+          <% view_filter_params = @coffee_filter == "all" ? {} : { filter: @coffee_filter } %>
+          <%= link_to t(".compact_view"),
+            coffees_path(view_filter_params),
+            class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@brew_history_view == "compact" ? "bg-[var(--rn-coffee)] text-[#fff8e8]" : "text-rn-muted hover:text-rn-ink"}" %>
+          <%= link_to t(".hero_view"),
+            coffees_path(view_filter_params.merge(view: "hero")),
+            class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@brew_history_view == "hero" ? "bg-[var(--rn-coffee)] text-[#fff8e8]" : "text-rn-muted hover:text-rn-ink"}" %>
+        </div>
+
+        <div class="inline-flex rounded-xl border border-rn-line bg-rn-surface p-1 shadow-sm">
+          <% filter_view_params = @brew_history_view == "hero" ? { view: "hero" } : {} %>
+          <% { "all" => t(".filter_all"), "brews" => t(".filter_brews"), "external" => t(".filter_external") }.each do |filter, label| %>
+            <% filter_params = filter == "all" ? filter_view_params : filter_view_params.merge(filter:) %>
+            <%= link_to label,
+              coffees_path(filter_params),
+              data: { testid: "coffee-filter-#{filter}" },
+              aria: (@coffee_filter == filter ? { current: "page" } : {}),
+              class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@coffee_filter == filter ? "bg-[var(--rn-accent-strong)] text-[#f8faf6]" : "text-rn-muted hover:text-rn-ink"}" %>
+          <% end %>
+        </div>
       </div>
     </div>
 
     <% if @brew_history.any? %>
-      <% history_params = @brew_history_view == "hero" ? { view: "hero" } : {} %>
+      <% history_params = {} %>
+      <% history_params[:view] = "hero" if @brew_history_view == "hero" %>
+      <% history_params[:filter] = @coffee_filter unless @coffee_filter == "all" %>
 
       <div class="mt-6 grid gap-4">
-        <% @brew_history.records.each do |brew| %>
+        <% @brew_history.records.each do |coffee| %>
           <% if @brew_history_view == "hero" %>
-            <div data-testid="brew-history-hero-card">
-              <%= link_to brew_path(brew), class: "block" do %>
-                <%= render "brews/hero_card",
-                  brew: brew,
-                  compact: true,
-                  chart_id: "brew-history-shot-fill-#{brew.id}" %>
-              <% end %>
-            </div>
+            <% if coffee.is_a?(Brew) %>
+              <div data-testid="brew-history-hero-card">
+                <%= link_to brew_path(coffee), class: "block" do %>
+                  <%= render "brews/hero_card",
+                    brew: coffee,
+                    compact: true,
+                    chart_id: "brew-history-shot-fill-#{coffee.id}" %>
+                <% end %>
+              </div>
+            <% else %>
+              <div data-testid="external-coffee-history-hero-card">
+                <%= link_to external_coffee_path(coffee), class: "block" do %>
+                  <%= render "external_coffees/hero_card", external_coffee: coffee, compact: true %>
+                <% end %>
+              </div>
+            <% end %>
           <% else %>
-            <%= render "brews/compact_card", brew: brew %>
+            <% if coffee.is_a?(Brew) %>
+              <%= render "brews/compact_card", brew: coffee %>
+            <% else %>
+              <%= render "external_coffees/compact_card", external_coffee: coffee %>
+            <% end %>
           <% end %>
         <% end %>
       </div>

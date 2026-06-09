@@ -41,7 +41,7 @@
             <% if @user.avatar.attached? %>
               <%= image_tag media_attachment_path(@user.avatar.attachment, variant: :thumbnail), alt: "", data: { testid: "profile-avatar-preview" }, class: "mt-2 h-20 w-20 rounded-full object-contain ring-1 ring-stone-200" %>
             <% end %>
-            <%= form.file_field :avatar, accept: "image/*", class: "mt-2 block w-full text-sm text-stone-700 file:mr-4 file:rounded-md file:border-0 file:bg-stone-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-stone-800" %>
+            <%= render "shared/photo_upload_input", form:, field: :avatar, multiple: false, spacing_class: "mt-2" %>
           </div>
 
           <div>
@@ -49,7 +49,7 @@
             <% if @user.public_banner.attached? %>
               <%= image_tag media_attachment_path(@user.public_banner.attachment, variant: :thumbnail), alt: "", data: { testid: "profile-public-banner-preview" }, class: "mt-2 h-20 w-full rounded-md object-contain ring-1 ring-stone-200" %>
             <% end %>
-            <%= form.file_field :public_banner, accept: "image/*", class: "mt-2 block w-full text-sm text-stone-700 file:mr-4 file:rounded-md file:border-0 file:bg-stone-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-stone-800" %>
+            <%= render "shared/photo_upload_input", form:, field: :public_banner, multiple: false, spacing_class: "mt-2" %>
           </div>
         </div>
 

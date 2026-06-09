@@ -4,6 +4,11 @@ export default class extends Controller {
   static targets = [ "latitude", "longitude", "status" ]
 
   capture() {
+    if (!this.isLocationSecureContext()) {
+      this.statusTarget.textContent = this.element.dataset.insecureMessage
+      return
+    }
+
     if (!navigator.geolocation) {
       this.statusTarget.textContent = this.element.dataset.unsupportedMessage
       return
@@ -21,5 +26,11 @@ export default class extends Controller {
     this.latitudeTarget.value = position.coords.latitude.toFixed(6)
     this.longitudeTarget.value = position.coords.longitude.toFixed(6)
     this.statusTarget.textContent = this.element.dataset.capturedMessage
+  }
+
+  isLocationSecureContext() {
+    if (window.isSecureContext) return true
+
+    return [ "localhost", "127.0.0.1", "::1" ].includes(window.location.hostname)
   }
 }

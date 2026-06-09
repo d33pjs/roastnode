@@ -41,7 +41,7 @@
 
   <div>
     <%= form.label :photos, t("equipment_events.form.photos"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.file_field :photos, multiple: true, accept: "image/*", class: "mt-1 block w-full text-sm text-stone-700 file:mr-4 file:rounded-md file:border-0 file:bg-stone-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-stone-800" %>
+    <%= render "shared/photo_upload_input", form: %>
   </div>
 
   <%= form.submit submit_label, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>

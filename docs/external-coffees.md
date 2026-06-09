@@ -7,19 +7,20 @@ External Coffees are purchased or otherwise household-external coffee drinks log
 - Workspace-private External Coffee records, separate from inventory-backed Brews.
 - Default External Coffee tab on the Log screen, beside brew-method tabs without becoming a Brew method.
 - Dedicated External Coffee create/list/detail/edit routes and pages, while still surfacing records in shared timeline/history UI.
-- External Coffees index page in the first slice, paginated newest-first, with compact/photo cards, a new-entry action, and no advanced search/filter initially.
+- The renamed Coffees history page at `/coffees` combines inventory-backed Brews and External Coffees, defaults to compact cards, can switch to hero cards, and has quick filters for All, Brews, and External.
+- External Coffees still have a dedicated index page for focused browsing, but the main household coffee history should link to `/coffees`.
 - Required occurred-at timestamp defaulting to the current time.
-- Searchable free-text Drink Type with seeded common suggestions and workspace-history suggestions.
+- Searchable free-text Drink Type with a broad seeded cafe-drink catalogue plus workspace-history suggestions.
 - Drink Type may include adjacent cafe drinks such as matcha latte; the feature does not validate that every entry is strictly coffee-based.
 - Place name suggestions sourced only from active-workspace External Coffee history.
 - Optional free-text Drink Size.
 - Optional free-text place name and place location.
-- Optional explicit current-location capture per entry, storing private coordinates only when the member asks for it.
+- Optional explicit current-location capture per entry, storing private coordinates only when the member asks for it. Browser geolocation requires HTTPS, or `localhost` on the same device; phone access over plain HTTP LAN hostnames should show a clear secure-context message.
 - Optional price stored as integer minor units with currency defaulting to the workspace currency.
 - Rating, private notes, public note, public/private links, and private photos in the first slice.
-- External Coffee Taste with two axes: acidity-to-bitterness and Intensity.
-- Photo-forward External Coffee Hero Card that still works without a photo, rendered prominently on External Coffee detail pages and available in External Coffee history/list views.
-- Dashboard recent activity should include External Coffees as concise activity rows in the first slice, without adding a third top dashboard hero card.
+- External Coffee Taste uses Brew-style choice controls with three visible choices per axis: Sour/Balanced/Bitter and Weak/Balanced/Strong, plus Unknown. Legacy stronger values remain readable for existing records.
+- Photo-forward External Coffee Hero Card that still works without a photo, rendered prominently on External Coffee detail pages and available in the Coffees hero-card history view.
+- Dashboard recent activity includes External Coffees as concise activity rows. The dashboard's top "Latest coffee" hero can be either a Brew or an External Coffee; the "Latest best brew" hero remains Brew-only.
 - General history/activity participation, with separate External Coffee Comparison for price, rating, taste, drink type, and place.
 - Workspace JSON export, external-coffee CSV export, media ZIP export, instance backup, and empty-server restore coverage.
 
@@ -65,9 +66,9 @@ External Coffee creation requires only Drink Type and occurred-at timestamp. Pla
 
 Drink Type suggestions may combine global seeded suggestions with active-workspace history. Place name suggestions should come only from active-workspace history.
 
-The Intensity taste axis uses `unknown`, `weak`, `balanced`, `strong`, and `harsh`.
+The Intensity taste axis accepts `unknown`, `weak`, `balanced`, `strong`, and legacy `harsh`, but the form presents `unknown`, `weak`, `balanced`, and `strong`.
 
-The acidity-to-bitterness axis uses `unknown`, `very_sour`, `sour`, `balanced`, `bitter`, and `very_bitter`.
+The acidity-to-bitterness axis accepts `unknown`, `very_sour`, `sour`, `balanced`, `bitter`, and `very_bitter`, but the form presents `unknown`, `sour`, `balanced`, and `bitter`.
 
 Rating uses the same optional whole-number `1..5` scale as Brews.
 

@@ -6,11 +6,8 @@ class BrewsController < ApplicationController
 
   def index
     @brew_history_view = params[:view] == "hero" ? "hero" : "compact"
-    brews = current_workspace
-      .brews
-      .includes(:bean, :user, :grinder, :machine, :brewer, :public_brew_share, brew_preparation_tools: :preparation_tool)
-      .order(occurred_at: :desc, created_at: :desc)
-    @brew_history = HistoryPaginator.new(brews, page: params[:page])
+    @coffee_filter = params[:filter].presence_in(%w[all brews external]) || "all"
+    @brew_history = HistoryPaginator.new(coffee_history_scope, page: params[:page])
   end
 
   def show
@@ -177,6 +174,33 @@ class BrewsController < ApplicationController
         .pick(:method)
 
       last_method.presence || Current.user.enabled_brew_methods.first
+    end
+
+    def coffee_history_scope
+      case @coffee_filter
+      when "brews"
+        brew_history_scope
+      when "external"
+        external_coffee_history_scope
+      else
+        (brew_history_scope.to_a + external_coffee_history_scope.to_a)
+          .sort_by { |record| [ record.occurred_at || Time.at(0), record.created_at || Time.at(0) ] }
+          .reverse
+      end
+    end
+
+    def brew_history_scope
+      current_workspace
+        .brews
+        .includes(:bean, :user, :grinder, :machine, :brewer, :public_brew_share, brew_preparation_tools: :preparation_tool)
+        .order(occurred_at: :desc, created_at: :desc)
+    end
+
+    def external_coffee_history_scope
+      current_workspace
+        .external_coffees
+        .includes(:user, :primary_photo_record, photos_attachments: :blob)
+        .order(occurred_at: :desc, created_at: :desc)
     end
 
     def load_form_options(selected_bean: nil, selected_grinder: nil, selected_machine: nil, selected_brewer: nil, allow_archived_equipment: false)

@@ -4,9 +4,9 @@ Roastnode detail pages should cross-link records wherever that helps a household
 
 ## Included Now
 
-- Dashboard brew hero cards are wrapped in one link to the brew detail page.
-- Dashboard `View all` links open all-time brew history from Latest brew and all-time activity history from Recent activity.
-- Brew history is available at `/brews`, defaults to compact cards, and can switch to hero cards while preserving pagination.
+- Dashboard latest coffee hero cards are wrapped in one link to the record detail page. Brew records link to brew details; External Coffee records link to external coffee details.
+- Dashboard `View all` links open all-time mixed coffee history from Latest coffee and all-time activity history from Recent activity.
+- Mixed coffee history is available at `/coffees`, defaults to compact cards, can switch to hero cards while preserving pagination, and can filter All, Brews, or External. The legacy `/brews` route remains available for compatibility.
 - Activity history is available at `/activity` and uses dashboard-style activity cards.
 - Hero card internals do not emit links, because the shared partial is used inside the dashboard link.
 - The global Gear navigation item opens the Gear overview page, which groups equipment cards and preparation tool cards in separate sections.

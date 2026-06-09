@@ -2,24 +2,6 @@ class ExternalCoffeesController < ApplicationController
   before_action :authorize_workspace_write!, only: %i[new create edit update destroy drink_type_suggestions place_name_suggestions]
   before_action :set_external_coffee, only: %i[show edit update destroy]
 
-  DRINK_TYPE_SUGGESTIONS = [
-    "Espresso",
-    "Americano",
-    "Black Coffee",
-    "Filter Coffee",
-    "Cappuccino",
-    "Flat White",
-    "Latte",
-    "Latte Macchiato",
-    "Cortado",
-    "Macchiato",
-    "Mocha",
-    "Cold Brew",
-    "Iced Latte",
-    "Matcha Latte",
-    "Chai Latte"
-  ].freeze
-
   def index
     @external_coffees = HistoryPaginator.new(
       current_workspace.external_coffees.includes(:user, :primary_photo_record, photos_attachments: :blob).recent,
@@ -74,7 +56,7 @@ class ExternalCoffeesController < ApplicationController
   end
 
   def drink_type_suggestions
-    render json: { suggestions: suggestions_for(:drink_type, seeded: DRINK_TYPE_SUGGESTIONS) }
+    render json: { suggestions: suggestions_for(:drink_type, seeded: ExternalCoffee::DRINK_TYPE_SUGGESTIONS) }
   end
 
   def place_name_suggestions
@@ -135,7 +117,7 @@ class ExternalCoffeesController < ApplicationController
     end
 
     def combined_drink_type_suggestions
-      (DRINK_TYPE_SUGGESTIONS + history_suggestions_for(:drink_type)).uniq
+      (ExternalCoffee::DRINK_TYPE_SUGGESTIONS + history_suggestions_for(:drink_type)).uniq
     end
 
     def history_suggestions_for(field)
