@@ -15,6 +15,7 @@ module ExternalCoffeesHelper
   }.freeze
 
   EXTERNAL_COFFEE_PREFIX_CURRENCIES = %w[AUD CAD CNY GBP JPY NZD USD].freeze
+  EXTERNAL_COFFEE_NO_SPACE_SUFFIX_CURRENCIES = %w[EUR].freeze
 
   def external_coffee_price(coffee)
     return t("external_coffees.show.unknown") if coffee.price.blank?
@@ -61,6 +62,8 @@ module ExternalCoffeesHelper
 
       if EXTERNAL_COFFEE_PREFIX_CURRENCIES.include?(currency)
         "#{symbol}#{formatted_value}"
+      elsif EXTERNAL_COFFEE_NO_SPACE_SUFFIX_CURRENCIES.include?(currency)
+        "#{formatted_value}#{symbol}"
       else
         "#{formatted_value} #{symbol}"
       end

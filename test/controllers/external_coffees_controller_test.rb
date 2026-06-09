@@ -112,7 +112,7 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ photo.id ], coffee.reload.photos.attachments.pluck(:id)
   end
 
-  test "show hero card renders identity images compact timestamp and symbol price" do
+  test "show hero card renders brand mark identity images compact timestamp and symbol price" do
     workspace = workspaces(:household)
     user = users(:one)
     attach_named_photo(workspace, :logo, filename: "household-logo.jpg")
@@ -129,9 +129,10 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     get external_coffee_path(coffee)
 
     assert_response :success
+    assert_select "[data-testid=external-coffee-card-brand-mark]"
     assert_select "[data-testid=external-coffee-workspace-logo]"
     assert_select "[data-testid=external-coffee-user-avatar]"
-    assert_select "[data-testid=external-coffee-price]", text: "4,50 €"
+    assert_select "[data-testid=external-coffee-price]", text: "4,50€"
     assert_select "[data-testid=external-coffee-price]", text: /EUR/, count: 0
     assert_select "[data-testid=external-coffee-logged-at]", text: "09.06.2026 14:05"
     assert_select "[data-testid=external-coffee-logged-at]", text: /:45/, count: 0
