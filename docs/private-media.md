@@ -9,6 +9,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Active Storage-backed photo attachments for equipment.
 - Active Storage-backed photo attachments for equipment events.
 - Active Storage-backed photo attachments for preparation tools.
+- Active Storage-backed photo attachments for External Coffees.
 - Active Storage-backed finished-drink photo attachments for recipes.
 - Active Storage-backed identity images for users: avatar and public banner.
 - Active Storage-backed identity images for workspaces: logo and banner.
@@ -22,7 +23,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Per-photo removal controls for workspace writers.
 - Current photo management on bean and brew edit screens.
 - App-scoped media delivery through `MediaAttachmentsController`.
-- Owner-only media ZIP export for workspace-owned originals.
+- Owner-only media ZIP export for workspace-owned originals, including External Coffee photos.
 
 ## Privacy Rule
 
@@ -74,4 +75,4 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 - Keep preview thumbnails behind `MediaAttachmentsController` with `variant: :thumbnail`; do not expose raw variant/blob URLs.
 - Keep public-share thumbnails behind `PublicBrewMediaController` with `variant: :thumbnail`; apply the share password gate and attachment whitelist before streaming bytes.
 - Keep public recipe thumbnails behind `PublicRecipeMediaController` with `variant: :thumbnail`; apply the share password gate and selected recipe-photo allowlist before streaming bytes.
-- Keep workspace media archives owner-only through `WorkspaceExportsController#media`. Include workspace-owned media and workspace identity images, but do not include user avatars/public banners without a separate account-data export decision.
+- Keep workspace media archives owner-only through `WorkspaceExportsController#media`. Include workspace-owned media, External Coffee photos, and workspace identity images, but do not include user avatars/public banners without a separate account-data export decision.

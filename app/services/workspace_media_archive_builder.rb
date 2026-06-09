@@ -57,6 +57,7 @@ class WorkspaceMediaArchiveBuilder
         photo_attachments(workspace.equipment.order(:id)),
         photo_attachments(workspace.preparation_tools.order(:id)),
         photo_attachments(workspace.brews.order(:id)),
+        photo_attachments(workspace.external_coffees.order(:id)),
         photo_attachments(workspace.equipment_events.order(:id))
       ].flatten
     end

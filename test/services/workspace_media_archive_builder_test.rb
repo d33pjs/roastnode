@@ -6,6 +6,8 @@ class WorkspaceMediaArchiveBuilderTest < ActiveSupport::TestCase
     generated_at = Time.zone.parse("2026-05-27 08:15:00")
     workspace = workspaces(:household)
     bean_photo = attach_photo(beans(:open_household), filename: "bean bag.jpg")
+    external_coffee = workspace.external_coffees.create!(user: users(:one), drink_type: "Cortado")
+    external_photo = attach_photo(external_coffee, filename: "cafe cup.jpg")
     other_workspace_photo = attach_photo(beans(:other_workspace_open), filename: "other.jpg")
     workspace_logo = attach_one(workspace.logo, filename: "logo.png")
 
@@ -27,6 +29,11 @@ class WorkspaceMediaArchiveBuilderTest < ActiveSupport::TestCase
     assert_equal "photos", bean_file.fetch("attachment_name")
     assert_match %r{\Amedia/beans/#{beans(:open_household).id}/photos/#{bean_photo.id}-bean_bag\.jpg\z}, bean_file.fetch("path")
     assert_equal File.binread(Rails.root.join("test/fixtures/files/photo.jpg")), entries.fetch(bean_file.fetch("path"))
+
+    external_file = manifest.fetch("files").find { |file| file.fetch("attachment_id") == external_photo.id }
+    assert_equal "ExternalCoffee", external_file.fetch("record_type")
+    assert_equal external_coffee.id, external_file.fetch("record_id")
+    assert_match %r{\Amedia/external_coffees/#{external_coffee.id}/photos/#{external_photo.id}-cafe_cup\.jpg\z}, external_file.fetch("path")
 
     logo_file = manifest.fetch("files").find { |file| file.fetch("attachment_id") == workspace_logo.id }
     assert_equal "Workspace", logo_file.fetch("record_type")

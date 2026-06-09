@@ -16,7 +16,7 @@
     <% end %>
 
     <div class="mt-6">
-      <%= render "brews/method_tabs", selected_method: @selected_method %>
+      <%= render "shared/log_tabs", active_tab: @selected_method %>
     </div>
 
     <% form_markup = capture do %>

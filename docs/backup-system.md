@@ -28,7 +28,7 @@ The full archive currently includes a manifest, a readable instance JSON export,
 - all users and account profile metadata needed for restore
 - all workspaces/households
 - all memberships and roles
-- all beans, equipment, preparation tools, brews, equipment events, inventory adjustments, statistics source records, and import metadata
+- all beans, equipment, preparation tools, brews, External Coffees, equipment events, inventory adjustments, statistics source records, and import metadata
 - all workspace media and account media, including originals
 - a manifest with format version, generated time, file checksums, and relationships between JSON records and media files
 

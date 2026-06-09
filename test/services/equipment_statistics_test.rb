@@ -53,7 +53,7 @@ class EquipmentStatisticsTest < ActiveSupport::TestCase
       channeling: false
     )
 
-    statistics = EquipmentStatistics.new(equipment: grinder).call
+    statistics = EquipmentStatistics.new(equipment: grinder, end_date: Date.new(2026, 5, 26)).call
 
     assert_equal 3, statistics[:totals][:brew_count]
     assert_equal 57.to_d, statistics[:totals][:total_bean_weight_grams]

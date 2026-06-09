@@ -14,6 +14,11 @@
               <p class="font-extrabold text-rn-ink"><%= t(".brew", bean: activity.bean.name) %></p>
               <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".brew_type") %> | <%= activity.user.display_label %></p>
             <% end %>
+          <% elsif activity.is_a?(ExternalCoffee) %>
+            <%= link_to external_coffee_path(activity), data: { testid: "activity-card" }, class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
+              <p class="font-extrabold text-rn-ink"><%= t(".external_coffee", drink: activity.drink_type) %></p>
+              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".external_coffee_type") %> | <%= activity.user.display_label %></p>
+            <% end %>
           <% elsif activity.is_a?(EquipmentEvent) %>
             <%= link_to equipment_event_path(activity), data: { testid: "activity-card" }, class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
               <p class="font-extrabold text-rn-ink"><%= t(".equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>

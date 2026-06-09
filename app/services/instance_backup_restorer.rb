@@ -11,6 +11,7 @@ class InstanceBackupRestorer
     @equipment_map = {}
     @preparation_tool_map = {}
     @brew_map = {}
+    @external_coffee_map = {}
     @equipment_event_map = {}
     @attachment_map = {}
     @active_workspace_targets = {}
@@ -36,6 +37,7 @@ class InstanceBackupRestorer
       restore_equipment
       restore_preparation_tools
       restore_brews
+      restore_external_coffees
       restore_brew_preparation_tools
       restore_equipment_events
       restore_inventory_adjustments
@@ -62,6 +64,7 @@ class InstanceBackupRestorer
         Equipment,
         PreparationTool,
         Brew,
+        ExternalCoffee,
         BrewPreparationTool,
         EquipmentEvent,
         EquipmentEventItem,
@@ -334,6 +337,35 @@ class InstanceBackupRestorer
       end
     end
 
+    def restore_external_coffees
+      workspace_payloads.each do |workspace_payload|
+        workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
+        Array(workspace_payload["external_coffees"]).each do |row|
+          coffee = ExternalCoffee.create!(
+            workspace:,
+            user: @user_map.fetch(row.fetch("user_id")),
+            occurred_at: time(row["occurred_at"]),
+            drink_type: row.fetch("drink_type"),
+            drink_size: row["drink_size"],
+            place_name: row["place_name"],
+            place_location: row["place_location"],
+            latitude: row["latitude"],
+            longitude: row["longitude"],
+            price_cents: row["price_cents"],
+            currency: row["currency"],
+            acidity_balance: row["acidity_balance"] || "unknown",
+            intensity: row["intensity"] || "unknown",
+            rating: row["rating"],
+            notes: row["notes"],
+            public_note: row["public_note"],
+            created_at: time(row["created_at"]),
+            updated_at: time(row["updated_at"])
+          )
+          @external_coffee_map[old_id(row)] = coffee
+        end
+      end
+    end
+
     def restore_equipment_events
       workspace_payloads.each do |workspace_payload|
         workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
@@ -402,6 +434,7 @@ class InstanceBackupRestorer
         restore_primary_photo_ids(workspace_payload.fetch("equipment"), @equipment_map)
         restore_primary_photo_ids(workspace_payload.fetch("preparation_tools"), @preparation_tool_map)
         restore_primary_photo_ids(workspace_payload.fetch("brews"), @brew_map)
+        restore_primary_photo_ids(Array(workspace_payload["external_coffees"]), @external_coffee_map)
         restore_primary_photo_ids(workspace_payload.fetch("equipment_events"), @equipment_event_map)
       end
     end
@@ -440,6 +473,7 @@ class InstanceBackupRestorer
         equipment: @equipment_map.size,
         preparation_tools: @preparation_tool_map.size,
         brews: @brew_map.size,
+        external_coffees: @external_coffee_map.size,
         equipment_events: @equipment_event_map.size,
         inventory_adjustments: InventoryAdjustment.count,
         media_files: @attachment_map.size
@@ -458,6 +492,7 @@ class InstanceBackupRestorer
         "Equipment" => @equipment_map,
         "PreparationTool" => @preparation_tool_map,
         "Brew" => @brew_map,
+        "ExternalCoffee" => @external_coffee_map,
         "EquipmentEvent" => @equipment_event_map
       }.fetch(entry.fetch("record_type"))
       record_map[entry.fetch("record_id")]

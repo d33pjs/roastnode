@@ -1,0 +1,18 @@
+<%= link_to external_coffee_path(external_coffee), data: { testid: "external-coffee-card" }, class: "block overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm hover:bg-[var(--rn-surface-muted)]" do %>
+  <article class="grid min-w-0 gap-4 p-4 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:items-center">
+    <%= render "shared/record_photo_thumb",
+      record: external_coffee,
+      testid: "external-coffee-card-photo",
+      class_name: "h-20 w-20 shrink-0 rounded-2xl object-cover ring-1 ring-stone-200",
+      fallback: external_coffee.drink_type %>
+    <div class="min-w-0">
+      <p class="break-words text-lg font-black text-rn-ink"><%= external_coffee.drink_type %></p>
+      <p class="mt-1 break-words text-sm font-semibold text-rn-muted"><%= [ external_coffee.drink_size, external_coffee.place_name, external_coffee.place_location ].compact_blank.join(" · ") %></p>
+      <p class="mt-2 text-xs font-bold text-rn-muted"><%= profile_timestamp(external_coffee.occurred_at) %> · <%= external_coffee.user.display_label %></p>
+    </div>
+    <div class="grid gap-1 text-left sm:text-right">
+      <p class="text-sm font-black text-rn-ink"><%= external_coffee_price(external_coffee) %></p>
+      <p class="text-sm font-bold text-rn-muted"><%= external_coffee_rating_marks(external_coffee) %></p>
+    </div>
+  </article>
+<% end %>

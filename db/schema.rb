@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_09_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -219,6 +219,34 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_150000) do
     t.index ["workspace_id", "event_type"], name: "index_equipment_events_on_workspace_id_and_event_type"
     t.index ["workspace_id", "occurred_at"], name: "index_equipment_events_on_workspace_id_and_occurred_at"
     t.index ["workspace_id"], name: "index_equipment_events_on_workspace_id"
+  end
+
+  create_table "external_coffees", force: :cascade do |t|
+    t.string "acidity_balance", default: "unknown", null: false
+    t.datetime "created_at", null: false
+    t.string "currency", null: false
+    t.string "drink_size"
+    t.string "drink_type", null: false
+    t.string "intensity", default: "unknown", null: false
+    t.decimal "latitude", precision: 10, scale: 6
+    t.decimal "longitude", precision: 10, scale: 6
+    t.text "notes"
+    t.datetime "occurred_at", null: false
+    t.string "place_location"
+    t.string "place_name"
+    t.integer "price_cents"
+    t.bigint "primary_photo_attachment_id"
+    t.text "public_note"
+    t.integer "rating"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["primary_photo_attachment_id"], name: "index_external_coffees_on_primary_photo_attachment_id"
+    t.index ["user_id"], name: "index_external_coffees_on_user_id"
+    t.index ["workspace_id", "drink_type"], name: "index_external_coffees_on_workspace_id_and_drink_type"
+    t.index ["workspace_id", "occurred_at"], name: "index_external_coffees_on_workspace_id_and_occurred_at"
+    t.index ["workspace_id", "place_name"], name: "index_external_coffees_on_workspace_id_and_place_name"
+    t.index ["workspace_id"], name: "index_external_coffees_on_workspace_id"
   end
 
   create_table "household_invites", force: :cascade do |t|
@@ -514,6 +542,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_150000) do
   add_foreign_key "equipment_event_items", "equipment_events"
   add_foreign_key "equipment_events", "users"
   add_foreign_key "equipment_events", "workspaces"
+  add_foreign_key "external_coffees", "active_storage_attachments", column: "primary_photo_attachment_id"
+  add_foreign_key "external_coffees", "users"
+  add_foreign_key "external_coffees", "workspaces"
   add_foreign_key "household_invites", "users", column: "accepted_by_id"
   add_foreign_key "household_invites", "users", column: "created_by_id"
   add_foreign_key "household_invites", "workspaces"

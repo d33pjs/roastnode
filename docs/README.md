@@ -14,6 +14,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/brew-draft-recovery.md` describes browser-local unsaved method-aware brew draft recovery.
 - `docs/formatting.md` describes comma-friendly decimal entry and pending profile-formatting decisions.
 - `docs/coffee-core.md` describes beans, equipment, espresso and Quick Drip logging, inventory deduction, and current coffee workflow scope.
+- `docs/external-coffees.md` describes planned purchased/out-of-home coffee logging, comparison, sharing, and privacy rules.
 - `docs/recipe-profiles.md` describes workspace recipe profiles, exact brew targets, guided logging, public recipe sharing, and snapshot privacy.
 - `docs/inventory-adjustments.md` describes manual bean inventory corrections.
 - `docs/bean-analytics.md` describes the bean detail drill-down analytics slice.

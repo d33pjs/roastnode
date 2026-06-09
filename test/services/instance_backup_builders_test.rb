@@ -23,6 +23,16 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
       machine_cups: 6,
       coffee_spoons: 6
     )
+    external_coffee = workspaces(:household).external_coffees.create!(
+      user:,
+      drink_type: "Flat White",
+      place_name: "Local Shop",
+      price_cents: 450,
+      currency: "EUR",
+      acidity_balance: "balanced",
+      intensity: "strong",
+      rating: 4
+    )
     attach_named_photo(user, :avatar, filename: "avatar.jpg")
     attach_named_photo(workspaces(:household), :logo, filename: "household-logo.jpg")
     invite = workspace_invites(:member_invite)
@@ -49,6 +59,11 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     assert_equal "6.0", brew_payload.fetch(:coffee_spoons)
     assert_equal "4.5", brew_payload.fetch(:grams_per_coffee_spoon)
     assert_equal "estimated_spoons", brew_payload.fetch(:coffee_amount_source)
+    external_coffee_payload = household_payload.fetch(:external_coffees).find { |coffee| coffee.fetch(:id) == external_coffee.id }
+    assert_equal "Flat White", external_coffee_payload.fetch(:drink_type)
+    assert_equal "Local Shop", external_coffee_payload.fetch(:place_name)
+    assert_equal 450, external_coffee_payload.fetch(:price_cents)
+    assert_equal "strong", external_coffee_payload.fetch(:intensity)
     assert_match(%r{media/users/#{user.id}/avatar/}, json)
     assert_match(%r{media/workspaces/#{workspaces(:household).id}/logo/}, json)
     assert_no_match(/password_digest/i, json)

@@ -1,0 +1,19 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-4xl py-6 sm:px-6 lg:py-10">
+    <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
+    <div class="mt-5">
+      <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("external_coffees.log_tab") %></p>
+      <h1 class="mt-2 text-3xl font-extrabold text-rn-ink sm:text-4xl"><%= t(".title") %></h1>
+    </div>
+
+    <div class="mt-6">
+      <%= render "shared/log_tabs", active_tab: "external_coffee" %>
+    </div>
+
+    <%= render "form",
+      external_coffee: @external_coffee,
+      submit_label: t(".create"),
+      drink_type_suggestions: @drink_type_suggestions,
+      place_name_suggestions: @place_name_suggestions %>
+  </section>
+</main>

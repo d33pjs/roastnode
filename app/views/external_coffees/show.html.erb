@@ -1,0 +1,81 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-5xl py-6 sm:px-6 lg:py-10">
+    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <%= render "shared/back_link", label: t(".back"), path: external_coffees_path %>
+        <h1 class="mt-4 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= @external_coffee.drink_type %></h1>
+      </div>
+
+      <% if current_workspace_policy.write? %>
+        <div class="flex flex-wrap gap-2">
+          <%= link_to t(".edit"), edit_external_coffee_path(@external_coffee), class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+          <%= button_to t(".delete"),
+            external_coffee_path(@external_coffee),
+            method: :delete,
+            form: { data: { turbo_confirm: t(".delete_confirmation") } },
+            class: "rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-extrabold text-red-800 hover:bg-red-100" %>
+        </div>
+      <% end %>
+    </div>
+
+    <div class="mt-6">
+      <%= render "hero_card", external_coffee: @external_coffee %>
+    </div>
+
+    <section class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
+      <div class="grid gap-5">
+        <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
+          <h2 class="text-lg font-black text-rn-ink"><%= t(".details") %></h2>
+          <dl class="mt-4 grid gap-4 sm:grid-cols-2">
+            <div>
+              <dt class="text-sm font-bold text-rn-muted"><%= t(".drink_size") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= @external_coffee.drink_size.presence || t(".unknown") %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-bold text-rn-muted"><%= t(".place") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= [ @external_coffee.place_name, @external_coffee.place_location ].compact_blank.join(" · ").presence || t(".unknown") %></dd>
+            </div>
+            <div>
+              <dt class="text-sm font-bold text-rn-muted"><%= t(".coordinates") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink">
+                <% if @external_coffee.latitude.present? && @external_coffee.longitude.present? %>
+                  <%= profile_number(@external_coffee.latitude, precision: 6) %>, <%= profile_number(@external_coffee.longitude, precision: 6) %>
+                <% else %>
+                  <%= t(".unknown") %>
+                <% end %>
+              </dd>
+            </div>
+            <div>
+              <dt class="text-sm font-bold text-rn-muted"><%= t(".price") %></dt>
+              <dd class="mt-1 text-sm font-semibold text-rn-ink"><%= external_coffee_price(@external_coffee) %></dd>
+            </div>
+          </dl>
+        </div>
+
+        <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
+          <h2 class="text-lg font-black text-rn-ink"><%= t(".notes") %></h2>
+          <div class="mt-4 grid gap-4">
+            <div>
+              <h3 class="text-sm font-bold text-rn-muted"><%= t(".private_note") %></h3>
+              <p class="mt-1 whitespace-pre-wrap text-sm font-semibold text-rn-ink"><%= @external_coffee.notes.presence || t(".no_notes") %></p>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-rn-muted"><%= t(".public_note") %></h3>
+              <p class="mt-1 whitespace-pre-wrap text-sm font-semibold text-rn-ink"><%= @external_coffee.public_note.presence || t(".no_notes") %></p>
+            </div>
+          </div>
+        </div>
+
+        <%= render "shared/photo_grid",
+          record: @external_coffee,
+          title: t(".photos"),
+          section_class: "rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm",
+          title_class: "text-lg font-black text-rn-ink" %>
+      </div>
+
+      <aside class="grid gap-5 lg:self-start">
+        <%= render "shared/record_links_list", record: @external_coffee, section_class: "rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm", title_class: "text-lg font-black text-rn-ink" %>
+      </aside>
+    </section>
+  </section>
+</main>

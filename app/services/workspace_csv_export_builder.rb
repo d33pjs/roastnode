@@ -17,6 +17,11 @@ class WorkspaceCsvExportBuilder
     retention_marker notes created_at updated_at
   ].freeze
 
+  EXTERNAL_COFFEE_COLUMNS = %w[
+    id occurred_at user_display_name user_email_address drink_type drink_size place_name place_location
+    latitude longitude price currency acidity_balance intensity rating notes public_note created_at updated_at
+  ].freeze
+
   def initialize(workspace)
     @workspace = workspace
   end
@@ -37,6 +42,16 @@ class WorkspaceCsvExportBuilder
 
       workspace.brews.includes(:user, :bean, :grinder, :machine, :brewer, :brew_preparation_tools).order(:id).each do |brew|
         csv << BREW_COLUMNS.map { |column| brew_value(brew, column) }
+      end
+    end
+  end
+
+  def external_coffees_csv
+    CSV.generate(headers: true) do |csv|
+      csv << EXTERNAL_COFFEE_COLUMNS
+
+      workspace.external_coffees.includes(:user).order(:id).each do |coffee|
+        csv << EXTERNAL_COFFEE_COLUMNS.map { |column| external_coffee_value(coffee, column) }
       end
     end
   end
@@ -71,6 +86,17 @@ class WorkspaceCsvExportBuilder
         "coffee_spoons", "grams_per_coffee_spoon", "brew_temperature_celsius"
         decimal(brew.public_send(column))
       else brew.public_send(column)
+      end
+    end
+
+    def external_coffee_value(coffee, column)
+      case column
+      when "occurred_at", "created_at", "updated_at" then timestamp(coffee.public_send(column))
+      when "user_display_name" then coffee.user.display_label
+      when "user_email_address" then coffee.user.email_address
+      when "price" then money(coffee.price_cents)
+      when "latitude", "longitude" then decimal(coffee.public_send(column))
+      else coffee.public_send(column)
       end
     end
 

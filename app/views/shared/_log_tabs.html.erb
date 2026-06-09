@@ -1,0 +1,29 @@
+<% enabled_methods = Current.user.enabled_brew_methods %>
+<% active_tab = local_assigns.fetch(:active_tab, "espresso") %>
+<% tab_count = enabled_methods.size + 1 %>
+
+<nav
+  data-testid="log-tabs"
+  class="grid gap-1 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface p-1"
+  style="grid-template-columns: repeat(<%= tab_count %>, minmax(0, 1fr));"
+>
+  <% enabled_methods.each do |method| %>
+    <% active = active_tab == method %>
+    <%= link_to t("brews.methods.#{method}"),
+      new_brew_path(method: method),
+      aria: (active ? { current: "page" } : {}),
+      class: [
+        "rn-method-tab",
+        active ? "rn-method-tab-active" : "rn-method-tab-inactive"
+      ].join(" ") %>
+  <% end %>
+
+  <% active = active_tab == "external_coffee" %>
+  <%= link_to t("external_coffees.log_tab"),
+    new_external_coffee_path,
+    aria: (active ? { current: "page" } : {}),
+    class: [
+      "rn-method-tab",
+      active ? "rn-method-tab-active" : "rn-method-tab-inactive"
+    ].join(" ") %>
+</nav>

@@ -19,6 +19,7 @@ class WorkspaceExportBuilder
       equipment: equipment_payload,
       preparation_tools: preparation_tools_payload,
       brews: brews_payload,
+      external_coffees: external_coffees_payload,
       brew_preparation_tools: brew_preparation_tools_payload,
       equipment_events: equipment_events_payload,
       equipment_event_items: equipment_event_items_payload,
@@ -214,6 +215,34 @@ class WorkspaceExportBuilder
           position: tool.position,
           created_at: timestamp(tool.created_at),
           updated_at: timestamp(tool.updated_at)
+        }
+      end
+    end
+
+    def external_coffees_payload
+      workspace.external_coffees.includes(:user).order(:id).map do |coffee|
+        {
+          id: coffee.id,
+          user_id: coffee.user_id,
+          user_email_address: coffee.user.email_address,
+          occurred_at: timestamp(coffee.occurred_at),
+          drink_type: coffee.drink_type,
+          drink_size: coffee.drink_size,
+          place_name: coffee.place_name,
+          place_location: coffee.place_location,
+          latitude: decimal(coffee.latitude),
+          longitude: decimal(coffee.longitude),
+          price_cents: coffee.price_cents,
+          currency: coffee.currency,
+          acidity_balance: coffee.acidity_balance,
+          intensity: coffee.intensity,
+          rating: coffee.rating,
+          notes: coffee.notes,
+          public_note: coffee.public_note,
+          primary_photo_attachment_id: coffee.primary_photo_attachment_id,
+          created_at: timestamp(coffee.created_at),
+          updated_at: timestamp(coffee.updated_at),
+          photos: photo_metadata(coffee)
         }
       end
     end

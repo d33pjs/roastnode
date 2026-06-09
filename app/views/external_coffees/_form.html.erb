@@ -1,0 +1,150 @@
+<% label_class = "block text-sm font-extrabold text-rn-muted" %>
+<% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+<% section_class = "grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
+<% section_title_class = "text-lg font-black text-rn-ink" %>
+
+<%= form_with model: external_coffee, class: "mt-8 grid gap-5" do |form| %>
+  <% if external_coffee.errors.any? %>
+    <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">
+      <%= external_coffee.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <section class="<%= section_class %>">
+    <h2 class="<%= section_title_class %>"><%= t(".sections.drink") %></h2>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <%= form.label :drink_type, t(".drink_type"), class: label_class %>
+        <%= form.text_field :drink_type, required: true, list: "external-coffee-drink-types", class: input_class %>
+        <datalist id="external-coffee-drink-types">
+          <% drink_type_suggestions.each do |suggestion| %>
+            <option value="<%= suggestion %>"></option>
+          <% end %>
+        </datalist>
+      </div>
+
+      <div>
+        <%= form.label :drink_size, t(".drink_size"), class: label_class %>
+        <%= form.text_field :drink_size, class: input_class %>
+      </div>
+
+      <div>
+        <%= form.label :occurred_at, t(".occurred_at"), class: label_class %>
+        <%= form.datetime_local_field :occurred_at, required: true, class: input_class %>
+      </div>
+
+      <div>
+        <%= form.label :price, t(".price"), class: label_class %>
+        <div class="mt-1 grid grid-cols-[minmax(0,1fr)_5rem] gap-2">
+          <%= form.text_field :price, inputmode: "decimal", class: input_class.sub("mt-1 ", "") %>
+          <%= form.text_field :currency, maxlength: 3, class: input_class.sub("mt-1 ", "uppercase ") %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="<%= section_class %>">
+    <h2 class="<%= section_title_class %>"><%= t(".sections.place") %></h2>
+
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div>
+        <%= form.label :place_name, t(".place_name"), class: label_class %>
+        <%= form.text_field :place_name, list: "external-coffee-place-names", class: input_class %>
+        <datalist id="external-coffee-place-names">
+          <% place_name_suggestions.each do |suggestion| %>
+            <option value="<%= suggestion %>"></option>
+          <% end %>
+        </datalist>
+      </div>
+
+      <div>
+        <%= form.label :place_location, t(".place_location"), class: label_class %>
+        <%= form.text_field :place_location, class: input_class %>
+      </div>
+    </div>
+
+    <div
+      data-controller="external-coffee-location"
+      data-unsupported-message="<%= t(".location_unsupported") %>"
+      data-pending-message="<%= t(".location_pending") %>"
+      data-denied-message="<%= t(".location_denied") %>"
+      data-captured-message="<%= t(".location_captured") %>"
+      class="rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3"
+    >
+      <%= form.hidden_field :latitude, data: { external_coffee_location_target: "latitude" } %>
+      <%= form.hidden_field :longitude, data: { external_coffee_location_target: "longitude" } %>
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <p data-external-coffee-location-target="status" class="text-sm font-semibold text-rn-muted">
+          <% if external_coffee.latitude.present? && external_coffee.longitude.present? %>
+            <%= t(".location_captured") %>
+          <% else %>
+            <%= t(".location_empty") %>
+          <% end %>
+        </p>
+        <button type="button" data-action="external-coffee-location#capture" class="rounded-full border border-rn-line bg-rn-surface px-3 py-2 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
+          <%= t(".use_current_location") %>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="<%= section_class %>">
+    <h2 class="<%= section_title_class %>"><%= t(".sections.taste") %></h2>
+
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div>
+        <%= form.label :acidity_balance, t(".acidity_balance"), class: label_class %>
+        <%= form.select :acidity_balance,
+          ExternalCoffee::ACIDITY_BALANCES.map { |value| [ external_coffee_acidity_label(value), value ] },
+          {},
+          class: input_class %>
+      </div>
+
+      <div>
+        <%= form.label :intensity, t(".intensity"), class: label_class %>
+        <%= form.select :intensity,
+          ExternalCoffee::INTENSITIES.map { |value| [ external_coffee_intensity_label(value), value ] },
+          {},
+          class: input_class %>
+      </div>
+
+      <div>
+        <%= form.label :rating, t(".rating"), class: label_class %>
+        <%= form.select :rating,
+          [[ t(".no_rating"), "" ]] + (1..5).map { |rating| [ rating, rating ] },
+          {},
+          class: input_class %>
+      </div>
+    </div>
+  </section>
+
+  <section class="<%= section_class %>">
+    <h2 class="<%= section_title_class %>"><%= t(".sections.notes") %></h2>
+
+    <div>
+      <%= form.label :notes, t(".notes"), class: label_class %>
+      <%= form.text_area :notes, rows: 4, class: input_class %>
+    </div>
+
+    <div>
+      <%= form.label :public_note, t(".public_note"), class: label_class %>
+      <%= form.text_area :public_note, rows: 4, class: input_class %>
+    </div>
+
+    <div>
+      <%= form.label :photos, t(".photos"), class: label_class %>
+      <%= form.file_field :photos, multiple: true, accept: "image/*", class: input_class %>
+    </div>
+  </section>
+
+  <%= render "shared/record_links_fields",
+    form:,
+    record: external_coffee,
+    label_class:,
+    input_class:,
+    section_class:,
+    section_title_class: %>
+
+  <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>
+<% end %>

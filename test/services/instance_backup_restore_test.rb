@@ -70,14 +70,32 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       machine_cups: 6,
       coffee_spoons: 6
     )
+    external_coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Americano",
+      drink_size: "large",
+      place_name: "Restore Cafe",
+      place_location: "Cologne",
+      latitude: 50.941278,
+      longitude: 6.958281,
+      price_cents: 390,
+      currency: "EUR",
+      acidity_balance: "bitter",
+      intensity: "harsh",
+      rating: 2,
+      notes: "Private restore note",
+      public_note: "Public restore note"
+    )
     duplicated_bean = source_bean.duplicate_for_new_bag!
     duplicated_bean.update!(name: "Restored duplicate bag")
     attachment = attach_photo(beans(:open_household))
+    external_photo = attach_photo(external_coffee)
     original = {
       users: User.count,
       workspaces: Workspace.count,
       beans: Bean.count,
       brews: Brew.count,
+      external_coffees: ExternalCoffee.count,
       equipment: Equipment.count,
       inventory_adjustments: InventoryAdjustment.count,
       attachments: ActiveStorage::Attachment.count,
@@ -89,6 +107,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       bean_name: source_bean.name,
       bean_finished_at: source_bean_finished_at,
       quick_drip_bean_name: quick_drip_bean.name,
+      external_coffee_drink_type: external_coffee.drink_type,
+      external_photo_filename: external_photo.blob.filename.to_s,
       brewer_name: equipment(:household_brewer).name,
       duplicated_bean_name: duplicated_bean.name,
       photo_filename: attachment.blob.filename.to_s
@@ -104,11 +124,13 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     restored_quick_drip_bean = Bean.find_by!(name: original.fetch(:quick_drip_bean_name))
     restored_duplicate_bean = Bean.find_by!(name: original.fetch(:duplicated_bean_name))
     restored_quick_drip_brew = restored_workspace.brews.find_by!(method: "quick_drip", bean: restored_quick_drip_bean)
+    restored_external_coffee = restored_workspace.external_coffees.find_by!(drink_type: original.fetch(:external_coffee_drink_type))
 
     assert_equal original.fetch(:users), User.count
     assert_equal original.fetch(:workspaces), Workspace.count
     assert_equal original.fetch(:beans), Bean.count
     assert_equal original.fetch(:brews), Brew.count
+    assert_equal original.fetch(:external_coffees), ExternalCoffee.count
     assert_equal original.fetch(:equipment), Equipment.count
     assert_equal original.fetch(:inventory_adjustments), InventoryAdjustment.count
     assert_equal original.fetch(:attachments), ActiveStorage::Attachment.count
@@ -130,6 +152,12 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 6.to_d, restored_quick_drip_brew.coffee_spoons
     assert_equal 4.5.to_d, restored_quick_drip_brew.grams_per_coffee_spoon
     assert_equal "estimated_spoons", restored_quick_drip_brew.coffee_amount_source
+    assert_equal "Restore Cafe", restored_external_coffee.place_name
+    assert_equal "Cologne", restored_external_coffee.place_location
+    assert_equal 390, restored_external_coffee.price_cents
+    assert_equal "bitter", restored_external_coffee.acidity_balance
+    assert_equal "harsh", restored_external_coffee.intensity
+    assert_equal original.fetch(:external_photo_filename), restored_external_coffee.photos.first.filename.to_s
     assert_equal original.fetch(:photo_filename), restored_bean.photos.first.filename.to_s
     assert_equal restored_bean, restored_duplicate_bean.duplicated_from_bean
     assert_equal(
@@ -138,9 +166,10 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
         workspaces: original.fetch(:workspaces),
         beans: original.fetch(:beans),
         brews: original.fetch(:brews),
+        external_coffees: original.fetch(:external_coffees),
         media_files: original.fetch(:attachments)
       },
-      summary.slice(:users, :workspaces, :beans, :brews, :media_files)
+      summary.slice(:users, :workspaces, :beans, :brews, :external_coffees, :media_files)
     )
   end
 
@@ -159,6 +188,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       PublicRecipeShare.delete_all
       Recipe.delete_all
       Brew.delete_all
+      ExternalCoffee.delete_all
       PreparationTool.delete_all
       Equipment.delete_all
       Bean.delete_all

@@ -21,6 +21,7 @@ class Workspace < ApplicationRecord
   has_many :beans, dependent: :destroy
   has_many :equipment, dependent: :destroy
   has_many :brews, dependent: :destroy
+  has_many :external_coffees, dependent: :destroy
   has_many :inventory_adjustments, dependent: :destroy
   has_many :equipment_events, dependent: :destroy
   has_many :preparation_tools, dependent: :destroy
@@ -74,6 +75,7 @@ class Workspace < ApplicationRecord
       preparation_tools.find_each(&:destroy_with_history!)
       equipment_events.destroy_all
       inventory_adjustments.destroy_all
+      external_coffees.destroy_all
       brews.destroy_all
       destroy!
     end

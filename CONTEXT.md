@@ -8,6 +8,46 @@ Roastnode tracks private household coffee practice. The language in this glossar
 A single prepared coffee drink or batch logged by a workspace member. A brew belongs to one **Brew method**.
 _Avoid_: Shot as the general term, extraction as the general term
 
+**External Coffee**:
+A purchased or otherwise household-external coffee drink logged by a workspace member for memory, comparison, and sharing. It is workspace-private by default, is not a **Brew**, and does not consume workspace bean inventory or require household equipment.
+_Avoid_: Cafe brew, out-of-home brew, third brew method
+
+**Drink Type**:
+The menu-style name of an **External Coffee**, such as latte macchiato, americano, flat white, black coffee, or matcha latte. It may include adjacent cafe drinks and is searchable suggestion text, not a **Brew method**.
+_Avoid_: Brew method for external coffee, fixed variant enum, recipe
+
+**Drink Size**:
+The optional cafe/menu size of an **External Coffee**, captured as free text such as small, medium, grande, 250ml, or single. It helps compare price and experience without normalizing every shop's size system.
+_Avoid_: Universal cup size, required serving volume
+
+**External Coffee Place**:
+The free-text place name and optional place location where an **External Coffee** was bought or consumed. It is not a reusable coffee-shop directory record.
+_Avoid_: Cafe account, shop entity, roaster
+
+**External Coffee Location Capture**:
+An explicit per-entry action where a member chooses to attach current device coordinates to an **External Coffee**. It is optional and is never automatic background location tracking.
+_Avoid_: Always-on location, passive location history, required coordinates
+
+**External Coffee Taste**:
+The sensory assessment of an **External Coffee** across two simple axes: acidity-to-bitterness and weak-to-strong. It is separate from espresso and Quick Drip taste labels because bought drinks may be diluted, milk-based, or non-espresso.
+_Avoid_: Reusing espresso taste balance as the only external taste field
+
+**External Coffee Photo**:
+An optional private photo attached to an **External Coffee**, such as the cup, menu, venue, or drink presentation. Public use requires explicit selection through a public share.
+_Avoid_: Public-by-default cafe photo, raw media URL
+
+**External Coffee Share**:
+An explicit public snapshot of one **External Coffee**. It controls whether date, time, place name, and location are public for that share.
+_Avoid_: Public-by-default external log, global cafe privacy setting
+
+**External Coffee Link**:
+An optional public or private link attached to an **External Coffee**, such as a cafe website, menu, product page, or related post. Only public links may appear in an **External Coffee Share**.
+_Avoid_: Public by default link, embedded private source
+
+**External Coffee Comparison**:
+Comparison of **External Coffees** by drink type, place, price, rating, and external taste axes. It may be compared with household brews only at broad rating/taste levels, not through bean inventory or equipment metrics.
+_Avoid_: Bean analytics, equipment analytics, extraction comparison
+
 **Brew method**:
 The preparation category of a **Brew**, such as espresso or Quick Drip. A brew method describes how coffee is prepared, not the specific equipment record used.
 _Avoid_: Recipe, machine, personal workflow
@@ -76,6 +116,14 @@ _Avoid_: Workspace method, authorization rule
 The single brew-logging entry point that shows a user's enabled brew methods as stable tabs. It opens the user's last logged enabled method by default without reordering the tabs.
 _Avoid_: Log espresso as the general entry point, moving method tabs
 
+**External Coffee Log Tab**:
+The default Log screen entry point for creating an **External Coffee**. It sits beside brew-method tabs in the UI but is not itself a **Brew method**.
+_Avoid_: External brew method, hidden separate app area
+
+**External Coffee Hero Card**:
+The screenshot-worthy card for an **External Coffee**. It is photo-forward when a primary photo exists and otherwise presents drink type, place, price, rating, and external taste axes without espresso graphs, inventory metrics, or household equipment.
+_Avoid_: Espresso chart card, gear card, text-only receipt
+
 **Quick Drip Hero Card**:
 The method-specific Hero Brew Card variant for Quick Drip. It stays in the existing dense card family and uses a metric-first batch summary instead of an espresso extraction chart.
 _Avoid_: Separate Quick Drip app card, decorative process illustration
@@ -134,9 +182,61 @@ Dev: "Should Log tabs reorder based on the last brew?"
 
 Domain expert: "No. Keep the tabs stable, but open the last logged enabled method."
 
+Dev: "Should External Coffee live away from the Log screen?"
+
+Domain expert: "No. Use an External Coffee Log Tab so bought drinks are logged from the same starting point without becoming a Brew method."
+
+Dev: "Should an External Coffee card use espresso-style extraction visuals?"
+
+Domain expert: "No. Use an External Coffee Hero Card that can make the drink photo the primary visual and keeps cafe-specific facts prominent."
+
 Dev: "Should the Quick Drip card look unrelated to espresso cards?"
 
 Domain expert: "No. Keep the same Hero Brew Card family, but show Quick Drip batch metrics instead of espresso extraction metrics."
+
+Dev: "Should a Starbucks latte be logged as a Brew without a household bean?"
+
+Domain expert: "No. Log it as External Coffee because it happened outside the household preparation and inventory workflow."
+
+Dev: "Is an External Coffee visible only to the person who logged it?"
+
+Domain expert: "No. It follows normal workspace privacy like other coffee records; public sharing is explicit."
+
+Dev: "Should External Coffee variants be added as Brew methods?"
+
+Domain expert: "No. Use Drink Type for menu-style names; Brew methods stay for household preparation categories."
+
+Dev: "Should all cafe drink sizes be normalized to one fixed scale?"
+
+Domain expert: "No. Use optional Drink Size text because shop size systems vary and exact volume is usually not known."
+
+Dev: "Should every cafe become a shared CoffeeShop record?"
+
+Domain expert: "No. External Coffee Place is free text first; structured shop records can wait until repeated-place workflows prove they are needed."
+
+Dev: "Should mobile logging automatically attach the current location?"
+
+Domain expert: "No. Location capture is explicit per External Coffee and logging works without it."
+
+Dev: "Can External Coffee use only the espresso sour-neutral-bitter field?"
+
+Domain expert: "No. External Coffee Taste has a separate strength/body axis because cafe drinks can be weak, strong, diluted, milk-heavy, or harsh."
+
+Dev: "Are cafe photos public once attached?"
+
+Domain expert: "No. External Coffee Photos are private media unless a public share explicitly selects them."
+
+Dev: "Should sharing cafe location be one global account setting?"
+
+Domain expert: "No. External Coffee Share controls date, time, place name, and location visibility per shared record."
+
+Dev: "Can an External Coffee Share show every attached link?"
+
+Domain expert: "No. It can show only External Coffee Links marked public."
+
+Dev: "Should External Coffees count in bean or equipment statistics?"
+
+Domain expert: "No. Use External Coffee Comparison for price, rating, taste, drink type, and place; household brew analytics stay tied to beans and equipment."
 
 Dev: "Does Quick Drip use the espresso taste labels?"
 

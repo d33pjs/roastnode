@@ -48,6 +48,7 @@ class User < ApplicationRecord
     inverse_of: :accepted_by
   has_many :data_imports, dependent: :restrict_with_exception
   has_many :brews, dependent: :restrict_with_exception
+  has_many :external_coffees, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception
   has_many :equipment_events, dependent: :restrict_with_exception
   has_many :recipes, foreign_key: :created_by_id, dependent: :restrict_with_exception, inverse_of: :created_by

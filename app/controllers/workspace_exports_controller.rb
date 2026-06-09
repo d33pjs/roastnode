@@ -24,6 +24,13 @@ class WorkspaceExportsController < ApplicationController
       disposition: "attachment"
   end
 
+  def external_coffees
+    send_data csv_export.external_coffees_csv,
+      filename: "#{current_workspace.name.parameterize}-external-coffees.csv",
+      type: "text/csv",
+      disposition: "attachment"
+  end
+
   def media
     archive = WorkspaceMediaArchiveBuilder.new(current_workspace).call
 

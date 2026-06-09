@@ -70,6 +70,10 @@ Rails.application.routes.draw do
     patch :taste, on: :member
     resource :public_brew_share, only: %i[new create edit update destroy]
   end
+  resources :external_coffees, only: %i[index new create show edit update destroy] do
+    get :drink_type_suggestions, on: :collection
+    get :place_name_suggestions, on: :collection
+  end
   resources :recipes do
     get :log, on: :member
     get :export, on: :member
@@ -91,6 +95,7 @@ Rails.application.routes.draw do
   resource :workspace_export, only: :show
   get "workspace_export/beans.csv" => "workspace_exports#beans", as: :workspace_export_beans
   get "workspace_export/brews.csv" => "workspace_exports#brews", as: :workspace_export_brews
+  get "workspace_export/external_coffees.csv" => "workspace_exports#external_coffees", as: :workspace_export_external_coffees
   get "workspace_export/media.zip" => "workspace_exports#media", as: :workspace_export_media
   resources :beanconqueror_imports, only: %i[new create show]
 

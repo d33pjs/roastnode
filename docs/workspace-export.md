@@ -12,7 +12,8 @@ Workspace Export is the first Roastnode data portability feature.
 - Workspace metadata.
 - Membership roles with user email/display name.
 - Import batch metadata.
-- Beans, equipment, preparation tools, brews, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
+- Beans, equipment, preparation tools, brews, External Coffees, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
+- External Coffees include drink type, drink size, place text, private coordinates, price/currency, taste axes, rating, notes, public note, and photo metadata.
 - Rich bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
 - Brew method fields, including Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, and coffee amount source.
 - Quick Drip profile preferences are account-level data. Active workspace exports do not include enabled-method or grams-per-coffee-spoon preferences; full instance backup/readable export payloads include them so restores can rebuild user logging defaults.
@@ -27,7 +28,7 @@ The media archive is available at `/workspace_export/media.zip`. It contains:
 - `data/workspace-export.json`, matching the normal JSON export payload.
 - Original media files under stable `media/<record_collection>/<record_id>/<attachment_name>/<attachment_id>-<filename>` paths.
 
-The archive includes workspace logo/banner and photos attached to beans, equipment, preparation tools, brews, and equipment events in the active workspace. It does not include user avatars or user public banners, because those belong to user accounts rather than the workspace export contract.
+The archive includes workspace logo/banner and photos attached to beans, equipment, preparation tools, brews, External Coffees, and equipment events in the active workspace. It does not include user avatars or user public banners, because those belong to user accounts rather than the workspace export contract.
 
 ## CSV Exports
 
@@ -35,10 +36,13 @@ CSV exports are separate spreadsheet-friendly downloads:
 
 - `/workspace_export/beans.csv`
 - `/workspace_export/brews.csv`
+- `/workspace_export/external_coffees.csv`
 
 The beans CSV includes flat bag metadata such as names, roaster, derived status (`stock`, `open`, `used_up`, or `archived`), remaining grams, roast data, variety information, purchase details, rating, notes, and timestamps.
 
 The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing, temperature, taste balance, rating, retention marker, notes, and timestamps.
+
+The External Coffees CSV includes occurred time, user labels, drink type, drink size, place name/location, private coordinates, price, currency, taste axes, rating, notes, public note, and timestamps.
 
 CSV exports are useful for spreadsheets and quick analysis. They are not intended to fully reconstruct all relationships; use the JSON export for that.
 
@@ -72,6 +76,7 @@ The top-level JSON shape is:
   "equipment": [],
   "preparation_tools": [],
   "brews": [],
+  "external_coffees": [],
   "brew_preparation_tools": [],
   "equipment_events": [],
   "equipment_event_items": [],
@@ -83,7 +88,7 @@ Local IDs are included so relationships can be reconstructed inside a single exp
 
 ## Instance Backup Coverage
 
-Instance backups and empty-server restore preserve the same Quick Drip durable fields: brew method, brewer references, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, bean grind state, preparation tool method, and user enabled-method/spoon preferences.
+Instance backups and empty-server restore preserve the same Quick Drip durable fields: brew method, brewer references, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, bean grind state, preparation tool method, and user enabled-method/spoon preferences. They also preserve External Coffee records and photos.
 
 ## Deferred
 

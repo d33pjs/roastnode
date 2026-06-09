@@ -4,7 +4,7 @@ class WorkspaceActivityFeed
   end
 
   def records
-    @records ||= (brews + manual_adjustments + equipment_events).sort_by do |record|
+    @records ||= (brews + external_coffees + manual_adjustments + equipment_events).sort_by do |record|
       [ record.occurred_at || Time.zone.at(0), record.created_at || Time.zone.at(0) ]
     end.reverse
   end
@@ -14,6 +14,10 @@ class WorkspaceActivityFeed
 
     def brews
       workspace.brews.includes(:bean, :user).to_a
+    end
+
+    def external_coffees
+      workspace.external_coffees.includes(:user).to_a
     end
 
     def manual_adjustments
