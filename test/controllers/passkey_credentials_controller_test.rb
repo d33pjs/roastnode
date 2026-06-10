@@ -9,6 +9,29 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  test "registration options current-password checks are rate limited by user and remote ip" do
+    ActionController::Base.cache_store.clear
+    sign_in_as(users(:one))
+
+    10.times do
+      post options_passkey_credentials_path,
+        params: { current_password: "wrong" },
+        headers: { "REMOTE_ADDR" => "203.0.113.13" },
+        as: :json
+      assert_response :unauthorized
+    end
+
+    post options_passkey_credentials_path,
+      params: { current_password: "wrong" },
+      headers: { "REMOTE_ADDR" => "203.0.113.13" },
+      as: :json
+
+    assert_response :too_many_requests
+    assert_equal I18n.t("passkey_credentials.rate_limited"), response.parsed_body.fetch("error")
+  ensure
+    ActionController::Base.cache_store.clear
+  end
+
   test "registration options store a challenge after current password confirmation" do
     sign_in_as(users(:one))
     fake = fake_options(payload: { "challenge" => "registration-challenge" })

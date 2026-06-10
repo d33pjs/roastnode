@@ -50,6 +50,7 @@ en:
       title: "Verify passkey"
       verify: "Verify with passkey"
   passkey_credentials:
+    rate_limited: "Try again later."
     create:
       failed: "Passkey could not be added."
     destroy:
@@ -691,6 +692,7 @@ en:
       user: "User"
     unlock:
       failed: "Password is not correct."
+      rate_limited: "Try again later."
   public_recipe_shares:
     create:
       created: "Public recipe share saved."
@@ -750,6 +752,7 @@ en:
       unknown: "Unknown"
     unlock:
       failed: "Password is not correct."
+      rate_limited: "Try again later."
   inventory_adjustments:
     create:
       created: "Inventory adjusted."
@@ -1341,6 +1344,7 @@ en:
       title: "Change password"
     update:
       current_password_invalid: "is not correct"
+      rate_limited: "Try again later."
       updated: "Password changed."
   statistics:
     index:
@@ -1523,12 +1527,12 @@ en:
       buy_me_a_coffee_display_mode: "Buy Me a Coffee display"
       buy_me_a_coffee_display_modes:
         link: "Simple link badge"
-        official_badge: "Official badge script"
+        official_badge: "Badge from profile slug"
       buy_me_a_coffee_slug: "Badge slug"
-      buy_me_a_coffee_slug_help: "Used in the official badge as data-slug. Letters, numbers, dot, underscore, and hyphen are allowed."
+      buy_me_a_coffee_slug_help: "Used to build a static buymeacoffee.com profile link. Letters, numbers, dot, underscore, and hyphen are allowed."
       buy_me_a_coffee_slug_placeholder: "d33p.js"
       buy_me_a_coffee_text: "Badge text"
-      buy_me_a_coffee_text_help: "Used in the official badge as data-text. Leave blank for the default."
+      buy_me_a_coffee_text_help: "Used as the static badge label. Leave blank for the default."
       buy_me_a_coffee_text_placeholder: "Buy me a coffee"
       buy_me_a_coffee_url: "Buy Me a Coffee URL"
       buy_me_a_coffee_url_help: "Used when the simple link badge mode is selected."
@@ -1542,7 +1546,7 @@ en:
       logo: "Household logo"
       name: "Household name"
       save: "Save workspace"
-      support_badge_help: "Shown on public shared brew and recipe pages. Official badge mode loads the Buy Me a Coffee CDN script."
+      support_badge_help: "Shown on public shared brew and recipe pages. Both modes render static links without third-party scripts."
       support_badge_title: "Support badge"
       title: "Workspace settings"
     public_brew_shares:

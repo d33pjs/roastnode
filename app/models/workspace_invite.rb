@@ -1,3 +1,5 @@
+require "digest"
+
 class WorkspaceInvite < ApplicationRecord
   INVITABLE_ROLES = %w[admin member viewer].freeze
   ROLE_PRIORITY = {
@@ -18,13 +20,21 @@ class WorkspaceInvite < ApplicationRecord
   belongs_to :accepted_by, class_name: "User", optional: true
 
   before_validation :set_token, on: :create
+  before_validation :set_token_digest
   before_validation :set_expiration, on: :create
 
   validates :role, presence: true, inclusion: { in: INVITABLE_ROLES }
   validates :token, presence: true, uniqueness: true
+  validates :token_digest, presence: true, uniqueness: true
   validates :expires_at, presence: true
 
   normalizes :email_address, with: ->(email) { email.presence&.strip&.downcase }
+
+  scope :matching_token, ->(token) { where(token_digest: token_digest_for(token)) }
+
+  def self.token_digest_for(token)
+    Digest::SHA256.hexdigest(token.to_s)
+  end
 
   def acceptable?
     accepted_at.blank? && revoked_at.blank? && expires_at.future?
@@ -58,6 +68,10 @@ class WorkspaceInvite < ApplicationRecord
   private
     def set_token
       self.token ||= SecureRandom.urlsafe_base64(24)
+    end
+
+    def set_token_digest
+      self.token_digest = self.class.token_digest_for(token) if token.present?
     end
 
     def set_expiration

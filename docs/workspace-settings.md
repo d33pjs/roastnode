@@ -6,14 +6,14 @@ Workspace settings are scoped to the current active workspace.
 
 - Owners and admins can open `/workspace/edit`.
 - The page edits the household/workspace name, default currency, household logo, and household banner.
-- The page can configure a public footer support badge for the household. It supports the existing simple Buy Me a Coffee URL badge and an opt-in official Buy Me a Coffee script badge driven by slug and display text.
+- The page can configure a public footer support badge for the household. It supports a simple Buy Me a Coffee URL badge and a slug-driven static badge link with custom display text.
 - The page lists public brew shares for the active workspace, including each public URL, linked brew, enabled state, creation/update timestamps, view count, retained recent IP history as a compact list, and quick open/edit/remove actions.
 - Owners see a deletion danger zone with typed-name confirmation.
 - The route is singleton and uses `current_workspace`; it does not accept a workspace ID.
 - Members and viewers are redirected by the existing workspace admin authorization helper.
 - `Workspace#default_currency` is normalized to uppercase.
 - `Workspace#buy_me_a_coffee_url` is optional and accepts only HTTP(S) URLs on `buymeacoffee.com` or `www.buymeacoffee.com`.
-- Official Buy Me a Coffee badge mode stores only slug and text, validates the slug, and loads `https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js` on public shared pages.
+- Slug-driven Buy Me a Coffee badge mode stores only slug and text, validates the slug, derives a `https://www.buymeacoffee.com/<slug>` link, and renders the local static footer button on public shared pages. Public pages must not load third-party Buy Me a Coffee scripts.
 - The household logo is shown in the Hero Brew Card workspace pill when available.
 - Household logo changes refresh existing public brew-share snapshots that belong to the workspace.
 

@@ -18,7 +18,7 @@ Public Brew Sharing lets a workspace writer publish one curated espresso brew pa
 - Public media route with opaque handles for selected share media and public identity images.
 - Automatic snapshot refresh for public-safe brew, bean, gear, tool, public-link, workspace-logo, and user-avatar changes.
 - Public page view counts plus a capped recent list of full viewer IP addresses and viewed-at timestamps.
-- Public shared pages include the global GitHub footer link, and show the workspace's Buy Me a Coffee support badge when that workspace setting is present.
+- Public shared pages include the global GitHub footer link, and show the workspace's static Buy Me a Coffee support badge when that workspace setting is present.
 - Native mobile share shortcuts for enabled public shares on the private compact Brew Log and brew detail action area.
 
 ## Privacy Contract
@@ -53,6 +53,8 @@ The snapshot and public page must not include:
 Workspace name/logo and user display label/avatar are intentional public identity surfaces for this feature. They should still be routed through the public-share media whitelist instead of raw Active Storage URLs.
 
 The optional workspace Buy Me a Coffee URL is not copied into public share snapshots. Public share controllers may read it from the share's workspace to render the global footer support badge.
+
+The footer support badge must render as local static HTML and SVG only. It must not load the Buy Me a Coffee CDN script or any other third-party script into the Roastnode origin.
 
 The public Hero Brew Card mirrors the private card's brew curve, timing guides, first-drip callout, total-time marker, and vertical temperature callout, but it does not render recipe ghost targets, the private retention card, or a bean photo in the hero. Public household and user identity sit below the hero instead of inside it, in a two-column strip even on mobile so the two identity blocks stay aligned.
 
@@ -113,7 +115,7 @@ Older snapshots without `public_media` fall back to live validation against the 
 
 The public media route applies the same password gate as the HTML page. It returns not found for disabled shares, unknown tokens, unselected attachments, attachments outside the share whitelist, and unsupported variants. Thumbnail responses may fall back to original bytes if local image processing fails, but logs must not include public bearer tokens or raw processor error messages.
 
-Because `/s/:token` is bearer access, Rails request logging redacts public share tokens and public media handles from `filtered_path`. Public share redirects are also configured through Rails redirect filtering.
+Because `/s/:token` and `/r/:token` are bearer access, Rails request logging redacts public share tokens and public media handles from `filtered_path`. Public share redirects are also configured through Rails redirect filtering. Password reset, workspace invite, and household invite bearer URLs are redacted by the same log-filtering initializer.
 
 ## Public View Tracking
 

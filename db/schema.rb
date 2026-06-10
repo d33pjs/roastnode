@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_09_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -258,12 +258,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_120000) do
     t.datetime "expires_at", null: false
     t.datetime "revoked_at"
     t.string "token", null: false
+    t.string "token_digest", null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id"
     t.index ["accepted_by_id"], name: "index_household_invites_on_accepted_by_id"
     t.index ["created_by_id"], name: "index_household_invites_on_created_by_id"
     t.index ["email_address"], name: "index_household_invites_on_email_address"
     t.index ["token"], name: "index_household_invites_on_token", unique: true
+    t.index ["token_digest"], name: "index_household_invites_on_token_digest", unique: true
     t.index ["workspace_id"], name: "index_household_invites_on_workspace_id"
   end
 
@@ -499,11 +501,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_09_120000) do
     t.datetime "revoked_at"
     t.string "role", default: "member", null: false
     t.string "token", null: false
+    t.string "token_digest", null: false
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["accepted_by_id"], name: "index_workspace_invites_on_accepted_by_id"
     t.index ["created_by_id"], name: "index_workspace_invites_on_created_by_id"
     t.index ["token"], name: "index_workspace_invites_on_token", unique: true
+    t.index ["token_digest"], name: "index_workspace_invites_on_token_digest", unique: true
     t.index ["workspace_id"], name: "index_workspace_invites_on_workspace_id"
   end
 

@@ -8,6 +8,38 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("household_invites.show.unavailable_title")
   end
 
+  test "household invite request path and redirects redact bearer tokens for logs" do
+    invite = household_invites(:active_household_invite)
+    request = ActionDispatch::Request.new(
+      Rack::MockRequest.env_for("/household_invites/#{invite.token}/signup?token=secret")
+    )
+    request.set_header("action_dispatch.parameter_filter", Rails.application.config.filter_parameters)
+
+    assert_equal "/household_invites/[FILTERED]/signup?token=[FILTERED]", request.filtered_path
+
+    user = User.create!(email_address: "other-owner@example.com", password: "password")
+    sign_in_as(user)
+
+    post accept_household_invite_path(invite.token), params: {
+      workspace: { name: "Wrong Household" }
+    }
+
+    assert_redirected_to household_invite_path(invite.token)
+    assert_equal "[FILTERED]", response.filtered_location
+  end
+
+  test "household invite controller lookup uses token digest instead of raw token in SQL binds" do
+    invite = household_invites(:active_household_invite)
+
+    sql_values = collect_sql_bind_values do
+      get household_invite_path(invite.token)
+    end
+
+    assert_response :success
+    assert_not_includes sql_values, invite.token
+    assert_includes sql_values, HouseholdInvite.token_digest_for(invite.token)
+  end
+
   test "unauthenticated user can view household invite signup form" do
     invite = household_invites(:active_household_invite)
 
@@ -289,6 +321,18 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def collect_sql_bind_values
+      values = []
+      callback = lambda do |_name, _started, _finished, _unique_id, payload|
+        next if payload[:name] == "SCHEMA"
+
+        values.concat(Array(payload[:binds]).map { |bind| bind.value_for_database.to_s })
+      end
+
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { yield }
+      values
+    end
+
     def closed_household_invite_cases
       accepted_user = User.create!(email_address: "accepted-owner@example.com", password: "password")
       accepted_workspace = Workspace.create!(name: "Accepted Household", kind: :household, default_currency: "EUR")

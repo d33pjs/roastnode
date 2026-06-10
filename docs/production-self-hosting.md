@@ -4,7 +4,7 @@ Roastnode v1 is a private household app. Production installs should optimize for
 
 ## Assumptions
 
-- Run the Rails app from the production `Dockerfile` or an equivalent Ruby 3.3.7 host.
+- Run the Rails app from the production `Dockerfile` or an equivalent Ruby 3.3.11 host.
 - Run PostgreSQL 17 or another PostgreSQL version supported by Rails 8.1.
 - Deploy the first release with Docker Compose, normally rendered and invoked by Ansible.
 - Terminate public TLS at a reverse proxy such as Nginx Proxy Manager, Traefik, Caddy, or another host-managed proxy.

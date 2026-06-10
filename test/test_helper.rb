@@ -12,8 +12,16 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
+    setup :clear_action_controller_cache_store
+    teardown :clear_action_controller_cache_store
+
     # Add more helper methods to be used by all tests here...
     include PasskeyTestHelper
+
+    private
+      def clear_action_controller_cache_store
+        ActionController::Base.cache_store&.clear
+      end
   end
 end
 

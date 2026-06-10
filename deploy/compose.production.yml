@@ -21,7 +21,7 @@ x-roastnode-app: &roastnode-app
 
 services:
   postgres:
-    image: ${POSTGRES_IMAGE:-postgres:17.5}
+    image: ${POSTGRES_IMAGE:-postgres:17.10}
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-roastnode}

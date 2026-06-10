@@ -61,7 +61,12 @@ class Workspace < ApplicationRecord
     if official_buy_me_a_coffee_badge?
       return if buy_me_a_coffee_slug.blank?
 
-      { mode: :official_badge, slug: buy_me_a_coffee_slug, text: buy_me_a_coffee_badge_text }
+      {
+        mode: :official_badge,
+        slug: buy_me_a_coffee_slug,
+        text: buy_me_a_coffee_badge_text,
+        url: "https://www.buymeacoffee.com/#{buy_me_a_coffee_slug}"
+      }
     elsif buy_me_a_coffee_url.present?
       { mode: :link, url: buy_me_a_coffee_url }
     end

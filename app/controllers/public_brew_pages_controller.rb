@@ -2,6 +2,14 @@ class PublicBrewPagesController < ApplicationController
   allow_unauthenticated_access
 
   before_action :set_share
+  rate_limit to: 10,
+    within: 3.minutes,
+    only: :unlock,
+    by: -> { "#{request.remote_ip}:#{PublicBrewShare.token_digest_for(params[:token])}" },
+    with: -> {
+      flash.now[:alert] = t(".rate_limited")
+      render :password, status: :too_many_requests
+    }
 
   def show
     return render :password if password_required?

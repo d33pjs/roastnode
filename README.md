@@ -72,7 +72,7 @@ Do not load the demo account on a hosted/public instance unless you immediately 
 - Rails web port: `3001`
 - Roastnode PostgreSQL host port: `5433`
 - PostgreSQL container port: `5432`
-- Compose image: `postgres:17.5`
+- Compose image: `postgres:17.10`
 
 The non-default host ports are intentional so Roastnode can run beside another project already using PostgreSQL on `5432`.
 

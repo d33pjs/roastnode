@@ -32,6 +32,40 @@ class PasswordChangesControllerTest < ActionDispatch::IntegrationTest
     assert_select "div", /#{I18n.t("password_changes.update.current_password_invalid")}/
   end
 
+  test "password change current-password checks are rate limited by user and remote ip" do
+    ActionController::Base.cache_store.clear
+    user = users(:one)
+    sign_in_as(user)
+
+    10.times do
+      patch password_change_path,
+        params: {
+          user: {
+            current_password: "wrong",
+            password: "new-password",
+            password_confirmation: "new-password"
+          }
+        },
+        headers: { "REMOTE_ADDR" => "203.0.113.12" }
+      assert_response :unprocessable_entity
+    end
+
+    patch password_change_path,
+      params: {
+        user: {
+          current_password: "wrong",
+          password: "new-password",
+          password_confirmation: "new-password"
+        }
+      },
+      headers: { "REMOTE_ADDR" => "203.0.113.12" }
+
+    assert_response :too_many_requests
+    assert_select "body", text: /#{I18n.t("password_changes.update.rate_limited")}/
+  ensure
+    ActionController::Base.cache_store.clear
+  end
+
   test "password change rejects mismatched confirmation" do
     user = users(:one)
     sign_in_as(user)

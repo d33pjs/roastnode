@@ -10,7 +10,7 @@ class WorkspaceInvitesController < ApplicationController
   end
 
   def show
-    @workspace_invite = WorkspaceInvite.find_by(token: params[:token])
+    @workspace_invite = WorkspaceInvite.matching_token(params[:token]).first
 
     unless @workspace_invite&.acceptable?
       @workspace_invite = nil
@@ -31,7 +31,7 @@ class WorkspaceInvitesController < ApplicationController
   end
 
   def accept
-    @workspace_invite = WorkspaceInvite.find_by(token: params[:token])
+    @workspace_invite = WorkspaceInvite.matching_token(params[:token]).first
 
     unless @workspace_invite&.acceptable_for?(Current.user)
       return redirect_to workspace_invite_path(params[:token]), alert: t(".unavailable")
@@ -44,7 +44,7 @@ class WorkspaceInvitesController < ApplicationController
   end
 
   def signup
-    @workspace_invite = WorkspaceInvite.find_by(token: params[:token])
+    @workspace_invite = WorkspaceInvite.matching_token(params[:token]).first
 
     unless @workspace_invite&.acceptable?
       return redirect_to workspace_invite_path(params[:token]), alert: t("workspace_invites.accept.unavailable")
@@ -107,7 +107,7 @@ class WorkspaceInvitesController < ApplicationController
 
   private
     def set_workspace_invite
-      @workspace_invite = current_workspace.workspace_invites.find_by!(token: params[:token])
+      @workspace_invite = current_workspace.workspace_invites.matching_token(params[:token]).first!
     end
 
     def workspace_invite_params

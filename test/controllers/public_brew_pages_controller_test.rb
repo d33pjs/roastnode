@@ -46,7 +46,7 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "enabled share renders official buy me a coffee badge script when configured" do
+  test "enabled share renders official buy me a coffee config as static local button" do
     share = create_share(enabled: true)
     share.workspace.update!(
       buy_me_a_coffee_display_mode: "official_badge",
@@ -58,15 +58,10 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[data-testid=site-footer-github][href=?]", Roastnode::AppVersion.github_url
-    assert_select "script[data-testid=site-footer-buy-me-a-coffee][src=?]", "https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
-    assert_select "script[data-name=?]", "bmc-button"
-    assert_select "script[data-slug=?]", "d33p.js"
-    assert_select "script[data-text=?]", "Buy me a coffee"
-    assert_select "script[data-color=?]", "#986338"
-    assert_select "script[data-font=?]", "Comic"
-    assert_select "script[data-outline-color=?]", "#ffffff"
-    assert_select "script[data-font-color=?]", "#ffffff"
-    assert_select "script[data-coffee-color=?]", "#FFDD00"
+    assert_select "a[data-testid=site-footer-buy-me-a-coffee][href=?]", "https://www.buymeacoffee.com/d33p.js", text: /Buy me a coffee/
+    assert_select "[data-testid=site-footer-buy-me-a-coffee-logo]"
+    assert_select "script[src*='buymeacoffee']", count: 0
+    assert_select "script[data-testid=site-footer-buy-me-a-coffee]", count: 0
     assert_select "[data-testid=site-footer-version]", count: 0
   end
 
@@ -281,6 +276,36 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     get public_brew_page_path(share.token)
     assert_response :success
     assert_select "[data-testid=public-brew-page]"
+  end
+
+  test "password unlock is rate limited by share token digest and remote ip" do
+    ActionController::Base.cache_store.clear
+    share = create_share(enabled: true, password: "espresso")
+    cache_keys = []
+    callback = lambda do |_name, _started, _finished, _unique_id, payload|
+      cache_keys << payload.fetch(:cache_key)
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "rate_limit.action_controller") do
+      10.times do
+        post unlock_public_brew_page_path(share.token),
+          params: { password: "wrong" },
+          headers: { "REMOTE_ADDR" => "203.0.113.10" }
+        assert_response :unprocessable_entity
+      end
+
+      post unlock_public_brew_page_path(share.token),
+        params: { password: "wrong" },
+        headers: { "REMOTE_ADDR" => "203.0.113.10" }
+    end
+
+    assert_response :too_many_requests
+    assert_select "body", text: /#{I18n.t("public_brew_pages.unlock.rate_limited")}/
+    assert_equal 1, cache_keys.length
+    assert_not_includes cache_keys.first, share.token
+    assert_includes cache_keys.first, PublicBrewShare.token_digest_for(share.token)
+  ensure
+    ActionController::Base.cache_store.clear
   end
 
   test "password change invalidates existing public page unlock" do

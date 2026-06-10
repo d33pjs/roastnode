@@ -169,6 +169,36 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", I18n.t("workspace_invites.show.unavailable_title")
   end
 
+  test "workspace invite request path and redirects redact bearer tokens for logs" do
+    invite = workspace_invites(:member_invite)
+    request = ActionDispatch::Request.new(
+      Rack::MockRequest.env_for("/workspace_invites/#{invite.token}/accept?token=secret")
+    )
+    request.set_header("action_dispatch.parameter_filter", Rails.application.config.filter_parameters)
+
+    assert_equal "/workspace_invites/[FILTERED]/accept?token=[FILTERED]", request.filtered_path
+
+    sign_in_as(users(:two))
+    invite.update!(email_address: "friend@example.com")
+
+    post accept_workspace_invite_path(invite.token)
+
+    assert_redirected_to workspace_invite_path(invite.token)
+    assert_equal "[FILTERED]", response.filtered_location
+  end
+
+  test "workspace invite controller lookup uses token digest instead of raw token in SQL binds" do
+    invite = workspace_invites(:member_invite)
+
+    sql_values = collect_sql_bind_values do
+      get workspace_invite_path(invite.token)
+    end
+
+    assert_response :success
+    assert_not_includes sql_values, invite.token
+    assert_includes sql_values, WorkspaceInvite.token_digest_for(invite.token)
+  end
+
   test "unauthenticated user can view invite signup form" do
     invite = workspace_invites(:member_invite)
 
@@ -276,4 +306,17 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to workspace_invite_path(invite.token)
     assert_nil invite.reload.accepted_at
   end
+
+  private
+    def collect_sql_bind_values
+      values = []
+      callback = lambda do |_name, _started, _finished, _unique_id, payload|
+        next if payload[:name] == "SCHEMA"
+
+        values.concat(Array(payload[:binds]).map { |bind| bind.value_for_database.to_s })
+      end
+
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { yield }
+      values
+    end
 end

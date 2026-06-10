@@ -1,5 +1,14 @@
 class PasswordChangesController < ApplicationController
   before_action :set_user
+  rate_limit to: 10,
+    within: 3.minutes,
+    only: :update,
+    by: :authenticated_password_check_rate_limit_key,
+    with: -> {
+      @user = Current.user
+      @user.errors.add(:base, t(".rate_limited"))
+      render :edit, status: :too_many_requests
+    }
 
   def edit
   end
@@ -27,6 +36,10 @@ class PasswordChangesController < ApplicationController
   private
     def set_user
       @user = Current.user
+    end
+
+    def authenticated_password_check_rate_limit_key
+      "#{Current.user.id}:#{request.remote_ip}"
     end
 
     def password_change_params

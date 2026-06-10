@@ -8,7 +8,7 @@ Workspace Core is the first real Roastnode product slice after Rails foundation 
 - `Membership` connects a `User` to a `Workspace` with one role.
 - `User#active_workspace` stores the current workspace for dashboard and scoped actions.
 - `User#default_landing_screen` stores whether `/` should open the dashboard or the espresso form.
-- `WorkspaceInvite` stores token links for adding signed-in or newly-created users to a workspace.
+- `WorkspaceInvite` stores token links for adding signed-in or newly-created users to a workspace. Controllers look up invite URLs by `token_digest`, not raw token values.
 - Workspace settings currently include the household/workspace name and default currency.
 
 ## Roles
@@ -33,6 +33,8 @@ Invites with `email_address` are email-bound: only a user account with that norm
 Email-bound invites queue an invite email when created. Owners and admins can resend an active email-bound invite or re-invite from a closed email-bound invite, which creates a fresh token with the same email and role. Blank-email invites keep the copyable-link fallback and do not offer send actions.
 
 Instance-admin household invites are separate from workspace member invites. They create a brand-new household for the recipient and never join the recipient to the inviting admin's active workspace.
+
+Workspace member invites and instance-admin household invites are bearer URLs. Request logs redact `/workspace_invites/:token...` and `/household_invites/:token...`, and SQL lookups use SHA-256 token digests so raw invite tokens are not used as query predicates.
 
 Workspace member invite management and instance-admin household invite management show when an invite has been accepted, including the accepting account when still available and the acceptance timestamp.
 

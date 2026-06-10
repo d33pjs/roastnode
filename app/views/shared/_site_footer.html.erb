@@ -1,6 +1,8 @@
 <% buy_me_a_coffee = local_assigns[:buy_me_a_coffee].presence %>
 <% buy_me_a_coffee ||= { mode: :link, url: local_assigns[:buy_me_a_coffee_url].presence } if local_assigns[:buy_me_a_coffee_url].present? %>
 <% show_version = local_assigns.fetch(:show_version, true) && Current.user.present? %>
+<% buy_me_a_coffee_url = buy_me_a_coffee&.fetch(:url, nil).presence %>
+<% buy_me_a_coffee_text = buy_me_a_coffee&.fetch(:text, nil).presence || t("shared.site_footer.buy_me_a_coffee") %>
 
 <footer data-testid="site-footer" class="border-t border-rn-line bg-rn-surface px-5 py-6 text-sm text-rn-muted">
   <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
@@ -18,26 +20,8 @@
     </div>
 
     <div class="flex w-full items-center justify-center sm:w-auto sm:justify-end">
-      <% if buy_me_a_coffee&.fetch(:mode, nil)&.to_sym == :official_badge %>
-        <span class="rn-footer-bmc-official inline-flex h-11 min-h-11 items-center overflow-hidden" data-testid="site-footer-buy-me-a-coffee-wrapper">
-          <%= tag.script "",
-            type: "text/javascript",
-            src: "https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js",
-            data: {
-              testid: "site-footer-buy-me-a-coffee",
-              name: "bmc-button",
-              slug: buy_me_a_coffee[:slug],
-              color: "#986338",
-              emoji: "",
-              font: "Comic",
-              text: buy_me_a_coffee[:text],
-              outline_color: "#ffffff",
-              font_color: "#ffffff",
-              coffee_color: "#FFDD00"
-            } %>
-        </span>
-      <% elsif buy_me_a_coffee&.fetch(:mode, nil)&.to_sym == :link && buy_me_a_coffee[:url].present? %>
-        <%= link_to buy_me_a_coffee[:url],
+      <% if buy_me_a_coffee_url.present? %>
+        <%= link_to buy_me_a_coffee_url,
           target: "_blank",
           rel: "noopener",
           data: { testid: "site-footer-buy-me-a-coffee" },
@@ -47,7 +31,7 @@
               <path d="M5 4h11a2 2 0 0 1 2 2v1h1.25a3.25 3.25 0 1 1 0 6.5H18v.5a5 5 0 0 1-5 5H8a5 5 0 0 1-5-5V6a2 2 0 0 1 2-2Zm13 7.5h1.25a1.25 1.25 0 0 0 0-2.5H18v2.5ZM5 6v8a3 3 0 0 0 3 3h5a3 3 0 0 0 3-3V6H5Z" />
             </svg>
           </span>
-          <span><%= t("shared.site_footer.buy_me_a_coffee") %></span>
+          <span><%= buy_me_a_coffee_text %></span>
         <% end %>
       <% elsif show_version %>
         <p data-testid="site-footer-version" class="font-bold">

@@ -1,6 +1,26 @@
 class PasskeyCredentialsController < ApplicationController
   include PasskeyChallenges
 
+  rate_limit to: 10,
+    within: 3.minutes,
+    only: :options,
+    by: :authenticated_password_check_rate_limit_key,
+    with: -> { render json: { error: t("passkey_credentials.rate_limited") }, status: :too_many_requests }
+  rate_limit to: 10,
+    within: 3.minutes,
+    only: :destroy,
+    by: :authenticated_password_check_rate_limit_key,
+    with: -> { redirect_to edit_profile_path, alert: t("passkey_credentials.rate_limited") }
+  rate_limit to: 10,
+    within: 3.minutes,
+    only: :second_factor,
+    by: :authenticated_password_check_rate_limit_key,
+    with: -> {
+      Current.user.errors.add(:base, t("passkey_credentials.rate_limited"))
+      @user = Current.user
+      render "profiles/edit", status: :too_many_requests
+    }
+
   def options
     unless Current.user.authenticate(params[:current_password].to_s)
       return render json: { error: t(".current_password_invalid") }, status: :unauthorized
@@ -71,5 +91,9 @@ class PasskeyCredentialsController < ApplicationController
 
     def second_factor_params
       params.require(:user).permit(:passkey_second_factor_enabled, :current_password)
+    end
+
+    def authenticated_password_check_rate_limit_key
+      "#{Current.user.id}:#{request.remote_ip}"
     end
 end

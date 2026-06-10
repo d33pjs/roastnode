@@ -52,7 +52,8 @@ class WorkspaceTest < ActiveSupport::TestCase
       {
         mode: :official_badge,
         slug: "d33p.js",
-        text: "Support the beans"
+        text: "Support the beans",
+        url: "https://www.buymeacoffee.com/d33p.js"
       },
       workspace.site_footer_buy_me_a_coffee
     )

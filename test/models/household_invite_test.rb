@@ -25,6 +25,8 @@ class HouseholdInviteTest < ActiveSupport::TestCase
     invite = HouseholdInvite.create!(created_by: users(:one), email_address: "fresh-owner@example.com")
 
     assert invite.token.present?
+    assert_equal Digest::SHA256.hexdigest(invite.token), invite.token_digest
+    assert_equal invite, HouseholdInvite.matching_token(invite.token).first
     assert invite.expires_at.future?
   end
 

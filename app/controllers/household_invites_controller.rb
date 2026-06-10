@@ -2,7 +2,7 @@ class HouseholdInvitesController < ApplicationController
   allow_unauthenticated_access only: %i[show signup]
 
   def show
-    @household_invite = HouseholdInvite.find_by(token: params[:token])
+    @household_invite = HouseholdInvite.matching_token(params[:token]).first
 
     unless @household_invite&.acceptable?
       @household_invite = nil
@@ -13,7 +13,7 @@ class HouseholdInvitesController < ApplicationController
   end
 
   def accept
-    @household_invite = HouseholdInvite.find_by(token: params[:token])
+    @household_invite = HouseholdInvite.matching_token(params[:token]).first
 
     unless @household_invite&.acceptable_for?(Current.user)
       return redirect_to household_invite_path(params[:token]), alert: t(".unavailable")
@@ -29,7 +29,7 @@ class HouseholdInvitesController < ApplicationController
   end
 
   def signup
-    @household_invite = HouseholdInvite.find_by(token: params[:token])
+    @household_invite = HouseholdInvite.matching_token(params[:token]).first
 
     unless @household_invite&.acceptable?
       return redirect_to household_invite_path(params[:token]), alert: t("household_invites.accept.unavailable")

@@ -7,6 +7,14 @@ class WorkspaceInviteTest < ActiveSupport::TestCase
     assert invite.acceptable?
   end
 
+  test "new invite stores a token digest for lookup" do
+    invite = workspaces(:household).workspace_invites.create!(created_by: users(:one), role: "member")
+
+    assert invite.token.present?
+    assert_equal Digest::SHA256.hexdigest(invite.token), invite.token_digest
+    assert_equal invite, WorkspaceInvite.matching_token(invite.token).first
+  end
+
   test "expired invite is not available for acceptance" do
     invite = workspace_invites(:expired_invite)
 

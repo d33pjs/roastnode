@@ -82,10 +82,20 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_no_changes -> { @user.reload.password_digest } do
       put password_path(token), params: { password: "no", password_confirmation: "match" }
       assert_redirected_to edit_password_path(token)
+      assert_equal "[FILTERED]", response.filtered_location
     end
 
     follow_redirect!
     assert_notice "Passwords did not match"
+  end
+
+  test "password reset request path redacts bearer tokens for logs" do
+    request = ActionDispatch::Request.new(
+      Rack::MockRequest.env_for("/passwords/reset-token/edit?token=secret")
+    )
+    request.set_header("action_dispatch.parameter_filter", Rails.application.config.filter_parameters)
+
+    assert_equal "/passwords/[FILTERED]/edit?token=[FILTERED]", request.filtered_path
   end
 
   private
