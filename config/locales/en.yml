@@ -84,6 +84,8 @@ en:
     destroy:
       destroyed: "Photo removed."
   shared:
+    back_link:
+      previous: "Back"
     app_navigation:
       account: "Account"
       beans: "Beans"

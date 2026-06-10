@@ -161,6 +161,33 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_appears_before "data-testid=\"external-coffee-details\"", "data-testid=\"external-coffee-danger-zone\""
   end
 
+  test "show back link returns to the previous in-app page" do
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Macchiato"
+    )
+    previous_path = "/coffees?filter=external"
+    sign_in_as(users(:one))
+
+    get external_coffee_path(coffee), headers: { "HTTP_REFERER" => "http://www.example.com#{previous_path}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?]", previous_path, text: /#{Regexp.escape(I18n.t("shared.back_link.previous"))}/
+  end
+
+  test "show back link ignores external referrers" do
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Macchiato"
+    )
+    sign_in_as(users(:one))
+
+    get external_coffee_path(coffee), headers: { "HTTP_REFERER" => "https://example.org/coffees" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?]", external_coffees_path, text: /#{Regexp.escape(I18n.t("external_coffees.show.back"))}/
+  end
+
   test "viewer cannot create external coffee" do
     memberships(:member).update!(role: "viewer")
     users(:two).update!(active_workspace: workspaces(:household))
