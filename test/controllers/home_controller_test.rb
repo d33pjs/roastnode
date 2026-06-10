@@ -379,10 +379,17 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       assert_select "section[data-testid=dashboard-metrics-grid].xl\\:grid-cols-4"
       assert_select "[data-testid=dashboard-metrics-grid] > article[data-testid=dashboard-metric-coffees-today]"
       assert_select "[data-testid=dashboard-metrics-grid] > article[data-testid=dashboard-metric-spent-this-week]"
+      assert_select "[data-testid=dashboard-metrics-grid] > article.h-48", count: 12
       assert_select "[data-testid=dashboard-metric-coffees-today]", text: /#{I18n.t("workspaces.show.status.coffees_today")}/
-      assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-chart] svg[data-testid=dashboard-line-chart]"
+      assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-chart].absolute svg[data-testid=dashboard-line-chart]"
       assert_select "[data-testid=dashboard-metric-coffees-today] line[data-testid=dashboard-line-chart-average]"
       assert_select "[data-testid=dashboard-metric-coffees-today] circle[data-testid=dashboard-line-chart-current]"
+      assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-trend-label].absolute", text: /last 4 weeks/
+      assert_card_contains_in_order(
+        "dashboard-metric-coffees-today",
+        'data-testid="dashboard-metric-chart"',
+        'data-testid="dashboard-metric-trend-label"'
+      )
       assert_select "[data-testid=dashboard-metric-spent-this-week]", text: /last 4 weeks/
       assert_select "[data-testid=dashboard-metric-open-beans]", text: /#{I18n.t("workspaces.show.status.open_beans")}/
       assert_select "[data-testid=dashboard-metric-stock-bags]", text: /#{I18n.t("workspaces.show.status.stock_bags")}/
@@ -469,6 +476,21 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
       assert first_index, "Expected #{first.inspect} to appear in response body"
       assert second_index, "Expected #{second.inspect} to appear in response body"
+      assert_operator first_index, :<, second_index
+    end
+
+    def assert_card_contains_in_order(testid, first, second)
+      card_start = response.body.index(%(data-testid="#{testid}"))
+      assert card_start, "Expected #{testid.inspect} to appear in response body"
+
+      card_end = response.body.index("</article>", card_start)
+      assert card_end, "Expected #{testid.inspect} card to close"
+
+      card_body = response.body[card_start...card_end]
+      first_index = card_body.index(first)
+      second_index = card_body.index(second)
+      assert first_index, "Expected #{first.inspect} to appear in #{testid.inspect}"
+      assert second_index, "Expected #{second.inspect} to appear in #{testid.inspect}"
       assert_operator first_index, :<, second_index
     end
 end
