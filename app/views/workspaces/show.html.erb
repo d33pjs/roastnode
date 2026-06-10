@@ -21,17 +21,17 @@
 
       <aside
         data-testid="dashboard-last-coffee-timer"
-        class="w-full min-w-0 rounded-xl border border-rn-line bg-rn-surface/85 px-2.5 py-2 shadow-sm lg:w-48 lg:justify-self-end lg:text-right"
+        class="w-full min-w-0 rounded-xl border border-rn-line bg-rn-surface/85 px-3 py-2.5 shadow-sm lg:w-64 lg:justify-self-end lg:text-right"
         <% if last_coffee_at.present? %>
           data-controller="dashboard-timer"
           data-dashboard-timer-since-at-value="<%= last_coffee_at.to_i %>"
         <% end %>>
-        <p class="text-[0.56rem] font-black uppercase tracking-[0.08em] text-rn-muted"><%= t(".timer.title") %></p>
-        <p class="mt-1 min-w-0 break-words text-base font-black leading-none text-rn-ink">
-          <span data-dashboard-timer-target="value" class="inline-block min-w-[16ch] whitespace-nowrap tabular-nums"><%= dashboard_duration_text(last_coffee_at) %></span>
+        <p class="text-[0.6rem] font-black uppercase tracking-[0.08em] text-rn-muted"><%= t(".timer.title") %></p>
+        <p class="mt-1 min-w-0 break-words text-xl font-black leading-none text-rn-ink sm:text-2xl">
+          <span data-dashboard-timer-target="value" class="inline-block min-w-[15ch] whitespace-nowrap tabular-nums"><%= dashboard_duration_text(last_coffee_at) %></span>
         </p>
         <% if last_coffee_at.present? %>
-          <p class="mt-1 text-[0.62rem] font-extrabold text-rn-muted"><%= t(".timer.since_last_coffee") %></p>
+          <p class="mt-1 text-[0.7rem] font-extrabold text-rn-muted"><%= t(".timer.since_last_coffee") %></p>
         <% end %>
       </aside>
     </header>

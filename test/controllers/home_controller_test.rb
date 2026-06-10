@@ -371,8 +371,11 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_select "[data-testid=dashboard-workspace-header] [data-testid=dashboard-last-coffee-timer][data-controller=?]", "dashboard-timer"
-      assert_select "[data-testid=dashboard-last-coffee-timer].lg\\:w-48.lg\\:text-right", text: /1h 0m 0s/
-      assert_select "[data-testid=dashboard-last-coffee-timer] [data-dashboard-timer-target=value].min-w-\\[16ch\\].whitespace-nowrap.tabular-nums"
+      assert_select "[data-testid=dashboard-last-coffee-timer].px-3.py-2\\.5.lg\\:w-64.lg\\:text-right", text: /1h 0m 0s/
+      assert_select "[data-testid=dashboard-last-coffee-timer] p.text-\\[0\\.6rem\\]"
+      assert_select "[data-testid=dashboard-last-coffee-timer] p.text-xl.sm\\:text-2xl"
+      assert_select "[data-testid=dashboard-last-coffee-timer] p.text-\\[0\\.7rem\\]"
+      assert_select "[data-testid=dashboard-last-coffee-timer] [data-dashboard-timer-target=value].min-w-\\[15ch\\].whitespace-nowrap.tabular-nums"
       assert_select "[data-testid=dashboard-last-coffee-timer]", text: /Updates every second/, count: 0
       assert_appears_before 'data-testid="dashboard-last-coffee-timer"', 'data-testid="dashboard-latest-coffee-card"'
       assert_select "[data-testid=dashboard-latest-coffee-card] > a", count: 1
