@@ -371,8 +371,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_select "[data-testid=dashboard-workspace-header] [data-testid=dashboard-last-coffee-timer][data-controller=?]", "dashboard-timer"
-      assert_select "[data-testid=dashboard-last-coffee-timer].lg\\:w-72.lg\\:text-right", text: /1h 0m 0s/
-      assert_select "[data-testid=dashboard-last-coffee-timer] [data-dashboard-timer-target=value].min-w-\\[15ch\\].whitespace-nowrap.tabular-nums"
+      assert_select "[data-testid=dashboard-last-coffee-timer].lg\\:w-48.lg\\:text-right", text: /1h 0m 0s/
+      assert_select "[data-testid=dashboard-last-coffee-timer] [data-dashboard-timer-target=value].min-w-\\[16ch\\].whitespace-nowrap.tabular-nums"
       assert_select "[data-testid=dashboard-last-coffee-timer]", text: /Updates every second/, count: 0
       assert_appears_before 'data-testid="dashboard-last-coffee-timer"', 'data-testid="dashboard-latest-coffee-card"'
       assert_select "[data-testid=dashboard-latest-coffee-card] > a", count: 1
@@ -393,9 +393,16 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       )
       assert_select "[data-testid=dashboard-metric-spent-this-week]", text: /last 4 weeks/
       assert_select "[data-testid=dashboard-metric-open-beans]", text: /#{I18n.t("workspaces.show.status.open_beans")}/
+      assert_select "[data-testid=dashboard-metric-open-beans] [data-testid=dashboard-metric-value].text-4xl"
       assert_select "[data-testid=dashboard-metric-stock-bags]", text: /#{I18n.t("workspaces.show.status.stock_bags")}/
       assert_select "[data-testid=dashboard-metric-open-grams] [data-testid=dashboard-metric-label]", text: "Grams remaining"
+      assert_select "[data-testid=dashboard-metric-open-grams] [data-testid=dashboard-metric-value].text-4xl"
       assert_select "[data-testid=dashboard-metric-open-grams] [data-testid=dashboard-metric-sublabel]", text: "in open bean bags"
+      assert_card_contains_in_order(
+        "dashboard-metric-open-grams",
+        'data-testid="dashboard-metric-value"',
+        'data-testid="dashboard-metric-sublabel"'
+      )
       assert_select "[data-testid=dashboard-metric-closed-bags-today]", text: /#{I18n.t("workspaces.show.status.closed_bags_today")}/
       assert_select "[data-testid=dashboard-metric-closed-bags-this-week]", text: /#{I18n.t("workspaces.show.status.closed_bags_this_week")}/
       assert_appears_before 'data-testid="dashboard-metric-coffees-today"', 'data-testid="dashboard-metric-brews-today"'
