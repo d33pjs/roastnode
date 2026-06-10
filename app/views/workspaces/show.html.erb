@@ -29,6 +29,32 @@
       </section>
     <% end %>
 
+    <% dashboard_metrics = @dashboard_metrics %>
+    <% last_coffee_at = dashboard_metrics[:last_coffee_at] %>
+
+    <section
+      data-testid="dashboard-last-coffee-timer"
+      class="mt-8 min-w-0 rounded-2xl border-2 border-[var(--rn-ink)] bg-rn-surface p-5 shadow-sm sm:p-6 lg:p-7"
+      <% if last_coffee_at.present? %>
+        data-controller="dashboard-timer"
+        data-dashboard-timer-since-at-value="<%= last_coffee_at.to_i %>"
+      <% end %>>
+      <div class="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div class="min-w-0">
+          <p class="text-xs font-black uppercase tracking-[0.08em] text-rn-muted"><%= t(".timer.title") %></p>
+          <p class="mt-2 min-w-0 text-4xl font-black leading-none text-rn-ink sm:text-5xl lg:text-6xl">
+            <span data-dashboard-timer-target="value"><%= dashboard_duration_text(last_coffee_at) %></span>
+          </p>
+          <% if last_coffee_at.present? %>
+            <p class="mt-2 text-base font-extrabold text-rn-ink"><%= t(".timer.since_last_coffee") %></p>
+          <% end %>
+        </div>
+        <% if last_coffee_at.present? %>
+          <p class="text-sm font-extrabold text-rn-muted lg:max-w-xs lg:text-right"><%= t(".timer.live") %></p>
+        <% end %>
+      </div>
+    </section>
+
     <% if @latest_coffee.present? || @latest_best_brew.present? %>
       <section class="mt-8 grid min-w-0 gap-6 lg:grid-cols-2">
         <% if @latest_coffee.present? %>
@@ -58,19 +84,91 @@
       </section>
     <% end %>
 
-    <section class="mt-8 grid gap-3 sm:grid-cols-3">
-      <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".status.brews_this_week") %></p>
-        <p class="mt-2 text-3xl font-black text-rn-ink"><%= @brews_this_week %></p>
-      </div>
-      <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".status.open_beans") %></p>
-        <p class="mt-2 text-3xl font-black text-rn-ink"><%= @open_bean_count %></p>
-      </div>
-      <div class="rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
-        <p class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".status.grams_remaining") %></p>
-        <p class="mt-2 text-3xl font-black text-rn-ink"><%= profile_grams(@grams_remaining) %></p>
-      </div>
+    <% dashboard_metric_cards = [
+      {
+        testid: "coffees-today",
+        label: t(".status.coffees_today"),
+        value: dashboard_metrics[:counts][:coffees_today],
+        comparison: dashboard_metrics[:comparisons][:coffees_today]
+      },
+      {
+        testid: "coffees-this-week",
+        label: t(".status.coffees_this_week"),
+        value: dashboard_metrics[:counts][:coffees_this_week],
+        comparison: dashboard_metrics[:comparisons][:coffees_this_week]
+      },
+      {
+        testid: "brews-today",
+        label: t(".status.brews_today"),
+        value: dashboard_metrics[:counts][:brews_today],
+        comparison: dashboard_metrics[:comparisons][:brews_today]
+      },
+      {
+        testid: "brews-this-week",
+        label: t(".status.brews_this_week"),
+        value: dashboard_metrics[:counts][:brews_this_week],
+        comparison: dashboard_metrics[:comparisons][:brews_this_week]
+      },
+      {
+        testid: "stock-bags",
+        label: t(".status.stock_bags"),
+        value: dashboard_metrics[:inventory][:stock_bag_count],
+        comparison: nil
+      },
+      {
+        testid: "stock-grams",
+        label: t(".status.stock_grams"),
+        value: profile_grams(dashboard_metrics[:inventory][:stock_grams]),
+        comparison: nil
+      },
+      {
+        testid: "open-grams",
+        label: t(".status.open_grams_remaining"),
+        value: profile_grams(dashboard_metrics[:inventory][:open_grams]),
+        comparison: nil
+      },
+      {
+        testid: "spent-today",
+        label: t(".status.spent_today"),
+        value: dashboard_money(dashboard_metrics[:spend][:today_cents]),
+        comparison: dashboard_metrics[:comparisons][:spent_today]
+      },
+      {
+        testid: "spent-this-week",
+        label: t(".status.spent_this_week"),
+        value: dashboard_money(dashboard_metrics[:spend][:week_cents]),
+        comparison: dashboard_metrics[:comparisons][:spent_this_week]
+      }
+    ] %>
+
+    <section class="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <% dashboard_metric_cards.each do |card| %>
+        <% comparison = card[:comparison] %>
+        <% trend = {
+          "up" => { text_class: "text-emerald-700", stroke: "#047857" },
+          "down" => { text_class: "text-red-700", stroke: "#b91c1c" },
+          "same" => { text_class: "text-rn-muted", stroke: "#78716c" },
+          "new" => { text_class: "text-emerald-700", stroke: "#047857" }
+        }[comparison&.dig(:direction)] || { text_class: "text-rn-muted", stroke: "#78716c" } %>
+
+        <article data-testid="dashboard-metric-<%= card[:testid] %>" class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm">
+          <p class="text-xs font-black uppercase tracking-[0.08em] text-rn-ink"><%= card[:label] %></p>
+          <p class="mt-2 min-w-0 break-words text-3xl font-black leading-tight text-rn-ink"><%= card[:value] %></p>
+
+          <% if comparison.present? %>
+            <svg data-testid="dashboard-metric-sparkline" class="mt-3 h-8 w-full" viewBox="0 0 120 32" role="img" aria-hidden="true" focusable="false">
+              <polyline
+                points="<%= dashboard_sparkline_points(comparison[:values]) %>"
+                fill="none"
+                stroke="<%= trend[:stroke] %>"
+                stroke-width="3"
+                stroke-linecap="round"
+                stroke-linejoin="round" />
+            </svg>
+            <p class="mt-2 text-xs font-black <%= trend[:text_class] %>"><%= comparison[:label] %></p>
+          <% end %>
+        </article>
+      <% end %>
     </section>
 
     <div class="mt-8 grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">

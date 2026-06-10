@@ -340,6 +340,39 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-latest-best-brew-card] [data-testid=brew-rating][aria-label=?]", "Rating 5 of 5 beans"
   end
 
+  test "workspace dashboard renders live timer before hero cards and metric trends" do
+    travel_to Time.zone.local(2026, 6, 10, 12, 0, 0) do
+      workspace = workspaces(:household)
+      brew = brews(:morning_espresso)
+      brew.update!(
+        occurred_at: Time.zone.local(2026, 6, 10, 10, 0, 0),
+        rating: 4
+      )
+      workspace.external_coffees.create!(
+        user: users(:one),
+        drink_type: "Flat White",
+        occurred_at: Time.zone.local(2026, 6, 10, 11, 0, 0),
+        price_cents: 450,
+        currency: workspace.default_currency
+      )
+      sign_in_as(users(:one))
+
+      get dashboard_path
+
+      assert_response :success
+      assert_select "[data-testid=dashboard-last-coffee-timer][data-controller=?]", "dashboard-timer"
+      assert_select "[data-testid=dashboard-last-coffee-timer]", text: /1h 0m 0s/
+      assert_appears_before 'data-testid="dashboard-last-coffee-timer"', 'data-testid="dashboard-latest-coffee-card"'
+      assert_select "[data-testid=dashboard-latest-coffee-card] > a", count: 1
+      assert_select "[data-testid=dashboard-latest-best-brew-card] > a", count: 1
+      assert_select "[data-testid=dashboard-metric-coffees-today]", text: /#{I18n.t("workspaces.show.status.coffees_today")}/
+      assert_select "[data-testid=dashboard-metric-coffees-today] svg[data-testid=dashboard-metric-sparkline]"
+      assert_select "[data-testid=dashboard-metric-spent-this-week]", text: /last 4 weeks/
+      assert_select "[data-testid=dashboard-metric-stock-bags]", text: /#{I18n.t("workspaces.show.status.stock_bags")}/
+      assert_select "[data-testid=dashboard-metric-open-grams]", text: /#{I18n.t("workspaces.show.status.open_grams_remaining")}/
+    end
+  end
+
   test "workspace dashboard latest coffee can be an external coffee" do
     workspace = workspaces(:household)
     latest_brew = brews(:morning_espresso)
@@ -400,4 +433,14 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", I18n.t("workspace_onboardings.new.title")
   end
+
+  private
+    def assert_appears_before(first, second)
+      first_index = response.body.index(first)
+      second_index = response.body.index(second)
+
+      assert first_index, "Expected #{first.inspect} to appear in response body"
+      assert second_index, "Expected #{second.inspect} to appear in response body"
+      assert_operator first_index, :<, second_index
+    end
 end

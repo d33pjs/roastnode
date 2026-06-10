@@ -1,6 +1,6 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-06-09
+Last reviewed: 2026-06-10
 
 This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
@@ -32,7 +32,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Beanconqueror import: conservative espresso-compatible JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, all-time bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed. Quick Drip counts in broad brew/consumption totals and method distributions; channeling, retention, and grinder tendency stay espresso-only.
 - Production self-hosting guide: deployment assumptions, environment/secrets handling, SMTP sender configuration, storage volume guidance, Ansible-friendly Compose/env examples, digest-based image upgrades, backup validation, empty-server restore drills, and upgrade checks.
-- Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, mobile-friendly back links, shared rounded photo upload controls that preserve existing photos on empty edit saves, a dashboard open bean cockpit with open/roast age, remaining inventory pressure, latest coffee setup, and best-brew links, Gear-centered equipment/tool return paths, a compact global footer with a left-aligned GitHub badge plus right-aligned app version or configured Buy Me a Coffee support badge, cross-links between domain records, optional demo data, and documentation for each shipped slice.
+- Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, mobile-friendly back links, shared rounded photo upload controls that preserve existing photos on empty edit saves, a dashboard live time-since-last-coffee card, mixed coffee metric cards with last-4-week trend sparklines, split unopened-stock/open-bean inventory cards, rough daily/weekly spend cards, a dashboard open bean cockpit with open/roast age, remaining inventory pressure, latest coffee setup, and best-brew links, Gear-centered equipment/tool return paths, a compact global footer with a left-aligned GitHub badge plus right-aligned app version or configured Buy Me a Coffee support badge, cross-links between domain records, optional demo data, and documentation for each shipped slice.
 
 ## Changed From The Initial Idea
 
