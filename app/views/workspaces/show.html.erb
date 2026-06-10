@@ -21,17 +21,17 @@
 
       <aside
         data-testid="dashboard-last-coffee-timer"
-        class="w-full min-w-0 rounded-xl border border-rn-line bg-rn-surface/85 px-4 py-3 shadow-sm lg:w-80 lg:justify-self-end lg:text-right"
+        class="w-full min-w-0 rounded-xl border border-rn-line bg-rn-surface/85 px-3 py-2.5 shadow-sm lg:w-72 lg:justify-self-end lg:text-right"
         <% if last_coffee_at.present? %>
           data-controller="dashboard-timer"
           data-dashboard-timer-since-at-value="<%= last_coffee_at.to_i %>"
         <% end %>>
-        <p class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-rn-muted"><%= t(".timer.title") %></p>
-        <p class="mt-1 min-w-0 break-words text-2xl font-black leading-none text-rn-ink sm:text-3xl">
-          <span data-dashboard-timer-target="value" class="whitespace-nowrap tabular-nums"><%= dashboard_duration_text(last_coffee_at) %></span>
+        <p class="text-[0.6rem] font-black uppercase tracking-[0.08em] text-rn-muted"><%= t(".timer.title") %></p>
+        <p class="mt-1 min-w-0 break-words text-xl font-black leading-none text-rn-ink sm:text-2xl">
+          <span data-dashboard-timer-target="value" class="inline-block min-w-[15ch] whitespace-nowrap tabular-nums"><%= dashboard_duration_text(last_coffee_at) %></span>
         </p>
         <% if last_coffee_at.present? %>
-          <p class="mt-1 text-xs font-extrabold text-rn-muted"><%= t(".timer.since_last_coffee") %></p>
+          <p class="mt-1 text-[0.7rem] font-extrabold text-rn-muted"><%= t(".timer.since_last_coffee") %></p>
         <% end %>
       </aside>
     </header>
@@ -115,7 +115,8 @@
       },
       {
         testid: "open-grams",
-        label: t(".status.open_grams_remaining"),
+        label: t(".status.grams_remaining"),
+        sublabel: t(".status.open_bean_bags"),
         value: profile_grams(dashboard_metrics[:inventory][:open_grams]),
         comparison: nil
       },
@@ -161,18 +162,21 @@
           "new" => { text_class: "text-emerald-700", stroke: "#047857" }
         }[comparison&.dig(:direction)] || { text_class: "text-rn-muted", stroke: "#78716c" } %>
 
-        <article data-testid="dashboard-metric-<%= card[:testid] %>" class="relative isolate h-40 min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+        <article data-testid="dashboard-metric-<%= card[:testid] %>" class="relative isolate h-32 min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface p-3 shadow-sm sm:p-4">
           <% if comparison.present? %>
             <%= render "workspaces/metric_trend_chart", comparison:, trend: %>
           <% end %>
 
           <div class="relative z-10 min-w-0">
-            <p class="text-xs font-black uppercase tracking-[0.08em] text-rn-ink"><%= card[:label] %></p>
-            <p class="mt-3 min-w-0 break-words text-3xl font-black leading-tight text-rn-ink"><%= card[:value] %></p>
+            <p data-testid="dashboard-metric-label" class="text-[0.68rem] font-black uppercase tracking-[0.08em] text-rn-ink"><%= card[:label] %></p>
+            <% if card[:sublabel].present? %>
+              <p data-testid="dashboard-metric-sublabel" class="mt-0.5 text-[0.62rem] font-black uppercase tracking-[0.08em] text-rn-muted"><%= card[:sublabel] %></p>
+            <% end %>
+            <p class="mt-2 min-w-0 break-words text-2xl font-black leading-tight text-rn-ink"><%= card[:value] %></p>
           </div>
 
           <% if comparison.present? %>
-            <p data-testid="dashboard-metric-trend-label" class="absolute inset-x-4 bottom-4 z-10 text-xs font-black <%= trend[:text_class] %> sm:inset-x-5"><%= comparison[:label] %></p>
+            <p data-testid="dashboard-metric-trend-label" class="absolute inset-x-3 bottom-3 z-10 text-[0.68rem] font-black <%= trend[:text_class] %> sm:inset-x-4"><%= comparison[:label] %></p>
           <% end %>
         </article>
       <% end %>

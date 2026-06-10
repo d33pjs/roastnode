@@ -1653,6 +1653,7 @@ en:
         coffees_this_week: "Coffees this week"
         grams_remaining: "Grams remaining"
         open_grams_remaining: "Grams remaining in open beans"
+        open_bean_bags: "in open bean bags"
         open_beans: "Open beans"
         spent_this_week: "Spent this week"
         spent_today: "Spent today"
