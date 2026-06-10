@@ -376,9 +376,13 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       assert_appears_before 'data-testid="dashboard-last-coffee-timer"', 'data-testid="dashboard-latest-coffee-card"'
       assert_select "[data-testid=dashboard-latest-coffee-card] > a", count: 1
       assert_select "[data-testid=dashboard-latest-best-brew-card] > a", count: 1
+      assert_select "section[data-testid=dashboard-metrics-grid].xl\\:grid-cols-4"
+      assert_select "[data-testid=dashboard-metrics-grid] > article[data-testid=dashboard-metric-coffees-today]"
+      assert_select "[data-testid=dashboard-metrics-grid] > article[data-testid=dashboard-metric-spent-this-week]"
       assert_select "[data-testid=dashboard-metric-coffees-today]", text: /#{I18n.t("workspaces.show.status.coffees_today")}/
-      assert_select "[data-testid=dashboard-metric-coffees-today] svg[data-testid=dashboard-metric-sparkline].absolute"
-      assert_select "[data-testid=dashboard-metric-coffees-today] polygon[data-testid=dashboard-metric-sparkline-area]"
+      assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-chart] svg[data-testid=dashboard-line-chart]"
+      assert_select "[data-testid=dashboard-metric-coffees-today] line[data-testid=dashboard-line-chart-average]"
+      assert_select "[data-testid=dashboard-metric-coffees-today] circle[data-testid=dashboard-line-chart-current]"
       assert_select "[data-testid=dashboard-metric-spent-this-week]", text: /last 4 weeks/
       assert_select "[data-testid=dashboard-metric-open-beans]", text: /#{I18n.t("workspaces.show.status.open_beans")}/
       assert_select "[data-testid=dashboard-metric-stock-bags]", text: /#{I18n.t("workspaces.show.status.stock_bags")}/

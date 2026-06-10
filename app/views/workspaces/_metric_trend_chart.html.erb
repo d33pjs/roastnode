@@ -1,0 +1,43 @@
+<% points = dashboard_line_chart_points(comparison) %>
+<% area_points = dashboard_line_chart_area_points(comparison) %>
+<% baseline_y = dashboard_line_chart_baseline_y(comparison) %>
+<% current_point = dashboard_line_chart_current_point(comparison) %>
+
+<div data-testid="dashboard-metric-chart" class="mt-4 h-20 min-w-0">
+  <svg data-testid="dashboard-line-chart" class="h-full w-full overflow-visible" viewBox="0 0 160 72" role="img" aria-hidden="true" focusable="false">
+    <title><%= comparison[:label] %></title>
+    <line x1="8" x2="152" y1="64" y2="64" stroke="currentColor" stroke-width="1" class="text-stone-200" />
+    <line x1="8" x2="152" y1="36" y2="36" stroke="currentColor" stroke-width="1" class="text-stone-100" />
+    <% if baseline_y.present? %>
+      <line
+        data-testid="dashboard-line-chart-average"
+        x1="8"
+        x2="152"
+        y1="<%= baseline_y %>"
+        y2="<%= baseline_y %>"
+        stroke="currentColor"
+        stroke-width="1.5"
+        stroke-dasharray="4 5"
+        class="text-stone-400" />
+    <% end %>
+    <polygon points="<%= area_points %>" fill="<%= trend[:stroke] %>" opacity="0.09" />
+    <polyline
+      data-testid="dashboard-line-chart-line"
+      points="<%= points %>"
+      fill="none"
+      stroke="<%= trend[:stroke] %>"
+      stroke-width="3.25"
+      stroke-linecap="round"
+      stroke-linejoin="round" />
+    <% if current_point.present? %>
+      <circle
+        data-testid="dashboard-line-chart-current"
+        cx="<%= current_point[:x] %>"
+        cy="<%= current_point[:y] %>"
+        r="4"
+        fill="var(--rn-surface)"
+        stroke="<%= trend[:stroke] %>"
+        stroke-width="3" />
+    <% end %>
+  </svg>
+</div>
