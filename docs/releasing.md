@@ -4,7 +4,7 @@ Roastnode is developed on the private Gitea origin and mirrored to GitHub. GitHu
 
 ## Workflow Split
 
-- Gitea runs `.gitea/workflows/ci.yml` for normal Rails checks.
+- Gitea runs `.gitea/workflows/ci.yml` for normal Rails checks and comparative source SBOM uploads.
 - GitHub runs `.github/workflows/source-sbom.yml` and `.github/workflows/release-container.yml` for release supply-chain artifacts only.
 - GitHub does not run duplicate Rails CI. The source SBOM and release workflows are separate from CI because they need GitHub Releases, GHCR, OIDC, Sigstore, and GitHub artifact attestations.
 - GitHub workflows include a `github.server_url == 'https://github.com'` guard so a Gitea runner that notices `.github/workflows` does not try to publish images or upload SBOMs.
@@ -33,6 +33,18 @@ GHCR publishing uses the built-in `GITHUB_TOKEN`. Keyless cosign signing and Git
 The Gitea push mirror token for GitHub needs permission to update workflow files. For a classic GitHub token this means including the `workflow` scope in addition to repository write access.
 
 If GitHub is still private, artifact attestations may require a GitHub plan that supports private/internal attestations. Public repositories can use the public Sigstore path.
+
+## Required Gitea Settings
+
+Configure these in the private Gitea repository when CI should upload source SBOMs to exodos.io:
+
+- Secret `EXODOS_API_TOKEN`: exodos.io API token.
+- Optional variable `EXODOS_API_URL`: defaults to `https://api.exodos.io`.
+- Variable `EXODOS_INVENTORYROOT_SYFT_SPDX_ID`: inventory root UUID for Syft SPDX source SBOM uploads.
+- Variable `EXODOS_INVENTORYROOT_SYFT_CDX_ID`: inventory root UUID for Syft CycloneDX source SBOM uploads.
+- Variable `EXODOS_INVENTORYROOT_CDX_CDX_ID`: inventory root UUID for cdxgen CycloneDX source SBOM uploads.
+- Variable `EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID`: inventory root UUID for mikebom SPDX 3.0.1 source SBOM uploads.
+- Variable `EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID`: inventory root UUID for mikebom CycloneDX 1.6 source SBOM uploads.
 
 ## Source SBOMs
 

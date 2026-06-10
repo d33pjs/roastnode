@@ -33,11 +33,15 @@ jobs:
       SOURCE_SYFT_SPDX_SBOM: roastnode-source-${{ github.sha }}.syft.spdx.json
       SOURCE_SYFT_CDX_SBOM: roastnode-source-${{ github.sha }}.syft.cdx.json
       SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
+      SOURCE_MIKEBOM_SPDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.spdx3.json
+      SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
       EXODOS_INVENTORYROOT_SYFT_CDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_CDX_ID }}
       EXODOS_INVENTORYROOT_CDX_CDX_ID: ${{ vars.EXODOS_INVENTORYROOT_CDX_CDX_ID }}
+      EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID }}
+      EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID: ${{ vars.EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID }}
 
     steps:
       - name: Install packages
@@ -128,3 +132,51 @@ jobs:
             -H "accept: application/json" \
             -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_CDX_CDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"cdxgen\",\"cyclonedx\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-cdxgen-cyclonedx\",\"unique\":true}]}" \
             -F "file=@${SOURCE_CDX_CDX_SBOM};type=application/json"
+
+      # Generate SBOMs via mikebom
+      - name: Download mikebom Open Source Binary
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$HOME/.local/bin"
+          tag="$(curl -fsSL https://api.github.com/repos/kusari-oss/mikebom/releases | ruby -rjson -e 'releases = JSON.parse(STDIN.read); release = releases.find { |item| !item.fetch("draft", false) }; abort "No mikebom release found" unless release; print release.fetch("tag_name")')"
+          asset="mikebom-${tag}-x86_64-unknown-linux-gnu.tar.gz"
+          curl -fsSL "https://github.com/kusari-oss/mikebom/releases/download/${tag}/${asset}" -o "${asset}"
+          tar -xzf "${asset}"
+          install -m 0755 mikebom "$HOME/.local/bin/mikebom"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          mikebom --version
+
+      - name: Generate source mikebom SBOM
+        run: |
+          set -euo pipefail
+
+          mikebom --offline sbom scan \
+            --path . \
+            --format cyclonedx-json,spdx-3-json \
+            --output cyclonedx-json="${SOURCE_MIKEBOM_CDX_SBOM}" \
+            --output spdx-3-json="${SOURCE_MIKEBOM_SPDX_SBOM}"
+
+      - name: Upload source mikebom SPDX SBOM to exodos.io
+        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID != '' }}
+        run: |
+          set -euo pipefail
+
+          api_url="${EXODOS_API_URL:-https://api.exodos.io}"
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"mikebom\",\"spdx\",\"spdx-3.0.1\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-mikebom-spdx\",\"unique\":true}]}" \
+            -F "file=@${SOURCE_MIKEBOM_SPDX_SBOM};type=application/json"
+
+      - name: Upload source mikebom CycloneDX SBOM to exodos.io
+        if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID != '' }}
+        run: |
+          set -euo pipefail
+
+          api_url="${EXODOS_API_URL:-https://api.exodos.io}"
+          curl -fsS -X POST "${api_url}/api/v1/boms/inventory/bom/upload" \
+            -H "X-API-Key: ${EXODOS_API_TOKEN}" \
+            -H "accept: application/json" \
+            -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"mikebom\",\"cyclonedx\",\"cyclonedx-1.6\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-mikebom-cyclonedx\",\"unique\":true}]}" \
+            -F "file=@${SOURCE_MIKEBOM_CDX_SBOM};type=application/json"
