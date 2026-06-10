@@ -141,9 +141,10 @@ jobs:
           mkdir -p "$HOME/.local/bin"
           tag="$(curl -fsSL https://api.github.com/repos/kusari-oss/mikebom/releases | ruby -rjson -e 'releases = JSON.parse(STDIN.read); release = releases.find { |item| !item.fetch("draft", false) }; abort "No mikebom release found" unless release; print release.fetch("tag_name")')"
           asset="mikebom-${tag}-x86_64-unknown-linux-gnu.tar.gz"
+          extract_dir="${asset%.tar.gz}"
           curl -fsSL "https://github.com/kusari-oss/mikebom/releases/download/${tag}/${asset}" -o "${asset}"
           tar -xzf "${asset}"
-          install -m 0755 mikebom "$HOME/.local/bin/mikebom"
+          install -m 0755 "${extract_dir}/mikebom" "$HOME/.local/bin/mikebom"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           mikebom --version
 
