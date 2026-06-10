@@ -1647,6 +1647,8 @@ en:
       status:
         brews_today: "Brews today"
         brews_this_week: "Brews this week"
+        closed_bags_this_week: "Closed bags this week"
+        closed_bags_today: "Closed bags today"
         coffees_today: "Coffees today"
         coffees_this_week: "Coffees this week"
         grams_remaining: "Grams remaining"
@@ -1657,7 +1659,6 @@ en:
         stock_bags: "Bean bags in stock"
         stock_grams: "Grams in stock"
       timer:
-        live: "Updates every second"
         no_coffee: "No coffee yet"
         since_last_coffee: "since last coffee"
         title: "Since last coffee"

@@ -11,12 +11,12 @@ module WorkspacesHelper
     "#{profile_number(amount, precision: 2, strip_insignificant_zeros: false)} #{current_workspace.default_currency}"
   end
 
-  def dashboard_sparkline_points(values, width: 120, height: 32, padding: 3)
-    values = Array(values).map(&:to_d)
+  def dashboard_sparkline_points(source, width: 120, height: 32, padding: 3)
+    values = dashboard_sparkline_values(source)
     return "" if values.empty?
 
-    minimum = values.min
-    maximum = values.max
+    minimum = dashboard_sparkline_scale_value(source, :scale_min) || values.min
+    maximum = dashboard_sparkline_scale_value(source, :scale_max) || values.max
     range = maximum - minimum
     x_step = values.one? ? 0 : width.to_d / (values.size - 1)
 
@@ -31,6 +31,13 @@ module WorkspacesHelper
 
       "#{profile_svg_number(x)},#{profile_svg_number(y)}"
     end.join(" ")
+  end
+
+  def dashboard_sparkline_area_points(source, width: 120, height: 32, padding: 3)
+    points = dashboard_sparkline_points(source, width:, height:, padding:)
+    return "" if points.blank?
+
+    "0,#{profile_svg_number(height)} #{points} #{profile_svg_number(width)},#{profile_svg_number(height)}"
   end
 
   def open_bean_cockpit_setup_parts(brew)
@@ -58,6 +65,18 @@ module WorkspacesHelper
       parts << "#{minutes}m" if minutes.positive? || parts.any?
       parts << "#{seconds}s"
       parts.join(" ")
+    end
+
+    def dashboard_sparkline_values(source)
+      raw_values = source.is_a?(Hash) ? source[:values] : source
+      Array(raw_values).map(&:to_d)
+    end
+
+    def dashboard_sparkline_scale_value(source, key)
+      return unless source.is_a?(Hash)
+      return unless source.key?(key)
+
+      source[key].to_d
     end
 
     def profile_svg_number(value)

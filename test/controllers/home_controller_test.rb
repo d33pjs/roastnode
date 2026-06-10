@@ -340,7 +340,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-latest-best-brew-card] [data-testid=brew-rating][aria-label=?]", "Rating 5 of 5 beans"
   end
 
-  test "workspace dashboard renders live timer before hero cards and metric trends" do
+  test "workspace dashboard renders compact header timer and ordered metric trends" do
     travel_to Time.zone.local(2026, 6, 10, 12, 0, 0) do
       workspace = workspaces(:household)
       brew = brews(:morning_espresso)
@@ -355,21 +355,45 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
         price_cents: 450,
         currency: workspace.default_currency
       )
+      beans(:open_household).update!(opened_on: Date.new(2026, 5, 10), remaining_grams: 150)
+      beans(:second_open_household).update!(opened_on: Date.new(2026, 5, 12), remaining_grams: 220)
+      workspace.beans.create!(
+        name: "Closed Today",
+        roaster_name: "Done Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 0,
+        opened_on: Date.new(2026, 5, 1),
+        finished_at: Time.zone.local(2026, 6, 10, 8, 0, 0)
+      )
       sign_in_as(users(:one))
 
       get dashboard_path
 
       assert_response :success
-      assert_select "[data-testid=dashboard-last-coffee-timer][data-controller=?]", "dashboard-timer"
-      assert_select "[data-testid=dashboard-last-coffee-timer]", text: /1h 0m 0s/
+      assert_select "[data-testid=dashboard-workspace-header] [data-testid=dashboard-last-coffee-timer][data-controller=?]", "dashboard-timer"
+      assert_select "[data-testid=dashboard-last-coffee-timer].lg\\:text-right", text: /1h 0m 0s/
+      assert_select "[data-testid=dashboard-last-coffee-timer]", text: /Updates every second/, count: 0
       assert_appears_before 'data-testid="dashboard-last-coffee-timer"', 'data-testid="dashboard-latest-coffee-card"'
       assert_select "[data-testid=dashboard-latest-coffee-card] > a", count: 1
       assert_select "[data-testid=dashboard-latest-best-brew-card] > a", count: 1
       assert_select "[data-testid=dashboard-metric-coffees-today]", text: /#{I18n.t("workspaces.show.status.coffees_today")}/
-      assert_select "[data-testid=dashboard-metric-coffees-today] svg[data-testid=dashboard-metric-sparkline]"
+      assert_select "[data-testid=dashboard-metric-coffees-today] svg[data-testid=dashboard-metric-sparkline].absolute"
+      assert_select "[data-testid=dashboard-metric-coffees-today] polygon[data-testid=dashboard-metric-sparkline-area]"
       assert_select "[data-testid=dashboard-metric-spent-this-week]", text: /last 4 weeks/
+      assert_select "[data-testid=dashboard-metric-open-beans]", text: /#{I18n.t("workspaces.show.status.open_beans")}/
       assert_select "[data-testid=dashboard-metric-stock-bags]", text: /#{I18n.t("workspaces.show.status.stock_bags")}/
       assert_select "[data-testid=dashboard-metric-open-grams]", text: /#{I18n.t("workspaces.show.status.open_grams_remaining")}/
+      assert_select "[data-testid=dashboard-metric-closed-bags-today]", text: /#{I18n.t("workspaces.show.status.closed_bags_today")}/
+      assert_select "[data-testid=dashboard-metric-closed-bags-this-week]", text: /#{I18n.t("workspaces.show.status.closed_bags_this_week")}/
+      assert_appears_before 'data-testid="dashboard-metric-coffees-today"', 'data-testid="dashboard-metric-brews-today"'
+      assert_appears_before 'data-testid="dashboard-metric-brews-today"', 'data-testid="dashboard-metric-coffees-this-week"'
+      assert_appears_before 'data-testid="dashboard-metric-coffees-this-week"', 'data-testid="dashboard-metric-brews-this-week"'
+      assert_appears_before 'data-testid="dashboard-metric-open-beans"', 'data-testid="dashboard-metric-stock-bags"'
+      assert_appears_before 'data-testid="dashboard-metric-stock-bags"', 'data-testid="dashboard-metric-open-grams"'
+      assert_appears_before 'data-testid="dashboard-metric-open-grams"', 'data-testid="dashboard-metric-stock-grams"'
+      assert_appears_before 'data-testid="dashboard-metric-closed-bags-today"', 'data-testid="dashboard-metric-closed-bags-this-week"'
+      assert_appears_before 'data-testid="dashboard-metric-closed-bags-this-week"', 'data-testid="dashboard-metric-spent-today"'
+      assert_appears_before 'data-testid="dashboard-metric-spent-today"', 'data-testid="dashboard-metric-spent-this-week"'
     end
   end
 

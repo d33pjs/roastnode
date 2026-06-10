@@ -33,7 +33,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - User espresso form focus preference for fast daily logging.
 - Browser-local unsaved draft recovery for new brew logs.
 - One-way ground-out to dose prefill while logging espresso.
-- Dashboard live time-since-last-coffee card, mixed Brew and External Coffee daily/weekly metric cards, rough daily/weekly spend, unopened-stock versus open-bean inventory split, last-4-week trend sparklines, open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
+- Dashboard compact live time-since-last-coffee header, mixed Brew and External Coffee daily/weekly metric cards, rough daily/weekly spend, unopened-stock versus open-bean inventory split, open-bean count, closed-bag daily/weekly counts, last-4-week trend background charts, open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
 - Repeat Good Brew flow from private brew details and dashboard cockpit best brews, pre-filling targetable shot/setup values from the source brew while keeping taste, notes, media, and sharing fields fresh.
 - Bean index cards group bags by workflow state: open, stock, finished/used up, and archived. Open bags sort by latest brew use first, then opened date and name for beans without brew history. Historical bags stay below active stock/open bags.
 

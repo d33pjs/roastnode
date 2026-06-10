@@ -51,6 +51,30 @@ class DashboardMetricsTest < ActiveSupport::TestCase
       @bean.update!(opened_on: Date.new(2026, 5, 10), remaining_grams: 150)
       beans(:second_open_household).update!(opened_on: Date.new(2026, 5, 12), remaining_grams: 220)
       @workspace.beans.create!(
+        name: "Finished Today",
+        roaster_name: "Done Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 0,
+        opened_on: Date.new(2026, 5, 1),
+        finished_at: Time.zone.local(2026, 6, 10, 8, 0, 0)
+      )
+      @workspace.beans.create!(
+        name: "Finished This Week",
+        roaster_name: "Done Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 0,
+        opened_on: Date.new(2026, 5, 1),
+        finished_at: Time.zone.local(2026, 6, 8, 8, 0, 0)
+      )
+      @workspace.beans.create!(
+        name: "Finished Last Week",
+        roaster_name: "Done Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 0,
+        opened_on: Date.new(2026, 5, 1),
+        finished_at: Time.zone.local(2026, 6, 1, 8, 0, 0)
+      )
+      @workspace.beans.create!(
         name: "Unopened Reserve",
         roaster_name: "Shelf Roaster",
         bag_size_grams: 500,
@@ -64,12 +88,23 @@ class DashboardMetricsTest < ActiveSupport::TestCase
         remaining_grams: 750,
         opened_on: nil
       )
+      @other_workspace.beans.create!(
+        name: "Other Finished",
+        roaster_name: "Other Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 0,
+        opened_on: Date.new(2026, 5, 1),
+        finished_at: Time.zone.local(2026, 6, 10, 9, 0, 0)
+      )
 
       metrics = DashboardMetrics.new(workspace: @workspace, now: Time.current).call
 
+      assert_equal 2, metrics[:inventory][:open_bean_count]
       assert_equal 1, metrics[:inventory][:stock_bag_count]
       assert_equal 500.to_d, metrics[:inventory][:stock_grams]
       assert_equal 370.to_d, metrics[:inventory][:open_grams]
+      assert_equal 1, metrics[:inventory][:closed_bags_today]
+      assert_equal 2, metrics[:inventory][:closed_bags_this_week]
     end
   end
 
@@ -87,6 +122,8 @@ class DashboardMetricsTest < ActiveSupport::TestCase
       assert_equal "+100% over last 4 weeks", comparison[:label]
       assert_equal "up", comparison[:direction]
       assert_equal [ 1, 2, 3, 4, 5 ], comparison[:values]
+      assert_equal 0.to_d, comparison[:scale_min]
+      assert_equal 5.to_d, comparison[:scale_max]
     end
   end
 
@@ -103,6 +140,8 @@ class DashboardMetricsTest < ActiveSupport::TestCase
 
       assert_equal "-50% over last 4 weeks", metrics[:comparisons][:coffees_this_week][:label]
       assert_equal "down", metrics[:comparisons][:coffees_this_week][:direction]
+      assert_equal 0.to_d, metrics[:comparisons][:coffees_this_week][:scale_min]
+      assert_equal 2.to_d, metrics[:comparisons][:coffees_this_week][:scale_max]
       assert_equal "new over last 4 weeks", metrics[:comparisons][:spent_this_week][:label]
       assert_equal "new", metrics[:comparisons][:spent_this_week][:direction]
     end

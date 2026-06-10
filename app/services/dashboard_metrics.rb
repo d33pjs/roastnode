@@ -30,9 +30,12 @@ class DashboardMetrics
 
     def inventory
       {
+        open_bean_count: open_beans.count,
         stock_bag_count: stock_beans.count,
         stock_grams: stock_beans.sum(:remaining_grams),
-        open_grams: workspace.beans.open.sum(:remaining_grams)
+        open_grams: open_beans.sum(:remaining_grams),
+        closed_bags_today: closed_bags.where(finished_at: today_range).count,
+        closed_bags_this_week: closed_bags.where(finished_at: week_range).count
       }
     end
 
@@ -76,6 +79,14 @@ class DashboardMetrics
 
     def stock_beans
       @stock_beans ||= workspace.beans.where(archived_at: nil, finished_at: nil, opened_on: nil).where("remaining_grams > 0")
+    end
+
+    def open_beans
+      @open_beans ||= workspace.beans.open
+    end
+
+    def closed_bags
+      @closed_bags ||= workspace.beans.where(archived_at: nil).where.not(finished_at: nil)
     end
 
     def today
@@ -141,6 +152,8 @@ class DashboardMetrics
     def comparison_for(current:, baseline:)
       average = average_value(baseline)
       direction = comparison_direction(current, average)
+      values = baseline + [ current ]
+      decimal_values = values.map(&:to_d)
 
       {
         current:,
@@ -148,7 +161,9 @@ class DashboardMetrics
         percent: comparison_percent(current, average),
         direction:,
         label: comparison_label(current, average, direction),
-        values: baseline + [ current ]
+        values:,
+        scale_min: [ 0.to_d, *decimal_values ].min,
+        scale_max: decimal_values.max || 0.to_d
       }
     end
 
