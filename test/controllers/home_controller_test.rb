@@ -371,7 +371,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
       assert_response :success
       assert_select "[data-testid=dashboard-workspace-header] [data-testid=dashboard-last-coffee-timer][data-controller=?]", "dashboard-timer"
-      assert_select "[data-testid=dashboard-last-coffee-timer].lg\\:text-right", text: /1h 0m 0s/
+      assert_select "[data-testid=dashboard-last-coffee-timer].lg\\:w-80.lg\\:text-right", text: /1h 0m 0s/
+      assert_select "[data-testid=dashboard-last-coffee-timer] [data-dashboard-timer-target=value].whitespace-nowrap.tabular-nums"
       assert_select "[data-testid=dashboard-last-coffee-timer]", text: /Updates every second/, count: 0
       assert_appears_before 'data-testid="dashboard-last-coffee-timer"', 'data-testid="dashboard-latest-coffee-card"'
       assert_select "[data-testid=dashboard-latest-coffee-card] > a", count: 1
@@ -379,9 +380,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       assert_select "section[data-testid=dashboard-metrics-grid].xl\\:grid-cols-4"
       assert_select "[data-testid=dashboard-metrics-grid] > article[data-testid=dashboard-metric-coffees-today]"
       assert_select "[data-testid=dashboard-metrics-grid] > article[data-testid=dashboard-metric-spent-this-week]"
-      assert_select "[data-testid=dashboard-metrics-grid] > article.h-48", count: 12
+      assert_select "[data-testid=dashboard-metrics-grid] > article.h-40", count: 12
       assert_select "[data-testid=dashboard-metric-coffees-today]", text: /#{I18n.t("workspaces.show.status.coffees_today")}/
-      assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-chart].absolute svg[data-testid=dashboard-line-chart]"
+      assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-chart].absolute.opacity-30 svg[data-testid=dashboard-line-chart]"
       assert_select "[data-testid=dashboard-metric-coffees-today] line[data-testid=dashboard-line-chart-average]"
       assert_select "[data-testid=dashboard-metric-coffees-today] circle[data-testid=dashboard-line-chart-current]"
       assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-trend-label].absolute", text: /last 4 weeks/
