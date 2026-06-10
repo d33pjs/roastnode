@@ -34,6 +34,8 @@
     </div>
   <% end %>
 
+  <%= render "brews/occurred_at_field", form: %>
+
   <% if brew.quick_drip? %>
     <%= render "brews/quick_drip_form_fields", form:, brew: %>
   <% else %>

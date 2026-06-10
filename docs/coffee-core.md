@@ -11,6 +11,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Workspace writer photo removal through the private media controller.
 - Espresso brew logging with a required bean.
 - Quick Drip logging as Roastnode's first non-espresso brew method for private automatic drip/filter-style daily coffee.
+- Editable log timestamps for espresso and Quick Drip brews, defaulting to the current time on new logs.
 - Automatic inventory deduction when a brew is saved.
 - Manual bean inventory adjustments for count corrections.
 - Brew correction flows for edit/delete with inventory adjustment.
@@ -81,6 +82,8 @@ Quick Drip omits espresso-only fields: temperature, preinfusion, first drip, and
 The log form pre-fills setup fields from the current user's most recent brew for the selected method in the active workspace. If the current user has not logged that method in that workspace yet, it falls back to the workspace's most recent brew for that method so new household members start from the shared setup.
 
 Users can hide optional fields from the new espresso form through Profile. Brew edit/correction screens always show the full log.
+
+New espresso and Quick Drip logs expose an editable log time that defaults to the current time. Brew edit/correction screens expose the saved log time; changing it also moves the associated inventory consumption adjustment so activity and inventory history stay aligned.
 
 Espresso copied fields:
 

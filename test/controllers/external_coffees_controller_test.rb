@@ -112,6 +112,32 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ photo.id ], coffee.reload.photos.attachments.pluck(:id)
   end
 
+  test "edit and update allow changing external coffee log time" do
+    sign_in_as(users(:one))
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Americano",
+      occurred_at: Time.zone.local(2026, 6, 8, 9, 30, 0),
+      currency: "EUR"
+    )
+
+    get edit_external_coffee_path(coffee)
+
+    assert_response :success
+    assert_select "input[type=datetime-local][name=?][required=required]", "external_coffee[occurred_at]"
+
+    patch external_coffee_path(coffee), params: {
+      external_coffee: {
+        drink_type: "Americano",
+        occurred_at: "2026-06-08T14:45",
+        currency: "EUR"
+      }
+    }
+
+    assert_redirected_to external_coffee_path(coffee)
+    assert_equal Time.zone.local(2026, 6, 8, 14, 45, 0), coffee.reload.occurred_at
+  end
+
   test "show hero card renders brand mark identity images footer timestamp bean rating and symbol price" do
     workspace = workspaces(:household)
     user = users(:one)

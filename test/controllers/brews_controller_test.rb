@@ -30,6 +30,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "5"
     assert_select "input[name=?][value=?]", "brew[first_drip_seconds]", "8", count: 0
     assert_select "input[name=?][value=?][checked]", "brew[rating]", "4", count: 0
+    assert_select "input[type=datetime-local][name=?][required=required]", "brew[occurred_at]"
     assert_select "textarea[name=?]", "brew[notes]", text: ""
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:puck_screen).id.to_s
@@ -112,6 +113,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path(method: "quick_drip")
 
     assert_response :success
+    assert_select "input[type=datetime-local][name=?][required=required]", "brew[occurred_at]"
     assert_select "input[name=?][autofocus]", "brew[machine_cups]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[machine_cups]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[coffee_spoons]"
@@ -659,6 +661,31 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Public brew note.", brew.reload.public_note
     assert_equal "Shot writeup", brew.record_links.first.label
     assert_equal "public", brew.record_links.first.visibility
+  end
+
+  test "writer can update brew log time and inventory adjustment time" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    new_time = Time.zone.local(2026, 5, 27, 10, 15, 0)
+
+    patch brew_path(brew), params: {
+      brew: {
+        bean_id: brew.bean.id,
+        grinder_id: brew.grinder.id,
+        machine_id: brew.machine.id,
+        occurred_at: "2026-05-27T10:15",
+        bean_weight_grams: brew.bean_weight_grams.to_s,
+        ground_weight_grams: brew.ground_weight_grams.to_s,
+        dose_grams: brew.dose_grams.to_s,
+        beverage_grams: brew.beverage_grams.to_s,
+        total_time_seconds: brew.total_time_seconds.to_s,
+        taste_balance: brew.taste_balance
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_equal new_time, brew.reload.occurred_at
+    assert_equal new_time, brew.inventory_adjustment.reload.occurred_at
   end
 
   test "new falls back to first open bean when last bean is closed" do
