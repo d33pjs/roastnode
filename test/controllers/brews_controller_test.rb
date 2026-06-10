@@ -1281,14 +1281,17 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
   test "writer sees brew correction actions" do
     sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
 
-    get brew_path(brews(:morning_espresso))
+    get brew_path(brew)
 
     assert_response :success
-    assert_select "a[href=?]", edit_brew_path(brews(:morning_espresso)), text: I18n.t("brews.show.edit")
-    assert_select "a[href=?]", new_brew_path(repeat_brew_id: brews(:morning_espresso).id), text: I18n.t("brews.show.repeat")
-    assert_select "a[href=?]", new_recipe_path(source_brew_id: brews(:morning_espresso).id), text: I18n.t("brews.show.save_as_recipe")
-    assert_select "form[action=?]", brew_path(brews(:morning_espresso))
+    assert_select "[data-testid=brew-detail-actions] a[href=?]", edit_brew_path(brew), text: I18n.t("brews.show.edit")
+    assert_select "[data-testid=brew-detail-actions] a[href=?]", new_brew_path(repeat_brew_id: brew.id), text: I18n.t("brews.show.repeat")
+    assert_select "[data-testid=brew-detail-actions] a[href=?]", new_recipe_path(source_brew_id: brew.id), text: I18n.t("brews.show.save_as_recipe")
+    assert_select "[data-testid=brew-detail-actions] form[action=?]", brew_path(brew), count: 0
+    assert_select "[data-testid=brew-danger-zone] form[action=?]", brew_path(brew)
+    assert_appears_before "data-testid=\"brew-log-details\"", "data-testid=\"brew-danger-zone\""
   end
 
   test "writer does not see save as recipe action on quick drip brew" do
@@ -1367,6 +1370,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       public_brew_page_url(share.token)
     assert_select "[data-testid=?] svg[aria-hidden=true]", "brew-native-share-button-#{brew.id}"
     assert_select "[data-testid=?] span.sr-only", "brew-native-share-button-#{brew.id}", I18n.t("shared.native_share.share_public_brew")
+    assert_appears_before "brew-native-share-button-#{brew.id}", edit_brew_public_brew_share_path(brew)
   end
 
   test "writer sees explicit taste correction form on brew detail" do

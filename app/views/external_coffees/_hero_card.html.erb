@@ -16,9 +16,6 @@
       <div class="min-w-0">
         <p class="text-xs font-black uppercase tracking-[0.12em] text-stone-300"><%= t("external_coffees.log_tab") %></p>
         <h2 class="mt-2 break-words text-3xl font-black leading-tight text-white sm:text-4xl"><%= external_coffee.drink_type %></h2>
-        <% if external_coffee.drink_size.present? %>
-          <p class="mt-1 text-sm font-extrabold text-lime-200"><%= external_coffee.drink_size %></p>
-        <% end %>
       </div>
       <div class="flex shrink-0 items-start gap-2 sm:gap-3">
         <div class="rounded-2xl border border-white/20 bg-black/35 px-3 py-2 text-right backdrop-blur">
@@ -42,7 +39,7 @@
         <% end %>
       </div>
 
-      <div class="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div data-testid="external-coffee-metrics" class="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <div class="rounded-2xl border border-white/15 bg-black/35 p-3 backdrop-blur">
           <p class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-stone-300"><%= t("external_coffees.show.acidity_balance") %></p>
           <p class="mt-1 text-sm font-black text-white"><%= external_coffee_acidity_label(external_coffee.acidity_balance) %></p>
@@ -53,22 +50,28 @@
         </div>
         <div class="rounded-2xl border border-white/15 bg-black/35 p-3 backdrop-blur">
           <p class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-stone-300"><%= t("external_coffees.show.rating") %></p>
-          <p class="mt-1 text-sm font-black text-lime-200"><%= external_coffee_rating_marks(external_coffee) %></p>
+          <div data-testid="external-coffee-rating" aria-label="<%= external_coffee_rating_label(external_coffee.rating) %>" class="mt-1 flex gap-0.5 sm:gap-1">
+            <% 5.times do |index| %>
+              <% filled = external_coffee.rating.present? && index < external_coffee.rating %>
+              <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-stone-400" %>"></span>
+            <% end %>
+          </div>
         </div>
         <div class="rounded-2xl border border-white/15 bg-black/35 p-3 backdrop-blur">
-          <p class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-stone-300"><%= t("external_coffees.show.logged_at") %></p>
-          <p data-testid="external-coffee-logged-at" class="mt-1 whitespace-nowrap text-xs font-black text-white sm:text-sm"><%= external_coffee_card_timestamp(external_coffee) %></p>
+          <p class="text-[0.65rem] font-black uppercase tracking-[0.08em] text-stone-300"><%= t("external_coffees.show.drink_size") %></p>
+          <p data-testid="external-coffee-drink-size" class="mt-1 overflow-hidden text-ellipsis whitespace-nowrap text-sm font-black text-white"><%= external_coffee.drink_size.presence || t("external_coffees.show.unknown") %></p>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-white/15 pt-3 text-xs font-bold text-stone-300">
-        <span data-testid="external-coffee-workspace" class="inline-flex min-w-0 max-w-full items-center gap-1.5">
+      <div data-testid="external-coffee-footer" class="flex flex-wrap items-center gap-2 border-t border-white/15 pt-3 text-xs font-bold text-stone-300">
+        <span data-testid="external-coffee-logged-at" class="shrink-0 whitespace-nowrap rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100"><%= external_coffee_card_timestamp(external_coffee) %></span>
+        <span data-testid="external-coffee-workspace" class="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100">
           <% if workspace_logo.present? %>
             <%= image_tag media_attachment_path(workspace_logo, variant: :thumbnail), alt: "", data: { testid: "external-coffee-workspace-logo" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
           <% end %>
           <span class="min-w-0 truncate"><%= current_workspace.name %></span>
         </span>
-        <span data-testid="external-coffee-byline" class="inline-flex min-w-0 max-w-full items-center gap-1.5">
+        <span data-testid="external-coffee-byline" class="ml-auto inline-flex min-w-0 max-w-full items-center gap-1.5">
           <% if user_avatar.present? %>
             <%= image_tag media_attachment_path(user_avatar, variant: :thumbnail), alt: "", data: { testid: "external-coffee-user-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
           <% end %>

@@ -509,6 +509,9 @@ en:
       coffee_spoons: "%{count} spoons"
       consumed: "Consumed"
       delete: "Delete"
+      delete_confirmation: "Delete this brew? Bean inventory will be corrected, but this cannot be undone."
+      danger_zone: "Danger zone"
+      danger_zone_body: "Delete this brew only when this log should be removed from the household history. Inventory changes from the brew will be reversed."
       details: "Details"
       dose: "Dose"
       edit: "Edit"
@@ -608,6 +611,8 @@ en:
       coordinates: "Coordinates"
       delete: "Delete"
       delete_confirmation: "Delete this external coffee?"
+      danger_zone: "Danger zone"
+      danger_zone_body: "Delete this external coffee only when it should be removed from the household history. This cannot be undone."
       details: "Details"
       drink_size: "Drink size"
       edit: "Edit"
@@ -623,6 +628,7 @@ en:
       private_note: "Private note"
       public_note: "Public note"
       rating: "Rating"
+      rating_beans: "Rating %{rating} of %{maximum} beans"
       unknown: "Unknown"
     taste:
       acidity:

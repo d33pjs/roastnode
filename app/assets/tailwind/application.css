@@ -240,6 +240,14 @@
     margin-left: 0.25rem;
   }
 
+  .brew-rating-bean {
+    display: inline-block;
+    width: clamp(0.42rem, 1.7vw, 0.72rem);
+    height: clamp(0.58rem, 2.35vw, 1rem);
+    border-radius: 60% 45% 60% 45%;
+    transform: rotate(24deg);
+  }
+
   @media (max-width: 640px) {
     .rn-datetime-input {
       font-size: 0.875rem;

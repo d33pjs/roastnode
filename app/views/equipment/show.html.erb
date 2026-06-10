@@ -110,18 +110,6 @@
       title_class: "font-semibold text-stone-950",
       actions_allowed: current_workspace_policy.manage? %>
 
-    <% if current_workspace_policy.manage? %>
-      <section data-testid="equipment-danger-zone" class="mt-8 rounded-lg border border-red-200 bg-white p-5 shadow-sm">
-        <h2 class="text-lg font-semibold text-red-800"><%= t(".danger_zone") %></h2>
-        <p class="mt-2 text-sm text-stone-700"><%= t(".danger_zone_body") %></p>
-        <%= button_to t(".delete"),
-          equipment_path(@equipment),
-          method: :delete,
-          form: { data: { turbo_confirm: t(".delete_confirmation") } },
-          class: "mt-4 rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>
-      </section>
-    <% end %>
-
     <div class="mt-8 grid gap-6 lg:grid-cols-2">
       <section>
         <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".recent_events") %></h2>
@@ -155,5 +143,17 @@
         </div>
       </section>
     </div>
+
+    <% if current_workspace_policy.manage? %>
+      <section data-testid="equipment-danger-zone" class="mt-8 rounded-lg border border-red-200 bg-white p-5 shadow-sm">
+        <h2 class="text-lg font-semibold text-red-800"><%= t(".danger_zone") %></h2>
+        <p class="mt-2 text-sm text-stone-700"><%= t(".danger_zone_body") %></p>
+        <%= button_to t(".delete"),
+          equipment_path(@equipment),
+          method: :delete,
+          form: { data: { turbo_confirm: t(".delete_confirmation") } },
+          class: "mt-4 rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>
+      </section>
+    <% end %>
   </section>
 </main>

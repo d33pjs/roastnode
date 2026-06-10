@@ -53,6 +53,12 @@ module ExternalCoffeesHelper
     "#{filled}#{empty}"
   end
 
+  def external_coffee_rating_label(rating)
+    return t("external_coffees.show.no_rating") if rating.blank?
+
+    t("external_coffees.show.rating_beans", rating:, maximum: 5)
+  end
+
   private
     def external_coffee_money(value, currency)
       formatted_value = profile_number(value, precision: 2, strip_insignificant_zeros: false)

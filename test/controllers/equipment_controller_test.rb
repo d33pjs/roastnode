@@ -213,6 +213,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?]", archive_equipment_path(equipment)
     assert_select "[data-testid=equipment-danger-zone]"
     assert_select "form[action=?]", equipment_path(equipment)
+    assert_appears_before "data-testid=\"equipment-recent-brews\"", "data-testid=\"equipment-danger-zone\""
   end
 
   test "show renders equipment record links" do
@@ -384,6 +385,15 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def assert_appears_before(first, second)
+      first_index = response.body.index(first)
+      second_index = response.body.index(second)
+
+      assert first_index, "Expected #{first.inspect} to appear in response body"
+      assert second_index, "Expected #{second.inspect} to appear in response body"
+      assert first_index < second_index, "Expected #{first.inspect} to appear before #{second.inspect}"
+    end
+
     def create_public_brew_share_for(brew, selected_photo_attachment_ids: [])
       brew.create_public_brew_share!(
         workspace: brew.workspace,

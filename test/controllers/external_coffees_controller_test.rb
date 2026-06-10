@@ -112,7 +112,7 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ photo.id ], coffee.reload.photos.attachments.pluck(:id)
   end
 
-  test "show hero card renders brand mark identity images compact timestamp and symbol price" do
+  test "show hero card renders brand mark identity images footer timestamp bean rating and symbol price" do
     workspace = workspaces(:household)
     user = users(:one)
     attach_named_photo(workspace, :logo, filename: "household-logo.jpg")
@@ -120,9 +120,11 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     coffee = workspace.external_coffees.create!(
       user:,
       drink_type: "Flat White",
+      drink_size: "Large cup",
       occurred_at: Time.zone.local(2026, 6, 9, 14, 5, 45),
       price_cents: 450,
-      currency: "EUR"
+      currency: "EUR",
+      rating: 4
     )
     sign_in_as(user)
 
@@ -134,8 +136,29 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=external-coffee-user-avatar]"
     assert_select "[data-testid=external-coffee-price]", text: "4,50€"
     assert_select "[data-testid=external-coffee-price]", text: /EUR/, count: 0
-    assert_select "[data-testid=external-coffee-logged-at]", text: "09.06.2026 14:05"
+    assert_select "[data-testid=external-coffee-metrics] [data-testid=external-coffee-logged-at]", count: 0
+    assert_select "[data-testid=external-coffee-footer] [data-testid=external-coffee-logged-at].rounded-full", text: "09.06.2026 14:05"
     assert_select "[data-testid=external-coffee-logged-at]", text: /:45/, count: 0
+    assert_select "[data-testid=external-coffee-drink-size]", text: "Large cup"
+    assert_select "[data-testid=external-coffee-rating] .brew-rating-bean", count: 5
+    assert_select "[data-testid=external-coffee-rating] .rating-bean--filled", count: 4
+    assert_select "[data-testid=external-coffee-rating] .rating-bean--empty", count: 1
+  end
+
+  test "show keeps delete action in the bottom danger zone" do
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Macchiato"
+    )
+    sign_in_as(users(:one))
+
+    get external_coffee_path(coffee)
+
+    assert_response :success
+    assert_select "[data-testid=external-coffee-actions] a[href=?]", edit_external_coffee_path(coffee), text: I18n.t("external_coffees.show.edit")
+    assert_select "[data-testid=external-coffee-actions] form[action=?]", external_coffee_path(coffee), count: 0
+    assert_select "[data-testid=external-coffee-danger-zone] form[action=?]", external_coffee_path(coffee)
+    assert_appears_before "data-testid=\"external-coffee-details\"", "data-testid=\"external-coffee-danger-zone\""
   end
 
   test "viewer cannot create external coffee" do
@@ -148,4 +171,14 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
     assert_equal I18n.t("authorization.denied"), flash[:alert]
   end
+
+  private
+    def assert_appears_before(first, second)
+      first_index = response.body.index(first)
+      second_index = response.body.index(second)
+
+      assert first_index, "Expected #{first.inspect} to appear in response body"
+      assert second_index, "Expected #{second.inspect} to appear in response body"
+      assert first_index < second_index, "Expected #{first.inspect} to appear before #{second.inspect}"
+    end
 end
