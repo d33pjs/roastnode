@@ -2,6 +2,6 @@
   <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.log_time") %></h2>
   <div class="mt-3 min-w-0 overflow-hidden">
     <%= form.label :occurred_at, t("brews.form.occurred_at"), class: "block text-sm font-bold text-rn-muted" %>
-    <%= form.datetime_local_field :occurred_at, required: true, class: "mt-1 block min-w-0 max-w-full w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none rn-datetime-input" %>
+    <%= form.datetime_local_field :occurred_at, required: true, step: 1, class: "mt-1 block min-w-0 max-w-full w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none rn-datetime-input" %>
   </div>
 </section>

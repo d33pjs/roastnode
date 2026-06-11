@@ -20,12 +20,30 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?]", "external_coffee[place_name]"
     assert_select "input[name=?]", "external_coffee[price]"
     assert_select "[data-testid=external-coffee-occurred-at-field].overflow-hidden"
-    assert_select "input[type=datetime-local][name=?].rn-datetime-input.min-w-0.max-w-full", "external_coffee[occurred_at]"
+    assert_select "input[type=datetime-local][name=?][step=?].rn-datetime-input.min-w-0.max-w-full", "external_coffee[occurred_at]", "1"
     assert_select "textarea[name=?]", "external_coffee[notes]"
     assert_select "textarea[name=?]", "external_coffee[public_note]"
     assert_select "input[type=file][name=?][multiple=multiple][data-testid=photo-upload-input]", "external_coffee[photos][]"
     assert_select "input[type=hidden][name=?]", "external_coffee[photos][]", count: 0
     assert_select "[data-controller=external-coffee-location][data-insecure-message]"
+  end
+
+  test "new places external coffee log time at the end of the form" do
+    sign_in_as(users(:one))
+
+    get new_external_coffee_path
+
+    assert_response :success
+    form_body = Nokogiri::HTML(response.body).at_css("form[action='#{external_coffees_path}']").inner_html
+    log_time_index = form_body.index('data-testid="external-coffee-occurred-at-field"')
+    record_links_index = form_body.index('data-testid="record-links-fields"')
+    submit_index = form_body.index('type="submit"')
+
+    assert_not_nil log_time_index
+    assert_not_nil record_links_index
+    assert_not_nil submit_index
+    assert_operator log_time_index, :>, record_links_index
+    assert_operator log_time_index, :<, submit_index
   end
 
   test "new renders external taste and rating as styled choices" do
@@ -124,18 +142,18 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     get edit_external_coffee_path(coffee)
 
     assert_response :success
-    assert_select "input[type=datetime-local][name=?][required=required]", "external_coffee[occurred_at]"
+    assert_select "input[type=datetime-local][name=?][required=required][step=?]", "external_coffee[occurred_at]", "1"
 
     patch external_coffee_path(coffee), params: {
       external_coffee: {
         drink_type: "Americano",
-        occurred_at: "2026-06-08T14:45",
+        occurred_at: "2026-06-08T14:45:28",
         currency: "EUR"
       }
     }
 
     assert_redirected_to external_coffee_path(coffee)
-    assert_equal Time.zone.local(2026, 6, 8, 14, 45, 0), coffee.reload.occurred_at
+    assert_equal Time.zone.local(2026, 6, 8, 14, 45, 28), coffee.reload.occurred_at
   end
 
   test "show hero card renders brand mark identity images footer timestamp bean rating and symbol price" do

@@ -29,11 +29,6 @@
         <%= form.text_field :drink_size, class: input_class %>
       </div>
 
-      <div data-testid="external-coffee-occurred-at-field" class="min-w-0 overflow-hidden">
-        <%= form.label :occurred_at, t(".occurred_at"), class: label_class %>
-        <%= form.datetime_local_field :occurred_at, required: true, class: "#{input_class} rn-datetime-input" %>
-      </div>
-
       <div class="min-w-0">
         <%= form.label :price, t(".price"), class: label_class %>
         <div class="mt-1 grid grid-cols-[minmax(0,1fr)_5rem] gap-2">
@@ -147,6 +142,15 @@
     input_class:,
     section_class:,
     section_title_class: %>
+
+  <section class="<%= section_class %>">
+    <h2 class="<%= section_title_class %>"><%= t(".sections.log_time") %></h2>
+
+    <div data-testid="external-coffee-occurred-at-field" class="min-w-0 overflow-hidden">
+      <%= form.label :occurred_at, t(".occurred_at"), class: label_class %>
+      <%= form.datetime_local_field :occurred_at, required: true, step: 1, class: "#{input_class} rn-datetime-input" %>
+    </div>
+  </section>
 
   <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>
 <% end %>

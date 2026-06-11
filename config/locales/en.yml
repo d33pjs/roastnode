@@ -591,6 +591,7 @@ en:
       rating: "Rating"
       sections:
         drink: "Drink"
+        log_time: "Log time"
         notes: "Notes and photos"
         place: "Place"
         taste: "Taste"

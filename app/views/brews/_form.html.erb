@@ -34,8 +34,6 @@
     </div>
   <% end %>
 
-  <%= render "brews/occurred_at_field", form: %>
-
   <% if brew.quick_drip? %>
     <%= render "brews/quick_drip_form_fields", form:, brew: %>
   <% else %>
@@ -46,6 +44,8 @@
       hidden_brew_fields:,
       hide_brew_field: %>
   <% end %>
+
+  <%= render "brews/occurred_at_field", form: %>
 
   <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>
 <% end %>

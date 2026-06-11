@@ -30,12 +30,30 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "5"
     assert_select "input[name=?][value=?]", "brew[first_drip_seconds]", "8", count: 0
     assert_select "input[name=?][value=?][checked]", "brew[rating]", "4", count: 0
-    assert_select "input[type=datetime-local][name=?][required=required]", "brew[occurred_at]"
+    assert_select "input[type=datetime-local][name=?][required=required][step=?]", "brew[occurred_at]", "1"
     assert_select "textarea[name=?]", "brew[notes]", text: ""
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:puck_screen).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:other_workspace_tool).id.to_s, count: 0
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
+  end
+
+  test "new places brew log time at the end of the form" do
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    form_body = Nokogiri::HTML(response.body).at_css("form[action='#{brews_path}']").inner_html
+    log_time_index = form_body.index('data-section="log-time"')
+    record_links_index = form_body.index('data-testid="record-links-fields"')
+    submit_index = form_body.index('type="submit"')
+
+    assert_not_nil log_time_index
+    assert_not_nil record_links_index
+    assert_not_nil submit_index
+    assert_operator log_time_index, :>, record_links_index
+    assert_operator log_time_index, :<, submit_index
   end
 
   test "new falls back to household last brew defaults for a user without household brews" do
@@ -113,7 +131,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path(method: "quick_drip")
 
     assert_response :success
-    assert_select "input[type=datetime-local][name=?][required=required]", "brew[occurred_at]"
+    assert_select "input[type=datetime-local][name=?][required=required][step=?]", "brew[occurred_at]", "1"
     assert_select "input[name=?][autofocus]", "brew[machine_cups]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[machine_cups]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[coffee_spoons]"
@@ -666,14 +684,19 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "writer can update brew log time and inventory adjustment time" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
-    new_time = Time.zone.local(2026, 5, 27, 10, 15, 0)
+    new_time = Time.zone.local(2026, 5, 27, 10, 15, 28)
+
+    get edit_brew_path(brew)
+
+    assert_response :success
+    assert_select "input[type=datetime-local][name=?][required=required][step=?]", "brew[occurred_at]", "1"
 
     patch brew_path(brew), params: {
       brew: {
         bean_id: brew.bean.id,
         grinder_id: brew.grinder.id,
         machine_id: brew.machine.id,
-        occurred_at: "2026-05-27T10:15",
+        occurred_at: "2026-05-27T10:15:28",
         bean_weight_grams: brew.bean_weight_grams.to_s,
         ground_weight_grams: brew.ground_weight_grams.to_s,
         dose_grams: brew.dose_grams.to_s,
