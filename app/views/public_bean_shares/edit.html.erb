@@ -1,0 +1,29 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-4xl py-6 sm:px-6 lg:py-10">
+    <%= render "shared/back_link", label: t(".back"), path: bean_path(@bean) %>
+    <div class="mt-5">
+      <h1 class="text-3xl font-extrabold text-rn-ink sm:text-4xl"><%= t(".title") %></h1>
+    </div>
+
+    <%= render "form",
+      bean: @bean,
+      share: @share,
+      available_photos: @available_photos,
+      selected_photo_attachment_ids: @selected_photo_attachment_ids,
+      submit_label: t(".update") %>
+
+    <section class="mt-6 grid gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 shadow-sm sm:p-5">
+      <h2 class="text-lg font-black text-red-950"><%= t(".remove") %></h2>
+      <%= button_to t(".remove"),
+        bean_public_bean_share_path(@bean),
+        method: :delete,
+        form: {
+          data: {
+            testid: "public-bean-share-destroy-form",
+            turbo_confirm: t(".remove_confirmation")
+          }
+        },
+        class: "rounded-2xl bg-red-700 px-5 py-3 text-sm font-extrabold text-white shadow-sm hover:bg-red-800" %>
+    </section>
+  </section>
+</main>

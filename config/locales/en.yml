@@ -314,6 +314,7 @@ en:
       details: "Details"
       duplicate: "Duplicate bag"
       edit: "Edit"
+      edit_public_share: "Edit public share"
       elevation: "Elevation"
       end_date: "End date"
       espresso_brews:
@@ -363,6 +364,7 @@ en:
       roast_date: "Roast date"
       roast_degree: "Degree of roast"
       roast_type: "Roast type"
+      share_publicly: "Share bean"
       start_date: "Start date"
       status: "Status"
       suggest_grinder: "Suggest grinder setting"
@@ -677,6 +679,35 @@ en:
       title: "Create public share"
     update:
       updated: "Public share saved."
+  public_bean_shares:
+    unsupported_status: "Public sharing is only available for opened, finished, or used up bags."
+    create:
+      created: "Public bean share saved."
+    destroy:
+      destroyed: "Public bean share removed."
+    edit:
+      back: "Back to bean"
+      public_url: "Public URL"
+      remove: "Remove public bean share"
+      remove_confirmation: "Remove this public bean share? The URL will stop working."
+      title: "Edit public bean share"
+      update: "Save public bean share"
+    form:
+      clear_password: "Remove password"
+      enabled: "Enable public bean page"
+      include_photo: "Include"
+      no_photos: "No bean photos yet."
+      password: "Password"
+      password_help: "Leave blank to keep the current password. Public visitors need this password before seeing the bean page."
+      photos: "Public bean photos"
+      settings: "Share settings"
+      title: "Share title"
+    new:
+      back: "Back to bean"
+      create: "Create public bean share"
+      title: "Create public bean share"
+    update:
+      updated: "Public bean share saved."
   public_brew_pages:
     password:
       intro: "Enter the password to view this shared brew."

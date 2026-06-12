@@ -546,6 +546,39 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
+  test "show links writer to create public bean share for publishable bean" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[href=?]", new_bean_public_bean_share_path(bean), text: I18n.t("beans.show.share_publicly")
+  end
+
+  test "show links writer to edit existing public bean share for publishable bean" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.create_public_bean_share!(
+      workspace: bean.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true,
+      title: "Shared bean",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBeanShareSnapshotBuilder.new(
+        bean:,
+        title: "Shared bean",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[href=?]", edit_bean_public_bean_share_path(bean), text: I18n.t("beans.show.edit_public_share")
+  end
+
   test "show renders bean record links with visibility labels" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
