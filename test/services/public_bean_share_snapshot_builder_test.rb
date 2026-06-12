@@ -88,6 +88,10 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal 2, snapshot.fetch("brews").size
     assert_equal %w[quick_drip espresso], snapshot.fetch("brews").map { |brew| brew.fetch("method") }
     quick_drip_row = snapshot.fetch("brews").find { |brew| brew.fetch("method") == "quick_drip" }
+    assert_equal "6.0", quick_drip_row.fetch("machine_cups")
+    assert_equal "6.0", quick_drip_row.fetch("coffee_spoons")
+    assert_equal "5.0", quick_drip_row.fetch("grams_per_coffee_spoon")
+    assert_equal "measured", quick_drip_row.fetch("coffee_amount_source")
     %w[
       channeling
       retention_marker

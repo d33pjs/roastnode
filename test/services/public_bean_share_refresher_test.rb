@@ -37,6 +37,16 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_equal [], share.snapshot.fetch("photos")
   end
 
+  test "refresh disables shares when bean is no longer publishable" do
+    bean = beans(:open_household)
+    share = create_share(bean)
+
+    bean.archive!
+    PublicBeanShareRefresher.refresh(share)
+
+    assert_not share.reload.enabled?
+  end
+
   test "refreshes shares for equipment changes" do
     bean = beans(:open_household)
     grinder = equipment(:household_grinder)

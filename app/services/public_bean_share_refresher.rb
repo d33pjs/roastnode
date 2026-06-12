@@ -44,6 +44,11 @@ class PublicBeanShareRefresher
 
   def refresh
     share.reload
+    unless share.publishable?
+      share.update_columns(enabled: false, updated_at: Time.current)
+      return
+    end
+
     selected_photo_attachment_ids = share.valid_selected_photo_attachment_ids
     title = share.title.presence || PublicBeanShare.default_title_for(share.bean)
     snapshot = PublicBeanShareSnapshotBuilder.new(
