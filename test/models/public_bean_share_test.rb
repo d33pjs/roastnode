@@ -62,6 +62,26 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     assert_includes share.errors[:bean], "must be open, finished, or used up"
   end
 
+  test "requires opened bean lifecycle" do
+    finished_without_opened_on = workspaces(:household).beans.create!(
+      name: "Never Opened",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 125,
+      finished_at: Time.current
+    )
+    share = PublicBeanShare.new(
+      workspace: finished_without_opened_on.workspace,
+      bean: finished_without_opened_on,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true
+    )
+
+    assert_not share.valid?
+    assert_includes share.errors[:bean], "must be open, finished, or used up"
+  end
+
   test "allows finished and used up bags" do
     finished = beans(:open_household)
     finished.finish!
@@ -77,6 +97,33 @@ class PublicBeanShareTest < ActiveSupport::TestCase
       )
       assert share.valid?, share.errors.full_messages.to_sentence
     end
+  end
+
+  test "optional password protection works" do
+    share = PublicBeanShare.create!(
+      workspace: workspaces(:household),
+      bean: beans(:open_household),
+      created_by: users(:one),
+      updated_by: users(:one),
+      password: "espresso"
+    )
+
+    assert share.password_protected?
+    assert share.authenticate_password("espresso")
+    assert_not share.authenticate_password("wrong")
+  end
+
+  test "password cannot exceed bcrypt limit" do
+    share = PublicBeanShare.new(
+      workspace: workspaces(:household),
+      bean: beans(:open_household),
+      created_by: users(:one),
+      updated_by: users(:one),
+      password: "x" * 73
+    )
+
+    assert_not share.valid?
+    assert_includes share.errors[:password], "is too long (maximum is 72 characters)"
   end
 
   test "only one public share can exist for a bean" do
@@ -99,16 +146,17 @@ class PublicBeanShareTest < ActiveSupport::TestCase
   end
 
   test "member can manage own bean share but not another member share" do
+    memberships(:owner).update!(role: "member")
     users(:two).update!(active_workspace: workspaces(:household))
     share = PublicBeanShare.create!(
       workspace: workspaces(:household),
       bean: beans(:open_household),
-      created_by: users(:one),
-      updated_by: users(:one)
+      created_by: users(:two),
+      updated_by: users(:two)
     )
 
-    assert share.manageable_by?(users(:one))
-    assert_not share.manageable_by?(users(:two))
+    assert share.manageable_by?(users(:two))
+    assert_not share.manageable_by?(users(:one))
   end
 
   test "workspace admin can manage any bean share" do

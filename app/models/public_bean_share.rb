@@ -62,7 +62,7 @@ class PublicBeanShare < ApplicationRecord
   end
 
   def publishable?
-    PUBLISHABLE_STATUSES.include?(bean&.bag_status)
+    bean&.opened_on.present? && PUBLISHABLE_STATUSES.include?(bean.bag_status)
   end
 
   def public_attachment_ids
