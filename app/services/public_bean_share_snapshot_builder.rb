@@ -1,0 +1,252 @@
+class PublicBeanShareSnapshotBuilder
+  def initialize(bean:, title:, selected_photo_attachment_ids:)
+    @bean = bean
+    @title = title
+    @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i).uniq
+    @brews = bean.brews.includes(:user, :grinder, :machine, :brewer).order(occurred_at: :desc, created_at: :desc).to_a
+  end
+
+  def call
+    payload = {
+      "title" => title.presence || PublicBeanShare.default_title_for(bean),
+      "workspace" => workspace_payload,
+      "bean" => bean_payload,
+      "stats" => stats_payload,
+      "distributions" => distributions_payload,
+      "timeline" => timeline_payload,
+      "photos" => photo_payloads,
+      "brews" => brew_payloads,
+      "generated_at" => Time.current.iso8601
+    }
+    payload["public_media"] = public_media_payloads(payload)
+    payload
+  end
+
+  private
+    attr_reader :bean, :title, :selected_photo_attachment_ids, :brews
+
+    def workspace_payload
+      {
+        "name" => bean.workspace.name,
+        "logo_attachment_id" => attachment_id(bean.workspace.logo.attachment)
+      }
+    end
+
+    def bean_payload
+      {
+        "name" => bean.name,
+        "display_name" => bean.display_name,
+        "roaster_name" => bean.roaster_name,
+        "origin" => bean.origin,
+        "process" => bean.process,
+        "roast_date" => bean.roast_date&.iso8601,
+        "opened_on" => bean.opened_on&.iso8601,
+        "roast_type" => bean.roast_type,
+        "roast_level" => bean.roast_level,
+        "roast_degree" => decimal_string(bean.roast_degree),
+        "tasting_notes" => bean.tasting_notes,
+        "public_note" => bean.public_note,
+        "public_status" => bean.open? ? "open" : "finished",
+        "bag_size_grams" => decimal_string(bean.bag_size_grams),
+        "remaining_grams" => decimal_string(bean.remaining_grams),
+        "remaining_percent" => bean.remaining_percent&.to_i,
+        "decaffeinated" => bean.decaffeinated,
+        "country" => bean.country,
+        "region" => bean.region,
+        "farm" => bean.farm,
+        "farmer" => bean.farmer,
+        "elevation" => bean.elevation,
+        "variety" => bean.variety,
+        "harvested" => bean.harvested,
+        "blend_type" => bean.blend_type,
+        "blend_percentage" => bean.blend_percentage,
+        "links" => link_payloads(bean)
+      }
+    end
+
+    def stats_payload
+      {
+        "brew_count" => brews.size,
+        "consumed_grams" => decimal_string(consumed_grams, precision: 1),
+        "dead_grams" => decimal_string(dead_grams, precision: 1),
+        "average_rating" => decimal_string(average_rating, precision: 1),
+        "channeling_count" => channeling_count,
+        "channeling_brew_count" => brews.size,
+        "channeling_percent" => percentage(channeling_count, brews.size),
+        "open_duration_days" => open_duration_days
+      }
+    end
+
+    def distributions_payload
+      {
+        "rating" => count_by_present_value(brews.filter_map(&:rating).map(&:to_s)),
+        "taste_balance" => count_by_present_value(brews.filter_map(&:taste_balance)),
+        "grind_setting" => count_by_present_value(brews.filter_map(&:grind_setting))
+      }
+    end
+
+    def timeline_payload
+      last_brew = brews.first
+      end_time = bean.finished_at || last_brew&.occurred_at || Time.current
+
+      {
+        "opened_on" => bean.opened_on&.iso8601,
+        "finished_at" => bean.finished_at&.iso8601,
+        "last_brew_at" => last_brew&.occurred_at&.iso8601,
+        "end_at" => end_time&.iso8601,
+        "brews" => brews.sort_by { |brew| [ brew.occurred_at, brew.created_at ] }.map do |brew|
+          {
+            "occurred_at" => brew.occurred_at&.iso8601,
+            "method" => brew.method,
+            "rating" => brew.rating
+          }
+        end
+      }
+    end
+
+    def photo_payloads
+      bean.photos.attachments.select { |attachment| selected_photo_attachment_ids.include?(attachment.id) }.map do |attachment|
+        {
+          "attachment_id" => attachment.id
+        }
+      end
+    end
+
+    def brew_payloads
+      brews.map do |brew|
+        {
+          "occurred_at" => brew.occurred_at&.iso8601,
+          "method" => brew.method,
+          "public_note" => brew.public_note,
+          "bean_weight_grams" => decimal_string(brew.bean_weight_grams),
+          "ground_weight_grams" => decimal_string(brew.ground_weight_grams),
+          "dose_grams" => decimal_string(brew.dose_grams),
+          "beverage_grams" => decimal_string(brew.beverage_grams),
+          "grind_setting" => brew.grind_setting,
+          "brew_temperature_celsius" => decimal_string(brew.brew_temperature_celsius),
+          "total_time_seconds" => brew.total_time_seconds,
+          "preinfusion_seconds" => brew.preinfusion_seconds,
+          "first_drip_seconds" => brew.first_drip_seconds,
+          "channeling" => brew.channeling,
+          "taste_balance" => brew.taste_balance,
+          "rating" => brew.rating,
+          "retention_marker" => brew.retention_marker,
+          "machine_cups" => decimal_string(brew.machine_cups),
+          "coffee_spoons" => decimal_string(brew.coffee_spoons),
+          "grams_per_coffee_spoon" => decimal_string(brew.grams_per_coffee_spoon),
+          "coffee_amount_source" => brew.coffee_amount_source,
+          "user" => user_payload(brew.user),
+          "equipment" => equipment_payloads(brew)
+        }
+      end
+    end
+
+    def user_payload(user)
+      {
+        "display_label" => user.display_label,
+        "avatar_attachment_id" => attachment_id(user.avatar.attachment)
+      }
+    end
+
+    def equipment_payloads(brew)
+      {
+        "grinder" => equipment_payload(brew.grinder),
+        "machine" => equipment_payload(brew.machine),
+        "brewer" => equipment_payload(brew.brewer)
+      }.compact
+    end
+
+    def equipment_payload(equipment)
+      return unless equipment
+
+      {
+        "name" => equipment.name,
+        "kind" => equipment.kind,
+        "model" => equipment.model
+      }
+    end
+
+    def link_payloads(record)
+      record.record_links.publicly_visible.map do |link|
+        {
+          "label" => link.label,
+          "url" => link.url,
+          "kind" => link.kind,
+          "position" => link.position
+        }
+      end
+    end
+
+    def public_media_payloads(payload)
+      collect_attachment_ids(payload).map { |id| { "attachment_id" => id } }.uniq
+    end
+
+    def collect_attachment_ids(value)
+      case value
+      when Hash
+        value.flat_map do |key, nested|
+          key.to_s.end_with?("attachment_id") && nested.present? ? [ nested.to_i ] : collect_attachment_ids(nested)
+        end
+      when Array
+        value.flat_map { |nested| collect_attachment_ids(nested) }
+      else
+        []
+      end
+    end
+
+    def consumed_grams
+      brews.sum { |brew| brew.bean_weight_grams.to_d }
+    end
+
+    def dead_grams
+      espresso_brews.sum do |brew|
+        next 0.to_d if brew.bean_weight_grams.blank? || brew.ground_weight_grams.blank?
+
+        [ brew.bean_weight_grams.to_d - brew.ground_weight_grams.to_d, 0.to_d ].max
+      end
+    end
+
+    def average_rating
+      ratings = brews.filter_map(&:rating)
+      return if ratings.empty?
+
+      ratings.sum.to_d / ratings.size
+    end
+
+    def channeling_count
+      brews.count(&:channeling?)
+    end
+
+    def espresso_brews
+      @espresso_brews ||= brews.select(&:espresso?)
+    end
+
+    def percentage(part, whole)
+      return 0 if whole.blank? || whole.to_d.zero?
+
+      ((part.to_d / whole.to_d) * 100).round
+    end
+
+    def open_duration_days
+      return if bean.opened_on.blank?
+
+      end_date = bean.finished_at&.to_date || brews.first&.occurred_at&.to_date || Date.current
+      [ (end_date - bean.opened_on).to_i, 0 ].max
+    end
+
+    def count_by_present_value(values)
+      values.compact_blank.tally.sort_by { |label, count| [ -count, label ] }.to_h
+    end
+
+    def attachment_id(attachment)
+      attachment&.id
+    end
+
+    def decimal_string(value, precision: nil)
+      return if value.blank?
+
+      decimal = value.to_d
+      decimal = decimal.round(precision) if precision
+      decimal.to_s("F")
+    end
+end
