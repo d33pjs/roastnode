@@ -71,8 +71,8 @@ class PublicBeanShareSnapshotBuilder
         "dead_grams" => decimal_string(dead_grams, precision: 1),
         "average_rating" => decimal_string(average_rating, precision: 1),
         "channeling_count" => channeling_count,
-        "channeling_brew_count" => brews.size,
-        "channeling_percent" => percentage(channeling_count, brews.size),
+        "channeling_brew_count" => espresso_brews.size,
+        "channeling_percent" => percentage(channeling_count, espresso_brews.size),
         "open_duration_days" => open_duration_days
       }
     end
@@ -214,7 +214,7 @@ class PublicBeanShareSnapshotBuilder
     end
 
     def channeling_count
-      brews.count(&:channeling?)
+      espresso_brews.count(&:channeling?)
     end
 
     def espresso_brews
