@@ -18,7 +18,7 @@ class PublicBeanShareSnapshotBuilder
       "brews" => brew_payloads,
       "generated_at" => Time.current.iso8601
     }
-    payload["public_media"] = public_media_payloads(payload)
+    payload["public_media"] = public_media_payloads
     payload
   end
 
@@ -105,40 +105,62 @@ class PublicBeanShareSnapshotBuilder
     end
 
     def photo_payloads
-      bean.photos.attachments.select { |attachment| selected_photo_attachment_ids.include?(attachment.id) }.map do |attachment|
-        {
-          "attachment_id" => attachment.id
-        }
-      end
+      selected_bean_photo_attachment_ids.map { |attachment_id| { "attachment_id" => attachment_id } }
     end
 
     def brew_payloads
-      brews.map do |brew|
-        {
-          "occurred_at" => brew.occurred_at&.iso8601,
-          "method" => brew.method,
-          "public_note" => brew.public_note,
-          "bean_weight_grams" => decimal_string(brew.bean_weight_grams),
-          "ground_weight_grams" => decimal_string(brew.ground_weight_grams),
-          "dose_grams" => decimal_string(brew.dose_grams),
-          "beverage_grams" => decimal_string(brew.beverage_grams),
-          "grind_setting" => brew.grind_setting,
-          "brew_temperature_celsius" => decimal_string(brew.brew_temperature_celsius),
-          "total_time_seconds" => brew.total_time_seconds,
-          "preinfusion_seconds" => brew.preinfusion_seconds,
-          "first_drip_seconds" => brew.first_drip_seconds,
-          "channeling" => brew.channeling,
-          "taste_balance" => brew.taste_balance,
-          "rating" => brew.rating,
-          "retention_marker" => brew.retention_marker,
-          "machine_cups" => decimal_string(brew.machine_cups),
-          "coffee_spoons" => decimal_string(brew.coffee_spoons),
-          "grams_per_coffee_spoon" => decimal_string(brew.grams_per_coffee_spoon),
-          "coffee_amount_source" => brew.coffee_amount_source,
-          "user" => user_payload(brew.user),
-          "equipment" => equipment_payloads(brew)
-        }
+      brews.map { |brew| brew_payload(brew) }
+    end
+
+    def brew_payload(brew)
+      common_brew_payload(brew).merge(method_specific_brew_payload(brew))
+    end
+
+    def common_brew_payload(brew)
+      {
+        "occurred_at" => brew.occurred_at&.iso8601,
+        "method" => brew.method,
+        "public_note" => brew.public_note,
+        "bean_weight_grams" => decimal_string(brew.bean_weight_grams),
+        "beverage_grams" => decimal_string(brew.beverage_grams),
+        "grind_setting" => brew.grind_setting,
+        "total_time_seconds" => brew.total_time_seconds,
+        "taste_balance" => brew.taste_balance,
+        "rating" => brew.rating,
+        "user" => user_payload(brew.user),
+        "equipment" => equipment_payloads(brew)
+      }
+    end
+
+    def method_specific_brew_payload(brew)
+      if brew.espresso?
+        espresso_brew_payload(brew)
+      elsif brew.quick_drip?
+        quick_drip_brew_payload(brew)
+      else
+        {}
       end
+    end
+
+    def espresso_brew_payload(brew)
+      {
+        "ground_weight_grams" => decimal_string(brew.ground_weight_grams),
+        "dose_grams" => decimal_string(brew.dose_grams),
+        "brew_temperature_celsius" => decimal_string(brew.brew_temperature_celsius),
+        "preinfusion_seconds" => brew.preinfusion_seconds,
+        "first_drip_seconds" => brew.first_drip_seconds,
+        "channeling" => brew.channeling,
+        "retention_marker" => brew.retention_marker
+      }
+    end
+
+    def quick_drip_brew_payload(brew)
+      {
+        "machine_cups" => decimal_string(brew.machine_cups),
+        "coffee_spoons" => decimal_string(brew.coffee_spoons),
+        "grams_per_coffee_spoon" => decimal_string(brew.grams_per_coffee_spoon),
+        "coffee_amount_source" => brew.coffee_amount_source
+      }
     end
 
     def user_payload(user)
@@ -177,20 +199,21 @@ class PublicBeanShareSnapshotBuilder
       end
     end
 
-    def public_media_payloads(payload)
-      collect_attachment_ids(payload).map { |id| { "attachment_id" => id } }.uniq
+    def public_media_payloads
+      public_media_attachment_ids.map { |attachment_id| { "attachment_id" => attachment_id } }
     end
 
-    def collect_attachment_ids(value)
-      case value
-      when Hash
-        value.flat_map do |key, nested|
-          key.to_s.end_with?("attachment_id") && nested.present? ? [ nested.to_i ] : collect_attachment_ids(nested)
-        end
-      when Array
-        value.flat_map { |nested| collect_attachment_ids(nested) }
-      else
-        []
+    def public_media_attachment_ids
+      [
+        attachment_id(bean.workspace.logo.attachment),
+        selected_bean_photo_attachment_ids,
+        brews.map { |brew| attachment_id(brew.user.avatar.attachment) }
+      ].flatten.compact.uniq
+    end
+
+    def selected_bean_photo_attachment_ids
+      @selected_bean_photo_attachment_ids ||= bean.photos.attachments.filter_map do |attachment|
+        attachment.id if selected_photo_attachment_ids.include?(attachment.id)
       end
     end
 

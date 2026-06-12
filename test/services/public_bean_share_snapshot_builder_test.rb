@@ -87,6 +87,18 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal({ "2.3" => 1 }, snapshot.dig("distributions", "grind_setting"))
     assert_equal 2, snapshot.fetch("brews").size
     assert_equal %w[quick_drip espresso], snapshot.fetch("brews").map { |brew| brew.fetch("method") }
+    quick_drip_row = snapshot.fetch("brews").find { |brew| brew.fetch("method") == "quick_drip" }
+    %w[
+      channeling
+      retention_marker
+      dose_grams
+      ground_weight_grams
+      brew_temperature_celsius
+      preinfusion_seconds
+      first_drip_seconds
+    ].each do |key|
+      assert_not quick_drip_row.key?(key), "expected Quick Drip row to omit #{key}"
+    end
     assert_includes snapshot.to_json, "Public espresso note"
     assert_includes snapshot.to_json, "Public batch note"
     assert_includes snapshot.to_json, "Buy beans"
@@ -101,6 +113,9 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_not_includes snapshot.to_json, "private-bag-name.jpg"
     assert_includes collect_attachment_ids(snapshot), bean_photo.id
     assert_not_includes collect_attachment_ids(snapshot), brew_photo.id
+    assert_equal [ avatar.id, bean_photo.id, logo.id ].sort,
+      snapshot.fetch("public_media").map { |media| media.fetch("attachment_id") }.sort
+    assert_no_internal_ids(snapshot)
   end
 
   test "public status collapses used up to finished" do
@@ -134,6 +149,19 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
         value.flat_map { |nested| collect_attachment_ids(nested) }
       else
         []
+      end
+    end
+
+    def assert_no_internal_ids(value)
+      case value
+      when Hash
+        value.each do |key, nested|
+          assert key.to_s.end_with?("attachment_id") || !key.to_s.end_with?("id"),
+            "expected #{key.inspect} to stay out of the public snapshot"
+          assert_no_internal_ids(nested)
+        end
+      when Array
+        value.each { |nested| assert_no_internal_ids(nested) }
       end
     end
 end

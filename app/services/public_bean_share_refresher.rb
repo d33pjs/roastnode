@@ -16,6 +16,16 @@ class PublicBeanShareRefresher
         PublicBeanShare.where(bean_id: record.id)
       when Brew
         PublicBeanShare.where(bean_id: record.bean_id)
+      when Equipment
+        PublicBeanShare
+          .joins(bean: :brews)
+          .where(
+            "brews.grinder_id = :equipment_id OR " \
+            "brews.machine_id = :equipment_id OR " \
+            "brews.brewer_id = :equipment_id",
+            equipment_id: record.id
+          )
+          .distinct
       when Workspace
         PublicBeanShare.where(workspace_id: record.id)
       when User

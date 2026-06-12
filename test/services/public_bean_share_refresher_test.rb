@@ -37,6 +37,39 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_equal [], share.snapshot.fetch("photos")
   end
 
+  test "refreshes shares for equipment changes" do
+    bean = beans(:open_household)
+    grinder = equipment(:household_grinder)
+    machine = equipment(:household_machine)
+    brewer = equipment(:household_brewer)
+    brews(:morning_espresso).update!(bean:, grinder:, machine:)
+    bean.workspace.brews.create!(
+      user: users(:two),
+      method: "quick_drip",
+      bean:,
+      brewer:,
+      machine_cups: 6,
+      coffee_spoons: 6,
+      grams_per_coffee_spoon: 5,
+      bean_weight_grams: 30,
+      beverage_grams: 720,
+      total_time_seconds: 300
+    )
+    share = create_share(bean)
+
+    grinder.update!(name: "Updated grinder")
+    PublicBeanShareRefresher.refresh_for(grinder)
+    assert_includes snapshot_equipment_names(share), "Updated grinder"
+
+    machine.update!(name: "Updated machine")
+    PublicBeanShareRefresher.refresh_for(machine)
+    assert_includes snapshot_equipment_names(share), "Updated machine"
+
+    brewer.update!(name: "Updated brewer")
+    PublicBeanShareRefresher.refresh_for(brewer)
+    assert_includes snapshot_equipment_names(share), "Updated brewer"
+  end
+
   private
     def create_share(bean, selected_photo_attachment_ids: [])
       PublicBeanShare.create!(
@@ -52,5 +85,11 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
           selected_photo_attachment_ids:
         ).call
       )
+    end
+
+    def snapshot_equipment_names(share)
+      share.reload.snapshot.fetch("brews").flat_map do |brew|
+        brew.fetch("equipment", {}).values.map { |equipment| equipment["name"] }
+      end
     end
 end
