@@ -16,6 +16,7 @@ class Bean < ApplicationRecord
   has_many :brews, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception
   has_many :duplicated_bean_bags, class_name: "Bean", foreign_key: :duplicated_from_bean_id, dependent: :nullify, inverse_of: :duplicated_from_bean
+  has_one :public_bean_share, dependent: :destroy
   has_many_attached :photos
 
   before_validation :set_default_remaining_grams
