@@ -36,6 +36,22 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "/media_attachments", response.body
   end
 
+  test "enabled share renders public bean metadata details" do
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["bean"]["continent"] = "South America"
+    snapshot["bean"]["country_of_manufacturer"] = "Germany"
+    snapshot["bean"]["manufacturer"] = "Calendar Coffee"
+    share.update!(snapshot:)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-details]", text: /South America/
+    assert_select "[data-testid=public-bean-details]", text: /Germany/
+    assert_select "[data-testid=public-bean-details]", text: /Calendar Coffee/
+  end
+
   test "timeline clusters dense brews without rendering callout cards" do
     avatar = attach_named_photo(users(:one), :avatar, filename: "timeline-avatar.jpg")
     bean = beans(:open_household)

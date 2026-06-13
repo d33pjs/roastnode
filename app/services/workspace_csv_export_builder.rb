@@ -3,9 +3,9 @@ require "csv"
 class WorkspaceCsvExportBuilder
   BEAN_COLUMNS = %w[
     id name roaster_name status remaining_grams bag_size_grams opened_on finished_at archived_at
-    roast_date roast_type grind_state roast_degree blend_type decaffeinated country region farm farmer
-    elevation variety process harvested blend_percentage tasting_notes rating purchase_source
-    purchase_url purchased_on purchase_price notes created_at updated_at
+    roast_date roast_type grind_state roast_degree blend_type decaffeinated continent country region farm farmer
+    elevation variety process harvested blend_percentage country_of_manufacturer manufacturer tasting_notes rating
+    purchase_source purchase_url purchased_on purchase_price notes created_at updated_at
   ].freeze
 
   BREW_COLUMNS = %w[

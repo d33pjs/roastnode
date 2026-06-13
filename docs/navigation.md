@@ -16,7 +16,7 @@ Roastnode detail pages should cross-link records wherever that helps a household
 - Brew detail pages show read-only related photo groups for the bean, grinder, machine, and selected preparation tools when photos exist.
 - Equipment event detail pages link affected equipment names to equipment detail pages.
 - Preparation tools have detail pages and brew detail tool links should point to those pages when the current tool record still exists.
-- Back links use the shared `shared/back_link` partial so they render as tap-friendly buttons on mobile. When the browser provides a same-origin previous page, the shared link returns there with a neutral "Back" label; direct visits, refreshes, self-referrers, and external referrers fall back to the explicit path passed by the view.
+- Back links use the shared `shared/back_link` partial so they render as tap-friendly buttons on mobile. When the browser provides a same-origin previous page, the shared link returns there with a neutral "Back" label; direct visits, refreshes, self-referrers, external referrers, and share workflow referrers fall back to the explicit path passed by the view so share create/edit flows cannot loop.
 
 ## Agent Notes
 

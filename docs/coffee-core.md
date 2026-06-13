@@ -36,8 +36,9 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Browser-local unsaved draft recovery for new brew logs.
 - One-way ground-out to dose prefill while logging espresso.
 - Dashboard compact live time-since-last-coffee header, row-major four-column metric grid for mixed Brew and External Coffee daily/weekly cards, rough daily/weekly spend, unopened-stock versus open-bean inventory split, open-bean count, closed-bag daily/weekly counts, last-4-week trend line chart components, open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
+- Dashboard bean stock shelf with unopened in-stock bags, quick-open actions, and bean cost metrics for stocked/open inventory.
 - Repeat Good Brew flow from private brew details and dashboard cockpit best brews, pre-filling targetable shot/setup values from the source brew while keeping taste, notes, media, and sharing fields fresh.
-- Bean index cards group bags by workflow state: open, stock, finished/used up, and archived. Open bags sort by latest brew use first, then opened date and name for beans without brew history. Historical bags stay below active stock/open bags.
+- Bean index cards group bags by workflow state: open, stock, finished/used up, and archived. Open bags sort by latest brew use first, then opened date and name for beans without brew history. Historical bags stay below active stock/open bags. Stock cards expose quick-open and Rebuy actions.
 
 ## Explicitly Deferred
 
@@ -198,8 +199,10 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Beans can be edited after creation, including remaining grams and additive package photos.
 - Bean status is derived from lifecycle fields: Stock means owned but unopened (`opened_on` blank), Open means brewable (`opened_on` present, remaining beans, not archived), Used up means zero remaining beans, and Archived means intentionally removed from normal workflows.
 - Beans can be archived, reopened, marked as stock/open/used up from the edit form, or duplicated as a new open bag. Duplicates copy descriptive metadata and photos, set `opened_on` to the current date, clear `archived_at`, and reset remaining grams to the bag size.
+- Stock-aware open-date behavior keeps unopened stock bags without an opened date, stamps quick-opened bags with the current date, and prevents stock bags from silently appearing in brew selection before they are opened.
+- Bag size can initialize or resync remaining grams in one direction for unopened stock bags, but editing remaining grams does not write back to the package size.
 - Beans can be deleted from a danger zone. This deletes the bean, its brews, and all inventory movements for that bean in one transaction.
-- Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, website, notes, and variety information.
+- Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, website, notes, richer origin/manufacturer fields, and variety information.
 - Public notes and public links are separate from private notes. Public brew shares copy only `public_note` and public links into their snapshots.
 - If multiple open beans have the same roaster/name, the espresso logging selector appends the opened date to those duplicate labels only.
 - The bean overview groups bags by lifecycle before sorting. Open bags prioritize recently used beans by newest brew, then fall back to opened-date/name ordering. Stock bags sort by purchase, roast, and creation freshness. Finished, used-up, and archived bags stay in historical sections so old bags do not jump above active workflow items.

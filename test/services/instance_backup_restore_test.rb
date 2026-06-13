@@ -59,7 +59,13 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     )
     source_bean = beans(:open_household)
     source_bean_finished_at = Time.zone.parse("2026-05-24 18:30:00")
-    source_bean.update!(remaining_grams: 14, finished_at: source_bean_finished_at)
+    source_bean.update!(
+      remaining_grams: 14,
+      finished_at: source_bean_finished_at,
+      continent: "South America",
+      country_of_manufacturer: "Germany",
+      manufacturer: "Calendar Coffee"
+    )
     quick_drip_bean = beans(:second_open_household)
     quick_drip_bean.update!(grind_state: "pre_ground")
     quick_drip_brew = workspaces(:household).brews.create!(
@@ -144,6 +150,9 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal restored_workspace, restored_user.active_workspace
     assert_equal original.fetch(:bean_finished_at).to_i, restored_bean.finished_at.to_i
     assert_equal "finished", restored_bean.bag_status
+    assert_equal "South America", restored_bean.continent
+    assert_equal "Germany", restored_bean.country_of_manufacturer
+    assert_equal "Calendar Coffee", restored_bean.manufacturer
     assert_equal "pre_ground", restored_quick_drip_bean.grind_state
     assert_equal "quick_drip", restored_quick_drip_brew.method
     assert_equal restored_quick_drip_bean, restored_quick_drip_brew.bean

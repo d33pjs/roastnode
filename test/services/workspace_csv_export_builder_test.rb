@@ -15,6 +15,9 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     assert_includes rows.headers, "finished_at"
     assert_includes rows.headers, "purchase_price"
     assert_includes rows.headers, "grind_state"
+    assert_includes rows.headers, "continent"
+    assert_includes rows.headers, "country_of_manufacturer"
+    assert_includes rows.headers, "manufacturer"
 
     bean_ids = rows.map { |row| row.fetch("id").to_i }
     assert_includes bean_ids, beans(:open_household).id

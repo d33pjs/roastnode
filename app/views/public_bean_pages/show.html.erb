@@ -123,14 +123,17 @@
     <section class="grid gap-6 border-t border-rn-line py-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
       <div>
         <h2 class="text-2xl font-black text-rn-ink"><%= t(".details") %></h2>
-        <dl class="mt-4 grid gap-3 sm:grid-cols-2">
+        <dl data-testid="public-bean-details" class="mt-4 grid gap-3 sm:grid-cols-2">
           <% [
             [ t(".origin"), bean["origin"] ],
+            [ t(".continent"), bean["continent"] ],
             [ t(".process"), bean["process"] ],
             [ t(".roast_date"), public_bean_date(bean["roast_date"]) ],
             [ t(".roast_type"), bean["roast_type"] ],
             [ t(".roast_level"), bean["roast_level"] ],
             [ t(".country"), bean["country"] ],
+            [ t(".country_of_manufacturer"), bean["country_of_manufacturer"] ],
+            [ t(".manufacturer"), bean["manufacturer"] ],
             [ t(".region"), bean["region"] ],
             [ t(".farm"), bean["farm"] ],
             [ t(".farmer"), bean["farmer"] ],
@@ -142,7 +145,7 @@
           ].select { |_label, value| value.present? }.each do |label, value| %>
             <div class="rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 shadow-sm">
               <dt class="text-xs font-black uppercase text-rn-muted"><%= label %></dt>
-              <dd class="mt-1 text-sm font-extrabold text-rn-ink"><%= value.to_s.humanize %></dd>
+              <dd class="mt-1 text-sm font-extrabold text-rn-ink"><%= value %></dd>
             </div>
           <% end %>
         </dl>

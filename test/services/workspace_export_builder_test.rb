@@ -6,7 +6,14 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     bean_photo = attach_photo(beans(:open_household))
     tool_photo = attach_photo(preparation_tools(:wdt))
     finished_at = Time.zone.parse("2026-05-24 18:30:00")
-    beans(:open_household).update!(remaining_grams: 14, finished_at:)
+    bean = beans(:open_household)
+    bean.update!(
+      remaining_grams: 14,
+      finished_at:,
+      continent: "South America",
+      country_of_manufacturer: "Germany",
+      manufacturer: "Calendar Coffee"
+    )
 
     payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at:).call
 
@@ -29,6 +36,9 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
 
     bean_payload = payload[:beans].find { |bean| bean[:id] == beans(:open_household).id }
     assert_equal "finished", bean_payload[:status]
+    assert_equal "South America", bean_payload.fetch(:continent)
+    assert_equal "Germany", bean_payload.fetch(:country_of_manufacturer)
+    assert_equal "Calendar Coffee", bean_payload.fetch(:manufacturer)
     assert_equal finished_at.iso8601, bean_payload[:finished_at]
     assert_equal bean_photo.id, bean_payload[:photos].first[:attachment_id]
     assert_equal "photo.jpg", bean_payload[:photos].first[:filename]

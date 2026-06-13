@@ -11,6 +11,9 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
       purchase_source: "Private cellar source.",
       purchase_price_cents: 1290,
       origin: "Colombia",
+      continent: "South America",
+      country_of_manufacturer: "Germany",
+      manufacturer: "Calendar Coffee",
       process: "Washed",
       tasting_notes: "Berry and caramel"
     )
@@ -75,6 +78,9 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "Shared bean", snapshot.fetch("title")
     assert_equal "Public bean note.", snapshot.dig("bean", "public_note")
     assert_equal "Colombia", snapshot.dig("bean", "origin")
+    assert_equal "South America", snapshot.dig("bean", "continent")
+    assert_equal "Germany", snapshot.dig("bean", "country_of_manufacturer")
+    assert_equal "Calendar Coffee", snapshot.dig("bean", "manufacturer")
     assert_equal "Washed", snapshot.dig("bean", "process")
     assert_equal "Berry and caramel", snapshot.dig("bean", "tasting_notes")
     assert_equal 2, snapshot.dig("stats", "brew_count")
