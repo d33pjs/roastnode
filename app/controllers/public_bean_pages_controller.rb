@@ -2,6 +2,7 @@ class PublicBeanPagesController < ApplicationController
   allow_unauthenticated_access
 
   before_action :set_share
+  after_action :record_page_view, only: :show
   rate_limit to: 10,
     within: 3.minutes,
     only: :unlock,
@@ -15,7 +16,7 @@ class PublicBeanPagesController < ApplicationController
     return render :password if password_required?
 
     load_snapshot
-    record_page_view
+    @record_public_bean_view = true
   end
 
   def unlock
@@ -42,6 +43,8 @@ class PublicBeanPagesController < ApplicationController
     end
 
     def record_page_view
+      return unless @record_public_bean_view && response.successful?
+
       PublicBeanShareViewRecorder.new(share: @share, request:).call
     end
 

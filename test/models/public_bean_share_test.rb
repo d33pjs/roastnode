@@ -230,6 +230,32 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     assert_equal [ selected_photo.id ], share.public_attachment_ids
   end
 
+  test "public attachment ids intersect manifest with live allowed attachments" do
+    bean = beans(:open_household)
+    selected_photo = attach_photo(bean)
+    rogue_photo = attach_photo(beans(:other_workspace_open))
+    logo = attach_named_photo(bean.workspace, :logo, filename: "household-logo.jpg")
+    avatar = attach_named_photo(users(:one), :avatar, filename: "brewer-avatar.jpg")
+    share = PublicBeanShare.create!(
+      workspace: bean.workspace,
+      bean:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      selected_photo_attachment_ids: [ selected_photo.id ],
+      snapshot: {
+        "public_media" => [
+          { "attachment_id" => selected_photo.id },
+          { "attachment_id" => rogue_photo.id },
+          { "attachment_id" => logo.id },
+          { "attachment_id" => avatar.id }
+        ]
+      }
+    )
+
+    assert_equal [ avatar.id, logo.id, selected_photo.id ].sort, share.public_attachment_ids.sort
+    assert_nil share.public_media_handle_for(rogue_photo.id)
+  end
+
   test "public media handles are opaque and resolve only for public attachments" do
     bean = beans(:open_household)
     photo = attach_photo(bean)
@@ -238,6 +264,7 @@ class PublicBeanShareTest < ActiveSupport::TestCase
       bean:,
       created_by: users(:one),
       updated_by: users(:one),
+      selected_photo_attachment_ids: [ photo.id ],
       snapshot: {
         "public_media" => [ { "attachment_id" => photo.id } ]
       }

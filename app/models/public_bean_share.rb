@@ -71,7 +71,9 @@ class PublicBeanShare < ApplicationRecord
 
   def public_attachment_ids
     snapshot_payload = snapshot.is_a?(Hash) ? snapshot : {}
-    collect_attachment_ids(snapshot_payload.fetch("public_media", [])).map(&:to_i).uniq
+    public_media_payload = snapshot_payload.key?("public_media") ? snapshot_payload["public_media"] : snapshot_payload
+
+    collect_attachment_ids(public_media_payload).map(&:to_i).uniq & allowed_public_attachment_ids
   end
 
   def public_media_handle_for(attachment_id)
@@ -135,6 +137,23 @@ class PublicBeanShare < ApplicationRecord
 
     def bean_photo_attachment_ids
       bean&.photos&.attachments&.map(&:id) || []
+    end
+
+    def allowed_public_attachment_ids
+      public_identity_attachment_ids + valid_selected_photo_attachment_ids
+    end
+
+    def public_identity_attachment_ids
+      [
+        workspace&.logo&.attachment&.id,
+        bean_brew_user_avatar_attachment_ids
+      ].flatten.compact
+    end
+
+    def bean_brew_user_avatar_attachment_ids
+      return [] unless bean
+
+      bean.brews.includes(:user).filter_map { |brew| brew.user.avatar.attachment&.id }
     end
 
     def collect_attachment_ids(value)

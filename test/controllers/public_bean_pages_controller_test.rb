@@ -30,6 +30,41 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "/media_attachments", response.body
   end
 
+  test "public page hides raw attachment ids and original filenames" do
+    bean = beans(:open_household)
+    photo = attach_photo_with_filename(bean, "private-bean-bag-original.jpg")
+    share = create_share(bean:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_includes response.body, "/b/#{share.token}/media/"
+    assert_no_match "private-bean-bag-original.jpg", response.body
+    assert_no_match %r{/media/#{photo.id}(?:[?"])}, response.body
+    assert_no_match "/rails/active_storage", response.body
+    assert_no_match "/media_attachments", response.body
+  end
+
+  test "public page uses stored snapshot instead of changed live bean fields" do
+    share = create_share(enabled: true)
+    bean = share.bean
+    snapshot = share.snapshot.deep_dup
+    snapshot["bean"]["name"] = "Snapshot bean name"
+    snapshot["bean"]["public_note"] = "Snapshot public note"
+    share.update!(snapshot:)
+
+    bean.update!(name: "Changed live bean name", public_note: "Changed live public note", notes: "Changed private note")
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "body", text: /Snapshot bean name/
+    assert_select "body", text: /Snapshot public note/
+    assert_select "body", text: /Changed live bean name/, count: 0
+    assert_select "body", text: /Changed live public note/, count: 0
+    assert_select "body", text: /Changed private note/, count: 0
+  end
+
   test "renders espresso and quick drip brews" do
     bean = beans(:open_household)
     bean.workspace.brews.create!(
@@ -84,6 +119,20 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "disabled and unknown shares do not record page views" do
+    share = create_share(enabled: false)
+
+    assert_no_difference -> { PublicBeanShareView.count } do
+      get public_bean_page_path(share.token), headers: { "REMOTE_ADDR" => "198.51.100.42" }
+    end
+    assert_response :not_found
+
+    assert_no_difference -> { PublicBeanShareView.count } do
+      get public_bean_page_path("missing-token"), headers: { "REMOTE_ADDR" => "198.51.100.43" }
+    end
+    assert_response :not_found
+  end
+
   test "public bean request path and redirects redact bearer tokens for logs" do
     share = create_share(enabled: true, password: "coffee")
     media_handle = "opaque-media-handle"
@@ -103,7 +152,7 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
-    def create_share(bean: beans(:open_household), enabled:, password: nil)
+    def create_share(bean: beans(:open_household), enabled:, password: nil, selected_photo_attachment_ids: [])
       bean.update!(public_note: "Public bean note.", notes: "Private bean note.")
       brews(:morning_espresso).update!(bean:, public_note: "Public brew note", notes: "Private brew note")
       PublicBeanShare.create!(
@@ -114,12 +163,19 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
         enabled:,
         password:,
         title: "Shared bean",
-        selected_photo_attachment_ids: [],
+        selected_photo_attachment_ids:,
         snapshot: PublicBeanShareSnapshotBuilder.new(
           bean:,
           title: "Shared bean",
-          selected_photo_attachment_ids: []
+          selected_photo_attachment_ids:
         ).call
       )
+    end
+
+    def attach_photo_with_filename(record, filename)
+      File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
+        record.photos.attach(io: file, filename:, content_type: "image/jpeg")
+      end
+      record.photos.attachments.last
     end
 end
