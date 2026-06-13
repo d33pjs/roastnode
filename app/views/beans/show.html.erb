@@ -1,18 +1,21 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-4xl px-6 py-10">
     <% purchase_url_href = bean_purchase_url_href(@bean.purchase_url) %>
+    <% bean_action_button_class = "inline-flex min-h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+    <% bean_primary_action_button_class = "inline-flex min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-stone-950 px-3 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
+    <% bean_action_form_class = "inline-flex shrink-0" %>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <%= render "shared/back_link", label: t(".back"), path: beans_path %>
 
       <% if purchase_url_href.present? || current_workspace_policy.write? %>
-        <div class="flex flex-wrap gap-2">
+        <div data-testid="bean-detail-actions" class="flex min-w-0 max-w-full flex-1 gap-2 overflow-x-auto pb-1 sm:flex-nowrap sm:items-center sm:justify-end lg:w-auto lg:flex-none lg:overflow-visible lg:pb-0">
           <% if purchase_url_href.present? %>
-            <%= link_to t(".rebuy"), purchase_url_href, target: "_blank", rel: "noopener", data: { testid: "bean-rebuy-link" }, class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+            <%= link_to t(".rebuy"), purchase_url_href, target: "_blank", rel: "noopener", data: { testid: "bean-rebuy-link" }, class: bean_action_button_class %>
           <% end %>
 
           <% if current_workspace_policy.write? %>
-            <%= link_to t(".edit"), edit_bean_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-            <%= link_to t(".adjust_inventory"), new_bean_inventory_adjustment_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+            <%= link_to t(".edit"), edit_bean_path(@bean), class: bean_action_button_class %>
+            <%= link_to t(".adjust_inventory"), new_bean_inventory_adjustment_path(@bean), class: bean_action_button_class %>
             <% if PublicBeanShare.publishable_bean?(@bean) %>
               <% public_bean_share = @bean.public_bean_share %>
               <% if public_bean_share.present? %>
@@ -22,24 +25,25 @@
                     url: public_bean_page_url(public_bean_share.token),
                     title: public_share_title,
                     text: t("beans.native_share.text", title: public_share_title),
-                    label: t("shared.native_share.share_public_bean"),
+                    label: t("shared.native_share.share"),
+                    label_class: "text-sm font-semibold",
                     testid: "bean-native-share-button-#{@bean.id}",
-                    button_class: "inline-flex h-10 w-10 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 hover:text-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
+                    button_class: bean_action_button_class %>
                 <% end %>
                 <% if public_bean_share.manageable_by?(Current.user) %>
-                  <%= link_to t(".edit_public_share"), edit_bean_public_bean_share_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                  <%= link_to t(".edit_public_share"), edit_bean_public_bean_share_path(@bean), class: bean_action_button_class %>
                 <% end %>
               <% else %>
-                <%= link_to t(".share_publicly"), new_bean_public_bean_share_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+                <%= link_to t(".share_publicly"), new_bean_public_bean_share_path(@bean), class: bean_action_button_class %>
               <% end %>
             <% end %>
-            <%= button_to t(".duplicate"), duplicate_bean_path(@bean), method: :post, class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+            <%= button_to t(".duplicate"), duplicate_bean_path(@bean), method: :post, form: { class: bean_action_form_class }, class: bean_action_button_class %>
             <% if @bean.stock? %>
-              <%= button_to t(".open_bag"), open_bag_bean_path(@bean), method: :patch, form: { data: { testid: "bean-open-bag-form" } }, class: "rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
+              <%= button_to t(".open_bag"), open_bag_bean_path(@bean), method: :patch, form: { class: bean_action_form_class, data: { testid: "bean-open-bag-form" } }, class: bean_primary_action_button_class %>
             <% elsif @bean.archived? || @bean.finished? %>
-              <%= button_to t(".reopen"), reopen_bean_path(@bean), method: :patch, class: "rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
+              <%= button_to t(".reopen"), reopen_bean_path(@bean), method: :patch, form: { class: bean_action_form_class }, class: bean_primary_action_button_class %>
             <% else %>
-              <%= button_to t(".finish"), finish_bean_path(@bean), method: :patch, form: { data: { testid: "bean-finish-form" } }, class: "rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
+              <%= button_to t(".finish"), finish_bean_path(@bean), method: :patch, form: { class: bean_action_form_class, data: { testid: "bean-finish-form" } }, class: bean_primary_action_button_class %>
             <% end %>
           <% end %>
         </div>

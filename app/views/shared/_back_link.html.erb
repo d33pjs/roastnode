@@ -1,5 +1,6 @@
 <% fallback_path = local_assigns.fetch(:path).to_s %>
-<% path = back_link_path(fallback_path) %>
+<% prefer_referrer = local_assigns.fetch(:prefer_referrer, true) %>
+<% path = prefer_referrer ? back_link_path(fallback_path) : fallback_path %>
 <% label = path == fallback_path ? local_assigns.fetch(:label) : t("shared.back_link.previous") %>
 
 <%= link_to path,

@@ -38,6 +38,15 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
   end
 
+  test "new back link returns to dashboard even with an in-app referrer" do
+    sign_in_as(users(:one))
+
+    get new_brew_path, headers: { "HTTP_REFERER" => "http://www.example.com#{beans_path}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.new.back"))}/
+  end
+
   test "new places brew log time at the end of the form" do
     sign_in_as(users(:one))
 
@@ -1082,7 +1091,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
-  test "show back link returns to the previous in-app page" do
+  test "show back link returns to dashboard even with an in-app referrer" do
     brew = brews(:morning_espresso)
     previous_path = "/coffees?view=hero"
     sign_in_as(users(:one))
@@ -1090,7 +1099,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew), headers: { "HTTP_REFERER" => "http://www.example.com#{previous_path}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", previous_path, text: /#{Regexp.escape(I18n.t("shared.back_link.previous"))}/
+    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.show.back"))}/
   end
 
   test "show back link ignores external referrers" do

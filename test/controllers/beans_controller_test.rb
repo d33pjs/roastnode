@@ -498,6 +498,28 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Colombia", bean.country
   end
 
+  test "writer can edit bean continent despite unchanged legacy invalid purchase url" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update_column(:purchase_url, "javascript:alert('bean')")
+
+    patch bean_path(bean), params: {
+      bean: {
+        name: bean.name,
+        continent: "Africa",
+        country: "",
+        region: ""
+      }
+    }
+
+    assert_redirected_to bean_path(bean)
+    bean.reload
+    assert_equal "Africa", bean.continent
+    assert_predicate bean.country, :blank?
+    assert_predicate bean.region, :blank?
+    assert_equal "javascript:alert('bean')", bean.purchase_url
+  end
+
   test "member can create pre-ground bean" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -810,12 +832,15 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(bean)
 
     assert_response :success
+    assert_select "[data-testid=bean-detail-actions]"
+    assert_includes response.body, "sm:flex-nowrap"
     assert_select "a[href=?]", edit_bean_public_bean_share_path(bean), text: I18n.t("beans.show.edit_public_share")
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "bean-native-share-button-#{bean.id}",
       public_bean_page_url(share.token)
     assert_select "[data-testid=?] svg[aria-hidden=true]", "bean-native-share-button-#{bean.id}"
-    assert_select "[data-testid=?] span.sr-only", "bean-native-share-button-#{bean.id}", I18n.t("shared.native_share.share_public_bean")
+    assert_select "[data-testid=?] span[data-native-share-target=label]", "bean-native-share-button-#{bean.id}", I18n.t("shared.native_share.share")
+    assert_select "[data-testid=?] span.sr-only", "bean-native-share-button-#{bean.id}", count: 0
     assert_appears_before "bean-native-share-button-#{bean.id}", edit_bean_public_bean_share_path(bean)
   end
 
