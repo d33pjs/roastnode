@@ -277,6 +277,27 @@ class BeanTest < ActiveSupport::TestCase
     end
   end
 
+  test "open bag transition tolerates legacy invalid purchase url" do
+    travel_to Date.new(2026, 6, 13) do
+      bean = workspaces(:household).beans.create!(
+        name: "Legacy Url Shelf Bag",
+        roaster_name: "Shelf Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 172,
+        opened_on: nil
+      )
+      bean.update_column(:purchase_url, "javascript:alert('bean')")
+
+      bean.open_bag!
+
+      bean.reload
+      assert_equal "open", bean.bag_status
+      assert_equal Date.new(2026, 6, 13), bean.opened_on
+      assert_equal 172.to_d, bean.remaining_grams
+      assert_equal "javascript:alert('bean')", bean.purchase_url
+    end
+  end
+
   test "origin fallback prefers country region then continent" do
     bean = Bean.new(origin: "Legacy Origin", country: "Colombia", region: "Huila", continent: "South America")
     assert_equal "Colombia", bean.origin_display_value
@@ -314,6 +335,14 @@ class BeanTest < ActiveSupport::TestCase
 
     bean.purchase_url = "http://example.com/beans"
     assert_predicate bean, :valid?
+  end
+
+  test "safe purchase url strips and drops invalid urls" do
+    assert_equal "https://example.com/beans", Bean.safe_purchase_url(" https://example.com/beans ")
+    assert_equal "http://example.com/beans", Bean.safe_purchase_url("http://example.com/beans")
+    assert_nil Bean.safe_purchase_url("javascript:alert(1)")
+    assert_nil Bean.safe_purchase_url("example.com/path")
+    assert_nil Bean.safe_purchase_url("https:///path")
   end
 
   test "purchase url rejects unsafe schemes" do

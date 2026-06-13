@@ -1091,6 +1091,35 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "quick open opens legacy stock bag with invalid purchase url" do
+    travel_to Date.new(2026, 6, 13) do
+      sign_in_as(users(:one))
+      bean = workspaces(:household).beans.create!(
+        name: "Legacy Shelf Bag",
+        roaster_name: "Shelf Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 199,
+        opened_on: nil
+      )
+      bean.update_column(:purchase_url, "javascript:alert('bean')")
+
+      patch open_bag_bean_path(bean)
+
+      assert_redirected_to bean_path(bean)
+      bean.reload
+      assert_equal "open", bean.bag_status
+      assert_equal Date.new(2026, 6, 13), bean.opened_on
+      assert_equal 199.to_d, bean.remaining_grams
+      assert_equal "javascript:alert('bean')", bean.purchase_url
+
+      follow_redirect!
+      assert_response :success
+      assert_select "a[data-testid=bean-rebuy-link]", count: 0
+      assert_select "dd[data-testid=bean-detail-purchase-url] a[href=?]", bean.purchase_url, count: 0
+      assert_select "body", text: /javascript:alert\('bean'\)/, count: 0
+    end
+  end
+
   test "quick open ignores non stock bags" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

@@ -26,6 +26,20 @@ class Bean < ApplicationRecord
   scope :open, -> { where(archived_at: nil, finished_at: nil).where.not(opened_on: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
   scope :recent, -> { order(created_at: :desc) }
 
+  def self.safe_purchase_url(url)
+    url = url.to_s.strip
+    return if url.blank?
+
+    url if valid_purchase_url?(url)
+  end
+
+  def self.valid_purchase_url?(url)
+    uri = URI.parse(url.to_s.strip)
+    uri.is_a?(URI::HTTP) && uri.host.present?
+  rescue URI::InvalidURIError
+    false
+  end
+
   validates :name, presence: true
   validates :bag_size_grams, numericality: { greater_than: 0 }
   validates :remaining_grams, numericality: { greater_than_or_equal_to: 0 }
@@ -130,11 +144,13 @@ class Bean < ApplicationRecord
   end
 
   def open_bag!
-    self.archived_at = nil
-    self.finished_at = nil
-    self.opened_on = Date.current
-    self.remaining_grams = bag_size_grams if remaining_grams.blank? || remaining_grams.to_d <= 0
-    save!
+    update_columns(
+      archived_at: nil,
+      finished_at: nil,
+      opened_on: Date.current,
+      remaining_grams: remaining_grams.blank? || remaining_grams.to_d <= 0 ? bag_size_grams : remaining_grams,
+      updated_at: Time.current
+    )
   end
 
   def origin_display_value
@@ -267,12 +283,8 @@ class Bean < ApplicationRecord
 
     def purchase_url_is_http_or_https
       return if purchase_url.blank?
+      return if self.class.valid_purchase_url?(purchase_url)
 
-      uri = URI.parse(purchase_url.to_s)
-      return if uri.is_a?(URI::HTTP) && uri.host.present?
-
-      errors.add(:purchase_url, "must be an HTTP or HTTPS URL")
-    rescue URI::InvalidURIError
       errors.add(:purchase_url, "must be an HTTP or HTTPS URL")
     end
 

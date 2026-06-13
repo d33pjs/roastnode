@@ -190,7 +190,7 @@ class BeanconquerorImport
         remaining_grams: finished ? 0 : bag_size,
         opened_on: date(raw["openDate"]),
         archived_at: finished ? Time.current : nil,
-        purchase_url: presence(raw["url"]),
+        purchase_url: Bean.safe_purchase_url(raw["url"]),
         purchased_on: date(raw["buyDate"]),
         purchase_price_cents: cents(raw["cost"]),
         rating: rating(raw["rating"]),

@@ -4,7 +4,8 @@ module BeansHelper
   end
 
   def bean_purchase_url_label(url)
-    uri = URI.parse(url.to_s)
+    url = url.to_s.strip
+    uri = URI.parse(url)
     host = uri.host.presence || url.to_s
     path = uri.path.to_s
     label = path.present? && path != "/" ? "#{host}#{path}" : host
@@ -14,12 +15,6 @@ module BeansHelper
   end
 
   def bean_purchase_url_href(url)
-    url = url.to_s.strip
-    return if url.blank?
-
-    uri = URI.parse(url)
-    return url if uri.is_a?(URI::HTTP) && uri.host.present?
-  rescue URI::InvalidURIError
-    nil
+    Bean.safe_purchase_url(url)
   end
 end

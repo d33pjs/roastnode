@@ -193,7 +193,7 @@ class InstanceBackupRestorer
             blend_type: row["blend_type"],
             decaffeinated: row["decaffeinated"],
             purchase_source: row["purchase_source"],
-            purchase_url: row["purchase_url"],
+            purchase_url: Bean.safe_purchase_url(row["purchase_url"]),
             purchased_on: date(row["purchased_on"]),
             purchase_price_cents: row["purchase_price_cents"],
             rating: row["rating"],

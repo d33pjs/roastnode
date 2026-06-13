@@ -78,6 +78,23 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
     assert_match "Invalid JSON", import.warnings.first
   end
 
+  test "invalid bean url does not skip imported bean" do
+    workspace = workspaces(:household)
+    payload = JSON.parse(beanconqueror_json)
+    payload.fetch("BEANS").first["url"] = "example.com/beans/bc-espresso"
+
+    assert_difference -> { workspace.beans.count }, 1 do
+      import = BeanconquerorImport.new(workspace:, user: users(:one), json: JSON.generate(payload)).call
+
+      assert_predicate import, :completed?
+      assert_equal 1, import.summary.dig("beans", "created")
+      assert_equal 0, import.summary.dig("beans", "skipped")
+    end
+
+    bean = workspace.beans.find_by!(import_source: "beanconqueror", import_source_id: "bc-bean-1")
+    assert_nil bean.purchase_url
+  end
+
   private
     def beanconqueror_json
       Rails.root.join("test/fixtures/files/beanconqueror_export.json").read

@@ -25,6 +25,7 @@ class BeansHelperTest < ActionView::TestCase
 
   test "purchase url label shortens host and compact path" do
     assert_equal "example.com/beans/house...", bean_purchase_url_label("https://example.com/beans/house-blend?ref=abc")
+    assert_equal "example.com/beans/house...", bean_purchase_url_label(" https://example.com/beans/house-blend?ref=abc ")
     assert_equal "shop.example.com", bean_purchase_url_label("https://shop.example.com")
   end
 

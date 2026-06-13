@@ -173,7 +173,43 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     )
   end
 
+  test "restorer drops invalid bean purchase urls instead of failing restore" do
+    source_bean_name = beans(:open_household).name
+    archive_bytes = mutate_backup_payload(
+      InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-28 12:00:00")).call
+    ) do |payload|
+      household = payload.fetch("workspaces").find { |workspace_payload| workspace_payload.dig("workspace", "name") == workspaces(:household).name }
+      household.fetch("beans").find { |bean| bean.fetch("name") == source_bean_name }["purchase_url"] = "javascript:alert('bean')"
+    end
+
+    empty_instance!
+    InstanceBackupRestorer.new(archive_bytes).call
+
+    restored_bean = Bean.find_by!(name: source_bean_name)
+    assert_nil restored_bean.purchase_url
+  end
+
   private
+    def mutate_backup_payload(archive_bytes)
+      Zip::OutputStream.write_buffer do |output|
+        Zip::File.open_buffer(archive_bytes) do |input|
+          manifest = JSON.parse(input.read("manifest.json"))
+          data_path = manifest.dig("data", "path")
+          payload = JSON.parse(input.read(data_path))
+          yield payload
+
+          input.each do |entry|
+            output.put_next_entry(entry.name)
+            if entry.name == data_path
+              output.write(JSON.pretty_generate(payload))
+            else
+              output.write(entry.get_input_stream.read)
+            end
+          end
+        end
+      end.string
+    end
+
     def empty_instance!
       ActiveStorage::VariantRecord.delete_all
       ActiveStorage::Attachment.delete_all
