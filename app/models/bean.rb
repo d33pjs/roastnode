@@ -8,6 +8,7 @@ class Bean < ApplicationRecord
   GRIND_STATES = %w[whole_bean pre_ground].freeze
   DUPLICATE_DISPLAY_DATE_FORMAT = "%d.%m.%Y"
   LOW_REMAINING_GRAMS = BigDecimal("18")
+  DEFAULT_SHOT_COST_GRAMS = BigDecimal("18")
 
   belongs_to :workspace
   belongs_to :data_import, optional: true
@@ -126,6 +127,18 @@ class Bean < ApplicationRecord
     save!
   end
 
+  def open_bag!
+    self.archived_at = nil
+    self.finished_at = nil
+    self.opened_on = Date.current
+    self.remaining_grams = bag_size_grams if remaining_grams.blank? || remaining_grams.to_d <= 0
+    save!
+  end
+
+  def origin_display_value
+    country.presence || region.presence || continent.presence
+  end
+
   def remaining_percent
     return 0.to_d if bag_size_grams.blank? || bag_size_grams.to_d <= 0
 
@@ -205,6 +218,33 @@ class Bean < ApplicationRecord
     end
   end
 
+  def cost_per_package
+    purchase_price
+  end
+
+  def cost_per_kg
+    return if purchase_price.blank? || bag_size_grams.blank? || bag_size_grams.to_d <= 0
+
+    ((purchase_price.to_d / bag_size_grams.to_d) * 1000).round(2)
+  end
+
+  def average_logged_bean_weight_grams
+    weights = brews.where.not(bean_weight_grams: nil).pluck(:bean_weight_grams).map(&:to_d)
+    return if weights.empty?
+
+    (weights.sum / weights.size).round(2)
+  end
+
+  def shot_weight_for_cost
+    average_logged_bean_weight_grams || DEFAULT_SHOT_COST_GRAMS
+  end
+
+  def cost_per_shot
+    return if purchase_price.blank? || bag_size_grams.blank? || bag_size_grams.to_d <= 0
+
+    ((purchase_price.to_d / bag_size_grams.to_d) * shot_weight_for_cost).round(2)
+  end
+
   def display_name_for_collection(beans)
     return display_name unless duplicate_display_name_in?(beans)
 
@@ -247,6 +287,7 @@ class Bean < ApplicationRecord
         decaffeinated:,
         grind_state:,
         country:,
+        continent:,
         region:,
         farm:,
         farmer:,
@@ -254,6 +295,8 @@ class Bean < ApplicationRecord
         variety:,
         harvested:,
         blend_percentage:,
+        country_of_manufacturer:,
+        manufacturer:,
         duplicated_from_bean: self
       }
     end

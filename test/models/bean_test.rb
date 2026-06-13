@@ -242,6 +242,105 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal bean.primary_photo_attachment.blob, duplicate.primary_photo_attachment.blob
   end
 
+  test "duplicates copy new origin and manufacturer metadata" do
+    source = beans(:open_household)
+    source.update!(
+      continent: "South America",
+      country_of_manufacturer: "Germany",
+      manufacturer: "Calendar Coffee"
+    )
+
+    duplicate = source.duplicate_for_new_bag!
+
+    assert_equal "South America", duplicate.continent
+    assert_equal "Germany", duplicate.country_of_manufacturer
+    assert_equal "Calendar Coffee", duplicate.manufacturer
+  end
+
+  test "open bag transition opens stock today and preserves remaining inventory" do
+    travel_to Date.new(2026, 6, 13) do
+      bean = workspaces(:household).beans.create!(
+        name: "Shelf Bag",
+        roaster_name: "Shelf Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 172,
+        opened_on: nil
+      )
+
+      bean.open_bag!
+
+      assert_equal "open", bean.bag_status
+      assert_equal Date.new(2026, 6, 13), bean.opened_on
+      assert_equal 172.to_d, bean.remaining_grams
+      assert_nil bean.archived_at
+      assert_nil bean.finished_at
+    end
+  end
+
+  test "origin fallback prefers country region then continent" do
+    bean = Bean.new(country: "Colombia", region: "Huila", continent: "South America")
+    assert_equal "Colombia", bean.origin_display_value
+
+    bean.country = ""
+    assert_equal "Huila", bean.origin_display_value
+
+    bean.region = ""
+    assert_equal "South America", bean.origin_display_value
+
+    bean.continent = ""
+    assert_nil bean.origin_display_value
+  end
+
+  test "cost metrics use purchase price bag size and average logged dose" do
+    bean = workspaces(:household).beans.create!(
+      name: "Cost Bag",
+      roaster_name: "Cost Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.current,
+      purchase_price_cents: 1250
+    )
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      bean_weight_grams: 18,
+      ground_weight_grams: 18,
+      dose_grams: 18,
+      beverage_grams: 45
+    )
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      bean_weight_grams: 20,
+      ground_weight_grams: 20,
+      dose_grams: 20,
+      beverage_grams: 50
+    )
+
+    assert_equal 50.to_d, bean.cost_per_kg
+    assert_equal 12.5.to_d, bean.cost_per_package
+    assert_equal 19.to_d, bean.average_logged_bean_weight_grams
+    assert_equal 0.95.to_d, bean.cost_per_shot
+  end
+
+  test "cost per shot falls back to eighteen grams without brews" do
+    bean = workspaces(:household).beans.create!(
+      name: "Fresh Cost Bag",
+      roaster_name: "Cost Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.current,
+      purchase_price_cents: 1000
+    )
+
+    assert_equal 18.to_d, bean.shot_weight_for_cost
+    assert_equal 0.72.to_d, bean.cost_per_shot
+  end
+
   test "display name for collection adds opened date only for duplicate open bags" do
     workspace = workspaces(:household)
     first = beans(:open_household)
