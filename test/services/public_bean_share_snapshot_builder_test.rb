@@ -139,6 +139,64 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "finished", snapshot.dig("bean", "public_status")
   end
 
+  test "includes enabled public brew share links for public bean brew rows" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:)
+    public_brew_share = brew.create_public_brew_share!(
+      workspace: bean.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true,
+      title: "Shared shot",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBrewShareSnapshotBuilder.new(
+        brew:,
+        title: "Shared shot",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+
+    snapshot = PublicBeanShareSnapshotBuilder.new(
+      bean:,
+      title: "Shared bean",
+      selected_photo_attachment_ids: []
+    ).call
+
+    brew_row = snapshot.fetch("brews").find { |row| row.fetch("method") == "espresso" }
+    assert_equal public_brew_share.token, brew_row.dig("public_share", "token")
+    assert_equal "Shared shot", brew_row.dig("public_share", "title")
+    assert_no_internal_ids(snapshot)
+  end
+
+  test "omits disabled public brew share links from public bean brew rows" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:)
+    brew.create_public_brew_share!(
+      workspace: bean.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: false,
+      title: "Disabled shot",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBrewShareSnapshotBuilder.new(
+        brew:,
+        title: "Disabled shot",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+
+    snapshot = PublicBeanShareSnapshotBuilder.new(
+      bean:,
+      title: "Shared bean",
+      selected_photo_attachment_ids: []
+    ).call
+
+    brew_row = snapshot.fetch("brews").find { |row| row.fetch("method") == "espresso" }
+    assert_nil brew_row["public_share"]
+  end
+
   private
     def attach_photo_with_filename(record, filename)
       File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|

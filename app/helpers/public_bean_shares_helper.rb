@@ -1,7 +1,8 @@
 module PublicBeanSharesHelper
-  TIMELINE_CLUSTER_GAP_PERCENT = 4.0
-  TIMELINE_MIN_POSITION_PERCENT = 6.0
-  TIMELINE_MAX_POSITION_PERCENT = 94.0
+  TIMELINE_CLUSTER_WINDOW_PERCENT = 4.0
+  TIMELINE_ITEM_GAP_PERCENT = 5.5
+  TIMELINE_MIN_POSITION_PERCENT = 8.0
+  TIMELINE_MAX_POSITION_PERCENT = 82.0
 
   def public_bean_media_url_for(share, attachment_id, variant: nil)
     return if attachment_id.blank?
@@ -68,37 +69,61 @@ module PublicBeanSharesHelper
     duration = end_time - start_time
     return 0 if duration <= 0
 
-    (((event_time - start_time) / duration) * 100).round.clamp(0, 100)
+    (((event_time - start_time) / duration) * 100).round(2).clamp(0, 100)
   rescue ArgumentError, TypeError
     0
   end
 
-  def public_bean_timeline_events(timeline)
+  def public_bean_timeline_items(timeline)
     timeline ||= {}
     brews = Array(timeline["brews"])
     return [] if brews.empty?
 
-    positions = brews.map do |brew|
-      public_bean_timeline_position(timeline["opened_on"], timeline["end_at"], brew["occurred_at"])
+    events = brews.each_with_index.map do |brew, index|
+      raw_position = public_bean_timeline_position(timeline["opened_on"], timeline["end_at"], brew["occurred_at"])
         .to_f
         .clamp(TIMELINE_MIN_POSITION_PERCENT, TIMELINE_MAX_POSITION_PERCENT)
-    end
-    display_positions = public_bean_timeline_display_positions(positions)
-
-    lane_counts = Hash.new(0)
-
-    brews.each_with_index.map do |brew, index|
-      callout_side = index.even? ? "top" : "bottom"
-      callout_lane = [ lane_counts[callout_side], 2 ].min
-      lane_counts[callout_side] += 1
 
       brew.merge(
-        "raw_position" => positions[index].round(2),
-        "display_position" => display_positions[index].round(2),
-        "callout_side" => callout_side,
-        "callout_lane" => callout_lane
+        "_timeline_index" => index,
+        "_timeline_time" => public_bean_time(brew["occurred_at"]),
+        "raw_position" => raw_position.round(2)
       )
+    end.sort_by { |event| [ event["_timeline_time"] || Time.zone.at(0), event["_timeline_index"] ] }
+
+    groups = public_bean_timeline_groups(events)
+    display_positions = public_bean_timeline_display_positions(
+      groups.map { |group| public_bean_timeline_average_position(group) },
+      gap: TIMELINE_ITEM_GAP_PERCENT
+    )
+
+    groups.each_with_index.map { |group, index| public_bean_timeline_item(group, display_positions[index]) }
+  end
+
+  def public_bean_timeline_item_label(item)
+    first_time = public_bean_time(item["occurred_at"])
+    last_time = public_bean_time(item["last_occurred_at"])
+    return public_bean_unknown_label unless first_time
+
+    if last_time && first_time.to_date != last_time.to_date
+      "#{first_time.strftime("%b %-d")}-#{last_time.strftime("%b %-d")}"
+    elsif item["type"] == "cluster"
+      first_time.strftime("%b %-d %H:%M")
+    else
+      first_time.strftime("%b %-d")
     end
+  end
+
+  def public_bean_timeline_item_title(item)
+    brews = Array(item["brews"]).presence || [ item ]
+    rating_labels = brews.filter_map { |brew| public_bean_rating(brew["rating"]) if brew["rating"].present? }
+    parts = [
+      item["type"] == "cluster" ? t("public_bean_pages.show.timeline_brews", count: item["count"]) : public_bean_method_label(item["method"]),
+      public_bean_timeline_item_label(item),
+      rating_labels.to_sentence
+    ].compact_blank
+
+    parts.join(" · ")
   end
 
   def public_bean_link_label(link)
@@ -137,11 +162,49 @@ module PublicBeanSharesHelper
       value.to_d
     end
 
-    def public_bean_timeline_display_positions(positions)
+    def public_bean_timeline_groups(events)
+      events.each_with_object([]) do |event, groups|
+        if groups.empty? || event.fetch("raw_position") - groups.last.last.fetch("raw_position") > TIMELINE_CLUSTER_WINDOW_PERCENT
+          groups << [ event ]
+        else
+          groups.last << event
+        end
+      end
+    end
+
+    def public_bean_timeline_average_position(group)
+      return 0 if group.empty?
+
+      group.sum { |event| event.fetch("raw_position").to_d } / group.size
+    end
+
+    def public_bean_timeline_item(group, display_position)
+      ratings = group.map { |event| event["rating"] }
+      methods = group.map { |event| event["method"].presence || "unknown" }
+      primary_method = methods.tally.max_by { |method, count| [ count, -methods.index(method) ] }&.first || "unknown"
+      brews = group.map { |event| event.except("_timeline_index", "_timeline_time") }
+      first = brews.first || {}
+      last = brews.last || first
+
+      first.merge(
+        "type" => group.one? ? "brew" : "cluster",
+        "count" => group.size,
+        "brews" => brews,
+        "ratings" => ratings,
+        "methods" => methods,
+        "primary_method" => primary_method,
+        "raw_position" => public_bean_timeline_average_position(group).to_f.round(2),
+        "display_position" => display_position.to_f.round(2),
+        "last_occurred_at" => last["occurred_at"]
+      )
+    end
+
+    def public_bean_timeline_display_positions(positions, gap:)
+      positions = positions.map(&:to_f)
       return positions if positions.one?
 
       gap = [
-        TIMELINE_CLUSTER_GAP_PERCENT,
+        gap,
         (TIMELINE_MAX_POSITION_PERCENT - TIMELINE_MIN_POSITION_PERCENT) / (positions.size - 1)
       ].min
 

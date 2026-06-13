@@ -2,19 +2,22 @@
 <% share = local_assigns.fetch(:share) %>
 <% user = brew["user"] || {} %>
 <% equipment = brew["equipment"] || {} %>
+<% public_share = brew["public_share"] || {} %>
 <% method = brew["method"].presence || "unknown" %>
 <% unknown = t("public_bean_pages.show.unknown") %>
 <% occurred_at = public_bean_time(brew["occurred_at"]) %>
 <% date_label = occurred_at ? l(occurred_at, format: :short) : unknown %>
 <% rating = brew["rating"].presence&.to_i %>
-<% chart_id = "public-bean-brew-fill-#{brew.object_id}" %>
+<% public_share_title = public_share["title"].presence || t("public_bean_pages.show.public_brew_page") %>
+<% public_share_path = public_brew_page_path(public_share["token"]) if public_share["token"].present? %>
+<% public_share_url = public_brew_page_url(public_share["token"]) if public_share["token"].present? %>
 <% metrics = if method == "espresso"
   [
     [ t("public_bean_pages.show.dose"), public_bean_grams(brew["dose_grams"].presence || brew["bean_weight_grams"]) ],
-    [ t("public_bean_pages.show.yield"), public_bean_grams(brew["beverage_grams"]) ],
     [ t("public_bean_pages.show.ratio"), public_bean_ratio(brew) ],
+    [ t("public_bean_pages.show.grind"), brew["grind_setting"].presence || unknown ],
     [ t("public_bean_pages.show.time"), public_bean_seconds(brew["total_time_seconds"]) ],
-    [ t("public_bean_pages.show.grind"), brew["grind_setting"].presence || unknown ]
+    [ t("public_bean_pages.show.yield"), public_bean_grams(brew["beverage_grams"]) ]
   ]
 else
   [
@@ -26,108 +29,83 @@ else
   ]
 end %>
 
-<article data-testid="public-bean-brew-hero-card" data-method="<%= method %>" class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
-  <div class="bg-[var(--rn-coffee)] p-4 text-[#fff8e8] sm:p-5">
+<article data-testid="public-bean-brew-compact-card" data-method="<%= method %>" class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+  <div class="p-4 hover:bg-[var(--rn-surface-muted)] sm:p-5">
     <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-2">
-          <span class="rounded-full border border-white/20 px-2.5 py-1 text-xs font-extrabold"><%= date_label %></span>
-          <span class="rounded-full bg-white/10 px-2.5 py-1 text-xs font-extrabold"><%= public_bean_method_label(method) %></span>
+          <p class="text-xs font-extrabold uppercase text-rn-muted"><%= date_label %></p>
+          <% if public_share_path.present? %>
+            <span data-testid="public-bean-brew-shared-marker" class="rounded-full bg-emerald-50 px-2 py-0.5 text-[0.65rem] font-extrabold uppercase text-emerald-800"><%= t("brews.shared_marker") %></span>
+          <% end %>
+          <span class="rounded-full bg-[var(--rn-surface-muted)] px-2 py-0.5 text-[0.65rem] font-extrabold uppercase text-rn-muted"><%= public_bean_method_label(method) %></span>
         </div>
-        <h3 class="mt-3 text-2xl font-black leading-8 sm:text-3xl"><%= public_bean_method_label(method) %></h3>
+        <h3 class="mt-2 truncate text-xl font-black text-rn-ink"><%= public_bean_method_label(method) %></h3>
+        <% if user["display_label"].present? || user["avatar_attachment_id"].present? %>
+          <div class="mt-2 flex min-w-0 items-center gap-2 text-sm font-semibold text-rn-muted">
+            <% if (avatar_url = public_bean_media_url_for(share, user["avatar_attachment_id"], variant: :thumbnail)).present? %>
+              <%= image_tag avatar_url, alt: "", class: "h-7 w-7 shrink-0 rounded-full object-contain" %>
+            <% end %>
+            <span class="truncate"><%= t("brews.show.logged_by") %>: <%= user["display_label"].presence || unknown %></span>
+          </div>
+        <% end %>
       </div>
 
-      <% if user["display_label"].present? || user["avatar_attachment_id"].present? %>
-        <div class="flex min-w-0 items-center gap-2 rounded-full bg-white/10 px-2 py-1.5 sm:max-w-64">
-          <% if (avatar_url = public_bean_media_url_for(share, user["avatar_attachment_id"], variant: :thumbnail)).present? %>
-            <%= image_tag avatar_url, alt: "", class: "h-8 w-8 shrink-0 rounded-full object-contain" %>
-          <% end %>
-          <span class="truncate text-sm font-extrabold"><%= user["display_label"] %></span>
+      <% if public_share_path.present? %>
+        <div class="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
+          <%= link_to public_share_title,
+            public_share_path,
+            target: "_blank",
+            rel: "noopener",
+            data: { testid: "public-bean-brew-public-link" },
+            class: "inline-flex min-h-10 items-center rounded-full bg-[var(--rn-accent-strong)] px-4 py-2 text-sm font-extrabold text-[#f8faf6] hover:opacity-90" %>
+          <%= render "shared/native_share_button",
+            url: public_share_url,
+            title: public_share_title,
+            text: public_share_title,
+            testid: "public-bean-brew-native-share-#{brew.object_id}",
+            button_class: "inline-flex h-10 w-10 items-center justify-center rounded-full text-rn-muted hover:bg-[var(--rn-surface-muted)] hover:text-rn-ink focus:outline-none focus:ring-2 focus:ring-[var(--rn-accent-strong)]" %>
         </div>
       <% end %>
     </div>
 
     <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-5">
       <% metrics.each do |label, value| %>
-        <div class="min-w-0 rounded-xl bg-white/10 p-3">
-          <p class="text-xs font-extrabold uppercase text-white/70"><%= label %></p>
-          <p class="mt-1 truncate text-base font-black text-white"><%= value %></p>
+        <div class="min-w-0 rounded-xl border border-rn-line bg-rn-canvas p-3">
+          <p class="text-xs font-extrabold uppercase text-rn-muted"><%= label %></p>
+          <p class="mt-1 truncate text-sm font-black text-rn-ink"><%= value %></p>
         </div>
       <% end %>
     </div>
-  </div>
 
-  <div class="brew-chart-grid bg-rn-canvas px-2 py-3 text-rn-ink sm:px-5">
-    <% if method == "espresso" %>
-      <svg class="block h-auto w-full" width="560" height="150" viewBox="0 0 560 150" role="img" aria-label="<%= t("public_bean_pages.show.espresso") %>">
-        <defs>
-          <linearGradient id="<%= chart_id %>" x1="0" x2="0" y1="0" y2="1">
-            <stop offset="0%" stop-color="#3a2a21" stop-opacity=".2" />
-            <stop offset="100%" stop-color="#3a2a21" stop-opacity="0" />
-          </linearGradient>
-        </defs>
-        <line x1="44" y1="118" x2="510" y2="118" stroke="var(--rn-ink)" stroke-width="2.5" />
-        <line x1="44" y1="24" x2="44" y2="118" stroke="var(--rn-ink)" stroke-width="2.5" />
-        <path d="M44 118 C94 120, 138 118, 174 108 C216 96, 232 72, 278 56 C328 38, 386 32, 450 40 C478 44, 496 51, 510 58" fill="none" stroke="var(--rn-coffee)" stroke-width="6" stroke-linecap="round" />
-        <path d="M44 118 C94 120, 138 118, 174 108 C216 96, 232 72, 278 56 C328 38, 386 32, 450 40 C478 44, 496 51, 510 58 L510 118 L44 118 Z" fill="url(#<%= chart_id %>)" />
-        <path d="M44 15 C132 14, 220 14, 308 15 C386 16, 450 17, 510 18" fill="none" stroke="var(--rn-honey)" stroke-width="3.5" stroke-linecap="round" />
-        <text x="12" y="123" font-size="13" fill="var(--rn-muted)">0g</text>
-        <text x="42" y="140" font-size="13" fill="var(--rn-muted)">0s</text>
-        <text x="410" y="77" font-size="14" font-weight="800" fill="var(--rn-ink)"><%= public_bean_grams(brew["beverage_grams"]) %></text>
-        <text x="456" y="140" font-size="13" fill="var(--rn-muted)"><%= public_bean_seconds(brew["total_time_seconds"]) %></text>
-      </svg>
-    <% else %>
-      <svg class="block h-auto w-full" width="560" height="150" viewBox="0 0 560 150" role="img" aria-label="<%= t("public_bean_pages.show.quick_drip") %>">
-        <rect x="58" y="38" width="166" height="78" rx="14" fill="none" stroke="var(--rn-coffee)" stroke-width="5" />
-        <path d="M224 58 C260 58, 260 98, 224 98" fill="none" stroke="var(--rn-coffee)" stroke-width="5" stroke-linecap="round" />
-        <path d="M74 83 C108 70, 138 96, 174 82 C194 74, 209 77, 224 84 L224 116 L74 116 Z" fill="var(--rn-honey)" fill-opacity=".5" />
-        <path d="M76 84 C109 70, 139 96, 175 82 C194 75, 209 77, 224 84" fill="none" stroke="var(--rn-coffee)" stroke-width="4" stroke-linecap="round" />
-        <line x1="296" y1="104" x2="504" y2="104" stroke="var(--rn-line)" stroke-width="10" stroke-linecap="round" />
-        <line x1="296" y1="104" x2="442" y2="104" stroke="var(--rn-accent-strong)" stroke-width="10" stroke-linecap="round" />
-        <circle cx="296" cy="104" r="11" fill="var(--rn-coffee)" />
-        <circle cx="442" cy="104" r="11" fill="var(--rn-honey)" />
-        <text x="296" y="72" font-size="14" font-weight="800" fill="var(--rn-ink)"><%= public_bean_grams(brew["bean_weight_grams"]) %></text>
-        <text x="382" y="72" font-size="14" font-weight="800" fill="var(--rn-muted)"><%= public_bean_seconds(brew["total_time_seconds"]) %></text>
-        <text x="455" y="72" font-size="14" font-weight="800" fill="var(--rn-ink)"><%= public_bean_rating(brew["rating"]) %></text>
-      </svg>
-    <% end %>
-  </div>
-
-  <div class="grid gap-4 border-t border-rn-line bg-rn-surface p-4 sm:grid-cols-[1fr_auto] sm:items-start">
-    <div class="min-w-0">
-      <div class="flex flex-wrap gap-2 text-xs font-extrabold text-rn-muted">
-        <% if brew["taste_balance"].present? %>
-          <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.taste_balance") %>: <%= brew["taste_balance"].to_s.humanize %></span>
-        <% end %>
-        <% if method == "espresso" && !brew["channeling"].nil? %>
-          <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.channeling") %>: <%= brew["channeling"] ? t("public_bean_pages.show.yes") : t("public_bean_pages.show.no") %></span>
-        <% end %>
-        <% if equipment.dig("grinder", "name").present? %>
-          <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.grinder") %>: <%= equipment.dig("grinder", "name") %></span>
-        <% end %>
-        <% if equipment.dig("machine", "name").present? %>
-          <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.machine") %>: <%= equipment.dig("machine", "name") %></span>
-        <% end %>
-        <% if equipment.dig("brewer", "name").present? %>
-          <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.brewer") %>: <%= equipment.dig("brewer", "name") %></span>
-        <% end %>
-      </div>
-
-      <% if brew["public_note"].present? %>
-        <p class="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-rn-muted"><%= brew["public_note"] %></p>
+    <div class="mt-3 flex flex-wrap items-center gap-2 text-xs font-extrabold text-rn-muted">
+      <% if brew["taste_balance"].present? %>
+        <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.taste_balance") %>: <%= brew["taste_balance"].to_s.humanize %></span>
       <% end %>
-    </div>
-
-    <% if rating.present? %>
-      <div class="min-w-0 rounded-xl bg-[var(--rn-surface-muted)] px-3 py-2">
-        <p class="text-xs font-extrabold uppercase text-rn-muted"><%= t("public_bean_pages.show.rating") %></p>
-        <div data-testid="public-bean-brew-rating-icons" aria-label="<%= public_bean_rating(brew["rating"]) %>" class="mt-2 flex gap-1">
+      <% if method == "espresso" && !brew["channeling"].nil? %>
+        <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.channeling") %>: <%= brew["channeling"] ? t("public_bean_pages.show.yes") : t("public_bean_pages.show.no") %></span>
+      <% end %>
+      <% if equipment.dig("grinder", "name").present? %>
+        <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.grinder") %>: <%= equipment.dig("grinder", "name") %></span>
+      <% end %>
+      <% if equipment.dig("machine", "name").present? %>
+        <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.machine") %>: <%= equipment.dig("machine", "name") %></span>
+      <% end %>
+      <% if equipment.dig("brewer", "name").present? %>
+        <span class="rounded-full bg-[var(--rn-surface-muted)] px-3 py-1"><%= t("public_bean_pages.show.brewer") %>: <%= equipment.dig("brewer", "name") %></span>
+      <% end %>
+      <% if rating.present? %>
+        <span data-testid="public-bean-brew-rating-icons" aria-label="<%= public_bean_rating(brew["rating"]) %>" class="inline-flex items-center gap-1 rounded-full bg-[var(--rn-surface-muted)] px-3 py-1">
           <% 5.times do |index| %>
             <% filled = index < rating %>
-            <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-[var(--rn-honey)] shadow-sm" : "rating-bean--empty border border-rn-line" %>"></span>
+            <span class="brew-rating-bean <%= filled ? "bg-[var(--rn-honey)] shadow-sm" : "border border-rn-line" %>"></span>
           <% end %>
-        </div>
-      </div>
+        </span>
+      <% end %>
+    </div>
+
+    <% if brew["public_note"].present? %>
+      <p class="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-rn-muted"><%= brew["public_note"] %></p>
     <% end %>
   </div>
 </article>

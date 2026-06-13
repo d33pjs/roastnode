@@ -3,7 +3,7 @@ class PublicBeanShareSnapshotBuilder
     @bean = bean
     @title = title
     @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i).uniq
-    @brews = bean.brews.includes(:user, :grinder, :machine, :brewer).order(occurred_at: :desc, created_at: :desc).to_a
+    @brews = bean.brews.includes(:user, :grinder, :machine, :brewer, :public_brew_share).order(occurred_at: :desc, created_at: :desc).to_a
   end
 
   def call
@@ -118,7 +118,7 @@ class PublicBeanShareSnapshotBuilder
     end
 
     def common_brew_payload(brew)
-      {
+      payload = {
         "occurred_at" => brew.occurred_at&.iso8601,
         "method" => brew.method,
         "public_note" => brew.public_note,
@@ -131,6 +131,10 @@ class PublicBeanShareSnapshotBuilder
         "user" => user_payload(brew.user),
         "equipment" => equipment_payloads(brew)
       }
+      if (public_share = public_brew_share_payload(brew)).present?
+        payload["public_share"] = public_share
+      end
+      payload
     end
 
     def method_specific_brew_payload(brew)
@@ -168,6 +172,16 @@ class PublicBeanShareSnapshotBuilder
       {
         "display_label" => user.display_label,
         "avatar_attachment_id" => attachment_id(user.avatar.attachment)
+      }
+    end
+
+    def public_brew_share_payload(brew)
+      share = brew.public_brew_share
+      return unless brew.espresso? && share&.enabled?
+
+      {
+        "token" => share.token,
+        "title" => share.title.presence || PublicBrewShare.default_title_for(brew)
       }
     end
 

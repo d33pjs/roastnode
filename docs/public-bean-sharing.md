@@ -8,8 +8,8 @@ Public Bean Sharing lets workspace writers publish one curated bean bag page wit
 - Unlisted public URL at `/b/:token`.
 - Optional per-share password gate.
 - Selected bean package photos only.
-- Snapshot-driven public bean page with remaining inventory, brew count, public status, consumed grams, dead grams, average rating, channeling rate, taste balance, rating distribution, grinder-setting distribution, open duration, and a compact timeline.
-- All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards.
+- Snapshot-driven public bean page with remaining inventory, brew count, public status, consumed grams, dead grams, average rating, channeling rate, taste balance, rating distribution, grinder-setting distribution, open duration, and a compact clustered timeline.
+- All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards. Espresso rows that already have an enabled public brew page show a public marker and link to that page.
 - Workspace settings management with URL, enabled/protected state, view count, and recent IP history.
 - The workspace support badge footer, when configured for public pages.
 
@@ -49,6 +49,7 @@ Refresh triggers include:
 
 - the shared bean
 - brews for the shared bean
+- public brew share enabled/title changes for brews on the shared bean
 - grinder, machine, or brewer records referenced by those brews
 - public links on the shared bean
 - selected bean media changes

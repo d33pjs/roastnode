@@ -26,7 +26,7 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-bean-journey-end][data-status=open]"
     assert_select "[data-testid=public-bean-journey-end-open-icon]"
     assert_select "[data-testid=public-bean-journey-brew][data-method=espresso]", minimum: 1
-    assert_select "[data-testid=public-bean-brew-hero-card]", minimum: 1
+    assert_select "[data-testid=public-bean-brew-compact-card]", minimum: 1
     assert_select "body", text: /Public bean note/
     assert_select "body", text: /Private bean note/, count: 0
     assert_select "body", text: /Private brew note/, count: 0
@@ -36,17 +36,57 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "/media_attachments", response.body
   end
 
-  test "timeline renders spaced callouts with public avatar and rating" do
+  test "timeline clusters dense brews without rendering callout cards" do
     avatar = attach_named_photo(users(:one), :avatar, filename: "timeline-avatar.jpg")
-    share = create_share(enabled: true)
+    bean = beans(:open_household)
+    bean.update!(
+      opened_on: Date.new(2026, 1, 12),
+      finished_at: Time.zone.parse("2026-05-28 12:00:00"),
+      remaining_grams: 0
+    )
+    brews(:morning_espresso).update!(
+      bean:,
+      occurred_at: Time.zone.parse("2026-01-13 08:00:00"),
+      rating: 4
+    )
+    3.times do |index|
+      bean.workspace.brews.create!(
+        user: users(:one),
+        method: "espresso",
+        bean:,
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        occurred_at: Time.zone.parse("2026-01-13 08:0#{index + 1}:00"),
+        bean_weight_grams: 18,
+        ground_weight_grams: 18,
+        dose_grams: 18,
+        beverage_grams: 40,
+        rating: index + 1,
+        taste_balance: "neutral"
+      )
+    end
+    bean.workspace.brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      occurred_at: Time.zone.parse("2026-05-10 09:00:00"),
+      machine_cups: 6,
+      bean_weight_grams: 30,
+      rating: 5,
+      taste_balance: "neutral"
+    )
+    share = create_share(bean:, enabled: true)
 
     get public_bean_page_path(share.token)
 
     assert_response :success
-    assert_select "[data-testid=public-bean-journey-callout][data-rating='4']"
-    assert_select "[data-testid=public-bean-journey-callout] img[data-testid=public-bean-journey-avatar][src=?]",
+    assert_select "[data-testid=public-bean-journey-callout]", count: 0
+    assert_select "[data-testid=public-bean-journey-cluster][data-count='4']", text: /4/
+    assert_select "[data-testid=public-bean-journey-cluster-rating]", 4
+    assert_select "[data-testid=public-bean-journey-brew] img[data-testid=public-bean-journey-avatar][src=?]",
       public_bean_media_path(share.token, share.public_media_handle_for(avatar.id), variant: :thumbnail)
-    assert_select "[data-testid=public-bean-journey-brew][data-display-position]"
+    assert_select "[data-testid=public-bean-journey-marker-label]"
   end
 
   test "timeline uses finished endpoint icon for finished bags" do
@@ -114,9 +154,37 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     get public_bean_page_path(share.token)
 
     assert_response :success
-    assert_select "[data-testid=public-bean-brew-hero-card][data-method=espresso]"
-    assert_select "[data-testid=public-bean-brew-hero-card][data-method=quick_drip]"
+    assert_select "[data-testid=public-bean-brew-compact-card][data-method=espresso]"
+    assert_select "[data-testid=public-bean-brew-compact-card][data-method=quick_drip]"
     assert_select "body", text: /Quick Drip/
+  end
+
+  test "compact brew list marks and links brews with enabled public pages" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:)
+    public_brew_share = brew.create_public_brew_share!(
+      workspace: bean.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true,
+      title: "Shared shot",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBrewShareSnapshotBuilder.new(
+        brew:,
+        title: "Shared shot",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+    share = create_share(bean:, enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-brew-hero-card]", count: 0
+    assert_select "[data-testid=public-bean-brew-compact-card]", minimum: 1
+    assert_select "[data-testid=public-bean-brew-shared-marker]", text: I18n.t("brews.shared_marker")
+    assert_select "a[data-testid=public-bean-brew-public-link][href=?]", public_brew_page_path(public_brew_share.token), text: /Shared shot/
   end
 
   test "successful public page render records view" do

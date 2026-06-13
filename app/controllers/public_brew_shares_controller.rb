@@ -33,6 +33,7 @@ class PublicBrewSharesController < ApplicationController
   def destroy
     redirect_target = params[:return_to] == "workspace" ? edit_workspace_path(anchor: "public-shares") : @brew
     @share.destroy!
+    PublicBeanShareRefresher.refresh_for(@brew)
 
     redirect_to redirect_target, notice: t(".destroyed")
   end
@@ -81,6 +82,7 @@ class PublicBrewSharesController < ApplicationController
           updated_by: Current.user
         )
       end
+      PublicBeanShareRefresher.refresh_for(@brew)
     end
 
     def apply_password_changes

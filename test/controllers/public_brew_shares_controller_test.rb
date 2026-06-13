@@ -78,6 +78,30 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes share.public_attachment_ids, unrelated_photo.id
   end
 
+  test "creating enabled brew share refreshes public bean share snapshot link" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    brew = create_brew_for(user)
+    bean_share = create_public_bean_share_for(brew.bean, user:)
+    brew_row = bean_share.snapshot.fetch("brews").find { |row| row.fetch("occurred_at") == brew.occurred_at.iso8601 }
+    assert_nil brew_row["public_share"]
+    sign_in_as(user)
+
+    post brew_public_brew_share_path(brew), params: {
+      public_brew_share: {
+        enabled: "1",
+        title: "Shared linked shot",
+        selected_photo_attachment_ids: []
+      }
+    }
+
+    assert_redirected_to edit_brew_public_brew_share_path(brew)
+    public_brew_share = brew.reload.public_brew_share
+    linked_brew_row = bean_share.reload.snapshot.fetch("brews").find { |row| row.fetch("occurred_at") == brew.occurred_at.iso8601 }
+    assert_equal public_brew_share.token, linked_brew_row.dig("public_share", "token")
+    assert_equal "Shared linked shot", linked_brew_row.dig("public_share", "title")
+  end
+
   test "post to existing share updates without creating duplicate" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -365,5 +389,22 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
       )
       share.update_columns(brew_id: brew.id) if brew.quick_drip?
       share
+    end
+
+    def create_public_bean_share_for(bean, user:, enabled: true, title: "Shared bean")
+      PublicBeanShare.create!(
+        workspace: bean.workspace,
+        bean:,
+        created_by: user,
+        updated_by: user,
+        enabled:,
+        title:,
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title:,
+          selected_photo_attachment_ids: []
+        ).call
+      )
     end
 end

@@ -1,17 +1,15 @@
 <% timeline = local_assigns.fetch(:timeline, {}) || {} %>
 <% share = local_assigns.fetch(:share) %>
 <% status = local_assigns[:status].presence || "open" %>
-<% events = public_bean_timeline_events(timeline) %>
+<% items = public_bean_timeline_items(timeline) %>
 <% brews = Array(timeline["brews"]) %>
 <% opened_on = timeline["opened_on"] %>
-<% end_at = timeline["end_at"] %>
 <% unknown = t("public_bean_pages.show.unknown") %>
 <% opened_date = public_bean_date(opened_on) || unknown %>
 <% finished_at = timeline["finished_at"] %>
 <% end_status = status == "finished" ? "finished" : "open" %>
 <% end_label = end_status == "finished" ? t("public_bean_pages.show.finished") : t("public_bean_pages.show.last_brew") %>
-<% end_date = public_bean_date(finished_at) || public_bean_date(timeline["last_brew_at"]) || public_bean_date(end_at) || unknown %>
-<% dot_size_class = events.size > 36 ? "h-2 w-2" : "h-3.5 w-3.5" %>
+<% end_date = public_bean_date(finished_at) || public_bean_date(timeline["last_brew_at"]) || public_bean_date(timeline["end_at"]) || unknown %>
 
 <section data-testid="public-bean-timeline" class="border-t border-rn-line py-8">
   <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
@@ -38,13 +36,13 @@
       </div>
     </div>
 
-    <div class="px-4 py-5 sm:px-6">
-      <div data-testid="public-bean-journey-track" class="relative h-64 overflow-hidden rounded-2xl border border-rn-line bg-rn-canvas sm:h-60">
-        <div class="absolute left-9 right-9 top-1/2 h-4 -translate-y-1/2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]">
+    <div class="px-3 py-5 sm:px-6">
+      <div data-testid="public-bean-journey-track" class="relative h-40 overflow-hidden rounded-2xl border border-rn-line bg-rn-canvas">
+        <div class="absolute left-10 right-10 top-14 h-2 -translate-y-1/2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]">
           <div class="h-full w-full rounded-full bg-[var(--rn-accent-strong)]"></div>
         </div>
 
-        <div data-testid="public-bean-journey-opened" class="absolute left-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border-4 border-[var(--rn-surface)] bg-[var(--rn-coffee)] text-[#fff8e8] shadow-sm">
+        <div data-testid="public-bean-journey-opened" class="absolute left-3 top-14 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border-4 border-[var(--rn-surface)] bg-[var(--rn-coffee)] text-[#fff8e8] shadow-sm">
           <svg aria-hidden="true" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M8 3h8l2 5H6l2-5Z" />
             <path d="M6 8h12l-1.2 12H7.2L6 8Z" />
@@ -53,7 +51,7 @@
           <span class="sr-only"><%= t("public_bean_pages.show.opened") %></span>
         </div>
 
-        <div data-testid="public-bean-journey-end" data-status="<%= end_status %>" class="absolute right-4 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border-4 border-[var(--rn-surface)] <%= end_status == "finished" ? "bg-[var(--rn-accent-strong)] text-[#f8faf6]" : "bg-[var(--rn-ink)] text-[var(--rn-surface)]" %> shadow-sm">
+        <div data-testid="public-bean-journey-end" data-status="<%= end_status %>" class="absolute right-3 top-14 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border-4 border-[var(--rn-surface)] <%= end_status == "finished" ? "bg-[var(--rn-accent-strong)] text-[#f8faf6]" : "bg-[var(--rn-ink)] text-[var(--rn-surface)]" %> shadow-sm">
           <% if end_status == "finished" %>
             <svg data-testid="public-bean-journey-end-finished-icon" aria-hidden="true" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 6 9 17l-5-5" />
@@ -67,44 +65,49 @@
           <span class="sr-only"><%= end_label %></span>
         </div>
 
-        <% events.each do |event| %>
-          <% position = event.fetch("display_position") %>
-          <% method = event["method"].presence || "unknown" %>
-          <% marker_class = method == "quick_drip" ? "bg-[var(--rn-honey)]" : "bg-[var(--rn-coffee)]" %>
-          <% callout_side = event.fetch("callout_side") %>
-          <% callout_top = callout_side == "top" %>
-          <% callout_lane = event.fetch("callout_lane", 0).to_i %>
-          <% callout_position_class = if callout_top
-            [ "top-3", "top-16", "top-28" ].fetch(callout_lane, "top-28")
-          else
-            [ "bottom-3", "bottom-16", "bottom-28" ].fetch(callout_lane, "bottom-28")
-          end %>
-          <% line_class = if callout_top
-            [ "bottom-1/2 h-10", "bottom-1/2 h-20", "bottom-1/2 h-28" ].fetch(callout_lane, "bottom-1/2 h-28")
-          else
-            [ "top-1/2 h-10", "top-1/2 h-20", "top-1/2 h-28" ].fetch(callout_lane, "top-1/2 h-28")
-          end %>
-          <% user = event["user"] || {} %>
-          <% avatar_url = public_bean_media_url_for(share, user["avatar_attachment_id"], variant: :thumbnail) %>
-          <% rating_label = event["rating"].present? ? public_bean_rating(event["rating"]) : unknown %>
-          <% event_date = public_bean_date(event["occurred_at"]) || unknown %>
-          <% left_style = "left: calc(2.25rem + (100% - 4.5rem) * #{position} / 100);" %>
+        <% items.each_with_index do |item, index| %>
+          <% position = item.fetch("display_position") %>
+          <% method = item["primary_method"].presence || item["method"].presence || "unknown" %>
+          <% marker_class = method == "quick_drip" ? "bg-[var(--rn-honey)] text-[var(--rn-coffee)]" : "bg-[var(--rn-coffee)] text-[#fff8e8]" %>
+          <% left_style = "left: calc(3rem + (100% - 6rem) * #{position} / 100);" %>
+          <% item_label = public_bean_timeline_item_label(item) %>
+          <% item_title = public_bean_timeline_item_title(item) %>
+          <% label_position_class = index.even? ? "bottom-3" : "top-3" %>
 
-          <span data-testid="public-bean-journey-callout-line" aria-hidden="true" class="absolute z-0 w-px bg-[var(--rn-line)] <%= line_class %>" style="<%= left_style %>"></span>
-
-          <div data-testid="public-bean-journey-callout" data-rating="<%= event["rating"] %>" data-method="<%= method %>" data-lane="<%= callout_lane %>" class="absolute z-20 flex w-20 -translate-x-1/2 items-center gap-1.5 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface px-1.5 py-1.5 text-rn-ink shadow-sm sm:w-28 sm:gap-2 sm:px-2 <%= callout_position_class %>" style="<%= left_style %>">
-            <% if avatar_url.present? %>
-              <%= image_tag avatar_url, alt: "", data: { testid: "public-bean-journey-avatar" }, class: "h-7 w-7 shrink-0 rounded-full object-contain" %>
-            <% else %>
-              <span aria-hidden="true" class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full <%= marker_class %> text-xs font-black text-[#fff8e8]"><%= public_bean_method_label(method).first %></span>
-            <% end %>
-            <span class="min-w-0">
-              <span class="block whitespace-nowrap text-xs font-black leading-4"><%= rating_label %></span>
-              <span class="hidden truncate text-[0.62rem] font-extrabold uppercase leading-3 text-rn-muted sm:block"><%= event_date %></span>
-            </span>
-          </div>
-
-          <span data-testid="public-bean-journey-brew" data-method="<%= method %>" data-display-position="<%= position %>" title="<%= [ public_bean_method_label(method), event_date, rating_label ].compact.join(" · ") %>" class="absolute top-1/2 z-10 flex <%= dot_size_class %> -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[var(--rn-surface)] <%= marker_class %> shadow-sm ring-2 ring-[var(--rn-canvas)]" style="<%= left_style %>"></span>
+          <% if item["type"] == "cluster" %>
+            <div data-testid="public-bean-journey-cluster" data-count="<%= item["count"] %>" data-display-position="<%= position %>" title="<%= item_title %>" class="absolute top-14 z-20 flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[var(--rn-surface)] bg-[var(--rn-accent-strong)] text-xs font-black text-[#f8faf6] shadow-sm ring-2 ring-[var(--rn-canvas)]" style="<%= left_style %>">
+              <%= item["count"] %>
+            </div>
+            <div data-testid="public-bean-journey-marker-label" class="absolute <%= label_position_class %> z-10 w-20 -translate-x-1/2 text-center sm:w-28" style="<%= left_style %>">
+              <span class="block text-[0.65rem] font-black uppercase leading-3 text-rn-muted"><%= item_label %></span>
+              <span class="mt-1 inline-flex max-w-full flex-wrap justify-center gap-1 rounded-full bg-[var(--rn-surface-muted)] px-1.5 py-1">
+                <% item.fetch("ratings", []).first(5).each do |rating| %>
+                  <span data-testid="public-bean-journey-cluster-rating" class="inline-flex items-center gap-0.5 text-[0.65rem] font-black leading-3 text-[var(--rn-accent-strong)]">
+                    <%= rating.presence || "?" %><span class="brew-rating-bean bg-[var(--rn-coffee)]"></span>
+                  </span>
+                <% end %>
+                <% if item.fetch("ratings", []).size > 5 %>
+                  <span class="text-[0.65rem] font-black leading-3 text-rn-muted">+<%= item.fetch("ratings", []).size - 5 %></span>
+                <% end %>
+              </span>
+            </div>
+          <% else %>
+            <% user = item["user"] || {} %>
+            <% avatar_url = public_bean_media_url_for(share, user["avatar_attachment_id"], variant: :thumbnail) %>
+            <div data-testid="public-bean-journey-brew" data-method="<%= method %>" data-display-position="<%= position %>" title="<%= item_title %>" class="absolute top-14 z-20 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[var(--rn-surface)] shadow-sm ring-2 ring-[var(--rn-canvas)] <%= marker_class unless avatar_url.present? %>" style="<%= left_style %>">
+              <% if avatar_url.present? %>
+                <%= image_tag avatar_url, alt: "", data: { testid: "public-bean-journey-avatar" }, class: "h-full w-full rounded-full object-contain" %>
+              <% else %>
+                <span aria-hidden="true" class="text-[0.65rem] font-black"><%= public_bean_method_label(method).first %></span>
+              <% end %>
+            </div>
+            <div data-testid="public-bean-journey-marker-label" class="absolute <%= label_position_class %> z-10 w-16 -translate-x-1/2 text-center sm:w-20" style="<%= left_style %>">
+              <span class="inline-flex items-center justify-center gap-1 rounded-full bg-[var(--rn-surface-muted)] px-2 py-1 text-[0.65rem] font-black leading-3 text-[var(--rn-accent-strong)]">
+                <%= item["rating"].presence || "?" %><span class="brew-rating-bean bg-[var(--rn-coffee)]"></span>
+              </span>
+              <span class="mt-1 block truncate text-[0.65rem] font-black uppercase leading-4 text-rn-muted"><%= item_label %></span>
+            </div>
+          <% end %>
         <% end %>
       </div>
 
