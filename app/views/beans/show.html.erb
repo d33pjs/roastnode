@@ -2,7 +2,6 @@
   <section class="mx-auto max-w-4xl px-6 py-10">
     <% purchase_url_href = bean_purchase_url_href(@bean.purchase_url) %>
     <% bean_action_button_class = "inline-flex min-h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-    <% bean_icon_action_button_class = "inline-flex min-h-10 w-10 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-stone-300 text-stone-900 hover:bg-stone-100" %>
     <% bean_primary_action_button_class = "inline-flex min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-stone-950 px-3 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
     <% bean_action_form_class = "inline-flex shrink-0" %>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -25,8 +24,7 @@
                     title: public_share_title,
                     text: t("beans.native_share.text", title: public_share_title),
                     label: t("shared.native_share.share_public_bean"),
-                    testid: "bean-native-share-button-#{@bean.id}",
-                    button_class: bean_icon_action_button_class %>
+                    testid: "bean-native-share-button-#{@bean.id}" %>
                 <% end %>
                 <% if public_bean_share.manageable_by?(Current.user) %>
                   <%= link_to t(".share_publicly"), edit_bean_public_bean_share_path(@bean), data: { testid: "bean-share-public-link-#{@bean.id}" }, class: bean_action_button_class %>

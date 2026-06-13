@@ -841,6 +841,9 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "bean-native-share-button-#{bean.id}",
       public_bean_page_url(share.token)
+    native_share_button = Nokogiri::HTML(response.body).at_css("[data-testid='bean-native-share-button-#{bean.id}']")
+    assert_includes native_share_button["class"], "rounded-full"
+    assert_not_includes native_share_button["class"], "border-stone-300"
     assert_select "[data-testid=?] svg[aria-hidden=true]", "bean-native-share-button-#{bean.id}"
     assert_select "[data-testid=?] span.sr-only", "bean-native-share-button-#{bean.id}", I18n.t("shared.native_share.share_public_bean")
     assert_select "form[data-testid=?]", "bean-duplicate-form-#{bean.id}"
