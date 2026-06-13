@@ -8,8 +8,9 @@ Public Bean Sharing lets workspace writers publish one curated bean bag page wit
 - Unlisted public URL at `/b/:token`.
 - Optional per-share password gate.
 - Selected bean package photos only.
-- Snapshot-driven public bean page with remaining inventory, brew count, public status, consumed grams, dead grams, average rating, channeling rate, taste balance, rating distribution, grinder-setting distribution, open duration, and a compact clustered timeline.
-- All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards. Espresso rows that already have an enabled public brew page show a public marker and link to that page.
+- Snapshot-driven public bean page with remaining inventory for open bags, brew count, public status, consumed grams, dead grams, average rating, channeling rate, taste balance, rating distribution, grinder-setting distribution, open duration, and a compact clustered timeline.
+- The timeline uses opened and finished/current endpoint markers, brew/count dots on the line, and lane-stacked date plus rating labels above or below the line so dense brew groups stay readable on mobile.
+- All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards with rating metric cards. Espresso rows that already have an enabled public brew page show the named public brew link as a compact chip near the date and method.
 - Workspace settings management with URL, enabled/protected state, view count, and recent IP history.
 - The workspace support badge footer, when configured for public pages.
 
@@ -22,6 +23,8 @@ Workspace name/logo and brewer display labels/avatars are intentional public ide
 The optional workspace support badge configuration is not copied into public bean snapshots. Public bean page controllers may read it from the share's workspace at request time to render the global footer support badge.
 
 Public bean pages include all espresso and Quick Drip brews for the bag as public-safe summaries. Brew summaries may include public notes, public metrics, method labels, taste, rating, channeling, and equipment labels from the snapshot, but they must not include private brew notes or brew photos.
+
+Dead grams include espresso retention (`bean_weight_grams - ground_weight_grams` where both values exist). When a bag is publicly finished while still showing remaining beans, the leftover remaining grams are also counted as dead grams and the remaining inventory hero card is omitted.
 
 ## Public Media
 

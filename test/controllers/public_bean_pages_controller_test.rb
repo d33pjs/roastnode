@@ -84,9 +84,28 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-bean-journey-callout]", count: 0
     assert_select "[data-testid=public-bean-journey-cluster][data-count='4']", text: /4/
     assert_select "[data-testid=public-bean-journey-cluster-rating]", 4
-    assert_select "[data-testid=public-bean-journey-brew] img[data-testid=public-bean-journey-avatar][src=?]",
-      public_bean_media_path(share.token, share.public_media_handle_for(avatar.id), variant: :thumbnail)
-    assert_select "[data-testid=public-bean-journey-marker-label]"
+    assert_select "[data-testid=public-bean-journey-avatar]", count: 0
+    assert_select "[data-testid=public-bean-journey-marker-label][data-side][data-lane]"
+    assert_select "[data-testid=public-bean-journey-brew-count-dot]", minimum: 1
+    assert_equal 1, response.body.scan("January 12, 2026").size
+    assert_equal 1, response.body.scan("May 28, 2026").size
+    assert share.public_media_handle_for(avatar.id).present?, "expected avatar to remain public media even when not rendered on the timeline"
+  end
+
+  test "finished hero stats are ordered and omit remaining" do
+    bean = beans(:open_household)
+    bean.update!(finished_at: Time.zone.parse("2026-06-12 12:00:00"), remaining_grams: 11.5)
+    share = create_share(bean:, enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-hero-stat-average-rating]"
+    assert_select "[data-testid=public-bean-hero-stat-status]"
+    assert_select "[data-testid=public-bean-hero-stat-brews]"
+    assert_select "[data-testid=public-bean-hero-stat-remaining]", count: 0
+    assert_appears_before "data-testid=\"public-bean-hero-stat-average-rating\"", "data-testid=\"public-bean-hero-stat-status\""
+    assert_appears_before "data-testid=\"public-bean-hero-stat-status\"", "data-testid=\"public-bean-hero-stat-brews\""
   end
 
   test "timeline uses finished endpoint icon for finished bags" do
@@ -183,8 +202,14 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=public-bean-brew-hero-card]", count: 0
     assert_select "[data-testid=public-bean-brew-compact-card]", minimum: 1
-    assert_select "[data-testid=public-bean-brew-shared-marker]", text: I18n.t("brews.shared_marker")
+    assert_select "[data-testid=public-bean-brew-shared-marker]", count: 0
+    assert_select "[data-testid^='public-bean-brew-native-share']", count: 0
+    assert_select "[data-testid=public-bean-brew-rating-metric]", minimum: 1
+    assert_select "[data-testid=public-bean-brew-date-chip]", minimum: 1
+    assert_select "[data-testid=public-bean-brew-method-chip]", minimum: 1
     assert_select "a[data-testid=public-bean-brew-public-link][href=?]", public_brew_page_path(public_brew_share.token), text: /Shared shot/
+    assert_appears_before "data-testid=\"public-bean-brew-date-chip\"", "data-testid=\"public-bean-brew-public-link\""
+    assert_appears_before "data-testid=\"public-bean-brew-public-link\"", "data-testid=\"public-bean-brew-method-chip\""
   end
 
   test "successful public page render records view" do
@@ -277,5 +302,14 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
         record.photos.attach(io: file, filename:, content_type: "image/jpeg")
       end
       record.photos.attachments.last
+    end
+
+    def assert_appears_before(first, second)
+      first_index = response.body.index(first)
+      second_index = response.body.index(second)
+
+      assert first_index, "Expected #{first.inspect} to appear in response body"
+      assert second_index, "Expected #{second.inspect} to appear in response body"
+      assert first_index < second_index, "Expected #{first.inspect} to appear before #{second.inspect}"
     end
 end

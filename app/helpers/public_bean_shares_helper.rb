@@ -1,6 +1,8 @@
 module PublicBeanSharesHelper
   TIMELINE_CLUSTER_WINDOW_PERCENT = 4.0
   TIMELINE_ITEM_GAP_PERCENT = 5.5
+  TIMELINE_LABEL_GAP_PERCENT = 28.0
+  TIMELINE_LABEL_LANES_PER_SIDE = 3
   TIMELINE_MIN_POSITION_PERCENT = 8.0
   TIMELINE_MAX_POSITION_PERCENT = 82.0
 
@@ -97,7 +99,8 @@ module PublicBeanSharesHelper
       gap: TIMELINE_ITEM_GAP_PERCENT
     )
 
-    groups.each_with_index.map { |group, index| public_bean_timeline_item(group, display_positions[index]) }
+    items = groups.each_with_index.map { |group, index| public_bean_timeline_item(group, display_positions[index]) }
+    public_bean_timeline_assign_label_lanes(items)
   end
 
   def public_bean_timeline_item_label(item)
@@ -197,6 +200,34 @@ module PublicBeanSharesHelper
         "display_position" => display_position.to_f.round(2),
         "last_occurred_at" => last["occurred_at"]
       )
+    end
+
+    def public_bean_timeline_assign_label_lanes(items)
+      lane_positions = {
+        "top" => Array.new(TIMELINE_LABEL_LANES_PER_SIDE) { -Float::INFINITY },
+        "bottom" => Array.new(TIMELINE_LABEL_LANES_PER_SIDE) { -Float::INFINITY }
+      }
+
+      items.each_with_index.map do |item, index|
+        position = item.fetch("display_position").to_f
+        preferred_sides = index.even? ? %w[bottom top] : %w[top bottom]
+        side, lane = public_bean_timeline_available_label_lane(position, lane_positions, preferred_sides)
+        lane_positions.fetch(side)[lane] = position
+        item.merge("label_side" => side, "label_lane" => lane)
+      end
+    end
+
+    def public_bean_timeline_available_label_lane(position, lane_positions, preferred_sides)
+      preferred_sides.each do |side|
+        lane_positions.fetch(side).each_with_index do |last_position, lane|
+          return [ side, lane ] if position - last_position >= TIMELINE_LABEL_GAP_PERCENT
+        end
+      end
+
+      preferred_sides
+        .flat_map { |side| lane_positions.fetch(side).each_with_index.map { |last_position, lane| [ side, lane, last_position ] } }
+        .min_by { |side, lane, last_position| [ last_position, lane, preferred_sides.index(side) ] }
+        .first(2)
     end
 
     def public_bean_timeline_display_positions(positions, gap:)

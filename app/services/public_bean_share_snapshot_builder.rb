@@ -237,11 +237,21 @@ class PublicBeanShareSnapshotBuilder
     end
 
     def dead_grams
+      espresso_dead_grams + finished_remaining_dead_grams
+    end
+
+    def espresso_dead_grams
       espresso_brews.sum do |brew|
         next 0.to_d if brew.bean_weight_grams.blank? || brew.ground_weight_grams.blank?
 
         [ brew.bean_weight_grams.to_d - brew.ground_weight_grams.to_d, 0.to_d ].max
       end
+    end
+
+    def finished_remaining_dead_grams
+      return 0.to_d unless bean.finished? && bean.remaining_grams.present?
+
+      [ bean.remaining_grams.to_d, 0.to_d ].max
     end
 
     def average_rating

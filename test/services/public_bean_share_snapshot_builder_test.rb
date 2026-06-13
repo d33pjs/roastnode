@@ -139,6 +139,23 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "finished", snapshot.dig("bean", "public_status")
   end
 
+  test "counts leftover remaining beans as dead grams when bag is finished" do
+    bean = beans(:open_household)
+    bean.update!(
+      finished_at: Time.zone.parse("2026-05-28 12:00:00"),
+      remaining_grams: 12.5
+    )
+
+    snapshot = PublicBeanShareSnapshotBuilder.new(
+      bean:,
+      title: "Shared bean",
+      selected_photo_attachment_ids: []
+    ).call
+
+    assert_equal "finished", snapshot.dig("bean", "public_status")
+    assert_equal "12.5", snapshot.dig("stats", "dead_grams")
+  end
+
   test "includes enabled public brew share links for public bean brew rows" do
     bean = beans(:open_household)
     brew = brews(:morning_espresso)

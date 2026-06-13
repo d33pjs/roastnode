@@ -8,6 +8,7 @@
 <% photos = Array(snapshot["photos"]) %>
 <% brews = Array(snapshot["brews"]) %>
 <% unknown = t(".unknown") %>
+<% finished_bag = bean["public_status"] == "finished" %>
 <% primary_photo = photos.first %>
 <% primary_photo_thumb_url = public_bean_media_url_for(@share, primary_photo&.fetch("attachment_id", nil), variant: :thumbnail) %>
 <% primary_photo_full_url = public_bean_media_url_for(@share, primary_photo&.fetch("attachment_id", nil)) %>
@@ -33,24 +34,26 @@
           <p class="mt-4 text-xl font-extrabold text-rn-muted"><%= bean["display_name"] %></p>
         <% end %>
 
-        <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <div class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
-            <p class="text-xs font-black uppercase text-rn-muted"><%= t(".remaining") %></p>
-            <p class="mt-1 text-2xl font-black text-rn-ink"><%= public_bean_grams(bean["remaining_grams"]) %></p>
-            <p class="mt-1 text-xs font-extrabold text-rn-muted"><%= public_bean_percent(bean["remaining_percent"]) %></p>
-          </div>
-          <div class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
-            <p class="text-xs font-black uppercase text-rn-muted"><%= t(".brews") %></p>
-            <p class="mt-1 text-2xl font-black text-rn-ink"><%= stats["brew_count"].presence || 0 %></p>
-          </div>
-          <div class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
-            <p class="text-xs font-black uppercase text-rn-muted"><%= t(".status") %></p>
-            <p class="mt-1 text-2xl font-black text-rn-ink"><%= t(".#{bean["public_status"].presence || "open"}", default: unknown) %></p>
-          </div>
-          <div class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
+        <div class="mt-6 grid gap-3 sm:grid-cols-2 <%= finished_bag ? "lg:grid-cols-3" : "lg:grid-cols-4" %>">
+          <div data-testid="public-bean-hero-stat-average-rating" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
             <p class="text-xs font-black uppercase text-rn-muted"><%= t(".average_rating") %></p>
             <p class="mt-1 text-2xl font-black text-rn-ink"><%= public_bean_rating(stats["average_rating"]) %></p>
           </div>
+          <div data-testid="public-bean-hero-stat-status" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
+            <p class="text-xs font-black uppercase text-rn-muted"><%= t(".status") %></p>
+            <p class="mt-1 text-2xl font-black text-rn-ink"><%= t(".#{bean["public_status"].presence || "open"}", default: unknown) %></p>
+          </div>
+          <div data-testid="public-bean-hero-stat-brews" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
+            <p class="text-xs font-black uppercase text-rn-muted"><%= t(".brews") %></p>
+            <p class="mt-1 text-2xl font-black text-rn-ink"><%= stats["brew_count"].presence || 0 %></p>
+          </div>
+          <% unless finished_bag %>
+            <div data-testid="public-bean-hero-stat-remaining" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
+              <p class="text-xs font-black uppercase text-rn-muted"><%= t(".remaining") %></p>
+              <p class="mt-1 text-2xl font-black text-rn-ink"><%= public_bean_grams(bean["remaining_grams"]) %></p>
+              <p class="mt-1 text-xs font-extrabold text-rn-muted"><%= public_bean_percent(bean["remaining_percent"]) %></p>
+            </div>
+          <% end %>
         </div>
       </div>
 
