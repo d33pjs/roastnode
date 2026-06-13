@@ -25,6 +25,15 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "New brew note"
   end
 
+  test "shares_for user finds bean shares containing that users brews" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:, user: users(:two))
+    share = create_share(bean)
+
+    assert_includes PublicBeanShareRefresher.shares_for(users(:two)), share
+  end
+
   test "refresh removes selected photos that no longer belong to bean" do
     bean = beans(:open_household)
     photo = attach_photo(bean)

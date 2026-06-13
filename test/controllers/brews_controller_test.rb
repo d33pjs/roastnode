@@ -655,6 +655,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "writer can update brew public note and public links" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
+    share = create_public_bean_share_for(brew.bean)
 
     patch brew_path(brew), params: {
       brew: {
@@ -679,6 +680,33 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Public brew note.", brew.reload.public_note
     assert_equal "Shot writeup", brew.record_links.first.label
     assert_equal "public", brew.record_links.first.visibility
+    assert_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "Public brew note."
+  end
+
+  test "moving brew to another bean refreshes old public bean snapshot" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.update!(public_note: "Moved brew public note")
+    old_bean = brew.bean
+    new_bean = beans(:second_open_household)
+    share = create_public_bean_share_for(old_bean)
+
+    patch brew_path(brew), params: {
+      brew: {
+        bean_id: new_bean.id,
+        grinder_id: brew.grinder.id,
+        machine_id: brew.machine.id,
+        bean_weight_grams: brew.bean_weight_grams.to_s,
+        ground_weight_grams: brew.ground_weight_grams.to_s,
+        dose_grams: brew.dose_grams.to_s,
+        beverage_grams: brew.beverage_grams.to_s,
+        total_time_seconds: brew.total_time_seconds.to_s,
+        taste_balance: brew.taste_balance
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_not_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "Moved brew public note"
   end
 
   test "writer can update brew log time and inventory adjustment time" do
@@ -778,6 +806,32 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 201.5.to_d, bean.reload.remaining_grams
     assert_equal [ "WDT", "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
     assert_equal 1, brew.photos.count
+  end
+
+  test "creating brew for shared bean refreshes public bean snapshot" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    bean = beans(:second_open_household)
+    share = create_public_bean_share_for(bean)
+    sign_in_as(user)
+
+    post brews_path, params: {
+      brew: {
+        bean_id: bean.id,
+        grinder_id: equipment(:household_grinder).id,
+        machine_id: equipment(:household_machine).id,
+        bean_weight_grams: "18.5",
+        dose_grams: "18.2",
+        beverage_grams: "42",
+        total_time_seconds: "31",
+        public_note: "Fresh public bean brew",
+        taste_balance: "neutral"
+      }
+    }
+
+    brew = workspaces(:household).brews.order(:created_at).last
+    assert_redirected_to brew_path(brew)
+    assert_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "Fresh public bean brew"
   end
 
   test "member can create espresso brew with comma decimal measurements" do
@@ -1591,6 +1645,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "writer can delete brew and reverse inventory" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
+    brew.update!(public_note: "Deleted brew public note")
+    share = create_public_bean_share_for(brew.bean)
 
     assert_difference -> { Brew.count }, -1 do
       delete brew_path(brew)
@@ -1598,6 +1654,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
     assert_equal 168.to_d, beans(:open_household).reload.remaining_grams
+    assert_not_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "Deleted brew public note"
   end
 
   test "viewer cannot edit update or delete brew" do
@@ -1826,6 +1883,22 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
         snapshot: PublicBrewShareSnapshotBuilder.new(
           brew:,
           title: "Shared shot",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
+
+    def create_public_bean_share_for(bean)
+      bean.create_public_bean_share!(
+        workspace: bean.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared bean",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title: "Shared bean",
           selected_photo_attachment_ids: []
         ).call
       )

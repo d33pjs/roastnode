@@ -31,7 +31,7 @@ class MediaAttachmentsController < ApplicationController
     return head :not_found unless record.respond_to?(:set_primary_photo!)
 
     record.set_primary_photo!(@attachment)
-    refresh_public_brew_shares_for(record)
+    refresh_public_shares_for(record)
 
     redirect_back_or_to record_path(record), notice: t(".updated")
   end
@@ -41,7 +41,7 @@ class MediaAttachmentsController < ApplicationController
 
     record = @attachment.record
     @attachment.destroy!
-    refresh_public_brew_shares_for(record)
+    refresh_public_shares_for(record)
 
     redirect_back_or_to record_path(record), notice: t(".destroyed")
   end
@@ -119,7 +119,7 @@ class MediaAttachmentsController < ApplicationController
         @attachment.destroy! if overwrite
         record.set_primary_photo!(new_attachment) if make_primary || (overwrite && was_primary)
       end
-      refresh_public_brew_shares_for(record)
+      refresh_public_shares_for(record)
 
       notice_key = overwrite ? ".updated" : ".created"
       redirect_to record_path(record), notice: t(notice_key)
@@ -193,7 +193,8 @@ class MediaAttachmentsController < ApplicationController
       end
     end
 
-    def refresh_public_brew_shares_for(record)
+    def refresh_public_shares_for(record)
       PublicBrewShareRefresher.refresh_for(record)
+      PublicBeanShareRefresher.refresh_for(record)
     end
 end

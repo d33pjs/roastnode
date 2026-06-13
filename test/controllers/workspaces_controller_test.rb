@@ -52,6 +52,38 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "owner sees public bean share management with full ip view log" do
+    share = create_public_bean_share_for(beans(:open_household), enabled: true)
+    share.public_bean_share_views.create!(
+      ip_address: "198.51.100.51",
+      user_agent: "Bean settings test browser",
+      viewed_at: Time.zone.local(2026, 6, 3, 11, 0, 0)
+    )
+    share.public_bean_share_views.create!(
+      ip_address: "203.0.113.62",
+      user_agent: "Bean settings test browser",
+      viewed_at: Time.zone.local(2026, 6, 3, 12, 30, 0)
+    )
+    sign_in_as(users(:one))
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "[data-testid=workspace-public-bean-shares]"
+    assert_select "[data-testid=?]", "workspace-public-bean-share-#{share.id}", text: /Shared bean/
+    assert_select "[data-testid=?] a[href=?]", "workspace-public-bean-share-#{share.id}", bean_path(share.bean), text: /Bean:/
+    assert_select "a[href=?]", public_bean_page_path(share.token), text: public_bean_page_url(share.token)
+    assert_select "a[href=?]", edit_bean_public_bean_share_path(share.bean)
+    assert_select "form[action=?]", bean_public_bean_share_path(share.bean)
+    assert_select "[data-testid=?]", "public-bean-share-created-at-#{share.id}"
+    assert_select "[data-testid=?]", "public-bean-share-updated-at-#{share.id}"
+    assert_select "[data-testid=?]", "public-bean-share-view-count-#{share.id}", text: "2"
+    assert_select "[data-testid=?]", "public-bean-share-recent-views-#{share.id}" do
+      assert_select "[data-testid=?]", "public-bean-share-recent-view-#{share.id}-#{share.public_bean_share_views.recent.first.id}", text: /203\.0\.113\.62/
+      assert_select "li", text: /198\.51\.100\.51/
+    end
+  end
+
   test "workspace public share management excludes other workspaces" do
     other_share = create_public_brew_share_for(brews(:other_workspace_brew), enabled: true, user: users(:two))
     sign_in_as(users(:one))
@@ -160,6 +192,24 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to dashboard_path
     assert workspace.reload.logo.attached?
     assert workspace.banner.attached?
+  end
+
+  test "workspace identity updates refresh public bean snapshots" do
+    workspace = workspaces(:household)
+    share = create_public_bean_share_for(beans(:open_household), enabled: true)
+    sign_in_as(users(:one))
+
+    patch workspace_path, params: {
+      workspace: {
+        name: "Public Bean Household",
+        default_currency: workspace.default_currency,
+        logo: photo_upload(filename: "bean-logo.jpg")
+      }
+    }
+
+    assert_redirected_to dashboard_path
+    assert_equal "Public Bean Household", share.reload.snapshot.dig("workspace", "name")
+    assert_equal workspace.reload.logo.attachment.id, share.snapshot.dig("workspace", "logo_attachment_id")
   end
 
   test "admin can update active workspace settings" do
@@ -317,6 +367,22 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
         selected_photo_attachment_ids: [],
         snapshot: PublicBrewShareSnapshotBuilder.new(
           brew:,
+          title:,
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
+
+    def create_public_bean_share_for(bean, enabled:, user: users(:one), title: "Shared bean")
+      bean.create_public_bean_share!(
+        workspace: bean.workspace,
+        created_by: user,
+        updated_by: user,
+        enabled:,
+        title:,
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
           title:,
           selected_photo_attachment_ids: []
         ).call

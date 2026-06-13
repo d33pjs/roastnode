@@ -78,7 +78,7 @@ class BrewsController < ApplicationController
     apply_recipe_snapshot
 
     if save_brew_with_preparation_tools
-      refresh_public_brew_shares_for(@brew)
+      refresh_public_shares_for(@brew)
       redirect_to @brew, notice: t(".created")
     else
       prepare_record_links(@brew)
@@ -94,9 +94,11 @@ class BrewsController < ApplicationController
     attributes[:method] = @brew.method
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
+    previous_bean = @brew.bean
 
     @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
-    refresh_public_brew_shares_for(@brew)
+    refresh_public_shares_for(@brew)
+    PublicBeanShareRefresher.refresh_for(previous_bean) if previous_bean&.id != @brew.bean_id
     redirect_to @brew, notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
     load_form_options(
@@ -112,7 +114,7 @@ class BrewsController < ApplicationController
 
   def taste
     if @brew.update(taste_brew_params)
-      refresh_public_brew_shares_for(@brew)
+      refresh_public_shares_for(@brew)
       redirect_to @brew, notice: t(".updated")
     else
       render :show, status: :unprocessable_entity
@@ -120,7 +122,9 @@ class BrewsController < ApplicationController
   end
 
   def destroy
+    bean = @brew.bean
     @brew.destroy_with_inventory_reversal!
+    PublicBeanShareRefresher.refresh_for(bean)
     redirect_to root_path, notice: t(".destroyed")
   end
 
@@ -532,8 +536,9 @@ class BrewsController < ApplicationController
       record.prepare_record_links_for_form
     end
 
-    def refresh_public_brew_shares_for(record)
+    def refresh_public_shares_for(record)
       PublicBrewShareRefresher.refresh_for(record)
+      PublicBeanShareRefresher.refresh_for(record)
     end
 
     def set_brew_form_preferences

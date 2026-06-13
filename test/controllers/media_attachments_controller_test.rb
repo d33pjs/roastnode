@@ -205,6 +205,25 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes share.public_attachment_ids, attachment.id
   end
 
+  test "removing selected bean photo refreshes public bean media allowlist" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    attachment = attach_photo(bean)
+    share = create_public_bean_share_for(bean, selected_photo_attachment_ids: [ attachment.id ])
+    media_path = public_bean_media_path(share.token, share.public_media_handle_for(attachment.id))
+
+    assert_difference -> { bean.photos.attachments.reload.count }, -1 do
+      delete media_attachment_path(attachment)
+    end
+
+    assert_redirected_to bean_path(bean)
+    assert_not_includes share.reload.selected_photo_attachment_ids, attachment.id
+    assert_not_includes share.public_attachment_ids, attachment.id
+
+    get media_path
+    assert_response :not_found
+  end
+
   test "writer marks an active workspace attachment as primary" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
@@ -358,4 +377,21 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
         ).call
       )
     end
+
+    def create_public_bean_share_for(bean, selected_photo_attachment_ids: [])
+      bean.create_public_bean_share!(
+        workspace: bean.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared bean",
+        selected_photo_attachment_ids:,
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title: "Shared bean",
+          selected_photo_attachment_ids:
+        ).call
+      )
+    end
+
 end

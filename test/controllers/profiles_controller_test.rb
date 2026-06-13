@@ -131,6 +131,27 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert user.public_banner.attached?
   end
 
+  test "profile identity updates refresh public bean snapshots" do
+    user = users(:one)
+    brew = brews(:morning_espresso)
+    brew.update!(user:)
+    share = create_public_bean_share_for(brew.bean)
+    sign_in_as(user)
+
+    patch profile_path, params: {
+      user: {
+        display_name: "Public Bean Brewer",
+        avatar: photo_upload(filename: "bean-avatar.jpg")
+      }
+    }
+
+    assert_redirected_to root_path
+    snapshot = share.reload.snapshot
+    user_payloads = snapshot.fetch("brews").map { |row| row.fetch("user") }
+    assert_includes user_payloads.map { |payload| payload["display_label"] }, "Public Bean Brewer"
+    assert_includes snapshot.fetch("public_media").map { |row| row["attachment_id"] }, user.reload.avatar.attachment.id
+  end
+
   test "profile does not accept unrelated user attributes" do
     user = users(:one)
     sign_in_as(user)
@@ -151,4 +172,21 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select "input[name=?]", "user[display_name]"
   end
+
+  private
+    def create_public_bean_share_for(bean)
+      bean.create_public_bean_share!(
+        workspace: bean.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared bean",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title: "Shared bean",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
 end

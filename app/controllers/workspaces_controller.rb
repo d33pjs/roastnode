@@ -6,6 +6,7 @@ class WorkspacesController < ApplicationController
   def edit
     @workspace = current_workspace
     load_public_brew_shares
+    load_public_bean_shares
   end
 
   def update
@@ -13,9 +14,11 @@ class WorkspacesController < ApplicationController
 
     if @workspace.update(workspace_params)
       PublicBrewShareRefresher.refresh_for(@workspace)
+      PublicBeanShareRefresher.refresh_for(@workspace)
       redirect_to dashboard_path, notice: t(".updated")
     else
       load_public_brew_shares
+      load_public_bean_shares
       render :edit, status: :unprocessable_entity
     end
   end
@@ -82,6 +85,13 @@ class WorkspacesController < ApplicationController
         .joins(:brew)
         .includes(:public_brew_share_views, brew: [ :bean, :user ])
         .where(brews: { method: "espresso" })
+        .order(updated_at: :desc, created_at: :desc)
+    end
+
+    def load_public_bean_shares
+      @public_bean_shares = current_workspace
+        .public_bean_shares
+        .includes(:public_bean_share_views, bean: [ :primary_photo_record ])
         .order(updated_at: :desc, created_at: :desc)
     end
 end

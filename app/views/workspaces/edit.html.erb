@@ -84,6 +84,7 @@
     </div>
 
     <%= render "public_brew_shares", public_brew_shares: @public_brew_shares %>
+    <%= render "public_bean_shares", public_bean_shares: @public_bean_shares %>
 
     <% if current_workspace_policy.owner? %>
       <div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-6 shadow-sm">

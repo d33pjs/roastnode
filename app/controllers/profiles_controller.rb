@@ -8,6 +8,7 @@ class ProfilesController < ApplicationController
 
     if @user.update(profile_params)
       PublicBrewShareRefresher.refresh_for(@user)
+      PublicBeanShareRefresher.refresh_for(@user)
       redirect_to root_path, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity
