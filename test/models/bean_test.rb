@@ -175,6 +175,20 @@ class BeanTest < ActiveSupport::TestCase
     assert_not_nil bean.archived_at
   end
 
+  test "archive tolerates legacy invalid purchase url" do
+    freeze_time do
+      bean = beans(:open_household)
+      bean.update_column(:purchase_url, "javascript:alert('bean')")
+
+      bean.archive!
+
+      bean.reload
+      assert_equal Time.current, bean.archived_at
+      assert_nil bean.finished_at
+      assert_equal "javascript:alert('bean')", bean.purchase_url
+    end
+  end
+
   test "finish marks a bag finished while preserving leftover grams" do
     freeze_time do
       bean = beans(:open_household)
@@ -200,6 +214,29 @@ class BeanTest < ActiveSupport::TestCase
     assert_nil bean.finished_at
     assert_nil bean.archived_at
     assert_equal 14.to_d, bean.remaining_grams
+  end
+
+  test "reopen tolerates legacy invalid purchase url" do
+    travel_to Date.new(2026, 6, 13) do
+      bean = beans(:open_household)
+      bean.update_columns(
+        purchase_url: "javascript:alert('bean')",
+        remaining_grams: 0,
+        archived_at: Time.current,
+        finished_at: Time.current,
+        opened_on: nil
+      )
+
+      bean.reopen!
+
+      bean.reload
+      assert_equal "open", bean.bag_status
+      assert_equal bean.bag_size_grams, bean.remaining_grams
+      assert_equal Date.new(2026, 6, 13), bean.opened_on
+      assert_nil bean.archived_at
+      assert_nil bean.finished_at
+      assert_equal "javascript:alert('bean')", bean.purchase_url
+    end
   end
 
   test "finished stats use consumed grams and clamped open days" do

@@ -1091,6 +1091,24 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "quick open rejects external redirect referrer" do
+    travel_to Date.new(2026, 6, 13) do
+      sign_in_as(users(:one))
+      bean = workspaces(:household).beans.create!(
+        name: "External Referrer Shelf",
+        roaster_name: "Shelf Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 199,
+        opened_on: nil
+      )
+
+      patch open_bag_bean_path(bean), headers: { "HTTP_REFERER" => "https://evil.example/pantry" }
+
+      assert_redirected_to bean_path(bean)
+      assert_equal "open", bean.reload.bag_status
+    end
+  end
+
   test "quick open opens legacy stock bag with invalid purchase url" do
     travel_to Date.new(2026, 6, 13) do
       sign_in_as(users(:one))

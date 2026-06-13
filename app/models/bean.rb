@@ -123,7 +123,11 @@ class Bean < ApplicationRecord
   end
 
   def archive!
-    update!(archived_at: Time.current, finished_at: nil)
+    update_columns(
+      archived_at: Time.current,
+      finished_at: nil,
+      updated_at: Time.current
+    )
   end
 
   def finish!
@@ -136,11 +140,13 @@ class Bean < ApplicationRecord
   end
 
   def reopen!
-    self.remaining_grams = bag_size_grams if remaining_grams.to_d <= 0
-    self.archived_at = nil
-    self.finished_at = nil
-    self.opened_on ||= Date.current
-    save!
+    update_columns(
+      remaining_grams: remaining_grams.to_d <= 0 ? bag_size_grams : remaining_grams,
+      archived_at: nil,
+      finished_at: nil,
+      opened_on: opened_on || Date.current,
+      updated_at: Time.current
+    )
   end
 
   def open_bag!

@@ -85,7 +85,7 @@ class BeansController < ApplicationController
     if @bean.stock?
       @bean.open_bag!
       refresh_public_shares_for(@bean)
-      redirect_back fallback_location: @bean, notice: t(".opened")
+      redirect_back_or_to @bean, allow_other_host: false, notice: t(".opened")
     else
       redirect_to @bean, alert: t(".not_stock")
     end
