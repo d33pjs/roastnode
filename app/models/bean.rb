@@ -50,7 +50,7 @@ class Bean < ApplicationRecord
   validates :grind_state, inclusion: { in: GRIND_STATES }
   validates :roast_degree, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
   validate :roast_degree_half_step
-  validate :purchase_url_is_http_or_https
+  validate :purchase_url_is_http_or_https, if: :will_save_change_to_purchase_url?
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 
   def open?

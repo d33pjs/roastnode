@@ -14,6 +14,7 @@ end %>
 }.fetch(remaining_state) %>
 <% latest_brew_at = bean[:latest_brew_at] %>
 <% purchase_url_href = bean_purchase_url_href(bean.purchase_url) %>
+<% bean_card_origin = bean.origin_display_value.presence %>
 
 <article data-testid="bean-card" class="min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
   <%= link_to bean_path(bean), data: { testid: "bean-card-detail-#{bean.id}" }, class: "grid min-w-0 transition hover:bg-[var(--rn-surface-muted)] sm:grid-cols-[9.5rem_1fr] lg:grid-cols-[10.5rem_1fr]" do %>
@@ -78,8 +79,8 @@ end %>
         <% if bean.roast_date.present? %>
           <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.roasted_on", date: l(bean.roast_date)) %></span>
         <% end %>
-        <% if bean.country.present? %>
-          <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= bean.country %></span>
+        <% if bean_card_origin.present? %>
+          <span data-testid="bean-card-origin-<%= bean.id %>" class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= bean_card_origin %></span>
         <% end %>
         <% if bean.rating.present? %>
           <span data-testid="bean-card-rating-<%= bean.id %>" class="max-w-full truncate rounded-full bg-amber-100 px-2.5 py-1 text-amber-800"><%= t("beans.index.rating", rating: bean.rating) %></span>

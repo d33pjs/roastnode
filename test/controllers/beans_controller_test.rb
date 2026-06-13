@@ -37,6 +37,29 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid^=bean-list-channeling]", count: 0
   end
 
+  test "index bean cards use structured origin fallback" do
+    sign_in_as(users(:one))
+    region_bean = beans(:open_household)
+    region_bean.update!(country: nil, region: "Huila", continent: "South America")
+    continent_bean = beans(:second_open_household)
+    continent_bean.update!(country: nil, region: nil, continent: "Africa", origin: "Legacy Origin")
+    legacy_bean = workspaces(:household).beans.create!(
+      name: "Legacy Origin Bag",
+      roaster_name: "Archive Coffee",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.current,
+      origin: "Old Label"
+    )
+
+    get beans_path
+
+    assert_response :success
+    assert_select "[data-testid=?]", "bean-card-origin-#{region_bean.id}", text: "Huila"
+    assert_select "[data-testid=?]", "bean-card-origin-#{continent_bean.id}", text: "Africa"
+    assert_select "[data-testid=?]", "bean-card-origin-#{legacy_bean.id}", text: "Old Label"
+  end
+
   test "index groups active beans before historical bags" do
     sign_in_as(users(:one))
     workspace = workspaces(:household)

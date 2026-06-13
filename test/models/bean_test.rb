@@ -403,6 +403,18 @@ class BeanTest < ActiveSupport::TestCase
     assert_nil Bean.safe_purchase_url("https:///path")
   end
 
+  test "unrelated bean edits tolerate unchanged legacy invalid purchase url" do
+    bean = beans(:open_household)
+    bean.update_column(:purchase_url, "javascript:alert('bean')")
+
+    assert_nothing_raised do
+      bean.update!(notes: "Updated notes without touching purchase URL")
+    end
+
+    assert_equal "javascript:alert('bean')", bean.reload.purchase_url
+    assert_equal "Updated notes without touching purchase URL", bean.notes
+  end
+
   test "purchase url rejects unsafe schemes" do
     bean = workspaces(:household).beans.build(
       name: "Unsafe Purchase Url",
