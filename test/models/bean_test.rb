@@ -257,6 +257,27 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal "Calendar Coffee", duplicate.manufacturer
   end
 
+  test "duplicates drop legacy invalid purchase url" do
+    source = beans(:open_household)
+    source.update_column(:purchase_url, "javascript:alert('bean')")
+
+    duplicate = nil
+    assert_difference -> { source.workspace.beans.count }, 1 do
+      duplicate = source.duplicate_for_new_bag!
+    end
+
+    assert_nil duplicate.purchase_url
+  end
+
+  test "duplicates keep valid purchase url" do
+    source = beans(:open_household)
+    source.update!(purchase_url: "https://example.com/beans")
+
+    duplicate = source.duplicate_for_new_bag!
+
+    assert_equal "https://example.com/beans", duplicate.purchase_url
+  end
+
   test "open bag transition opens stock today and preserves remaining inventory" do
     travel_to Date.new(2026, 6, 13) do
       bean = workspaces(:household).beans.create!(

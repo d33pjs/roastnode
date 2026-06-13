@@ -301,7 +301,7 @@ class Bean < ApplicationRecord
         remaining_grams: bag_size_grams,
         opened_on: Date.current,
         purchase_source:,
-        purchase_url:,
+        purchase_url: self.class.safe_purchase_url(purchase_url),
         purchased_on:,
         purchase_price_cents:,
         rating:,
