@@ -27,6 +27,8 @@ Public bean pages include all espresso and Quick Drip brews for the bag as publi
 
 Public bean pages use `PublicBeanMediaController` and opaque media handles. The only user-selected photos in v1 are bean package photos. Workspace logos and brewer avatars may appear through the snapshot media allowlist.
 
+Public bean media streams only safe browser-raster image content types: JPEG, PNG, GIF, and WebP. HTML, SVG, and other active or non-image content types return `404 Not Found`.
+
 Public bean pages must not use `MediaAttachmentsController`, `rails_blob_path`, `rails_storage_proxy_path`, signed blob URLs, raw private media routes, raw record/database IDs, raw attachment IDs, original filenames, or private media handles.
 
 Disabled shares, unknown tokens, locked password-protected shares, unsupported variants, deleted attachments, unselected bean photos, and attachments outside the snapshot allowlist return `404 Not Found`.

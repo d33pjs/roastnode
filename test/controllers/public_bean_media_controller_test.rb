@@ -92,6 +92,30 @@ class PublicBeanMediaControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "rejects selected unsafe public bean media content types" do
+    [
+      [ "payload.html", "text/html" ],
+      [ "payload.svg", "image/svg+xml" ]
+    ].each do |filename, content_type|
+      bean = workspaces(:household).beans.create!(
+        name: "Unsafe media #{filename}",
+        roaster_name: "Risk Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 200,
+        opened_on: Date.current
+      )
+      attachment = attach_payload(bean, filename:, content_type:)
+      share = create_share(bean:, selected_photo_attachment_ids: [ attachment.id ])
+      handle = share.public_media_handle_for(attachment.id)
+
+      get public_bean_media_path(share.token, handle)
+      assert_response :not_found
+
+      get public_bean_media_path(share.token, handle, variant: "thumbnail")
+      assert_response :not_found
+    end
+  end
+
   private
     def create_share(bean:, selected_photo_attachment_ids:, password: nil, enabled: true)
       PublicBeanShare.create!(
@@ -108,6 +132,15 @@ class PublicBeanMediaControllerTest < ActionDispatch::IntegrationTest
           selected_photo_attachment_ids:
         ).call
       )
+    end
+
+    def attach_payload(record, filename:, content_type:)
+      record.photos.attach(
+        io: StringIO.new("<svg><script>alert(1)</script></svg>"),
+        filename:,
+        content_type:
+      )
+      record.photos.attachments.last
     end
 
     def public_bean_media_handle_for(share, attachment_id)

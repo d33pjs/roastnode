@@ -84,6 +84,16 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "rejects selected unsafe public brew media content type" do
+    brew = brews(:morning_espresso)
+    attachment = attach_payload(brew, filename: "payload.html", content_type: "text/html")
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ attachment.id ])
+
+    get public_media_path_for(share, attachment)
+
+    assert_response :not_found
+  end
+
   test "rejects media for password protected share until unlocked" do
     brew = brews(:morning_espresso)
     photo = attach_photo(brew)
@@ -138,5 +148,14 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
         selected_photo_attachment_ids:,
         snapshot:
       )
+    end
+
+    def attach_payload(record, filename:, content_type:)
+      record.photos.attach(
+        io: StringIO.new("<html><script>alert(1)</script></html>"),
+        filename:,
+        content_type:
+      )
+      record.photos.attachments.last
     end
 end

@@ -46,7 +46,7 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Workspace owners/admins can manage any workspace recipe share. Workspace writers can manage only shares for recipes they created. Viewers cannot manage recipe shares.
 - Ingredients and finish note are public recipe content by default once a recipe share is enabled.
 - Public recipe media is private by default and appears publicly only when the share explicitly selects the recipe photo.
-- Public recipe media must use opaque `PublicRecipeShare` media handles and the share's selected recipe-photo allowlist. Public recipe pages must not render raw Active Storage routes, private media attachment routes, raw attachment IDs, original filenames, or private media handles.
+- Public recipe media must use opaque `PublicRecipeShare` media handles, the share's selected recipe-photo allowlist, and safe raster image content types. Public recipe pages must not render raw Active Storage routes, private media attachment routes, raw attachment IDs, original filenames, or private media handles.
 - The optional workspace Buy Me a Coffee URL is not copied into public recipe snapshots. Public recipe page controllers may read it from the share's workspace to render the global footer support badge.
 
 ## Current Limits

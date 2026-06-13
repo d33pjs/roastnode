@@ -104,6 +104,8 @@ Public share pages must not use `MediaAttachmentsController`, `rails_blob_path`,
 
 `PublicBrewMediaController` streams only attachments allowed by an enabled share. Public HTML uses per-share opaque media handles instead of database attachment IDs. The controller resolves those handles back to the share's media allowlist before loading an Active Storage attachment.
 
+Public media streams only safe browser-raster image content types: JPEG, PNG, GIF, and WebP. HTML, SVG, and other active or non-image content types return `404 Not Found`.
+
 New snapshots use the builder-generated `public_media` manifest as the public media allowlist:
 
 - selected share-record photos

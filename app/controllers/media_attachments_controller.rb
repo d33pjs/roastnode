@@ -1,9 +1,12 @@
 class MediaAttachmentsController < ApplicationController
+  include SafeImageMedia
+
   THUMBNAIL_VARIANT = "thumbnail"
   THUMBNAIL_TRANSFORMATIONS = { resize_to_limit: [ 480, 480 ] }.freeze
 
   before_action :set_attachment
   before_action :ensure_attachment_in_current_workspace!
+  before_action :ensure_safe_image_attachment!, only: %i[show download primary]
 
   def show
     return send_thumbnail if params[:variant] == THUMBNAIL_VARIANT
@@ -19,7 +22,7 @@ class MediaAttachmentsController < ApplicationController
   def crop
     return unless ensure_write_policy!
     return head :not_found unless photo_collection_record?(@attachment.record)
-    return redirect_to record_path(@attachment.record), alert: t(".not_image") unless @attachment.blob.image?
+    return redirect_to record_path(@attachment.record), alert: t(".not_image") unless safe_image_attachment? && @attachment.blob.image?
 
     save_crop if request.patch?
   end
@@ -53,13 +56,13 @@ class MediaAttachmentsController < ApplicationController
 
     def send_blob(disposition:, filename: @attachment.blob.filename.to_s, data: @attachment.blob.download)
       send_data data,
-        type: @attachment.blob.content_type,
+        type: safe_image_content_type,
         disposition:,
         filename:
     end
 
     def send_thumbnail
-      return head :not_found unless @attachment.blob.image?
+      return head :not_found unless safe_image_attachment? && @attachment.blob.image?
 
       response.set_header("X-Roastnode-Media-Variant", THUMBNAIL_VARIANT)
       send_blob(
@@ -102,7 +105,7 @@ class MediaAttachmentsController < ApplicationController
       attributes = crop_params
       file = attributes[:file]
 
-      unless file&.content_type&.start_with?("image/")
+      unless SafeImageMedia::SAFE_IMAGE_CONTENT_TYPES.include?(file&.content_type.to_s.downcase)
         redirect_to crop_media_attachment_path(@attachment), alert: t(".invalid_image")
         return
       end

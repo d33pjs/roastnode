@@ -1,6 +1,8 @@
 require "digest"
 
 class PublicBeanMediaController < ApplicationController
+  include SafeImageMedia
+
   THUMBNAIL_VARIANT = MediaAttachmentsController::THUMBNAIL_VARIANT
   THUMBNAIL_TRANSFORMATIONS = MediaAttachmentsController::THUMBNAIL_TRANSFORMATIONS
 
@@ -10,6 +12,7 @@ class PublicBeanMediaController < ApplicationController
   before_action :ensure_share_unlocked!
   before_action :set_attachment
   before_action :ensure_attachment_public!
+  before_action :ensure_safe_image_attachment!
 
   def show
     return send_thumbnail if params[:variant] == THUMBNAIL_VARIANT
@@ -47,13 +50,13 @@ class PublicBeanMediaController < ApplicationController
 
     def send_blob(disposition:, data: @attachment.blob.download)
       send_data data,
-        type: @attachment.blob.content_type,
+        type: safe_image_content_type,
         disposition:,
         filename: public_filename
     end
 
     def send_thumbnail
-      return head :not_found unless @attachment.blob.image?
+      return head :not_found unless safe_image_attachment? && @attachment.blob.image?
 
       response.set_header("X-Roastnode-Media-Variant", THUMBNAIL_VARIANT)
       send_blob(

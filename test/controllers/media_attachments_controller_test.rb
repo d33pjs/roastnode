@@ -33,6 +33,17 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "does not serve active workspace attachment with unsafe content type" do
+    sign_in_as(users(:one))
+    attachment = attach_payload(beans(:open_household), filename: "payload.html", content_type: "text/html")
+
+    get media_attachment_path(attachment)
+    assert_response :not_found
+
+    get download_media_attachment_path(attachment)
+    assert_response :not_found
+  end
+
   test "downloads active workspace attachment" do
     sign_in_as(users(:one))
     attachment = attach_photo(beans(:open_household))
@@ -392,6 +403,15 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
           selected_photo_attachment_ids:
         ).call
       )
+    end
+
+    def attach_payload(record, filename:, content_type:)
+      record.photos.attach(
+        io: StringIO.new("<html><script>alert(1)</script></html>"),
+        filename:,
+        content_type:
+      )
+      record.photos.attachments.last
     end
 
 end

@@ -29,6 +29,14 @@ class PublicRecipeMediaControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "rejects selected unsafe public recipe media content type" do
+    share, attachment = create_share_with_payload(content_type: "text/html")
+
+    get public_recipe_media_path(share.token, share.public_media_handle_for(attachment.id))
+
+    assert_response :not_found
+  end
+
   private
     def create_share_with_photo(enabled:, selected: true, password: nil)
       recipe = recipes(:household_recipe)
@@ -54,5 +62,30 @@ class PublicRecipeMediaControllerTest < ActionDispatch::IntegrationTest
         ).call
       )
       [ share, photo ]
+    end
+
+    def create_share_with_payload(content_type:)
+      recipe = recipes(:household_recipe)
+      recipe.photos.attach(
+        io: StringIO.new("<html><script>alert(1)</script></html>"),
+        filename: "payload.html",
+        content_type:
+      )
+      attachment = recipe.photos.attachments.last
+      selected_ids = [ attachment.id ]
+      share = recipe.create_public_recipe_share!(
+        workspace: recipe.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        title: "Shared recipe",
+        enabled: true,
+        selected_photo_attachment_ids: selected_ids,
+        snapshot: PublicRecipeShareSnapshotBuilder.new(
+          recipe:,
+          title: "Shared recipe",
+          selected_photo_attachment_ids: selected_ids
+        ).call
+      )
+      [ share, attachment ]
     end
 end
