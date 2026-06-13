@@ -137,6 +137,25 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Buy grinder", equipment.record_links.first.label
   end
 
+  test "updating equipment refreshes public bean share snapshots" do
+    sign_in_as(users(:one))
+    grinder = equipment(:household_grinder)
+    share = create_public_bean_share_for(beans(:open_household))
+
+    patch equipment_path(grinder), params: {
+      equipment: {
+        name: "Updated Niche",
+        kind: grinder.kind,
+        model: "Updated Zero"
+      }
+    }
+
+    assert_redirected_to gear_path
+    equipment_names = snapshot_equipment_names(share)
+    assert_includes equipment_names, "Updated Niche"
+    assert_not_includes equipment_names, "Niche Zero"
+  end
+
   test "viewer cannot create equipment" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)
@@ -248,7 +267,9 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     grinder = equipment(:household_grinder)
     brew = brews(:morning_espresso)
     share = create_public_brew_share_for(brew)
+    bean_share = create_public_bean_share_for(brew.bean)
     assert_equal grinder.name, share.snapshot.dig("equipment", 0, "name")
+    assert_includes snapshot_equipment_names(bean_share), grinder.name
 
     assert_difference -> { workspaces(:household).equipment.count }, -1 do
       assert_no_difference -> { Brew.count } do
@@ -259,6 +280,7 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to gear_path
     assert_nil brew.reload.grinder
     assert_not_includes share.reload.snapshot.fetch("equipment").map { |item| item.fetch("role") }, "grinder"
+    assert_not_includes snapshot_equipment_names(bean_share), grinder.name
   end
 
   test "viewer cannot manage equipment" do
@@ -408,5 +430,27 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
           selected_photo_attachment_ids:
         ).call
       )
+    end
+
+    def create_public_bean_share_for(bean)
+      bean.create_public_bean_share!(
+        workspace: bean.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared bean",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title: "Shared bean",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
+
+    def snapshot_equipment_names(share)
+      share.reload.snapshot.fetch("brews").flat_map do |brew|
+        brew.fetch("equipment", {}).values.map { |equipment| equipment["name"] }
+      end
     end
 end

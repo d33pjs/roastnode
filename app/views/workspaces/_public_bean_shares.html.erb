@@ -36,7 +36,7 @@
                 <%= button_to t("#{locale_scope}.remove"),
                   bean_public_bean_share_path(share.bean),
                   method: :delete,
-                  params: { return_to: "workspace" },
+                  params: { return_to: "public_bean_shares" },
                   form: { data: { turbo_confirm: t("#{locale_scope}.remove_confirmation") } },
                   class: "rounded-md border border-red-200 bg-white px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>
               </div>

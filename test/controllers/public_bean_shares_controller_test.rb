@@ -186,6 +186,18 @@ class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to bean_path(bean)
   end
 
+  test "workspace settings removal returns to public bean shares section" do
+    bean = beans(:open_household)
+    create_share_for(bean, user: users(:one))
+    sign_in_as(users(:one))
+
+    assert_difference -> { PublicBeanShare.count }, -1 do
+      delete bean_public_bean_share_path(bean), params: { return_to: "public_bean_shares" }
+    end
+
+    assert_redirected_to edit_workspace_path(anchor: "public-bean-shares")
+  end
+
   private
     def create_share_for(bean, user:, enabled: true, password: nil, title: "Shared bean")
       bean.create_public_bean_share!(

@@ -75,6 +75,7 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", public_bean_page_path(share.token), text: public_bean_page_url(share.token)
     assert_select "a[href=?]", edit_bean_public_bean_share_path(share.bean)
     assert_select "form[action=?]", bean_public_bean_share_path(share.bean)
+    assert_select "form[action=?] input[type=hidden][name=return_to][value=public_bean_shares]", bean_public_bean_share_path(share.bean)
     assert_select "[data-testid=?]", "public-bean-share-created-at-#{share.id}"
     assert_select "[data-testid=?]", "public-bean-share-updated-at-#{share.id}"
     assert_select "[data-testid=?]", "public-bean-share-view-count-#{share.id}", text: "2"
@@ -92,6 +93,17 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=?]", "workspace-public-share-#{other_share.id}", count: 0
+  end
+
+  test "workspace public bean share management excludes other workspaces" do
+    other_share = create_public_bean_share_for(beans(:other_workspace_open), enabled: true, user: users(:two))
+    sign_in_as(users(:one))
+
+    get edit_workspace_path
+
+    assert_response :success
+    assert_select "[data-testid=?]", "workspace-public-bean-share-#{other_share.id}", count: 0
+    assert_select "a[href=?]", public_bean_page_path(other_share.token), count: 0
   end
 
   test "workspace public share management excludes stale quick drip shares" do

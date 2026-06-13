@@ -31,7 +31,13 @@ class PublicBeanSharesController < ApplicationController
   end
 
   def destroy
-    redirect_target = params[:return_to] == "workspace" ? edit_workspace_path(anchor: "public-shares") : @bean
+    redirect_target = if params[:return_to] == "public_bean_shares"
+      edit_workspace_path(anchor: "public-bean-shares")
+    elsif params[:return_to] == "workspace"
+      edit_workspace_path(anchor: "public-shares")
+    else
+      @bean
+    end
     @share.destroy!
 
     redirect_to redirect_target, notice: t(".destroyed")
