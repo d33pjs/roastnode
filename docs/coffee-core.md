@@ -43,7 +43,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 
 - Public overview pages for all shared brews.
 - Public overview pages for all shared recipes.
-- Quick Drip recipes and public Quick Drip sharing.
+- Quick Drip recipes and standalone public Quick Drip brew share pages. Quick Drip brews may appear as public-safe summaries inside public bean shares.
 - Beanconqueror Quick Drip import.
 - Brewer cup/water calibration and professional filter method templates.
 - Fediverse publishing for brew shares.

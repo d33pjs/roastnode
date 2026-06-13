@@ -48,7 +48,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - The espresso metric area uses Dose, Ratio, Grind, Retention, Rating, and Balance. Mobile uses a balanced two-by-three grid and can show the full retention label; the tighter desktop six-column row shortens it to `Ret.`.
 - Use the profile `display_name` through `User#display_label` for user-facing labels. Do not put `email_address` on screenshot-friendly brew cards.
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
-- Public share pages use `public_brew_pages/_hero_card` because they render snapshot data and public media routes without `current_workspace`. Public Quick Drip sharing is deferred, so public shares only resolve espresso brews.
+- Public brew share pages use `public_brew_pages/_hero_card` because they render snapshot data and public media routes without `current_workspace`. Standalone public Quick Drip brew share pages are deferred, so public brew shares only resolve espresso brews. Public bean shares may still render Quick Drip brews as compact public-safe summaries.
 - Keep cross-links in the full brew details below the hero card, not inside the hero card partial.
 - Use `brew_card_photo_attachment`, which prefers the bean's primary package photo and falls back through the normal primary-photo helper.
 - Keep grinder, machine, and brewer primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.

@@ -19,6 +19,8 @@ Public bean shares render from `PublicBeanShare` snapshots. They must not render
 
 Workspace name/logo and brewer display labels/avatars are intentional public identity surfaces when copied into the snapshot media allowlist. They must still render through public media handles, not raw Active Storage URLs.
 
+The optional workspace support badge configuration is not copied into public bean snapshots. Public bean page controllers may read it from the share's workspace at request time to render the global footer support badge.
+
 Public bean pages include all espresso and Quick Drip brews for the bag as public-safe summaries. Brew summaries may include public notes, public metrics, method labels, taste, rating, channeling, and equipment labels from the snapshot, but they must not include private brew notes or brew photos.
 
 ## Public Media

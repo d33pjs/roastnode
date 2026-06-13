@@ -41,7 +41,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Backups were originally framed as documentation plus workspace export. The current v1 direction now needs an in-app, instance-admin-only backup system with scheduled jobs, full reconstructable archives, and readable all-households JSON.
 - Last-brew defaults were narrowed after product testing. The current contract copies only setup fields: bean, grinder, machine, preparation tools, grind setting, temperature, and pre-infusion seconds.
 - Beanconqueror compatibility means practical import first, not round-trip parity.
-- Quick Drip v1 intentionally covers private automatic drip/filter-style daily logging. Quick Drip recipes, public Quick Drip sharing, Beanconqueror Quick Drip import, brewer cup/water calibration, and professional filter methods remain deferred.
+- Quick Drip v1 intentionally covers private automatic drip/filter-style daily logging. Quick Drip brews can appear as public-safe summaries inside public bean shares, but standalone public Quick Drip brew share pages, Quick Drip recipes, Beanconqueror Quick Drip import, brewer cup/water calibration, and professional filter methods remain deferred.
 - The first analytics implementation is server-rendered/query-backed. ECharts/Stimulus interactivity remains optional future work.
 - Public identity images are now split by context: normal app media stays private behind authenticated routes, while workspace logos and user avatars referenced by enabled public brew, bean, or recipe share snapshots can render through the relevant public share media whitelist.
 

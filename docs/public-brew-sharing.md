@@ -1,6 +1,6 @@
 # Public Brew Sharing
 
-Public Brew Sharing lets a workspace writer publish one curated espresso brew page without opening the private workspace. Quick Drip public sharing is deferred.
+Public Brew Sharing lets a workspace writer publish one curated espresso brew page without opening the private workspace. Standalone Quick Drip public brew share pages are deferred; Quick Drip brews may appear only as public-safe summaries inside public bean shares.
 
 ## Included Now
 
