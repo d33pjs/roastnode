@@ -10,6 +10,16 @@
           <% if PublicBeanShare.publishable_bean?(@bean) %>
             <% public_bean_share = @bean.public_bean_share %>
             <% if public_bean_share.present? %>
+              <% if public_bean_share.enabled? && public_bean_share.manageable_by?(Current.user) %>
+                <% public_share_title = public_bean_share.title.presence || PublicBeanShare.default_title_for(@bean) %>
+                <%= render "shared/native_share_button",
+                  url: public_bean_page_url(public_bean_share.token),
+                  title: public_share_title,
+                  text: t("beans.native_share.text", title: public_share_title),
+                  label: t("shared.native_share.share_public_bean"),
+                  testid: "bean-native-share-button-#{@bean.id}",
+                  button_class: "inline-flex h-10 w-10 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 hover:text-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
+              <% end %>
               <% if public_bean_share.manageable_by?(Current.user) %>
                 <%= link_to t(".edit_public_share"), edit_bean_public_bean_share_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
               <% end %>

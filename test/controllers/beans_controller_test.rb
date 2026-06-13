@@ -559,7 +559,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
   test "show links writer to edit existing public bean share for publishable bean" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
-    bean.create_public_bean_share!(
+    share = bean.create_public_bean_share!(
       workspace: bean.workspace,
       created_by: users(:one),
       updated_by: users(:one),
@@ -577,6 +577,12 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[href=?]", edit_bean_public_bean_share_path(bean), text: I18n.t("beans.show.edit_public_share")
+    assert_select "[data-testid=?][data-native-share-url-value=?]",
+      "bean-native-share-button-#{bean.id}",
+      public_bean_page_url(share.token)
+    assert_select "[data-testid=?] svg[aria-hidden=true]", "bean-native-share-button-#{bean.id}"
+    assert_select "[data-testid=?] span.sr-only", "bean-native-share-button-#{bean.id}", I18n.t("shared.native_share.share_public_bean")
+    assert_appears_before "bean-native-share-button-#{bean.id}", edit_bean_public_bean_share_path(bean)
   end
 
   test "show hides public bean share actions from writer who cannot manage existing share" do

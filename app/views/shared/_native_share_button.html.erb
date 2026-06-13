@@ -1,6 +1,6 @@
 <% button_class = local_assigns.fetch(:button_class, "inline-flex h-10 w-10 items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 hover:text-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400") %>
 <% share_text = local_assigns.fetch(:text, title) %>
-<% label = t("shared.native_share.share_public_brew") %>
+<% label = local_assigns.fetch(:label, t("shared.native_share.share_public_brew")) %>
 
 <%= button_tag type: "button",
   class: button_class,

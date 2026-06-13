@@ -130,6 +130,19 @@ class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "public_bean_share[title]", share.title
   end
 
+  test "edit shows public bean share url when enabled" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    bean = beans(:open_household)
+    share = create_share_for(bean, user:, enabled: true)
+    sign_in_as(user)
+
+    get edit_bean_public_bean_share_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-share-url] a[href=?]", public_bean_page_path(share.token), text: public_bean_page_url(share.token)
+  end
+
   test "writer cannot manage another writers bean share" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

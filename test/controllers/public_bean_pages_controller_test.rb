@@ -20,7 +20,12 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=public-bean-page]"
     assert_select "[data-testid=public-bean-timeline]"
-    assert_select "[data-testid=public-bean-brew-card]", minimum: 1
+    assert_select "[data-testid=public-bean-journey]"
+    assert_select "[data-testid=public-bean-journey-track]"
+    assert_select "[data-testid=public-bean-journey-opened]"
+    assert_select "[data-testid=public-bean-journey-end]"
+    assert_select "[data-testid=public-bean-journey-brew][data-method=espresso]", minimum: 1
+    assert_select "[data-testid=public-bean-brew-hero-card]", minimum: 1
     assert_select "body", text: /Public bean note/
     assert_select "body", text: /Private bean note/, count: 0
     assert_select "body", text: /Private brew note/, count: 0
@@ -82,8 +87,8 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     get public_bean_page_path(share.token)
 
     assert_response :success
-    assert_select "[data-testid=public-bean-brew-card][data-method=espresso]"
-    assert_select "[data-testid=public-bean-brew-card][data-method=quick_drip]"
+    assert_select "[data-testid=public-bean-brew-hero-card][data-method=espresso]"
+    assert_select "[data-testid=public-bean-brew-hero-card][data-method=quick_drip]"
     assert_select "body", text: /Quick Drip/
   end
 

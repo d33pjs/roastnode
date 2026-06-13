@@ -32,9 +32,25 @@ module PublicBeanSharesHelper
     "#{public_bean_decimal(value)}/5"
   end
 
+  def public_bean_ratio(brew)
+    dose = public_bean_decimal_value(brew["dose_grams"].presence || brew["bean_weight_grams"])
+    beverage = public_bean_decimal_value(brew["beverage_grams"])
+    return public_bean_unknown_label if dose.zero? || beverage.zero?
+
+    "1:#{public_bean_decimal(beverage / dose, precision: 2)}"
+  end
+
   def public_bean_date(value)
     date = Date.iso8601(value.to_s)
     l(date, format: :long)
+  rescue ArgumentError, TypeError
+    nil
+  end
+
+  def public_bean_time(value)
+    return if value.blank?
+
+    Time.zone.parse(value.to_s)
   rescue ArgumentError, TypeError
     nil
   end
@@ -73,13 +89,19 @@ module PublicBeanSharesHelper
       t("public_bean_pages.show.unknown")
     end
 
-    def public_bean_decimal(value)
+    def public_bean_decimal(value, precision: 1)
       number_with_precision(
         value.to_d,
-        precision: 1,
+        precision:,
         strip_insignificant_zeros: true,
         separator: ".",
         delimiter: ","
       )
+    end
+
+    def public_bean_decimal_value(value)
+      return 0.to_d if value.blank?
+
+      value.to_d
     end
 end
