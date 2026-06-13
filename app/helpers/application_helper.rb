@@ -79,6 +79,6 @@ module ApplicationHelper
     end
 
     def workflow_back_link_referrer?(path)
-      path.match?(%r{\A/(brews|beans|recipes)/\d+/public_(brew|bean|recipe)_share(/new|/edit)?(?:\?.*)?\z})
+      path.match?(%r{\A/(?:brews/\d+/public_brew_share|beans/\d+/public_bean_share|recipes/\d+/public_recipe_share)(?:/(?:new|edit))?(?:\?.*)?\z})
     end
 end

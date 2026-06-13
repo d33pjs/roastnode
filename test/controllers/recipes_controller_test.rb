@@ -27,6 +27,16 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: recipes(:other_workspace_recipe).title, count: 0
   end
 
+  test "show back link ignores public recipe share workflow referrers" do
+    recipe = recipes(:household_recipe)
+    sign_in_as(users(:one))
+
+    get recipe_path(recipe), headers: { "HTTP_REFERER" => "http://www.example.com#{new_recipe_public_recipe_share_path(recipe)}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?]", recipes_path, text: /#{Regexp.escape(I18n.t("recipes.show.back"))}/
+  end
+
   test "show renders finish ingredients and finish note" do
     sign_in_as(users(:one))
     recipe = recipes(:household_recipe)
