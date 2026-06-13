@@ -115,7 +115,13 @@ class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
   test "writer cannot manage another writers bean share" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
-    create_share_for(beans(:open_household), user: users(:one))
+    other_writer = User.create!(
+      email_address: "other-bean-share-writer@example.com",
+      password: "password",
+      active_workspace: workspaces(:household)
+    )
+    Membership.create!(user: other_writer, workspace: workspaces(:household), role: "member")
+    create_share_for(beans(:open_household), user: other_writer)
     sign_in_as(user)
 
     get edit_bean_public_bean_share_path(beans(:open_household))
