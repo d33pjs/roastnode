@@ -665,6 +665,16 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
+  test "show back link ignores public bean share workflow referrers" do
+    bean = beans(:open_household)
+    sign_in_as(users(:one))
+
+    get bean_path(bean), headers: { "HTTP_REFERER" => "http://www.example.com#{new_bean_public_bean_share_path(bean)}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?]", beans_path, text: /#{Regexp.escape(I18n.t("beans.show.back"))}/
+  end
+
   test "show uses structured origin fallback and renders cost metrics" do
     sign_in_as(users(:one))
     bean = beans(:second_open_household)

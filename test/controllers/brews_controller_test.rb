@@ -1103,6 +1103,16 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.show.back"))}/
   end
 
+  test "show back link ignores public brew share workflow referrers" do
+    brew = brews(:morning_espresso)
+    sign_in_as(users(:one))
+
+    get brew_path(brew), headers: { "HTTP_REFERER" => "http://www.example.com#{new_brew_public_brew_share_path(brew)}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.show.back"))}/
+  end
+
   test "show back link ignores self referrers" do
     brew = brews(:morning_espresso)
     sign_in_as(users(:one))

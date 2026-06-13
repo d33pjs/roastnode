@@ -9,6 +9,7 @@ module ApplicationHelper
 
     path = uri.relative? ? uri.to_s : uri.request_uri
     return fallback_path if path.blank? || path == request.fullpath
+    return fallback_path if workflow_back_link_referrer?(path)
 
     path
   rescue URI::InvalidURIError
@@ -75,5 +76,9 @@ module ApplicationHelper
           uri.host == origin.host &&
           uri.port == origin.port
       end
+    end
+
+    def workflow_back_link_referrer?(path)
+      path.match?(%r{\A/(brews|beans|recipes)/\d+/public_(brew|bean|recipe)_share(/new|/edit)?(?:\?.*)?\z})
     end
 end
