@@ -9,6 +9,8 @@
 <% brews = Array(snapshot["brews"]) %>
 <% unknown = t(".unknown") %>
 <% finished_bag = bean["public_status"] == "finished" %>
+<% average_rating_value = stats["average_rating"].presence&.to_d %>
+<% average_rating_icon_count = average_rating_value.present? ? average_rating_value.round : 0 %>
 <% primary_photo = photos.first %>
 <% primary_photo_thumb_url = public_bean_media_url_for(@share, primary_photo&.fetch("attachment_id", nil), variant: :thumbnail) %>
 <% primary_photo_full_url = public_bean_media_url_for(@share, primary_photo&.fetch("attachment_id", nil)) %>
@@ -17,13 +19,17 @@
 <main data-testid="public-bean-page" data-controller="public-lightbox" data-public-lightbox-sources-value="<%= lightbox_sources.to_json %>" data-action="keydown@window->public-lightbox#closeFromKeyboard" class="min-h-screen bg-rn-canvas text-rn-ink">
   <section class="rn-shell max-w-6xl py-5 sm:px-6 lg:py-8">
     <header class="flex items-center justify-between gap-4 py-4">
-      <div class="flex min-w-0 items-center gap-3">
-        <% if (logo_url = public_bean_media_url_for(@share, snapshot.dig("workspace", "logo_attachment_id"), variant: :thumbnail)).present? %>
-          <%= image_tag logo_url, alt: "", class: "h-10 w-10 shrink-0 rounded-full object-contain" %>
-        <% end %>
-        <p class="truncate text-xs font-black uppercase text-rn-muted"><%= snapshot.dig("workspace", "name").presence || unknown %></p>
+      <div data-testid="public-bean-roastnode-brand" class="min-w-0">
+        <%= render "shared/brand_wordmark",
+          container_class: "block h-8 w-36 sm:h-10 sm:w-44",
+          image_class: "h-full w-full object-contain object-left" %>
       </div>
-      <p class="shrink-0 rounded-full bg-[var(--rn-surface-muted)] px-3 py-1 text-xs font-black uppercase text-rn-muted"><%= t(".bean") %></p>
+      <div data-testid="public-bean-household-identity" class="flex min-w-0 items-center justify-end gap-2 text-right">
+        <p class="min-w-0 truncate text-xs font-black uppercase text-rn-muted"><%= snapshot.dig("workspace", "name").presence || unknown %></p>
+        <% if (logo_url = public_bean_media_url_for(@share, snapshot.dig("workspace", "logo_attachment_id"), variant: :thumbnail)).present? %>
+          <%= image_tag logo_url, alt: "", data: { testid: "public-bean-household-logo" }, class: "h-10 w-10 shrink-0 rounded-full object-contain" %>
+        <% end %>
+      </div>
     </header>
 
     <section class="mt-4 grid overflow-hidden rounded-3xl border border-rn-line bg-rn-surface shadow-sm lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-stretch">
@@ -37,7 +43,12 @@
         <div class="mt-6 grid gap-3 sm:grid-cols-2 <%= finished_bag ? "lg:grid-cols-3" : "lg:grid-cols-4" %>">
           <div data-testid="public-bean-hero-stat-average-rating" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
             <p class="text-xs font-black uppercase text-rn-muted"><%= t(".average_rating") %></p>
-            <p class="mt-1 text-2xl font-black text-rn-ink"><%= public_bean_rating(stats["average_rating"]) %></p>
+            <div data-testid="public-bean-average-rating-icons" aria-label="<%= public_bean_rating(stats["average_rating"]) %>" class="mt-2 flex gap-1">
+              <% 5.times do |index| %>
+                <% filled = index < average_rating_icon_count %>
+                <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-rn-line" %>"></span>
+              <% end %>
+            </div>
           </div>
           <div data-testid="public-bean-hero-stat-status" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
             <p class="text-xs font-black uppercase text-rn-muted"><%= t(".status") %></p>

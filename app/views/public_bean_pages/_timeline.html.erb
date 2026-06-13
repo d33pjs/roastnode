@@ -74,8 +74,10 @@
           <% item_title = public_bean_timeline_item_title(item) %>
           <% label_side = item["label_side"].presence || (index.even? ? "bottom" : "top") %>
           <% label_lane = item["label_lane"].to_i %>
-          <% label_offset = 1.0 + (label_lane * 3.7) %>
-          <% label_style = "#{left_style} #{label_side == "top" ? "top: #{label_offset}rem;" : "bottom: #{label_offset}rem;"}" %>
+          <% label_gap = 0.85 + (label_lane * 3.05) %>
+          <% connector_height = [ label_gap - 0.18, 0.45 ].max %>
+          <% label_style = "#{left_style} #{label_side == "top" ? "bottom: calc(50% + #{label_gap}rem);" : "top: calc(50% + #{label_gap}rem);"}" %>
+          <% connector_style = "#{left_style} #{label_side == "top" ? "bottom: 50%;" : "top: 50%;"} height: #{connector_height}rem;" %>
           <% label_date = content_tag(:span, item_label, class: "block text-[0.65rem] font-black uppercase leading-3 text-rn-muted sm:text-[0.7rem]") %>
           <% rating_row = capture do %>
             <span class="mt-1 inline-flex max-w-full flex-wrap items-center justify-center gap-1 rounded-full bg-[var(--rn-surface-muted)] px-2 py-1 shadow-sm">
@@ -90,6 +92,7 @@
             </span>
           <% end %>
           <% label_content = label_side == "top" ? safe_join([ label_date, rating_row ]) : safe_join([ rating_row, label_date ]) %>
+          <span data-testid="public-bean-journey-marker-connector" data-side="<%= label_side %>" data-lane="<%= label_lane %>" aria-hidden="true" class="absolute z-0 w-px -translate-x-1/2 bg-[var(--rn-line)] opacity-80" style="<%= connector_style %>"></span>
 
           <% if item["type"] == "cluster" %>
             <div data-testid="public-bean-journey-cluster" data-count="<%= item["count"] %>" data-display-position="<%= position %>" title="<%= item_title %>" class="absolute top-1/2 z-20 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-[var(--rn-surface)] bg-[var(--rn-accent-strong)] text-xs font-black text-[#f8faf6] shadow-sm ring-2 ring-[var(--rn-canvas)]" style="<%= left_style %>">

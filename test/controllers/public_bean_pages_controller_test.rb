@@ -86,10 +86,25 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-bean-journey-cluster-rating]", 4
     assert_select "[data-testid=public-bean-journey-avatar]", count: 0
     assert_select "[data-testid=public-bean-journey-marker-label][data-side][data-lane]"
+    assert_select "[data-testid=public-bean-journey-marker-connector][data-side][data-lane]"
     assert_select "[data-testid=public-bean-journey-brew-count-dot]", minimum: 1
     assert_equal 1, response.body.scan("January 12, 2026").size
     assert_equal 1, response.body.scan("May 28, 2026").size
     assert share.public_media_handle_for(avatar.id).present?, "expected avatar to remain public media even when not rendered on the timeline"
+  end
+
+  test "public page header shows roastnode brand and household identity" do
+    logo = attach_named_photo(beans(:open_household).workspace, :logo, filename: "household-logo.jpg")
+    share = create_share(enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-roastnode-brand] img[data-testid=brand-wordmark][alt=?]", "Roastnode"
+    assert_select "[data-testid=public-bean-household-identity]", text: /#{share.workspace.name}/
+    assert_select "[data-testid=public-bean-household-logo][src=?]",
+      public_bean_media_path(share.token, share.public_media_handle_for(logo.id), variant: :thumbnail)
+    assert_select "[data-testid=public-bean-kind-pill]", count: 0
   end
 
   test "finished hero stats are ordered and omit remaining" do
@@ -101,6 +116,7 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=public-bean-hero-stat-average-rating]"
+    assert_select "[data-testid=public-bean-average-rating-icons][aria-label] .brew-rating-bean", count: 5
     assert_select "[data-testid=public-bean-hero-stat-status]"
     assert_select "[data-testid=public-bean-hero-stat-brews]"
     assert_select "[data-testid=public-bean-hero-stat-remaining]", count: 0
