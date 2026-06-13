@@ -85,6 +85,9 @@ Rails.application.routes.draw do
   get "s/:token" => "public_brew_pages#show", as: :public_brew_page
   post "s/:token/password" => "public_brew_pages#unlock", as: :unlock_public_brew_page
   get "s/:token/media/:media_id" => "public_brew_media#show", as: :public_brew_media
+  get "b/:token" => "public_bean_pages#show", as: :public_bean_page
+  post "b/:token/password" => "public_bean_pages#unlock", as: :unlock_public_bean_page
+  get "b/:token/media/:media_id" => "public_bean_media#show", as: :public_bean_media
   get "r/:token" => "public_recipe_pages#show", as: :public_recipe_page
   post "r/:token/password" => "public_recipe_pages#unlock", as: :unlock_public_recipe_page
   get "r/:token/media/:media_id" => "public_recipe_media#show", as: :public_recipe_media

@@ -1,7 +1,7 @@
 # Redact bearer-token URLs and public media handles from Rails request logs.
 module RoastnodeBearerUrlLogFilter
-  PUBLIC_SHARE_MEDIA_PATH = %r{\A/([sr])/[^/?#]+/media/[^/?#]+}
-  PUBLIC_SHARE_PATH = %r{\A/([sr])/[^/?#]+}
+  PUBLIC_SHARE_MEDIA_PATH = %r{\A/([srb])/[^/?#]+/media/[^/?#]+}
+  PUBLIC_SHARE_PATH = %r{\A/([srb])/[^/?#]+}
   SENSITIVE_TOKEN_PATH = %r{\A/(passwords|workspace_invites|household_invites)/[^/?#]+}
 
   def filtered_path
@@ -14,6 +14,6 @@ end
 ActionDispatch::Request.prepend(RoastnodeBearerUrlLogFilter)
 
 Rails.application.config.filter_redirect += [
-  %r{\A(?:https?://[^/]+)?/[sr]/[^/?#]+},
+  %r{\A(?:https?://[^/]+)?/[srb]/[^/?#]+},
   %r{\A(?:https?://[^/]+)?/(?:passwords|workspace_invites|household_invites)/[^/?#]+}
 ]

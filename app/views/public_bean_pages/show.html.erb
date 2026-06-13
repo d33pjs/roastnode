@@ -1,0 +1,191 @@
+<% content_for :hide_app_navigation, true %>
+<% snapshot = @snapshot || {} %>
+<% bean = snapshot["bean"] || {} %>
+<% stats = snapshot["stats"] || {} %>
+<% distributions = snapshot["distributions"] || {} %>
+<% timeline = snapshot["timeline"] || {} %>
+<% photos = Array(snapshot["photos"]) %>
+<% brews = Array(snapshot["brews"]) %>
+<% unknown = t(".unknown") %>
+<% primary_photo = photos.first %>
+<% primary_photo_thumb_url = public_bean_media_url_for(@share, primary_photo&.fetch("attachment_id", nil), variant: :thumbnail) %>
+<% primary_photo_full_url = public_bean_media_url_for(@share, primary_photo&.fetch("attachment_id", nil)) %>
+<% lightbox_sources = photos.filter_map { |photo| public_bean_media_url_for(@share, photo["attachment_id"]) } %>
+
+<main data-testid="public-bean-page" data-controller="public-lightbox" data-public-lightbox-sources-value="<%= lightbox_sources.to_json %>" data-action="keydown@window->public-lightbox#closeFromKeyboard" class="min-h-screen bg-[#f6f4ef] text-stone-950">
+  <section class="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+    <header class="flex items-center justify-between gap-4 py-4">
+      <div class="flex min-w-0 items-center gap-3">
+        <% if (logo_url = public_bean_media_url_for(@share, snapshot.dig("workspace", "logo_attachment_id"), variant: :thumbnail)).present? %>
+          <%= image_tag logo_url, alt: "", class: "h-10 w-10 shrink-0 rounded-full object-contain" %>
+        <% end %>
+        <p class="truncate text-xs font-black uppercase text-stone-700"><%= snapshot.dig("workspace", "name").presence || unknown %></p>
+      </div>
+      <p class="shrink-0 text-xs font-black uppercase text-stone-600"><%= t(".bean") %></p>
+    </header>
+
+    <section class="grid gap-6 py-8 lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-stretch">
+      <div class="min-w-0">
+        <p class="text-sm font-black uppercase text-stone-600"><%= bean["roaster_name"].presence || unknown %></p>
+        <h1 class="mt-2 text-4xl font-black leading-tight sm:text-6xl"><%= bean["name"].presence || snapshot["title"].presence || unknown %></h1>
+        <% if bean["display_name"].present? && bean["display_name"] != bean["name"] %>
+          <p class="mt-4 text-xl font-extrabold text-stone-700"><%= bean["display_name"] %></p>
+        <% end %>
+
+        <div class="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div class="rounded-lg border border-stone-300 bg-white px-4 py-3">
+            <p class="text-xs font-black uppercase text-stone-500"><%= t(".remaining") %></p>
+            <p class="mt-1 text-2xl font-black"><%= public_bean_grams(bean["remaining_grams"]) %></p>
+            <p class="mt-1 text-xs font-extrabold text-stone-600"><%= public_bean_percent(bean["remaining_percent"]) %></p>
+          </div>
+          <div class="rounded-lg border border-stone-300 bg-white px-4 py-3">
+            <p class="text-xs font-black uppercase text-stone-500"><%= t(".brews") %></p>
+            <p class="mt-1 text-2xl font-black"><%= stats["brew_count"].presence || 0 %></p>
+          </div>
+          <div class="rounded-lg border border-stone-300 bg-white px-4 py-3">
+            <p class="text-xs font-black uppercase text-stone-500"><%= t(".status") %></p>
+            <p class="mt-1 text-2xl font-black"><%= t(".#{bean["public_status"].presence || "open"}", default: unknown) %></p>
+          </div>
+          <div class="rounded-lg border border-stone-300 bg-white px-4 py-3">
+            <p class="text-xs font-black uppercase text-stone-500"><%= t(".average_rating") %></p>
+            <p class="mt-1 text-2xl font-black"><%= public_bean_rating(stats["average_rating"]) %></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="min-h-80 overflow-hidden rounded-lg border border-stone-300 bg-white">
+        <% if primary_photo_thumb_url.present? && primary_photo_full_url.present? %>
+          <button type="button" data-action="public-lightbox#open" data-public-lightbox-index-param="0" data-full-src="<%= primary_photo_full_url %>" aria-label="<%= t(".open_photo") %>" class="block h-full min-h-80 w-full p-2">
+            <%= image_tag primary_photo_thumb_url, alt: "", class: "h-full w-full object-contain" %>
+          </button>
+        <% else %>
+          <div class="flex h-full min-h-80 items-center justify-center bg-stone-100 px-6 text-center text-sm font-black uppercase text-stone-500"><%= t(".bean") %></div>
+        <% end %>
+      </div>
+    </section>
+
+    <% if photos.many? %>
+      <section class="flex gap-2 py-2">
+        <% photos.drop(1).each_with_index do |photo, index| %>
+          <% thumb_url = public_bean_media_url_for(@share, photo["attachment_id"], variant: :thumbnail) %>
+          <% full_url = public_bean_media_url_for(@share, photo["attachment_id"]) %>
+          <% if thumb_url.present? && full_url.present? %>
+            <button type="button" data-action="public-lightbox#open" data-public-lightbox-index-param="<%= index + 1 %>" data-full-src="<%= full_url %>" aria-label="<%= t(".open_photo") %>" class="h-20 w-20 shrink-0 rounded-lg border border-stone-300 bg-white p-1">
+              <%= image_tag thumb_url, alt: "", class: "h-full w-full object-contain" %>
+            </button>
+          <% end %>
+        <% end %>
+      </section>
+    <% end %>
+
+    <%= render "timeline", timeline: %>
+
+    <section class="grid gap-4 border-t border-stone-300 py-8 sm:grid-cols-2 lg:grid-cols-4">
+      <div data-testid="public-bean-stat-consumed" class="rounded-lg border border-stone-300 bg-white p-4">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t(".consumed") %></p>
+        <p class="mt-2 text-3xl font-black"><%= public_bean_grams(stats["consumed_grams"]) %></p>
+      </div>
+      <div data-testid="public-bean-stat-dead" class="rounded-lg border border-stone-300 bg-white p-4">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t(".dead_grams") %></p>
+        <p class="mt-2 text-3xl font-black"><%= public_bean_grams(stats["dead_grams"]) %></p>
+      </div>
+      <div class="rounded-lg border border-stone-300 bg-white p-4">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t(".channeling") %></p>
+        <p class="mt-2 text-3xl font-black"><%= public_bean_percent(stats["channeling_percent"]) %></p>
+      </div>
+      <div class="rounded-lg border border-stone-300 bg-white p-4">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t(".open_duration") %></p>
+        <p class="mt-2 text-3xl font-black"><%= stats["open_duration_days"].presence || 0 %></p>
+      </div>
+    </section>
+
+    <section class="grid gap-4 border-t border-stone-300 py-8 lg:grid-cols-3">
+      <%= render "stat_bar_list", title: t(".grinder_settings"), distribution: distributions["grind_setting"], testid: "public-bean-grind-distribution" %>
+      <%= render "stat_bar_list", title: t(".ratings"), distribution: distributions["rating"], testid: "public-bean-rating-distribution" %>
+      <%= render "stat_bar_list", title: t(".taste_balance"), distribution: distributions["taste_balance"], testid: "public-bean-taste-distribution" %>
+    </section>
+
+    <section class="grid gap-6 border-t border-stone-300 py-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
+      <div>
+        <h2 class="text-2xl font-black"><%= t(".details") %></h2>
+        <dl class="mt-4 grid gap-3 sm:grid-cols-2">
+          <% [
+            [ t(".origin"), bean["origin"] ],
+            [ t(".process"), bean["process"] ],
+            [ t(".roast_date"), public_bean_date(bean["roast_date"]) ],
+            [ t(".roast_type"), bean["roast_type"] ],
+            [ t(".roast_level"), bean["roast_level"] ],
+            [ t(".country"), bean["country"] ],
+            [ t(".region"), bean["region"] ],
+            [ t(".farm"), bean["farm"] ],
+            [ t(".farmer"), bean["farmer"] ],
+            [ t(".elevation"), bean["elevation"] ],
+            [ t(".variety"), bean["variety"] ],
+            [ t(".harvested"), bean["harvested"] ],
+            [ t(".blend_type"), bean["blend_type"] ],
+            [ t(".blend_percentage"), bean["blend_percentage"] ]
+          ].select { |_label, value| value.present? }.each do |label, value| %>
+            <div class="rounded-lg border border-stone-300 bg-white px-4 py-3">
+              <dt class="text-xs font-black uppercase text-stone-500"><%= label %></dt>
+              <dd class="mt-1 text-sm font-extrabold text-stone-900"><%= value.to_s.humanize %></dd>
+            </div>
+          <% end %>
+        </dl>
+        <% if bean["tasting_notes"].present? %>
+          <p class="mt-4 rounded-lg border border-stone-300 bg-white px-4 py-3 text-sm font-semibold leading-6 text-stone-700"><%= bean["tasting_notes"] %></p>
+        <% end %>
+      </div>
+
+      <aside class="grid content-start gap-4">
+        <% if bean["public_note"].present? %>
+          <section class="rounded-lg border border-stone-300 bg-white p-4">
+            <h2 class="text-xs font-black uppercase text-stone-500"><%= t(".public_note") %></h2>
+            <p class="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-stone-700"><%= bean["public_note"] %></p>
+          </section>
+        <% end %>
+
+        <% if bean.fetch("links", []).any? %>
+          <section class="rounded-lg border border-stone-300 bg-white p-4">
+            <h2 class="text-xs font-black uppercase text-stone-500"><%= t(".links") %></h2>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <% bean.fetch("links", []).each do |link| %>
+                <%= link_to public_bean_link_label(link), link["url"], target: "_blank", rel: "noopener", data: { testid: "public-bean-link" }, class: "rounded-full bg-stone-950 px-4 py-2 text-sm font-extrabold text-stone-50 hover:bg-stone-800" %>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+      </aside>
+    </section>
+
+    <section class="border-t border-stone-300 py-8">
+      <div class="flex items-end justify-between gap-4">
+        <div>
+          <p class="text-xs font-black uppercase text-stone-600"><%= t(".brews") %></p>
+          <h2 class="mt-1 text-3xl font-black"><%= t(".all_brews") %></h2>
+        </div>
+        <p class="text-sm font-extrabold text-stone-600"><%= brews.size %></p>
+      </div>
+
+      <div class="mt-5 grid gap-4">
+        <% brews.each do |brew| %>
+          <%= render "brew_card", share: @share, brew: %>
+        <% end %>
+      </div>
+    </section>
+
+    <div data-public-lightbox-target="dialog" data-action="touchstart->public-lightbox#touchStart touchend->public-lightbox#touchEnd" role="dialog" aria-modal="true" aria-hidden="true" class="hidden fixed inset-0 z-50 bg-black/90 p-4">
+      <button type="button" data-action="public-lightbox#close" class="absolute right-4 top-4 rounded-full bg-white px-4 py-2 text-sm font-black text-stone-950"><%= t(".close_photo") %></button>
+      <button type="button" data-action="public-lightbox#previous" class="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-2xl font-black text-stone-950" aria-label="<%= t(".previous_photo") %>">
+        <span aria-hidden="true">&lt;</span>
+        <span class="sr-only"><%= t(".previous_photo") %></span>
+      </button>
+      <button type="button" data-action="public-lightbox#next" class="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-white/90 px-4 py-3 text-2xl font-black text-stone-950" aria-label="<%= t(".next_photo") %>">
+        <span aria-hidden="true">&gt;</span>
+        <span class="sr-only"><%= t(".next_photo") %></span>
+      </button>
+      <div class="flex h-full items-center justify-center">
+        <img data-public-lightbox-target="image" alt="" class="max-h-full max-w-full object-contain" />
+      </div>
+    </div>
+  </section>
+</main>

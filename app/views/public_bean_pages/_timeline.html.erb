@@ -1,0 +1,32 @@
+<% timeline = local_assigns.fetch(:timeline, {}) || {} %>
+<% brews = Array(timeline["brews"]) %>
+<% opened_on = timeline["opened_on"] %>
+<% end_at = timeline["end_at"] %>
+
+<section data-testid="public-bean-timeline" class="border-t border-stone-300 py-8">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <p class="text-xs font-black uppercase text-stone-600"><%= t("public_bean_pages.show.timeline") %></p>
+      <h2 class="mt-1 text-2xl font-black"><%= t("public_bean_pages.show.opened") %></h2>
+    </div>
+    <p class="text-sm font-extrabold text-stone-600"><%= public_bean_date(opened_on) || t("public_bean_pages.show.unknown") %></p>
+  </div>
+
+  <div class="mt-6 w-full">
+    <div class="relative h-28 w-full rounded-lg border border-stone-300 bg-white px-4">
+      <div class="absolute left-4 right-4 top-14 h-1 rounded-full bg-stone-200"></div>
+      <div class="absolute left-4 top-11 h-7 w-1 rounded-full bg-stone-950"></div>
+      <div class="absolute right-4 top-11 h-7 w-1 rounded-full bg-stone-500"></div>
+
+      <% brews.each_with_index do |brew, index| %>
+        <% position = public_bean_timeline_position(opened_on, end_at, brew["occurred_at"]) %>
+        <span aria-hidden="true" title="<%= public_bean_method_label(brew["method"]) %>" class="absolute top-12 h-5 w-1 rounded-full <%= brew["method"] == "quick_drip" ? "bg-amber-700" : "bg-stone-950" %>" style="left: calc(1rem + (100% - 2rem) * <%= position %> / 100); transform: translateX(-50%);"></span>
+      <% end %>
+    </div>
+
+    <div class="mt-2 flex justify-between gap-4 text-xs font-extrabold text-stone-600">
+      <span><%= public_bean_date(opened_on) || t("public_bean_pages.show.unknown") %></span>
+      <span><%= public_bean_date(timeline["finished_at"]) || public_bean_date(timeline["last_brew_at"]) || t("public_bean_pages.show.unknown") %></span>
+    </div>
+  </div>
+</section>
