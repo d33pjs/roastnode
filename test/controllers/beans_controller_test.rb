@@ -215,6 +215,67 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-roaster-suggestions-target=list]"
   end
 
+  test "new bean form uses stock-aware inventory sync and Brew-style rating control" do
+    sign_in_as(users(:one))
+
+    get new_bean_path
+
+    assert_response :success
+    assert_select "[data-controller=?]", "bean-inventory-form"
+    assert_select "select[name=?][data-bean-inventory-form-target=?]", "bean[bag_status]", "status"
+    assert_select "input[name=?][data-bean-inventory-form-target=?]", "bean[bag_size_grams]", "bagSize"
+    assert_select "input[name=?][data-bean-inventory-form-target=?]", "bean[remaining_grams]", "remaining"
+    assert_select "input[name=?][data-bean-inventory-form-target=?]", "bean[opened_on]", "openedOn"
+    assert_select "[data-testid=bean-rating-options] .rn-rating-scale"
+    assert_select "input[type=radio][name=?][value='']", "bean[rating]"
+    assert_select "input[type=radio][name=?][value='5']", "bean[rating]"
+  end
+
+  test "new bean form renders origin and process fields in approved order" do
+    sign_in_as(users(:one))
+
+    get new_bean_path
+
+    assert_response :success
+    assert_appears_before "bean[continent]", "bean[country]"
+    assert_appears_before "bean[country]", "bean[region]"
+    assert_appears_before "bean[region]", "bean[elevation]"
+    assert_appears_before "bean[elevation]", "bean[variety]"
+    assert_appears_before "bean[variety]", "bean[blend_percentage]"
+    assert_appears_before "bean[blend_percentage]", "bean[process]"
+    assert_appears_before "bean[process]", "bean[blend_type]"
+    assert_appears_before "bean[blend_type]", "bean[country_of_manufacturer]"
+    assert_appears_before "bean[country_of_manufacturer]", "bean[manufacturer]"
+    assert_appears_before "bean[manufacturer]", "bean[farm]"
+    assert_appears_before "bean[farm]", "bean[farmer]"
+    assert_appears_before "bean[farmer]", "bean[harvested]"
+  end
+
+  test "writer can save new origin and manufacturer metadata" do
+    sign_in_as(users(:one))
+
+    assert_difference -> { workspaces(:household).beans.count }, 1 do
+      post beans_path, params: {
+        bean: {
+          name: "Metadata Bag",
+          roaster_name: "Calendar Coffee",
+          bag_size_grams: "250",
+          remaining_grams: "250",
+          opened_on: "2026-06-13",
+          continent: "South America",
+          country: "Colombia",
+          country_of_manufacturer: "Germany",
+          manufacturer: "Calendar Coffee"
+        }
+      }
+    end
+
+    bean = workspaces(:household).beans.order(:created_at).last
+    assert_equal "South America", bean.continent
+    assert_equal "Germany", bean.country_of_manufacturer
+    assert_equal "Calendar Coffee", bean.manufacturer
+  end
+
   test "roaster suggestions match substring across active workspace bean history" do
     sign_in_as(users(:one))
     workspace = workspaces(:household)

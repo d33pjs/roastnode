@@ -1,0 +1,15 @@
+<div data-testid="bean-rating-options" class="rn-rating-control mt-2">
+  <label class="rn-choice rn-rating-empty">
+    <%= form.radio_button :rating, "", checked: form.object.rating.blank?, class: "rn-choice-input" %>
+    <span class="rn-choice-label rn-choice-label-muted"><%= t("beans.form.no_rating") %></span>
+  </label>
+
+  <div class="rn-rating-scale" aria-label="<%= t("beans.form.rating") %>">
+    <% 1.upto(5) do |rating| %>
+      <label class="rn-choice rn-rating-choice">
+        <%= form.radio_button :rating, rating, class: "rn-choice-input" %>
+        <span class="rn-choice-label rn-rating-label"><%= rating %></span>
+      </label>
+    <% end %>
+  </div>
+</div>
