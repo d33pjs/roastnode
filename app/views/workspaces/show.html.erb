@@ -275,6 +275,47 @@
         </div>
       </section>
 
+      <section data-testid="dashboard-stock-beans" class="min-w-0">
+        <div class="mb-4 flex min-w-0 items-center justify-between gap-4">
+          <h2 class="text-xl font-black text-rn-ink"><%= t(".stock_beans") %></h2>
+          <%= link_to t(".view_all"), beans_path, class: "text-sm font-bold text-rn-muted hover:text-rn-ink" %>
+        </div>
+
+        <div class="grid gap-3">
+          <% if @stock_bean_shelf_entries.any? %>
+            <% @stock_bean_shelf_entries.each do |entry| %>
+              <% bean = entry.bean %>
+              <% purchase_url_href = bean_purchase_url_href(bean.purchase_url) %>
+
+              <article data-testid="dashboard-stock-bean-card-<%= bean.id %>" class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+                <div class="flex min-w-0 items-start gap-3">
+                  <%= render "shared/record_photo_thumb",
+                    record: bean,
+                    testid: "dashboard-stock-bean-photo",
+                    class_name: "h-16 w-16 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
+                  <div class="min-w-0 flex-1">
+                    <%= link_to bean.name, bean_path(bean), class: "block truncate font-extrabold text-rn-ink hover:underline" %>
+                    <p class="mt-1 truncate text-sm text-rn-muted"><%= bean.roaster_name.presence || t(".unknown_roaster") %></p>
+                    <p class="mt-2 text-xs font-extrabold text-rn-muted"><%= t("beans.index.remaining_of", remaining: profile_grams(bean.remaining_grams), total: profile_grams(bean.bag_size_grams)) %></p>
+                  </div>
+                </div>
+
+                <div class="mt-3 flex flex-wrap gap-2">
+                  <% if purchase_url_href.present? %>
+                    <%= link_to t(".cockpit.rebuy"), purchase_url_href, target: "_blank", rel: "noopener", data: { testid: "dashboard-stock-bean-rebuy-#{bean.id}" }, class: "rounded-full border border-rn-line bg-rn-surface px-3 py-1.5 text-xs font-extrabold text-rn-ink hover:bg-[var(--rn-canvas)]" %>
+                  <% end %>
+                  <% if current_workspace_policy.write? %>
+                    <%= button_to t(".cockpit.open_bag"), open_bag_bean_path(bean), method: :patch, form: { data: { testid: "dashboard-stock-bean-open-bag-#{bean.id}" } }, class: "rounded-full border border-rn-line bg-rn-surface px-3 py-1.5 text-xs font-extrabold text-rn-ink hover:bg-[var(--rn-canvas)]" %>
+                  <% end %>
+                </div>
+              </article>
+            <% end %>
+          <% else %>
+            <p class="rounded-2xl border border-rn-line bg-rn-surface p-4 text-sm text-rn-muted"><%= t(".no_stock_beans") %></p>
+          <% end %>
+        </div>
+      </section>
+
       <section data-testid="dashboard-recent-activity" class="min-w-0">
         <div data-testid="dashboard-recent-activity-heading" class="mb-4 flex min-w-0 items-center justify-between gap-4">
           <h2 class="text-xl font-black text-rn-ink"><%= t(".recent_activity") %></h2>

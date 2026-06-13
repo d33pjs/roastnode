@@ -234,6 +234,63 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "workspace dashboard renders in stock beans with quick open and rebuy actions" do
+    sign_in_as(users(:one))
+    stock = workspaces(:household).beans.create!(
+      name: "Pantry Stock",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil,
+      purchase_url: "https://example.com/pantry"
+    )
+    unsafe_stock = workspaces(:household).beans.create!(
+      name: "Unsafe Pantry",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    unsafe_stock.update_column(:purchase_url, "javascript:alert('bean')")
+    workspaces(:other_household).beans.create!(
+      name: "Other Pantry",
+      roaster_name: "Other",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=dashboard-stock-beans]"
+    assert_select "[data-testid=?]", "dashboard-stock-bean-card-#{stock.id}", text: /Pantry Stock/
+    assert_select "[data-testid=?] a[href=?]", "dashboard-stock-bean-card-#{stock.id}", bean_path(stock)
+    assert_select "[data-testid=?] a[data-testid=?][href=?]", "dashboard-stock-bean-card-#{stock.id}", "dashboard-stock-bean-rebuy-#{stock.id}", stock.purchase_url
+    assert_select "[data-testid=?] form[data-testid=?][action=?]", "dashboard-stock-bean-card-#{stock.id}", "dashboard-stock-bean-open-bag-#{stock.id}", open_bag_bean_path(stock)
+    assert_select "[data-testid=?] a[href=?]", "dashboard-stock-bean-card-#{unsafe_stock.id}", unsafe_stock.reload.purchase_url, count: 0
+    assert_select "body", text: /Other Pantry/, count: 0
+  end
+
+  test "workspace dashboard hides stock quick open for viewers" do
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    stock = workspaces(:household).beans.create!(
+      name: "Viewer Pantry",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    sign_in_as(users(:two))
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=?]", "dashboard-stock-bean-card-#{stock.id}", text: /Viewer Pantry/
+    assert_select "[data-testid=?]", "dashboard-stock-bean-open-bag-#{stock.id}", count: 0
+  end
+
   test "workspace dashboard constrains open beans and recent activity on narrow screens" do
     sign_in_as(users(:one))
 

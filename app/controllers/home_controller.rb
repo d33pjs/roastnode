@@ -31,6 +31,7 @@ class HomeController < ApplicationController
     def load_dashboard
       @dashboard_metrics = DashboardMetrics.new(workspace: current_workspace).call
       @open_bean_cockpit_entries = OpenBeanCockpit.new(workspace: current_workspace).call
+      @stock_bean_shelf_entries = StockBeanShelf.new(workspace: current_workspace).call
       @open_beans = @open_bean_cockpit_entries.map(&:bean)
       @latest_coffee = latest_dashboard_coffee
       @latest_best_brew = dashboard_brews.where.not(rating: nil).order(rating: :desc, occurred_at: :desc, created_at: :desc).first
