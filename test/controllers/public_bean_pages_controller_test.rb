@@ -23,7 +23,8 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-bean-journey]"
     assert_select "[data-testid=public-bean-journey-track]"
     assert_select "[data-testid=public-bean-journey-opened]"
-    assert_select "[data-testid=public-bean-journey-end]"
+    assert_select "[data-testid=public-bean-journey-end][data-status=open]"
+    assert_select "[data-testid=public-bean-journey-end-open-icon]"
     assert_select "[data-testid=public-bean-journey-brew][data-method=espresso]", minimum: 1
     assert_select "[data-testid=public-bean-brew-hero-card]", minimum: 1
     assert_select "body", text: /Public bean note/
@@ -33,6 +34,32 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=site-footer-buy-me-a-coffee][href=?]", "https://buymeacoffee.com/roastnode"
     assert_no_match "/rails/active_storage", response.body
     assert_no_match "/media_attachments", response.body
+  end
+
+  test "timeline renders spaced callouts with public avatar and rating" do
+    avatar = attach_named_photo(users(:one), :avatar, filename: "timeline-avatar.jpg")
+    share = create_share(enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-journey-callout][data-rating='4']"
+    assert_select "[data-testid=public-bean-journey-callout] img[data-testid=public-bean-journey-avatar][src=?]",
+      public_bean_media_path(share.token, share.public_media_handle_for(avatar.id), variant: :thumbnail)
+    assert_select "[data-testid=public-bean-journey-brew][data-display-position]"
+  end
+
+  test "timeline uses finished endpoint icon for finished bags" do
+    bean = beans(:open_household)
+    bean.update!(finished_at: Time.zone.parse("2026-06-12 12:00:00"), remaining_grams: 0)
+    share = create_share(bean:, enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-journey-end][data-status=finished]"
+    assert_select "[data-testid=public-bean-journey-end-finished-icon]"
+    assert_select "[data-testid=public-bean-journey-end-open-icon]", count: 0
   end
 
   test "public page hides raw attachment ids and original filenames" do

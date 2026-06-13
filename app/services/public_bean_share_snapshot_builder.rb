@@ -98,7 +98,8 @@ class PublicBeanShareSnapshotBuilder
           {
             "occurred_at" => brew.occurred_at&.iso8601,
             "method" => brew.method,
-            "rating" => brew.rating
+            "rating" => brew.rating,
+            "user" => user_payload(brew.user)
           }
         end
       }

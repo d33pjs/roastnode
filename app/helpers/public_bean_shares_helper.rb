@@ -1,4 +1,8 @@
 module PublicBeanSharesHelper
+  TIMELINE_CLUSTER_GAP_PERCENT = 4.0
+  TIMELINE_MIN_POSITION_PERCENT = 6.0
+  TIMELINE_MAX_POSITION_PERCENT = 94.0
+
   def public_bean_media_url_for(share, attachment_id, variant: nil)
     return if attachment_id.blank?
 
@@ -69,6 +73,34 @@ module PublicBeanSharesHelper
     0
   end
 
+  def public_bean_timeline_events(timeline)
+    timeline ||= {}
+    brews = Array(timeline["brews"])
+    return [] if brews.empty?
+
+    positions = brews.map do |brew|
+      public_bean_timeline_position(timeline["opened_on"], timeline["end_at"], brew["occurred_at"])
+        .to_f
+        .clamp(TIMELINE_MIN_POSITION_PERCENT, TIMELINE_MAX_POSITION_PERCENT)
+    end
+    display_positions = public_bean_timeline_display_positions(positions)
+
+    lane_counts = Hash.new(0)
+
+    brews.each_with_index.map do |brew, index|
+      callout_side = index.even? ? "top" : "bottom"
+      callout_lane = [ lane_counts[callout_side], 2 ].min
+      lane_counts[callout_side] += 1
+
+      brew.merge(
+        "raw_position" => positions[index].round(2),
+        "display_position" => display_positions[index].round(2),
+        "callout_side" => callout_side,
+        "callout_lane" => callout_lane
+      )
+    end
+  end
+
   def public_bean_link_label(link)
     link["label"].presence || t("public_bean_pages.show.#{link["kind"].presence || "info"}", default: t("public_bean_pages.show.info"))
   end
@@ -103,5 +135,38 @@ module PublicBeanSharesHelper
       return 0.to_d if value.blank?
 
       value.to_d
+    end
+
+    def public_bean_timeline_display_positions(positions)
+      return positions if positions.one?
+
+      gap = [
+        TIMELINE_CLUSTER_GAP_PERCENT,
+        (TIMELINE_MAX_POSITION_PERCENT - TIMELINE_MIN_POSITION_PERCENT) / (positions.size - 1)
+      ].min
+
+      separated = positions.each_with_index.map do |position, index|
+        next position if index.zero?
+
+        [ position, positions[index - 1] + gap ].max
+      end
+
+      separated.each_index do |index|
+        next if index.zero?
+
+        separated[index] = [ separated[index], separated[index - 1] + gap ].max
+      end
+
+      overflow = separated.last - TIMELINE_MAX_POSITION_PERCENT
+      separated.map! { |position| position - overflow } if overflow.positive?
+
+      if separated.first < TIMELINE_MIN_POSITION_PERCENT
+        separated[0] = TIMELINE_MIN_POSITION_PERCENT
+        (1...separated.size).each do |index|
+          separated[index] = [ separated[index], separated[index - 1] + gap ].max
+        end
+      end
+
+      separated.map { |position| position.clamp(TIMELINE_MIN_POSITION_PERCENT, TIMELINE_MAX_POSITION_PERCENT) }
     end
 end

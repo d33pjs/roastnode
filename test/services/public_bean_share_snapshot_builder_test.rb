@@ -87,6 +87,10 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal({ "2.3" => 1 }, snapshot.dig("distributions", "grind_setting"))
     assert_equal 2, snapshot.fetch("brews").size
     assert_equal %w[quick_drip espresso], snapshot.fetch("brews").map { |brew| brew.fetch("method") }
+    quick_drip_timeline_row = snapshot.dig("timeline", "brews").find { |brew| brew.fetch("method") == "quick_drip" }
+    assert_equal users(:two).display_label, quick_drip_timeline_row.dig("user", "display_label")
+    assert_equal avatar.id, quick_drip_timeline_row.dig("user", "avatar_attachment_id")
+    assert_equal 4, quick_drip_timeline_row.fetch("rating")
     quick_drip_row = snapshot.fetch("brews").find { |brew| brew.fetch("method") == "quick_drip" }
     assert_equal "6.0", quick_drip_row.fetch("machine_cups")
     assert_equal "6.0", quick_drip_row.fetch("coffee_spoons")
