@@ -16,8 +16,8 @@ end %>
 <% purchase_url_href = bean_purchase_url_href(bean.purchase_url) %>
 <% bean_card_origin = bean.origin_display_value.presence %>
 
-<article data-testid="bean-card" class="min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
-  <%= link_to bean_path(bean), data: { testid: "bean-card-detail-#{bean.id}" }, class: "grid min-w-0 transition hover:bg-[var(--rn-surface-muted)] sm:grid-cols-[9.5rem_1fr] lg:grid-cols-[10.5rem_1fr]" do %>
+<article data-testid="bean-card" class="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+  <%= link_to bean_path(bean), data: { testid: "bean-card-detail-#{bean.id}" }, class: "grid min-w-0 flex-1 transition hover:bg-[var(--rn-surface-muted)] sm:grid-cols-[9.5rem_1fr] lg:grid-cols-[10.5rem_1fr]" do %>
     <div class="aspect-[4/3] min-h-36 bg-[var(--rn-surface-muted)] p-2 sm:aspect-auto sm:min-h-full">
       <%= render "shared/record_photo_thumb",
         record: bean,
@@ -90,7 +90,7 @@ end %>
   <% end %>
 
   <% if purchase_url_href.present? || (can_write && bean.stock?) %>
-    <div data-testid="bean-card-actions-<%= bean.id %>" class="flex flex-wrap items-center gap-2 border-t border-rn-line px-4 py-3">
+    <div data-testid="bean-card-actions-<%= bean.id %>" class="shrink-0 flex flex-wrap items-center gap-2 border-t border-rn-line px-4 py-3">
       <% if purchase_url_href.present? %>
         <%= link_to t("beans.index.rebuy"), purchase_url_href, target: "_blank", rel: "noopener", data: { testid: "bean-card-rebuy-#{bean.id}" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-bold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
       <% end %>

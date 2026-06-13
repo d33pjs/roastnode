@@ -176,7 +176,9 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get beans_path
 
     assert_response :success
-    assert_select "[data-testid=?]", "bean-card-actions-#{bean.id}" do
+    assert_select "article[data-testid=bean-card].flex.h-full.flex-col"
+    assert_select "a[data-testid=?].flex-1", "bean-card-detail-#{bean.id}"
+    assert_select "[data-testid=?].shrink-0", "bean-card-actions-#{bean.id}" do
       assert_select "a[data-testid=?][href=?]", "bean-card-rebuy-#{bean.id}", bean.purchase_url
       assert_select "form[data-testid=?][action=?]", "bean-card-open-bag-#{bean.id}", open_bag_bean_path(bean)
     end
