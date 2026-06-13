@@ -1,12 +1,13 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-4xl px-6 py-10">
+    <% purchase_url_href = bean_purchase_url_href(@bean.purchase_url) %>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <%= render "shared/back_link", label: t(".back"), path: beans_path %>
 
-      <% if @bean.purchase_url.present? || current_workspace_policy.write? %>
+      <% if purchase_url_href.present? || current_workspace_policy.write? %>
         <div class="flex flex-wrap gap-2">
-          <% if @bean.purchase_url.present? %>
-            <%= link_to t(".rebuy"), @bean.purchase_url, target: "_blank", rel: "noopener", data: { testid: "bean-rebuy-link" }, class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <% if purchase_url_href.present? %>
+            <%= link_to t(".rebuy"), purchase_url_href, target: "_blank", rel: "noopener", data: { testid: "bean-rebuy-link" }, class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <% end %>
 
           <% if current_workspace_policy.write? %>
@@ -298,8 +299,8 @@
         <div>
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".purchase_url") %></dt>
           <dd data-testid="bean-detail-purchase-url" class="mt-1 text-sm font-semibold text-stone-950">
-            <% if @bean.purchase_url.present? %>
-              <%= link_to bean_purchase_url_label(@bean.purchase_url), @bean.purchase_url, target: "_blank", rel: "noopener", class: "break-words text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-700" %>
+            <% if purchase_url_href.present? %>
+              <%= link_to bean_purchase_url_label(@bean.purchase_url), purchase_url_href, target: "_blank", rel: "noopener", class: "break-words text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-700" %>
             <% else %>
               <%= t(".unknown") %>
             <% end %>

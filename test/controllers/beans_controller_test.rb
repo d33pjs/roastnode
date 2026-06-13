@@ -159,6 +159,43 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "index does not render legacy invalid purchase urls as clickable or raw actions" do
+    sign_in_as(users(:one))
+    bean = workspaces(:household).beans.create!(
+      name: "Legacy Bad Shelf",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    bean.update_column(:purchase_url, "javascript:alert('bean')")
+
+    get beans_path
+
+    assert_response :success
+    assert_select "a[data-testid=?]", "bean-card-rebuy-#{bean.id}", count: 0
+    assert_select "a[href=?]", bean.reload.purchase_url, count: 0
+    assert_select "body", text: /javascript:alert\('bean'\)/, count: 0
+  end
+
+  test "viewer index omits stock quick open forms" do
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    bean = workspaces(:household).beans.create!(
+      name: "Viewer Stock Shelf",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    sign_in_as(users(:two))
+
+    get beans_path
+
+    assert_response :success
+    assert_select "form[data-testid=?]", "bean-card-open-bag-#{bean.id}", count: 0
+  end
+
   test "member can create bean" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
@@ -649,6 +686,22 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-cost-per-shot]", text: /0[,.]90/
   end
 
+  test "show falls back to legacy origin after structured origin fields" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    bean.update!(
+      origin: "Antigua",
+      country: nil,
+      region: nil,
+      continent: nil
+    )
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-header-origin]", "Antigua"
+  end
+
   test "show renders shortened website link and rebuy action" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
@@ -660,6 +713,38 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=bean-rebuy-link][href=?][target=_blank][rel=noopener]", bean.purchase_url
     assert_select "dd[data-testid=bean-detail-purchase-url] a[href=?]", bean.purchase_url, text: /example\.com/
     assert_select "body", text: /https:\/\/example.com\/beans\/house-blend\?ref=private/, count: 0
+  end
+
+  test "show does not render legacy invalid purchase url as clickable or raw text" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update_column(:purchase_url, "javascript:alert('bean')")
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[data-testid=bean-rebuy-link]", count: 0
+    assert_select "dd[data-testid=bean-detail-purchase-url] a[href=?]", bean.reload.purchase_url, count: 0
+    assert_select "dd[data-testid=bean-detail-purchase-url]", text: I18n.t("beans.show.unknown")
+    assert_select "body", text: /javascript:alert\('bean'\)/, count: 0
+  end
+
+  test "viewer show omits stock quick open form" do
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    bean = workspaces(:household).beans.create!(
+      name: "Viewer Detail Shelf",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    sign_in_as(users(:two))
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "form[data-testid=bean-open-bag-form]", count: 0
   end
 
   test "show links writer to create public bean share for publishable bean" do

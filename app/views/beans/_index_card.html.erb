@@ -13,6 +13,7 @@ end %>
   "low" => "bg-red-600"
 }.fetch(remaining_state) %>
 <% latest_brew_at = bean[:latest_brew_at] %>
+<% purchase_url_href = bean_purchase_url_href(bean.purchase_url) %>
 
 <article data-testid="bean-card" class="min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
   <%= link_to bean_path(bean), data: { testid: "bean-card-detail-#{bean.id}" }, class: "grid min-w-0 transition hover:bg-[var(--rn-surface-muted)] sm:grid-cols-[9.5rem_1fr] lg:grid-cols-[10.5rem_1fr]" do %>
@@ -87,10 +88,10 @@ end %>
     </div>
   <% end %>
 
-  <% if bean.purchase_url.present? || (can_write && bean.stock?) %>
+  <% if purchase_url_href.present? || (can_write && bean.stock?) %>
     <div data-testid="bean-card-actions-<%= bean.id %>" class="flex flex-wrap items-center gap-2 border-t border-rn-line px-4 py-3">
-      <% if bean.purchase_url.present? %>
-        <%= link_to t("beans.index.rebuy"), bean.purchase_url, target: "_blank", rel: "noopener", data: { testid: "bean-card-rebuy-#{bean.id}" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-bold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
+      <% if purchase_url_href.present? %>
+        <%= link_to t("beans.index.rebuy"), purchase_url_href, target: "_blank", rel: "noopener", data: { testid: "bean-card-rebuy-#{bean.id}" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-bold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
       <% end %>
       <% if can_write && bean.stock? %>
         <%= button_to t("beans.index.open_bag"), open_bag_bean_path(bean), method: :patch, form: { data: { testid: "bean-card-open-bag-#{bean.id}" } }, class: "rounded-md bg-stone-950 px-3 py-2 text-sm font-bold text-white hover:bg-stone-800" %>

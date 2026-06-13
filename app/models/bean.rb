@@ -21,6 +21,7 @@ class Bean < ApplicationRecord
   has_many_attached :photos
 
   before_validation :set_default_remaining_grams
+  normalizes :purchase_url, with: ->(url) { url.to_s.strip.presence }
 
   scope :open, -> { where(archived_at: nil, finished_at: nil).where.not(opened_on: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
   scope :recent, -> { order(created_at: :desc) }
@@ -35,6 +36,7 @@ class Bean < ApplicationRecord
   validates :grind_state, inclusion: { in: GRIND_STATES }
   validates :roast_degree, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
   validate :roast_degree_half_step
+  validate :purchase_url_is_http_or_https
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 
   def open?
@@ -136,7 +138,7 @@ class Bean < ApplicationRecord
   end
 
   def origin_display_value
-    country.presence || region.presence || continent.presence
+    country.presence || region.presence || continent.presence || origin.presence
   end
 
   def remaining_percent
@@ -261,6 +263,17 @@ class Bean < ApplicationRecord
       return if (roast_degree.to_d * 2) % 1 == 0
 
       errors.add(:roast_degree, "must use half-step increments")
+    end
+
+    def purchase_url_is_http_or_https
+      return if purchase_url.blank?
+
+      uri = URI.parse(purchase_url.to_s)
+      return if uri.is_a?(URI::HTTP) && uri.host.present?
+
+      errors.add(:purchase_url, "must be an HTTP or HTTPS URL")
+    rescue URI::InvalidURIError
+      errors.add(:purchase_url, "must be an HTTP or HTTPS URL")
     end
 
     def duplicate_attributes

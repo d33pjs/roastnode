@@ -278,7 +278,7 @@ class BeanTest < ActiveSupport::TestCase
   end
 
   test "origin fallback prefers country region then continent" do
-    bean = Bean.new(country: "Colombia", region: "Huila", continent: "South America")
+    bean = Bean.new(origin: "Legacy Origin", country: "Colombia", region: "Huila", continent: "South America")
     assert_equal "Colombia", bean.origin_display_value
 
     bean.country = ""
@@ -288,7 +288,60 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal "South America", bean.origin_display_value
 
     bean.continent = ""
-    assert_nil bean.origin_display_value
+    assert_equal "Legacy Origin", bean.origin_display_value
+  end
+
+  test "purchase url allows blank and normalizes whitespace to nil" do
+    bean = workspaces(:household).beans.build(
+      name: "Blank Purchase Url",
+      bag_size_grams: 250,
+      purchase_url: " "
+    )
+
+    assert_predicate bean, :valid?
+    assert_nil bean.purchase_url
+  end
+
+  test "purchase url strips valid http and https urls" do
+    bean = workspaces(:household).beans.build(
+      name: "Valid Purchase Url",
+      bag_size_grams: 250,
+      purchase_url: " https://example.com/beans "
+    )
+
+    assert_predicate bean, :valid?
+    assert_equal "https://example.com/beans", bean.purchase_url
+
+    bean.purchase_url = "http://example.com/beans"
+    assert_predicate bean, :valid?
+  end
+
+  test "purchase url rejects unsafe schemes" do
+    bean = workspaces(:household).beans.build(
+      name: "Unsafe Purchase Url",
+      bag_size_grams: 250
+    )
+
+    [ "javascript:alert(1)", "data:text/html,<p>x</p>" ].each do |url|
+      bean.purchase_url = url
+
+      assert_not_predicate bean, :valid?, "#{url.inspect} should be invalid"
+      assert_includes bean.errors[:purchase_url], "must be an HTTP or HTTPS URL"
+    end
+  end
+
+  test "purchase url rejects schemeless and hostless urls" do
+    bean = workspaces(:household).beans.build(
+      name: "Hostless Purchase Url",
+      bag_size_grams: 250
+    )
+
+    [ "example.com/path", "https:///path" ].each do |url|
+      bean.purchase_url = url
+
+      assert_not_predicate bean, :valid?, "#{url.inspect} should be invalid"
+      assert_includes bean.errors[:purchase_url], "must be an HTTP or HTTPS URL"
+    end
   end
 
   test "cost metrics use purchase price bag size and average logged dose" do

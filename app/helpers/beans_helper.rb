@@ -12,4 +12,14 @@ module BeansHelper
   rescue URI::InvalidURIError
     url.to_s.length > 24 ? "#{url.to_s.first(23)}..." : url.to_s
   end
+
+  def bean_purchase_url_href(url)
+    url = url.to_s.strip
+    return if url.blank?
+
+    uri = URI.parse(url)
+    return url if uri.is_a?(URI::HTTP) && uri.host.present?
+  rescue URI::InvalidURIError
+    nil
+  end
 end
