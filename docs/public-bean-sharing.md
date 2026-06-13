@@ -11,10 +11,11 @@ Public Bean Sharing lets workspace writers publish one curated bean bag page wit
 - Snapshot-driven public bean page with remaining inventory, brew count, public status, consumed grams, dead grams, average rating, channeling rate, taste balance, rating distribution, grinder-setting distribution, open duration, and a compact timeline.
 - All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards.
 - Workspace settings management with URL, enabled/protected state, view count, and recent IP history.
+- The workspace support badge footer, when configured for public pages.
 
 ## Privacy Contract
 
-Public bean shares render from `PublicBeanShare` snapshots. They must not render private notes, purchase source, purchase cost, private links, brew photos, raw attachment IDs, original filenames, signed Active Storage URLs, private media routes, user email addresses, invite tokens, session data, admin data, export data, backup data, environment variables, or infrastructure secrets.
+Public bean shares render from `PublicBeanShare` snapshots. They must not render private notes, purchase source, purchase cost, private links, brew photos, raw record/database IDs, raw attachment IDs, original filenames, signed Active Storage URLs, private media routes, user email addresses, invite tokens, session data, admin data, export data, backup data, environment variables, or infrastructure secrets.
 
 Workspace name/logo and brewer display labels/avatars are intentional public identity surfaces when copied into the snapshot media allowlist. They must still render through public media handles, not raw Active Storage URLs.
 
@@ -24,7 +25,7 @@ Public bean pages include all espresso and Quick Drip brews for the bag as publi
 
 Public bean pages use `PublicBeanMediaController` and opaque media handles. The only user-selected photos in v1 are bean package photos. Workspace logos and brewer avatars may appear through the snapshot media allowlist.
 
-Public bean pages must not use `MediaAttachmentsController`, `rails_blob_path`, `rails_storage_proxy_path`, signed blob URLs, raw private media routes, raw attachment IDs, original filenames, or private media handles.
+Public bean pages must not use `MediaAttachmentsController`, `rails_blob_path`, `rails_storage_proxy_path`, signed blob URLs, raw private media routes, raw record/database IDs, raw attachment IDs, original filenames, or private media handles.
 
 Disabled shares, unknown tokens, locked password-protected shares, unsupported variants, deleted attachments, unselected bean photos, and attachments outside the snapshot allowlist return `404 Not Found`.
 
@@ -57,6 +58,6 @@ Public pages still render from the refreshed snapshot. They do not read arbitrar
 - Use `PublicBeanShareSnapshotBuilder` for public bean data.
 - Use `PublicBeanShareRefresher` when public-safe source records change.
 - Treat `/b/:token` as bearer access and do not log raw share tokens.
-- Public pages must not use `MediaAttachmentsController`, raw Active Storage routes, or private record links.
+- Public pages must not use `MediaAttachmentsController`, raw Active Storage routes, raw record/database IDs, or private record links.
 - Use opaque public media handles in public HTML; do not render raw Active Storage attachment IDs.
 - Keep public bean pages and public bean media independent from `current_workspace`.

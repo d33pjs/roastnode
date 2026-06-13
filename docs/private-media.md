@@ -59,7 +59,7 @@ Public bean share pages may render selected bean package photos through `PublicB
 
 The public bean media controller streams only bean photo attachment IDs that are both selected on the `PublicBeanShare` and present in the share snapshot's `public_media` allowlist. Workspace logos and brewer avatars may appear only when referenced by the snapshot media allowlist. Disabled shares, unknown tokens, locked password-protected shares, unsupported variants, deleted attachments, unselected bean photos, and attachments outside the snapshot allowlist return `404 Not Found`.
 
-Public bean media responses use generic filenames and opaque per-share media handles. Rendered public bean HTML must not expose raw attachment IDs, original filenames, brew photos, private media routes, or signed Active Storage URLs. Request and redirect logs must not expose raw share tokens or media handles.
+Public bean media responses use generic filenames and opaque per-share media handles. Rendered public bean HTML must not expose raw record/database IDs, raw attachment IDs, original filenames, brew photos, private media routes, or signed Active Storage URLs. Request and redirect logs must not expose raw share tokens or media handles.
 
 Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, preparation tools, and recipes. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
 
