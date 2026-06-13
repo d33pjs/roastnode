@@ -19,6 +19,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
 - Curated public espresso brew sharing with optional passwords, selected photos, and public buy/affiliate links.
+- Curated public bean sharing for opened, finished, or used-up bags with optional passwords, selected bean package photos, all-brew public summaries, and workspace settings management.
 - Private recipe profiles created from workspace brews, with editable exact espresso targets and prominent target markers.
 - Recipe-guided espresso logging that shows recipe targets without overwriting normal last-brew defaults.
 - Recipe JSON import/export for portable unlinked recipe snapshots, including finish ingredients and finish notes while excluding media internals.
@@ -219,6 +220,7 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 - Use `Bean#destroy_with_history!` for destructive bean deletion; plain `destroy!` is intentionally blocked by dependent brew and inventory guards.
 - Render photos through `media_attachment_path`, never raw Active Storage blob URLs.
 - Public brew pages are the exception to private media routing: they render selected snapshot media through `public_brew_media_path`, never raw Active Storage blob URLs.
+- Public bean pages use curated `PublicBeanShare` snapshots. Selected bean package photos render only through `PublicBeanMediaController` with opaque handles; brew photos, purchase source, purchase cost, private notes, private links, and private record routes must not render.
 - Public recipe pages use curated `PublicRecipeShare` snapshots. Ingredients and finish notes are public snapshot content; selected recipe photos render only through `PublicRecipeMediaController` with opaque handles.
 - Remove photos through `MediaAttachmentsController#destroy` so workspace and write permissions stay centralized.
 - Beanconqueror import is a practical JSON subset, not full feature parity.

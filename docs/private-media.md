@@ -39,7 +39,7 @@ User avatar/banner replacement is limited to the signed-in user. Workspace logo/
 
 ## Public Brew Share Media
 
-Public brew share pages are one current public media exception. They must use `PublicBrewMediaController`, not `MediaAttachmentsController`.
+Public brew share pages must use `PublicBrewMediaController`, not `MediaAttachmentsController`.
 
 The public media controller streams only attachment IDs allowed by an enabled `PublicBrewShare` snapshot and its selected photo list. New snapshots use a builder-generated `public_media` manifest as the media allowlist; legacy snapshots fall back to live validation against selected share photos and public identity images. This includes selected brew/bean/equipment/tool photos plus the workspace logo and user avatar when those identity images are referenced by the snapshot. Unsupported variants, disabled shares, unknown tokens, locked password-protected shares, and attachments outside the public whitelist return `404 Not Found`.
 
@@ -52,6 +52,14 @@ Public recipe share pages may render explicitly selected recipe photos through `
 The public recipe media controller streams only recipe photo attachment IDs that are both selected on the `PublicRecipeShare` and present in the share snapshot's `public_media` allowlist. Disabled shares, unknown tokens, locked password-protected shares, unsupported variants, deleted attachments, unselected recipe photos, and attachments outside the snapshot allowlist return `404 Not Found`.
 
 Public recipe media responses use generic filenames and opaque per-share media handles. Rendered public recipe HTML must not expose raw attachment IDs or original filenames. Request and redirect logs must not expose raw share tokens or media handles.
+
+## Public Bean Share Media
+
+Public bean share pages may render selected bean package photos through `PublicBeanMediaController`. They must not use `MediaAttachmentsController`, raw Active Storage URLs, signed URLs, or private media attachment paths.
+
+The public bean media controller streams only bean photo attachment IDs that are both selected on the `PublicBeanShare` and present in the share snapshot's `public_media` allowlist. Workspace logos and brewer avatars may appear only when referenced by the snapshot media allowlist. Disabled shares, unknown tokens, locked password-protected shares, unsupported variants, deleted attachments, unselected bean photos, and attachments outside the snapshot allowlist return `404 Not Found`.
+
+Public bean media responses use generic filenames and opaque per-share media handles. Rendered public bean HTML must not expose raw attachment IDs, original filenames, brew photos, private media routes, or signed Active Storage URLs. Request and redirect logs must not expose raw share tokens or media handles.
 
 Primary photo selection uses `MediaAttachmentsController#primary` and requires workspace write access. Primary photos are stored as `primary_photo_attachment_id` on beans, brews, equipment, equipment events, preparation tools, and recipes. `HasPrimaryPhoto#primary_photo_attachment` falls back to the first attached photo when no explicit primary is set or when the stored attachment is no longer valid.
 
@@ -75,4 +83,5 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 - Keep preview thumbnails behind `MediaAttachmentsController` with `variant: :thumbnail`; do not expose raw variant/blob URLs.
 - Keep public-share thumbnails behind `PublicBrewMediaController` with `variant: :thumbnail`; apply the share password gate and attachment whitelist before streaming bytes.
 - Keep public recipe thumbnails behind `PublicRecipeMediaController` with `variant: :thumbnail`; apply the share password gate and selected recipe-photo allowlist before streaming bytes.
+- Keep public bean thumbnails behind `PublicBeanMediaController` with `variant: :thumbnail`; apply the share password gate and selected bean-photo allowlist before streaming bytes.
 - Keep workspace media archives owner-only through `WorkspaceExportsController#media`. Include workspace-owned media, External Coffee photos, and workspace identity images, but do not include user avatars/public banners without a separate account-data export decision.
