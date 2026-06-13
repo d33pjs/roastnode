@@ -834,14 +834,24 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=bean-detail-actions]"
     assert_includes response.body, "sm:flex-nowrap"
-    assert_select "a[href=?]", edit_bean_public_bean_share_path(bean), text: I18n.t("beans.show.edit_public_share")
+    assert_select "[data-testid=?][href=?]",
+      "bean-share-public-link-#{bean.id}",
+      edit_bean_public_bean_share_path(bean),
+      text: I18n.t("beans.show.share_publicly")
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "bean-native-share-button-#{bean.id}",
       public_bean_page_url(share.token)
     assert_select "[data-testid=?] svg[aria-hidden=true]", "bean-native-share-button-#{bean.id}"
-    assert_select "[data-testid=?] span[data-native-share-target=label]", "bean-native-share-button-#{bean.id}", I18n.t("shared.native_share.share")
-    assert_select "[data-testid=?] span.sr-only", "bean-native-share-button-#{bean.id}", count: 0
-    assert_appears_before "bean-native-share-button-#{bean.id}", edit_bean_public_bean_share_path(bean)
+    assert_select "[data-testid=?] span.sr-only", "bean-native-share-button-#{bean.id}", I18n.t("shared.native_share.share_public_bean")
+    assert_select "form[data-testid=?]", "bean-duplicate-form-#{bean.id}"
+    assert_select "form[data-testid=bean-finish-form]"
+    assert_select "[data-testid=?][href=?]", "bean-adjust-inventory-link-#{bean.id}", new_bean_inventory_adjustment_path(bean)
+    assert_select "[data-testid=?][href=?]", "bean-edit-link-#{bean.id}", edit_bean_path(bean)
+    assert_appears_before "bean-native-share-button-#{bean.id}", "bean-share-public-link-#{bean.id}"
+    assert_appears_before "bean-share-public-link-#{bean.id}", "bean-duplicate-form-#{bean.id}"
+    assert_appears_before "bean-duplicate-form-#{bean.id}", "bean-finish-form"
+    assert_appears_before "bean-finish-form", "bean-adjust-inventory-link-#{bean.id}"
+    assert_appears_before "bean-adjust-inventory-link-#{bean.id}", "bean-edit-link-#{bean.id}"
   end
 
   test "show hides public bean share actions from writer who cannot manage existing share" do

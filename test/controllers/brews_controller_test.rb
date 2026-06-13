@@ -1519,6 +1519,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
+    assert_select "[data-testid=brew-detail-actions]"
+    assert_includes response.body, "sm:flex-nowrap"
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "brew-native-share-button-#{brew.id}",
       public_brew_page_url(share.token)
