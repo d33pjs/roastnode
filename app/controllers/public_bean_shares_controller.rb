@@ -46,7 +46,7 @@ class PublicBeanSharesController < ApplicationController
     end
 
     def ensure_publishable_bean!
-      return if PublicBeanShare::PUBLISHABLE_STATUSES.include?(@bean.bag_status)
+      return if PublicBeanShare.publishable_bean?(@bean)
 
       redirect_to @bean, alert: t("public_bean_shares.unsupported_status")
     end

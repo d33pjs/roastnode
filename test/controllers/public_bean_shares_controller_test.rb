@@ -87,6 +87,24 @@ class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("public_bean_shares.unsupported_status"), flash[:alert]
   end
 
+  test "finished bean without opened date cannot be shared" do
+    bean = workspaces(:household).beans.create!(
+      name: "Never Opened Finished",
+      roaster_name: "Shelf",
+      bag_size_grams: 250,
+      remaining_grams: 125
+    )
+    bean.update_columns(finished_at: Time.current)
+    sign_in_as(users(:one))
+
+    assert_no_difference -> { PublicBeanShare.count } do
+      get new_bean_public_bean_share_path(bean)
+    end
+
+    assert_redirected_to bean_path(bean)
+    assert_equal I18n.t("public_bean_shares.unsupported_status"), flash[:alert]
+  end
+
   test "viewer cannot manage public bean shares" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)

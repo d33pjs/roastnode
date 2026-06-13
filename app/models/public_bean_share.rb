@@ -28,6 +28,10 @@ class PublicBeanShare < ApplicationRecord
     bean.display_name
   end
 
+  def self.publishable_bean?(bean)
+    bean.present? && bean.opened_on.present? && PUBLISHABLE_STATUSES.include?(bean.bag_status)
+  end
+
   def self.find_enabled_by_token!(token)
     joins(:bean)
       .where(beans: { archived_at: nil })
@@ -62,7 +66,7 @@ class PublicBeanShare < ApplicationRecord
   end
 
   def publishable?
-    bean&.opened_on.present? && PUBLISHABLE_STATUSES.include?(bean.bag_status)
+    self.class.publishable_bean?(bean)
   end
 
   def public_attachment_ids

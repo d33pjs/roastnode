@@ -82,6 +82,29 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     assert_includes share.errors[:bean], "must be open, finished, or used up"
   end
 
+  test "class publishable bean predicate requires opened publishable lifecycle" do
+    stock = workspaces(:household).beans.create!(
+      name: "Stock Predicate Bag",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250
+    )
+    finished_without_opened_on = workspaces(:household).beans.create!(
+      name: "Finished Without Opened Predicate Bag",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 125
+    )
+    finished_without_opened_on.update_columns(finished_at: Time.current)
+    finished = beans(:open_household)
+    finished.finish!
+
+    assert_not PublicBeanShare.publishable_bean?(nil)
+    assert_not PublicBeanShare.publishable_bean?(stock)
+    assert_not PublicBeanShare.publishable_bean?(finished_without_opened_on)
+    assert PublicBeanShare.publishable_bean?(finished)
+  end
+
   test "allows finished and used up bags" do
     finished = beans(:open_household)
     finished.finish!

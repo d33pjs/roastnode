@@ -579,6 +579,38 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", edit_bean_public_bean_share_path(bean), text: I18n.t("beans.show.edit_public_share")
   end
 
+  test "show hides public bean share actions from writer who cannot manage existing share" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    other_writer = User.create!(
+      email_address: "other-bean-show-share-writer@example.com",
+      password: "password",
+      active_workspace: workspaces(:household)
+    )
+    Membership.create!(user: other_writer, workspace: workspaces(:household), role: "member")
+    bean = beans(:open_household)
+    bean.create_public_bean_share!(
+      workspace: bean.workspace,
+      created_by: other_writer,
+      updated_by: other_writer,
+      enabled: true,
+      title: "Other writer share",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBeanShareSnapshotBuilder.new(
+        bean:,
+        title: "Other writer share",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+    sign_in_as(user)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[href=?]", edit_bean_public_bean_share_path(bean), count: 0
+    assert_select "a[href=?]", new_bean_public_bean_share_path(bean), count: 0
+  end
+
   test "show renders bean record links with visibility labels" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

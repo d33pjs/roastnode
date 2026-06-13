@@ -7,9 +7,12 @@
         <div class="flex flex-wrap gap-2">
           <%= link_to t(".edit"), edit_bean_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
           <%= link_to t(".adjust_inventory"), new_bean_inventory_adjustment_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <% if PublicBeanShare::PUBLISHABLE_STATUSES.include?(@bean.bag_status) %>
-            <% if @bean.public_bean_share.present? %>
-              <%= link_to t(".edit_public_share"), edit_bean_public_bean_share_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+          <% if PublicBeanShare.publishable_bean?(@bean) %>
+            <% public_bean_share = @bean.public_bean_share %>
+            <% if public_bean_share.present? %>
+              <% if public_bean_share.manageable_by?(Current.user) %>
+                <%= link_to t(".edit_public_share"), edit_bean_public_bean_share_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+              <% end %>
             <% else %>
               <%= link_to t(".share_publicly"), new_bean_public_bean_share_path(@bean), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
             <% end %>
