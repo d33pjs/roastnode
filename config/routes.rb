@@ -53,6 +53,7 @@ Rails.application.routes.draw do
     get :roaster_suggestions, on: :collection
     patch :finish, on: :member
     patch :close, on: :member
+    patch :open_bag, on: :member
     patch :reopen, on: :member
     post :duplicate, on: :member
     resources :inventory_adjustments, only: %i[new create]

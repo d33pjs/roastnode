@@ -1,3 +1,4 @@
+<% can_write = local_assigns.fetch(:can_write, false) %>
 <% remaining_percent = bean.remaining_percent %>
 <% remaining_state = if bean.nearly_finished?
   "low"
@@ -13,74 +14,87 @@ end %>
 }.fetch(remaining_state) %>
 <% latest_brew_at = bean[:latest_brew_at] %>
 
-<%= link_to bean_path(bean), data: { testid: "bean-card" }, class: "grid min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm transition hover:bg-[var(--rn-surface-muted)] sm:grid-cols-[9.5rem_1fr] lg:grid-cols-[10.5rem_1fr]" do %>
-  <div class="aspect-[4/3] min-h-36 bg-[var(--rn-surface-muted)] p-2 sm:aspect-auto sm:min-h-full">
-    <%= render "shared/record_photo_thumb",
-      record: bean,
-      testid: "bean-card-photo",
-      class_name: "h-full w-full rounded-xl object-contain ring-1 ring-stone-200" %>
-  </div>
-
-  <div class="min-w-0 p-4">
-    <div class="flex min-w-0 items-start justify-between gap-3">
-      <div class="min-w-0">
-        <p class="truncate text-lg font-black leading-6 text-rn-ink"><%= bean.name %></p>
-        <p class="mt-0.5 truncate text-sm font-bold text-rn-muted"><%= bean.roaster_name.presence || t("beans.index.unknown") %></p>
-      </div>
-      <span class="shrink-0 rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-xs font-extrabold text-rn-muted"><%= t("beans.statuses.#{bean.bag_status}") %></span>
+<article data-testid="bean-card" class="min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+  <%= link_to bean_path(bean), data: { testid: "bean-card-detail-#{bean.id}" }, class: "grid min-w-0 transition hover:bg-[var(--rn-surface-muted)] sm:grid-cols-[9.5rem_1fr] lg:grid-cols-[10.5rem_1fr]" do %>
+    <div class="aspect-[4/3] min-h-36 bg-[var(--rn-surface-muted)] p-2 sm:aspect-auto sm:min-h-full">
+      <%= render "shared/record_photo_thumb",
+        record: bean,
+        testid: "bean-card-photo",
+        class_name: "h-full w-full rounded-xl object-contain ring-1 ring-stone-200" %>
     </div>
 
-    <div class="mt-3 grid gap-3">
-      <div>
-        <div class="flex min-w-0 items-end justify-between gap-3 text-xs font-extrabold text-rn-muted">
-          <span class="shrink-0"><%= t("beans.index.remaining") %></span>
-          <span data-testid="bean-card-remaining-<%= bean.id %>" class="min-w-0 truncate text-right text-rn-ink"><%= t("beans.index.remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></span>
+    <div class="min-w-0 p-4">
+      <div class="flex min-w-0 items-start justify-between gap-3">
+        <div class="min-w-0">
+          <p class="truncate text-lg font-black leading-6 text-rn-ink"><%= bean.name %></p>
+          <p class="mt-0.5 truncate text-sm font-bold text-rn-muted"><%= bean.roaster_name.presence || t("beans.index.unknown") %></p>
         </div>
-        <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]">
-          <div data-testid="bean-card-progress-<%= bean.id %>" data-remaining-state="<%= remaining_state %>" class="h-full rounded-full <%= remaining_bar_class %>" style="width: <%= remaining_percent %>%"></div>
+        <span class="shrink-0 rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-xs font-extrabold text-rn-muted"><%= t("beans.statuses.#{bean.bag_status}") %></span>
+      </div>
+
+      <div class="mt-3 grid gap-3">
+        <div>
+          <div class="flex min-w-0 items-end justify-between gap-3 text-xs font-extrabold text-rn-muted">
+            <span class="shrink-0"><%= t("beans.index.remaining") %></span>
+            <span data-testid="bean-card-remaining-<%= bean.id %>" class="min-w-0 truncate text-right text-rn-ink"><%= t("beans.index.remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></span>
+          </div>
+          <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]">
+            <div data-testid="bean-card-progress-<%= bean.id %>" data-remaining-state="<%= remaining_state %>" class="h-full rounded-full <%= remaining_bar_class %>" style="width: <%= remaining_percent %>%"></div>
+          </div>
+          <% if remaining_state == "low" && bean.open? %>
+            <p data-testid="bean-card-low-warning-<%= bean.id %>" class="mt-1 text-xs font-extrabold text-red-700"><%= t("beans.index.low_remaining") %></p>
+          <% end %>
         </div>
-        <% if remaining_state == "low" && bean.open? %>
-          <p data-testid="bean-card-low-warning-<%= bean.id %>" class="mt-1 text-xs font-extrabold text-red-700"><%= t("beans.index.low_remaining") %></p>
+
+        <% if bean.finished? %>
+          <div data-testid="bean-card-finished-stats-<%= bean.id %>" class="text-xs font-extrabold text-rn-muted">
+            <p class="text-rn-ink">
+              <%= t("beans.index.finished_stats",
+                used: statistics_grams(bean.finished_used_grams),
+                days: t("beans.index.days", count: bean.finished_open_days),
+                per_day: statistics_grams(bean.finished_grams_per_day)) %>
+            </p>
+            <% if bean.remaining_grams.to_d.positive? %>
+              <p class="mt-1"><%= t("beans.index.leftover", amount: statistics_grams(bean.remaining_grams)) %></p>
+            <% end %>
+          </div>
         <% end %>
       </div>
 
-      <% if bean.finished? %>
-        <div data-testid="bean-card-finished-stats-<%= bean.id %>" class="text-xs font-extrabold text-rn-muted">
-          <p class="text-rn-ink">
-            <%= t("beans.index.finished_stats",
-              used: statistics_grams(bean.finished_used_grams),
-              days: t("beans.index.days", count: bean.finished_open_days),
-              per_day: statistics_grams(bean.finished_grams_per_day)) %>
-          </p>
-          <% if bean.remaining_grams.to_d.positive? %>
-            <p class="mt-1"><%= t("beans.index.leftover", amount: statistics_grams(bean.remaining_grams)) %></p>
-          <% end %>
-        </div>
-      <% end %>
+      <div class="mt-3 flex min-w-0 flex-wrap gap-1.5 text-xs font-bold text-rn-muted">
+        <% if latest_brew_at.present? %>
+          <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.last_brew", date: l(latest_brew_at.to_date)) %></span>
+        <% end %>
+        <% if bean.opened_on.present? %>
+          <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.opened_on", date: l(bean.opened_on)) %></span>
+        <% end %>
+        <% if bean.finished_at.present? %>
+          <span data-testid="bean-card-finished-on-<%= bean.id %>" class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.finished_on", date: l(bean.finished_at.to_date)) %></span>
+        <% end %>
+        <% if bean.purchased_on.present? %>
+          <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.purchased_on", date: l(bean.purchased_on)) %></span>
+        <% end %>
+        <% if bean.roast_date.present? %>
+          <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.roasted_on", date: l(bean.roast_date)) %></span>
+        <% end %>
+        <% if bean.country.present? %>
+          <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= bean.country %></span>
+        <% end %>
+        <% if bean.rating.present? %>
+          <span data-testid="bean-card-rating-<%= bean.id %>" class="max-w-full truncate rounded-full bg-amber-100 px-2.5 py-1 text-amber-800"><%= t("beans.index.rating", rating: bean.rating) %></span>
+        <% end %>
+      </div>
     </div>
+  <% end %>
 
-    <div class="mt-3 flex min-w-0 flex-wrap gap-1.5 text-xs font-bold text-rn-muted">
-      <% if latest_brew_at.present? %>
-        <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.last_brew", date: l(latest_brew_at.to_date)) %></span>
+  <% if bean.purchase_url.present? || (can_write && bean.stock?) %>
+    <div data-testid="bean-card-actions-<%= bean.id %>" class="flex flex-wrap items-center gap-2 border-t border-rn-line px-4 py-3">
+      <% if bean.purchase_url.present? %>
+        <%= link_to t("beans.index.rebuy"), bean.purchase_url, target: "_blank", rel: "noopener", data: { testid: "bean-card-rebuy-#{bean.id}" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-bold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
       <% end %>
-      <% if bean.opened_on.present? %>
-        <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.opened_on", date: l(bean.opened_on)) %></span>
-      <% end %>
-      <% if bean.finished_at.present? %>
-        <span data-testid="bean-card-finished-on-<%= bean.id %>" class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.finished_on", date: l(bean.finished_at.to_date)) %></span>
-      <% end %>
-      <% if bean.purchased_on.present? %>
-        <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.purchased_on", date: l(bean.purchased_on)) %></span>
-      <% end %>
-      <% if bean.roast_date.present? %>
-        <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= t("beans.index.roasted_on", date: l(bean.roast_date)) %></span>
-      <% end %>
-      <% if bean.country.present? %>
-        <span class="max-w-full truncate rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1"><%= bean.country %></span>
-      <% end %>
-      <% if bean.rating.present? %>
-        <span data-testid="bean-card-rating-<%= bean.id %>" class="max-w-full truncate rounded-full bg-amber-100 px-2.5 py-1 text-amber-800"><%= t("beans.index.rating", rating: bean.rating) %></span>
+      <% if can_write && bean.stock? %>
+        <%= button_to t("beans.index.open_bag"), open_bag_bean_path(bean), method: :patch, form: { data: { testid: "bean-card-open-bag-#{bean.id}" } }, class: "rounded-md bg-stone-950 px-3 py-2 text-sm font-bold text-white hover:bg-stone-800" %>
       <% end %>
     </div>
-  </div>
-<% end %>
+  <% end %>
+</article>

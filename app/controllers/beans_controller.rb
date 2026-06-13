@@ -6,8 +6,8 @@ class BeansController < ApplicationController
     { key: "archived", statuses: %w[archived] }
   ].freeze
 
-  before_action :authorize_workspace_write!, only: %i[new create edit update finish close reopen duplicate destroy roaster_suggestions]
-  before_action :set_bean, only: %i[show edit update finish close reopen duplicate destroy]
+  before_action :authorize_workspace_write!, only: %i[new create edit update finish close open_bag reopen duplicate destroy roaster_suggestions]
+  before_action :set_bean, only: %i[show edit update finish close open_bag reopen duplicate destroy]
 
   def index
     @beans = current_workspace.beans
@@ -79,6 +79,16 @@ class BeansController < ApplicationController
     @bean.archive!
     refresh_public_shares_for(@bean)
     redirect_to @bean, notice: t(".closed")
+  end
+
+  def open_bag
+    if @bean.stock?
+      @bean.open_bag!
+      refresh_public_shares_for(@bean)
+      redirect_back fallback_location: @bean, notice: t(".opened")
+    else
+      redirect_to @bean, alert: t(".not_stock")
+    end
   end
 
   def finish

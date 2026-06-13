@@ -25,7 +25,7 @@
 
             <div class="grid max-w-full min-w-0 gap-3 lg:grid-cols-2">
               <% group.fetch(:beans).each do |bean| %>
-                <%= render "beans/index_card", bean: %>
+                <%= render "beans/index_card", bean:, can_write: current_workspace_policy.write? %>
               <% end %>
             </div>
           </section>

@@ -27,7 +27,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "table", count: 0
     assert_select "[data-testid=bean-card-list]"
     assert_select "[data-testid=bean-desktop-table]", count: 0
-    assert_select "a[data-testid=bean-card][href=?]", bean_path(bean)
+    assert_select "article[data-testid=bean-card]"
+    assert_select "a[data-testid=?][href=?]", "bean-card-detail-#{bean.id}", bean_path(bean)
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
     assert_select "[data-testid=?]", "bean-card-rating-#{bean.id}", text: /4/
@@ -136,6 +137,26 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?]", "bean-card-finished-stats-#{finished.id}", text: /18[,.]2g\/day/
     assert_select "[data-testid=?]", "bean-card-finished-on-#{finished.id}", text: /Finished/
     assert_select "[data-testid=?][data-remaining-state=low]", "bean-card-progress-#{finished.id}"
+  end
+
+  test "index stock cards render rebuy and quick open actions for writers" do
+    sign_in_as(users(:one))
+    bean = workspaces(:household).beans.create!(
+      name: "Shelf Bag",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil,
+      purchase_url: "https://example.com/rebuy"
+    )
+
+    get beans_path
+
+    assert_response :success
+    assert_select "[data-testid=?]", "bean-card-actions-#{bean.id}" do
+      assert_select "a[data-testid=?][href=?]", "bean-card-rebuy-#{bean.id}", bean.purchase_url
+      assert_select "form[data-testid=?][action=?]", "bean-card-open-bag-#{bean.id}", open_bag_bean_path(bean)
+    end
   end
 
   test "member can create bean" do
@@ -607,6 +628,40 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
   end
 
+  test "show uses structured origin fallback and renders cost metrics" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    bean.update!(
+      origin: nil,
+      country: nil,
+      region: "Huila",
+      continent: "South America",
+      bag_size_grams: 250,
+      purchase_price_cents: 1250
+    )
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-header-origin]", "Huila"
+    assert_select "[data-testid=bean-cost-per-kg]", text: /50/
+    assert_select "[data-testid=bean-cost-per-package]", text: /12[,.]50/
+    assert_select "[data-testid=bean-cost-per-shot]", text: /0[,.]90/
+  end
+
+  test "show renders shortened website link and rebuy action" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update!(purchase_url: "https://example.com/beans/house-blend?ref=private")
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[data-testid=bean-rebuy-link][href=?][target=_blank][rel=noopener]", bean.purchase_url
+    assert_select "dd[data-testid=bean-detail-purchase-url] a[href=?]", bean.purchase_url, text: /example\.com/
+    assert_select "body", text: /https:\/\/example.com\/beans\/house-blend\?ref=private/, count: 0
+  end
+
   test "show links writer to create public bean share for publishable bean" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
@@ -928,6 +983,56 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Translation missing/, count: 0
     assert_select "form[action=?]", reopen_bean_path(bean)
     assert_select "form[data-testid=bean-finish-form]", count: 0
+  end
+
+  test "quick open opens stock bag today and returns to safe origin" do
+    travel_to Date.new(2026, 6, 13) do
+      sign_in_as(users(:one))
+      bean = workspaces(:household).beans.create!(
+        name: "Shelf Bag",
+        roaster_name: "Shelf Roaster",
+        bag_size_grams: 250,
+        remaining_grams: 199,
+        opened_on: nil
+      )
+
+      patch open_bag_bean_path(bean), headers: { "HTTP_REFERER" => "http://www.example.com#{dashboard_path}" }
+
+      assert_redirected_to dashboard_path
+      bean.reload
+      assert_equal "open", bean.bag_status
+      assert_equal Date.new(2026, 6, 13), bean.opened_on
+      assert_equal 199.to_d, bean.remaining_grams
+    end
+  end
+
+  test "quick open ignores non stock bags" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    original_opened_on = bean.opened_on
+
+    patch open_bag_bean_path(bean)
+
+    assert_redirected_to bean_path(bean)
+    assert_equal original_opened_on, bean.reload.opened_on
+  end
+
+  test "viewer cannot quick open stock bean" do
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    bean = workspaces(:household).beans.create!(
+      name: "Viewer Shelf",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    sign_in_as(users(:two))
+
+    patch open_bag_bean_path(bean)
+
+    assert_redirected_to root_path
+    assert_nil bean.reload.opened_on
   end
 
   test "writer can delete bean with brew history" do
