@@ -1,10 +1,20 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-3xl px-6 py-10">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div data-testid="equipment-event-detail-header-controls" class="flex items-center justify-between gap-3">
       <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
 
       <% if current_workspace_policy.write? %>
-        <%= link_to t(".edit"), edit_equipment_event_path(@equipment_event), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
+        <%= render "shared/detail_actions",
+          testid: "equipment-event-detail-actions",
+          actions: [
+            {
+              icon: "edit",
+              label: t(".edit"),
+              path: edit_equipment_event_path(@equipment_event),
+              primary: true,
+              testid: "equipment-event-edit-link-#{@equipment_event.id}"
+            }
+          ] %>
       <% end %>
     </div>
 

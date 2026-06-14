@@ -218,7 +218,12 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     get external_coffee_path(coffee)
 
     assert_response :success
-    assert_select "[data-testid=external-coffee-actions] a[href=?]", edit_external_coffee_path(coffee), text: I18n.t("external_coffees.show.edit")
+    header = Nokogiri::HTML(response.body).at_css("[data-testid='external-coffee-header-controls']")
+    assert_not_includes header["class"].to_s, "flex-col"
+    assert_select "[data-testid=external-coffee-actions] a[href=?][title=?]",
+      edit_external_coffee_path(coffee),
+      I18n.t("external_coffees.show.edit")
+    assert_select "[data-testid=external-coffee-actions] svg.material-symbol[data-symbol=edit]"
     assert_select "[data-testid=external-coffee-actions] form[action=?]", external_coffee_path(coffee), count: 0
     assert_select "[data-testid=external-coffee-danger-zone] form[action=?]", external_coffee_path(coffee)
     assert_appears_before "data-testid=\"external-coffee-details\"", "data-testid=\"external-coffee-danger-zone\""

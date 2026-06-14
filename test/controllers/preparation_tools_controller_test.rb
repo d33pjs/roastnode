@@ -52,7 +52,12 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=preparation-tool-recent-brews] a[href=?]", brew_path(brews(:morning_espresso))
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
-    assert_select "a[href=?]", edit_preparation_tool_path(preparation_tools(:wdt)), text: I18n.t("preparation_tools.show.edit")
+    header = Nokogiri::HTML(response.body).at_css("[data-testid='preparation-tool-detail-header-controls']")
+    assert_not_includes header["class"].to_s, "flex-col"
+    assert_select "[data-testid=preparation-tool-detail-actions] a[href=?][title=?]",
+      edit_preparation_tool_path(preparation_tools(:wdt)),
+      I18n.t("preparation_tools.show.edit")
+    assert_select "[data-testid=preparation-tool-detail-actions] svg.material-symbol[data-symbol=edit]"
     assert_select "form[action=?]", archive_preparation_tool_path(preparation_tools(:wdt))
     assert_select "[data-testid=preparation-tool-danger-zone]"
     assert_select "form[action=?]", preparation_tool_path(preparation_tools(:wdt))

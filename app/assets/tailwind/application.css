@@ -195,6 +195,14 @@
     color: var(--rn-ink);
   }
 
+  .rn-detail-menu-panel {
+    display: none;
+  }
+
+  details[open] > .rn-detail-menu-panel {
+    display: grid;
+  }
+
   .rn-footer-bmc-official {
     transform-origin: center right;
   }

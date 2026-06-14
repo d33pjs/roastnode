@@ -1,23 +1,47 @@
 <main class="rn-page">
   <section class="rn-shell max-w-6xl py-6 sm:px-6 lg:py-10">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div class="min-w-0">
+    <div>
+      <div data-testid="recipe-detail-header-controls" class="flex items-center justify-between gap-3">
         <%= render "shared/back_link", label: t(".back"), path: recipes_path %>
+
+        <% if current_workspace_policy.write? %>
+          <% recipe_actions = [
+            {
+              icon: "local_cafe",
+              label: t(".log"),
+              path: log_recipe_path(@recipe),
+              primary: true,
+              testid: "recipe-log-link-#{@recipe.id}"
+            },
+            {
+              icon: "edit",
+              label: t(".edit"),
+              path: edit_recipe_path(@recipe),
+              testid: "recipe-edit-link-#{@recipe.id}"
+            },
+            {
+              icon: "file_download",
+              label: t(".export"),
+              path: export_recipe_path(@recipe),
+              testid: "recipe-export-link-#{@recipe.id}"
+            }
+          ] %>
+          <% if current_workspace_policy.manage? || @recipe.created_by_id == Current.user.id %>
+            <% public_share_path = @recipe.public_recipe_share.present? ? edit_recipe_public_recipe_share_path(@recipe) : new_recipe_public_recipe_share_path(@recipe) %>
+            <% recipe_actions << {
+              icon: "public",
+              label: t(".share_publicly"),
+              path: public_share_path,
+              testid: "recipe-share-public-link-#{@recipe.id}"
+            } %>
+          <% end %>
+          <%= render "shared/detail_actions", testid: "recipe-detail-actions", actions: recipe_actions %>
+        <% end %>
+      </div>
+      <div class="min-w-0">
         <p class="mt-4 text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".eyebrow") %></p>
         <h1 class="mt-2 text-3xl font-black leading-tight text-rn-ink sm:text-4xl"><%= @recipe.title %></h1>
       </div>
-
-      <% if current_workspace_policy.write? %>
-        <div class="flex shrink-0 flex-wrap gap-2">
-          <%= link_to t(".log"), log_recipe_path(@recipe), class: "rounded-2xl bg-[var(--rn-accent-strong)] px-4 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
-          <%= link_to t(".edit"), edit_recipe_path(@recipe), class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
-          <%= link_to t(".export"), export_recipe_path(@recipe), class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
-          <% if current_workspace_policy.manage? || @recipe.created_by_id == Current.user.id %>
-            <% public_share_path = @recipe.public_recipe_share.present? ? edit_recipe_public_recipe_share_path(@recipe) : new_recipe_public_recipe_share_path(@recipe) %>
-            <%= link_to t(".share_publicly"), public_share_path, class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
-          <% end %>
-        </div>
-      <% end %>
     </div>
 
     <div class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">

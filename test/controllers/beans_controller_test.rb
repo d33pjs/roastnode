@@ -693,7 +693,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     duplicate = workspaces(:household).beans.order(:created_at).last
     assert_redirected_to edit_bean_path(duplicate)
     assert_equal source.name, duplicate.name
-    assert_equal Date.current, duplicate.opened_on
+    assert_equal Time.find_zone!("Europe/Berlin").today, duplicate.opened_on
     assert_equal duplicate.bag_size_grams, duplicate.remaining_grams
     assert_equal 1, duplicate.photos.count
   end
@@ -840,6 +840,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=bean-detail-actions]"
+    header = Nokogiri::HTML(response.body).at_css("[data-testid='bean-detail-header-controls']")
+    assert_not_includes header["class"].to_s, "flex-col"
     actions = Nokogiri::HTML(response.body).at_css("[data-testid='bean-detail-actions']")
     assert_not_includes actions["class"].to_s, "overflow-x-auto"
     assert_select "[data-testid=bean-detail-actions] svg.material-symbol", minimum: 1
@@ -847,6 +849,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       "bean-edit-link-#{bean.id}-mobile",
       edit_bean_path(bean)
     assert_select "[data-testid=bean-detail-actions-more]"
+    menu = Nokogiri::HTML(response.body).at_css("[data-testid='bean-detail-actions-menu']")
+    assert_includes menu["class"].to_s, "rn-detail-menu-panel"
     assert_select "[data-testid=bean-detail-actions-menu] a[href=?]",
       new_bean_inventory_adjustment_path(bean),
       text: I18n.t("beans.show.adjust_inventory")

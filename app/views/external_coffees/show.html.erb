@@ -1,16 +1,24 @@
 <main class="rn-page">
   <section class="rn-shell max-w-5xl py-6 sm:px-6 lg:py-10">
-    <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
+    <div>
+      <div data-testid="external-coffee-header-controls" class="flex items-center justify-between gap-3">
         <%= render "shared/back_link", label: t(".back"), path: external_coffees_path %>
-        <h1 class="mt-4 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= @external_coffee.drink_type %></h1>
-      </div>
 
-      <% if current_workspace_policy.write? %>
-        <div data-testid="external-coffee-actions" class="flex flex-wrap gap-2">
-          <%= link_to t(".edit"), edit_external_coffee_path(@external_coffee), class: "rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]" %>
-        </div>
-      <% end %>
+        <% if current_workspace_policy.write? %>
+          <%= render "shared/detail_actions",
+            testid: "external-coffee-actions",
+            actions: [
+              {
+                icon: "edit",
+                label: t(".edit"),
+                path: edit_external_coffee_path(@external_coffee),
+                primary: true,
+                testid: "external-coffee-edit-link-#{@external_coffee.id}"
+              }
+            ] %>
+        <% end %>
+      </div>
+      <h1 class="mt-4 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= @external_coffee.drink_type %></h1>
     </div>
 
     <div class="mt-6">

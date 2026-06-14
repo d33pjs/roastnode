@@ -1,23 +1,46 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-5xl px-6 py-10">
-    <header class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-      <div>
+    <header class="mb-8">
+      <div data-testid="equipment-detail-header-controls" class="flex items-center justify-between gap-3">
         <%= render "shared/back_link", label: t(".back"), path: gear_path %>
+
+        <% if current_workspace_policy.manage? %>
+          <% equipment_actions = [
+            {
+              icon: "edit",
+              label: t(".edit"),
+              path: edit_equipment_path(@equipment),
+              primary: true,
+              testid: "equipment-edit-link-#{@equipment.id}"
+            }
+          ] %>
+          <% if @equipment.archived? %>
+            <% equipment_actions << {
+              kind: :button,
+              icon: "refresh",
+              label: t(".reopen"),
+              path: reopen_equipment_path(@equipment),
+              method: :patch,
+              form_testid: "equipment-reopen-form-#{@equipment.id}"
+            } %>
+          <% else %>
+            <% equipment_actions << {
+              kind: :button,
+              icon: "archive",
+              label: t(".archive"),
+              path: archive_equipment_path(@equipment),
+              method: :patch,
+              form_testid: "equipment-archive-form-#{@equipment.id}"
+            } %>
+          <% end %>
+          <%= render "shared/detail_actions", testid: "equipment-detail-actions", actions: equipment_actions %>
+        <% end %>
+      </div>
+      <div>
         <p class="mt-4 text-sm font-semibold uppercase text-stone-600"><%= @equipment.kind.humanize %></p>
         <h1 class="mt-2 text-3xl font-bold text-stone-950"><%= @equipment.name %></h1>
         <p class="mt-2 text-stone-700"><%= @equipment.model.presence || t(".unknown_model") %></p>
       </div>
-
-      <% if current_workspace_policy.manage? %>
-        <div class="flex flex-wrap gap-2">
-          <%= link_to t(".edit"), edit_equipment_path(@equipment), class: "rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-          <% if @equipment.archived? %>
-            <%= button_to t(".reopen"), reopen_equipment_path(@equipment), method: :patch, class: "rounded-md bg-stone-950 px-4 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
-          <% else %>
-            <%= button_to t(".archive"), archive_equipment_path(@equipment), method: :patch, class: "rounded-md border border-red-200 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-50" %>
-          <% end %>
-        </div>
-      <% end %>
     </header>
 
     <section class="grid gap-4 sm:grid-cols-3">

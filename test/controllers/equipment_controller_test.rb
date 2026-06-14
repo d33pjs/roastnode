@@ -236,7 +236,12 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     get equipment_path(equipment)
 
     assert_response :success
-    assert_select "a[href=?]", edit_equipment_path(equipment), text: I18n.t("equipment.show.edit")
+    header = Nokogiri::HTML(response.body).at_css("[data-testid='equipment-detail-header-controls']")
+    assert_not_includes header["class"].to_s, "flex-col"
+    assert_select "[data-testid=equipment-detail-actions] a[href=?][title=?]",
+      edit_equipment_path(equipment),
+      I18n.t("equipment.show.edit")
+    assert_select "[data-testid=equipment-detail-actions] svg.material-symbol[data-symbol=edit]"
     assert_select "a[href=?]", new_equipment_event_path, count: 0
     assert_select "form[action=?]", archive_equipment_path(equipment)
     assert_select "[data-testid=equipment-danger-zone]"

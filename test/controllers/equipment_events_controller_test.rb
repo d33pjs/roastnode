@@ -72,7 +72,12 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     get equipment_event_path(event)
 
     assert_response :success
-    assert_select "a[href=?]", edit_equipment_event_path(event), text: I18n.t("equipment_events.show.edit")
+    header = Nokogiri::HTML(response.body).at_css("[data-testid='equipment-event-detail-header-controls']")
+    assert_not_includes header["class"].to_s, "flex-col"
+    assert_select "[data-testid=equipment-event-detail-actions] a[href=?][title=?]",
+      edit_equipment_event_path(event),
+      I18n.t("equipment_events.show.edit")
+    assert_select "[data-testid=equipment-event-detail-actions] svg.material-symbol[data-symbol=edit]"
     assert_select "[data-testid=equipment-event-danger-zone]"
     assert_select "form[action=?]", equipment_event_path(event)
   end

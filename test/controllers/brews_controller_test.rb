@@ -1505,6 +1505,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
+    header = Nokogiri::HTML(response.body).at_css("[data-testid='brew-detail-header-controls']")
+    assert_not_includes header["class"].to_s, "flex-col"
     actions = Nokogiri::HTML(response.body).at_css("[data-testid='brew-detail-actions']")
     assert_not_includes actions["class"].to_s, "overflow-x-auto"
     assert_select "[data-testid=brew-detail-actions] svg.material-symbol", minimum: 1

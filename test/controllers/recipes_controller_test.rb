@@ -21,6 +21,12 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", recipe.title
+    header = Nokogiri::HTML(response.body).at_css("[data-testid='recipe-detail-header-controls']")
+    assert_not_includes header["class"].to_s, "flex-col"
+    assert_select "[data-testid=recipe-detail-actions] a[href=?][title=?]",
+      log_recipe_path(recipe),
+      I18n.t("recipes.show.log")
+    assert_select "[data-testid=recipe-detail-actions] svg.material-symbol[data-symbol=local_cafe]"
     assert_select "[data-testid=recipe-target-guide]", text: /Set grinder/
     assert_select "[data-testid=recipe-target-guide]", text: /12/
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /Source brew/
