@@ -58,7 +58,10 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=equipment-form-section][data-section=identity]"
-    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("equipment.new.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      gear_path,
+      I18n.t("equipment.new.back"),
+      I18n.t("equipment.new.back")
     assert_select "[data-testid=equipment-form-section][data-section=setup]"
     assert_select "[data-testid=equipment-form-section][data-section=notes]"
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
@@ -82,7 +85,10 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("equipment.edit.title")
-    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("equipment.edit.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      gear_path,
+      I18n.t("equipment.edit.back"),
+      I18n.t("equipment.edit.back")
     assert_select "img[src=?]", media_attachment_path(existing_photo, variant: :thumbnail)
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment[photos][]"
 
@@ -214,7 +220,10 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", equipment(:household_grinder).name
-    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("equipment.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      gear_path,
+      I18n.t("equipment.show.back"),
+      I18n.t("equipment.show.back")
     assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
     assert_select "p", text: /18g/

@@ -20,3 +20,9 @@ Users can choose number and timestamp display preferences from Profile:
 Currency is still owned by the active workspace through `Workspace#default_currency`. Profile number formatting controls the amount display, but it does not perform currency conversion.
 
 Displayed measurement units are compact: grams, seconds, and Celsius render without a space between number and unit, for example `18,2g`, `31s`, and `93°C`.
+
+## Timezones
+
+Each user has an IANA timezone preference, defaulting to `Europe/Berlin`. Authenticated requests run inside the current user's timezone with `Time.use_zone`, so Rails renders `datetime-local` fields in the user's wall time and parses submitted values back into stored UTC instants. Public and unauthenticated requests keep the application default timezone.
+
+Use IANA names such as `Europe/Berlin`, not display-only labels, for persisted user timezone values.

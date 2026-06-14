@@ -1,0 +1,50 @@
+<% action = local_assigns.fetch(:action) %>
+<% variant = local_assigns.fetch(:variant, :icon).to_sym %>
+<% label = action.fetch(:label) %>
+<% icon = action.fetch(:icon, "more_vert") %>
+<% action_testid = local_assigns[:testid] || action[:testid] %>
+<% title = action.fetch(:title, label) %>
+<% icon_button_class = "inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full text-stone-700 hover:bg-stone-100 hover:text-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
+<% primary_icon_button_class = "inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-stone-950 text-white hover:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
+<% menu_item_class = "flex w-full items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-semibold text-stone-800 hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
+<% action_class = variant == :menu ? menu_item_class : (action[:primary] ? primary_icon_button_class : icon_button_class) %>
+<% label_class = variant == :menu ? "" : "sr-only" %>
+<% data_attributes = action.fetch(:data, {}).dup %>
+<% data_attributes[:testid] = action_testid if action_testid.present? %>
+
+<% case action.fetch(:kind, :link).to_sym %>
+<% when :native_share %>
+  <%= render "shared/native_share_button",
+    url: action.fetch(:url),
+    title: action.fetch(:title),
+    text: action.fetch(:text),
+    label:,
+    icon:,
+    testid: action_testid,
+    button_class: action_class,
+    label_class: label_class %>
+<% when :button %>
+  <% form_options = { class: action.fetch(:form_class, variant == :menu ? "contents" : "inline-flex shrink-0") } %>
+  <% form_options[:data] = { testid: action[:form_testid] } if action[:form_testid].present? %>
+  <%= button_to(action.fetch(:path),
+    method: action.fetch(:method, :post),
+    form: form_options,
+    class: action_class,
+    data: action.fetch(:button_data, {}),
+    aria: { label: label },
+    title: title) do %>
+    <%= material_symbol(icon) %>
+    <span class="<%= label_class %>"><%= label %></span>
+  <% end %>
+<% else %>
+  <%= link_to(action.fetch(:path),
+    data: data_attributes,
+    target: action[:target],
+    rel: action[:rel],
+    class: action_class,
+    aria: { label: label },
+    title: title) do %>
+    <%= material_symbol(icon) %>
+    <span class="<%= label_class %>"><%= label %></span>
+  <% end %>
+<% end %>

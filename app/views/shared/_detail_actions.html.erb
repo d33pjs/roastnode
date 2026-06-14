@@ -1,0 +1,46 @@
+<% actions = Array(local_assigns.fetch(:actions)).compact %>
+<% testid = local_assigns.fetch(:testid) %>
+
+<% if actions.any? %>
+  <% primary_action = actions.find { |action| action[:primary] } || actions.first %>
+  <% primary_index = actions.index(primary_action) %>
+  <% overflow_actions = actions.each_with_index.reject { |_action, index| index == primary_index }.map(&:first) %>
+  <% compact_mobile = actions.size > 2 %>
+
+  <div data-testid="<%= testid %>" class="relative flex min-w-0 max-w-full flex-1 items-center justify-end gap-2 sm:flex-none">
+    <div class="hidden flex-wrap items-center justify-end gap-2 sm:flex">
+      <% actions.each do |action| %>
+        <%= render "shared/detail_action", action:, variant: :icon %>
+      <% end %>
+    </div>
+
+    <div class="flex items-center justify-end gap-2 sm:hidden">
+      <% if compact_mobile %>
+        <%= render "shared/detail_action",
+          action: primary_action,
+          variant: :icon,
+          testid: primary_action[:testid].present? ? "#{primary_action[:testid]}-mobile" : nil %>
+
+        <% if overflow_actions.any? %>
+          <details data-testid="<%= testid %>-more" class="relative">
+            <summary aria-label="<%= t("shared.detail_actions.more") %>" title="<%= t("shared.detail_actions.more") %>" class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-full text-stone-700 hover:bg-stone-100 hover:text-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400 [&::-webkit-details-marker]:hidden">
+              <%= material_symbol("more_vert") %>
+            </summary>
+            <div data-testid="<%= testid %>-menu" class="absolute right-0 z-30 mt-2 grid min-w-56 gap-1 rounded-md border border-stone-200 bg-white p-2 shadow-lg">
+              <% overflow_actions.each do |action| %>
+                <%= render "shared/detail_action", action:, variant: :menu %>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+      <% else %>
+        <% actions.each do |action| %>
+          <%= render "shared/detail_action",
+            action:,
+            variant: :icon,
+            testid: action[:testid].present? ? "#{action[:testid]}-mobile" : nil %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

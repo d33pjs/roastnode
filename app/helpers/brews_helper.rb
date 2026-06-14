@@ -76,7 +76,7 @@ module BrewsHelper
   end
 
   def brew_card_bean_descriptor(bean)
-    [ bean.origin, bean.process, bean.roast_level ].compact_blank.join(" · ")
+    [ bean.origin, bean.roast_level ].compact_blank.join(" · ")
   end
 
   def brew_card_tool_names(brew)

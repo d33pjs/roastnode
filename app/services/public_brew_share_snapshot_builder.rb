@@ -15,7 +15,7 @@ class PublicBrewShareSnapshotBuilder
       "equipment" => [ equipment_payload(brew.grinder, "grinder"), equipment_payload(brew.machine, "machine") ].compact,
       "tools" => tool_payloads,
       "photos" => photo_payloads([ brew ]),
-      "generated_at" => Time.current.iso8601
+      "generated_at" => time_string(Time.current)
     }
     payload["public_media"] = public_media_payloads(payload)
     payload
@@ -44,7 +44,7 @@ class PublicBrewShareSnapshotBuilder
 
     def brew_payload
       {
-        "occurred_at" => brew.occurred_at&.iso8601,
+        "occurred_at" => time_string(brew.occurred_at),
         "method" => brew.method,
         "public_note" => brew.public_note,
         "bean_weight_grams" => decimal_string(brew.bean_weight_grams),
@@ -126,6 +126,10 @@ class PublicBrewShareSnapshotBuilder
           "position" => link.position
         }
       end
+    end
+
+    def time_string(value)
+      value&.utc&.iso8601
     end
 
     def photo_payloads(records)

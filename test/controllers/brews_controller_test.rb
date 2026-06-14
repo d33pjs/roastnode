@@ -44,7 +44,12 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path, headers: { "HTTP_REFERER" => "http://www.example.com#{beans_path}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.new.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      dashboard_path,
+      I18n.t("brews.new.back"),
+      I18n.t("brews.new.back")
+    assert_select "a[data-testid=back-link] svg.material-symbol[data-symbol=arrow_back]"
+    assert_select "a[data-testid=back-link]", text: /#{Regexp.escape(I18n.t("brews.new.back"))}/, count: 0
   end
 
   test "new places brew log time at the end of the form" do
@@ -721,7 +726,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "writer can update brew log time and inventory adjustment time" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
-    new_time = Time.zone.local(2026, 5, 27, 10, 15, 28)
+    new_time = Time.find_zone("Europe/Berlin").local(2026, 5, 27, 10, 15, 28)
 
     get edit_brew_path(brew)
 
@@ -746,6 +751,39 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to brew_path(brew)
     assert_equal new_time, brew.reload.occurred_at
     assert_equal new_time, brew.inventory_adjustment.reload.occurred_at
+  end
+
+  test "datetime fields render and submit in user timezone" do
+    user = users(:one)
+    user.update!(time_zone: "Europe/Berlin")
+    sign_in_as(user)
+    brew = brews(:morning_espresso)
+    brew.update!(occurred_at: Time.utc(2026, 6, 14, 8, 15, 28))
+
+    get edit_brew_path(brew)
+
+    assert_response :success
+    assert_select "input[type=datetime-local][name=?][value=?]",
+      "brew[occurred_at]",
+      "2026-06-14T10:15:28"
+
+    patch brew_path(brew), params: {
+      brew: {
+        bean_id: brew.bean.id,
+        grinder_id: brew.grinder.id,
+        machine_id: brew.machine.id,
+        occurred_at: "2026-06-14T10:45:28",
+        bean_weight_grams: brew.bean_weight_grams.to_s,
+        ground_weight_grams: brew.ground_weight_grams.to_s,
+        dose_grams: brew.dose_grams.to_s,
+        beverage_grams: brew.beverage_grams.to_s,
+        total_time_seconds: brew.total_time_seconds.to_s,
+        taste_balance: brew.taste_balance
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_equal Time.utc(2026, 6, 14, 8, 45, 28), brew.reload.occurred_at
   end
 
   test "new falls back to first open bean when last bean is closed" do
@@ -1099,7 +1137,12 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew), headers: { "HTTP_REFERER" => "http://www.example.com#{previous_path}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      dashboard_path,
+      I18n.t("brews.show.back"),
+      I18n.t("brews.show.back")
+    assert_select "a[data-testid=back-link] svg.material-symbol[data-symbol=arrow_back]"
+    assert_select "a[data-testid=back-link]", text: /#{Regexp.escape(I18n.t("brews.show.back"))}/, count: 0
   end
 
   test "show back link ignores external referrers" do
@@ -1109,7 +1152,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew), headers: { "HTTP_REFERER" => "https://example.org/coffees" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      dashboard_path,
+      I18n.t("brews.show.back"),
+      I18n.t("brews.show.back")
   end
 
   test "show back link ignores public brew share workflow referrers" do
@@ -1119,7 +1165,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew), headers: { "HTTP_REFERER" => "http://www.example.com#{new_brew_public_brew_share_path(brew)}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      dashboard_path,
+      I18n.t("brews.show.back"),
+      I18n.t("brews.show.back")
   end
 
   test "show back link ignores self referrers" do
@@ -1129,7 +1178,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew), headers: { "HTTP_REFERER" => "http://www.example.com#{brew_path(brew)}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", dashboard_path, text: /#{Regexp.escape(I18n.t("brews.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      dashboard_path,
+      I18n.t("brews.show.back"),
+      I18n.t("brews.show.back")
   end
 
   test "show renders related bean equipment and preparation tool photos" do
@@ -1182,7 +1234,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     avatar = attach_named_photo(users(:one), :avatar, filename: "avatar.jpg")
     workspace_logo = attach_named_photo(workspaces(:household), :logo, filename: "workspace-logo.jpg")
     brew.update!(
-      occurred_at: Time.zone.local(2026, 5, 26, 11, 22, 8),
+      occurred_at: Time.find_zone("Europe/Berlin").local(2026, 5, 26, 11, 22, 8),
       bean_weight_grams: 18.6,
       ground_weight_grams: 18.2,
       dose_grams: 18.2,
@@ -1303,7 +1355,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
     brew.update!(
-      occurred_at: Time.zone.local(2026, 5, 26, 11, 22, 8),
+      occurred_at: Time.find_zone("Europe/Berlin").local(2026, 5, 26, 11, 22, 8),
       bean_weight_grams: 18.6,
       ground_weight_grams: 18.2,
       dose_grams: 18.2,
@@ -1433,6 +1485,19 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /one@example.com/, count: 0
   end
 
+  test "show omits bean processing from private hero card descriptor" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.bean.update!(origin: "Colombia", process: "Washed", roast_level: "Light")
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-title-block]", text: /Colombia/
+    assert_select "[data-testid=brew-title-block]", text: /Light/
+    assert_select "[data-testid=brew-title-block]", text: /Washed/, count: 0
+  end
+
   test "writer sees brew correction actions" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
@@ -1440,9 +1505,15 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
-    assert_select "[data-testid=brew-detail-actions] a[href=?]", edit_brew_path(brew), text: I18n.t("brews.show.edit")
-    assert_select "[data-testid=brew-detail-actions] a[href=?]", new_brew_path(repeat_brew_id: brew.id), text: I18n.t("brews.show.repeat")
-    assert_select "[data-testid=brew-detail-actions] a[href=?]", new_recipe_path(source_brew_id: brew.id), text: I18n.t("brews.show.save_as_recipe")
+    actions = Nokogiri::HTML(response.body).at_css("[data-testid='brew-detail-actions']")
+    assert_not_includes actions["class"].to_s, "overflow-x-auto"
+    assert_select "[data-testid=brew-detail-actions] svg.material-symbol", minimum: 1
+    assert_select "[data-testid=?][href=?]",
+      "brew-edit-link-#{brew.id}-mobile",
+      edit_brew_path(brew)
+    assert_select "[data-testid=brew-detail-actions-more]"
+    assert_select "[data-testid=brew-detail-actions-menu] a[href=?]", new_brew_path(repeat_brew_id: brew.id), text: I18n.t("brews.show.repeat")
+    assert_select "[data-testid=brew-detail-actions-menu] a[href=?]", new_recipe_path(source_brew_id: brew.id), text: I18n.t("brews.show.save_as_recipe")
     assert_select "[data-testid=brew-detail-actions] form[action=?]", brew_path(brew), count: 0
     assert_select "[data-testid=brew-danger-zone] form[action=?]", brew_path(brew)
     assert_appears_before "data-testid=\"brew-log-details\"", "data-testid=\"brew-danger-zone\""
@@ -1519,13 +1590,12 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
-    assert_select "[data-testid=brew-detail-actions]"
-    assert_includes response.body, "sm:flex-nowrap"
+    actions = Nokogiri::HTML(response.body).at_css("[data-testid='brew-detail-actions']")
+    assert_not_includes actions["class"].to_s, "overflow-x-auto"
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "brew-native-share-button-#{brew.id}",
       public_brew_page_url(share.token)
-    assert_select "[data-testid=?] svg[aria-hidden=true]", "brew-native-share-button-#{brew.id}"
-    assert_select "[data-testid=?] span.sr-only", "brew-native-share-button-#{brew.id}", I18n.t("shared.native_share.share_public_brew")
+    assert_select "[data-testid=?] svg.material-symbol[data-symbol=ios_share][aria-hidden=true]", "brew-native-share-button-#{brew.id}"
     assert_appears_before "brew-native-share-button-#{brew.id}", edit_brew_public_brew_share_path(brew)
   end
 
@@ -1765,8 +1835,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", brew_path(older), text: /#{older.bean.name}/
     assert_select "[data-testid=?]", "brew-history-shared-marker-#{older.id}", I18n.t("brews.shared_marker")
     assert_select "[data-testid=?]", "brew-history-shared-marker-#{newest.id}", count: 0
-    assert_select "[data-testid=?] svg[aria-hidden=true]", "brew-native-share-button-#{older.id}"
-    assert_select "[data-testid=?] span.sr-only", "brew-native-share-button-#{older.id}", I18n.t("shared.native_share.share_public_brew")
+    assert_select "[data-testid=?] svg.material-symbol[data-symbol=ios_share][aria-hidden=true]", "brew-native-share-button-#{older.id}"
     assert_select "[data-testid=?]", "brew-native-share-button-#{newest.id}", count: 0
     assert_select "[data-testid=?]", "brew-history-compact-card-link-#{older.id}"
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0

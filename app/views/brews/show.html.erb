@@ -2,30 +2,54 @@
   <%= render "brews/hero_card_styles" %>
 
   <section class="mx-auto max-w-5xl px-6 py-10">
-    <% brew_action_button_class = "inline-flex min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <%= render "shared/back_link", label: t(".back"), path: dashboard_path, prefer_referrer: false %>
 
       <% if current_workspace_policy.write? %>
-        <div data-testid="brew-detail-actions" class="flex min-w-0 max-w-full flex-1 gap-2 overflow-x-auto pb-1 sm:flex-nowrap sm:items-center sm:justify-end lg:w-auto lg:flex-none lg:overflow-visible lg:pb-0">
-          <% if @brew.espresso? && @brew.public_brew_share&.enabled? %>
-            <% public_share_title = @brew.public_brew_share.title.presence || PublicBrewShare.default_title_for(@brew) %>
-            <%= render "shared/native_share_button",
-              url: public_brew_page_url(@brew.public_brew_share.token),
-              title: public_share_title,
-              text: t("brews.native_share.text", title: public_share_title),
-              testid: "brew-native-share-button-#{@brew.id}" %>
-          <% end %>
-          <% if @brew.espresso? && (current_workspace_policy.manage? || @brew.user_id == Current.user.id) %>
-            <% share_path = @brew.public_brew_share ? edit_brew_public_brew_share_path(@brew) : new_brew_public_brew_share_path(@brew) %>
-            <%= link_to t(".share_publicly"), share_path, class: brew_action_button_class %>
-          <% end %>
-          <% if @brew.espresso? %>
-            <%= link_to t(".save_as_recipe"), new_recipe_path(source_brew_id: @brew.id), class: brew_action_button_class %>
-          <% end %>
-          <%= link_to t(".repeat"), new_brew_path(repeat_brew_id: @brew.id), class: brew_action_button_class %>
-          <%= link_to t(".edit"), edit_brew_path(@brew), class: brew_action_button_class %>
-        </div>
+        <% brew_actions = [] %>
+        <% if @brew.espresso? && @brew.public_brew_share&.enabled? %>
+          <% public_share_title = @brew.public_brew_share.title.presence || PublicBrewShare.default_title_for(@brew) %>
+          <% brew_actions << {
+            kind: :native_share,
+            icon: "ios_share",
+            label: t("shared.native_share.share_public_brew"),
+            url: public_brew_page_url(@brew.public_brew_share.token),
+            title: public_share_title,
+            text: t("brews.native_share.text", title: public_share_title),
+            testid: "brew-native-share-button-#{@brew.id}"
+          } %>
+        <% end %>
+        <% if @brew.espresso? && (current_workspace_policy.manage? || @brew.user_id == Current.user.id) %>
+          <% share_path = @brew.public_brew_share ? edit_brew_public_brew_share_path(@brew) : new_brew_public_brew_share_path(@brew) %>
+          <% brew_actions << {
+            icon: "public",
+            label: t(".share_publicly"),
+            path: share_path,
+            testid: "brew-share-public-link-#{@brew.id}"
+          } %>
+        <% end %>
+        <% if @brew.espresso? %>
+          <% brew_actions << {
+            icon: "bookmark_add",
+            label: t(".save_as_recipe"),
+            path: new_recipe_path(source_brew_id: @brew.id),
+            testid: "brew-save-recipe-link-#{@brew.id}"
+          } %>
+        <% end %>
+        <% brew_actions << {
+          icon: "restart_alt",
+          label: t(".repeat"),
+          path: new_brew_path(repeat_brew_id: @brew.id),
+          testid: "brew-repeat-link-#{@brew.id}"
+        } %>
+        <% brew_actions << {
+          icon: "edit",
+          label: t(".edit"),
+          path: edit_brew_path(@brew),
+          primary: true,
+          testid: "brew-edit-link-#{@brew.id}"
+        } %>
+        <%= render "shared/detail_actions", testid: "brew-detail-actions", actions: brew_actions %>
       <% end %>
     </div>
 

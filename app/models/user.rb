@@ -4,6 +4,7 @@ class User < ApplicationRecord
   THEMES = %w[light dark].freeze
   NUMBER_FORMATS = %w[comma_decimal dot_decimal].freeze
   TIME_FORMATS = %w[european_24h_seconds us_12h_seconds].freeze
+  TIME_ZONES = ActiveSupport::TimeZone.all.map { |zone| zone.tzinfo.name }.uniq.freeze
   ENABLED_BREW_METHODS = Brew::BREW_METHODS.freeze
   DEFAULT_BREW_FOCUS_FIELDS = %w[
     bean_weight_grams
@@ -66,6 +67,7 @@ class User < ApplicationRecord
   validates :theme, inclusion: { in: THEMES }
   validates :number_format, inclusion: { in: NUMBER_FORMATS }
   validates :time_format, inclusion: { in: TIME_FORMATS }
+  validates :time_zone, presence: true, inclusion: { in: TIME_ZONES }
   validates :default_brew_focus_field, inclusion: { in: DEFAULT_BREW_FOCUS_FIELDS }
   validates :grams_per_coffee_spoon, numericality: { greater_than: 0 }, allow_nil: true
   validate :hidden_brew_field_names_supported

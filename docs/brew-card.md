@@ -7,7 +7,7 @@ The brew detail page and dashboard use compact Hero Brew Cards for screenshot-wo
 - European timestamp with seconds: `dd.mm.yyyy HH:MM:ss`.
 - Active workspace/household name on the card.
 - Household logo inside the workspace pill when one is attached.
-- Bean roaster, bean name, compact origin/process/roast-level descriptor, and the bean primary photo when available. Keep the photo to the right of the name block so the text stays the first read.
+- Bean roaster, bean name, compact origin/roast-level descriptor, and the bean primary photo when available. Keep processing off the private Hero Brew Card. Keep the photo to the right of the name block so the text stays the first read.
 - Safe logged-by label from the user's profile username, falling back to `unknown username`.
 - User avatar next to the logged-by label when one is attached.
 - Dose from the espresso form on espresso cards.

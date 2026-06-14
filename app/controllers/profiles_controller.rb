@@ -23,6 +23,7 @@ class ProfilesController < ApplicationController
         :theme,
         :number_format,
         :time_format,
+        :time_zone,
         :default_brew_focus_field,
         :grams_per_coffee_spoon,
         :avatar,

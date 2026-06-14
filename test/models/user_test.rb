@@ -54,6 +54,16 @@ class UserTest < ActiveSupport::TestCase
     assert_not_predicate user, :valid?
   end
 
+  test "timezone preference is constrained to IANA zones" do
+    user = users(:one)
+
+    user.time_zone = "Europe/Berlin"
+    assert_predicate user, :valid?
+
+    user.time_zone = "Mars/Olympus"
+    assert_not_predicate user, :valid?
+  end
+
   test "theme is constrained to supported values" do
     user = users(:one)
 

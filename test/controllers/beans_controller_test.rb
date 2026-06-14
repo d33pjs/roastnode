@@ -719,7 +719,12 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     get bean_path(bean), headers: { "HTTP_REFERER" => "http://www.example.com#{new_bean_public_bean_share_path(bean)}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", beans_path, text: /#{Regexp.escape(I18n.t("beans.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      beans_path,
+      I18n.t("beans.show.back"),
+      I18n.t("beans.show.back")
+    assert_select "a[data-testid=back-link] svg.material-symbol[data-symbol=arrow_back]"
+    assert_select "a[data-testid=back-link]", text: /#{Regexp.escape(I18n.t("beans.show.back"))}/, count: 0
   end
 
   test "show uses structured origin fallback and renders cost metrics" do
@@ -835,19 +840,26 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=bean-detail-actions]"
-    assert_includes response.body, "sm:flex-nowrap"
+    actions = Nokogiri::HTML(response.body).at_css("[data-testid='bean-detail-actions']")
+    assert_not_includes actions["class"].to_s, "overflow-x-auto"
+    assert_select "[data-testid=bean-detail-actions] svg.material-symbol", minimum: 1
+    assert_select "[data-testid=?][href=?]",
+      "bean-edit-link-#{bean.id}-mobile",
+      edit_bean_path(bean)
+    assert_select "[data-testid=bean-detail-actions-more]"
+    assert_select "[data-testid=bean-detail-actions-menu] a[href=?]",
+      new_bean_inventory_adjustment_path(bean),
+      text: I18n.t("beans.show.adjust_inventory")
     assert_select "[data-testid=?][href=?]",
       "bean-share-public-link-#{bean.id}",
-      edit_bean_public_bean_share_path(bean),
-      text: I18n.t("beans.show.share_publicly")
+      edit_bean_public_bean_share_path(bean)
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "bean-native-share-button-#{bean.id}",
       public_bean_page_url(share.token)
     native_share_button = Nokogiri::HTML(response.body).at_css("[data-testid='bean-native-share-button-#{bean.id}']")
     assert_includes native_share_button["class"], "rounded-full"
     assert_not_includes native_share_button["class"], "border-stone-300"
-    assert_select "[data-testid=?] svg[aria-hidden=true]", "bean-native-share-button-#{bean.id}"
-    assert_select "[data-testid=?] span.sr-only", "bean-native-share-button-#{bean.id}", I18n.t("shared.native_share.share_public_bean")
+    assert_select "[data-testid=?] svg.material-symbol[data-symbol=ios_share][aria-hidden=true]", "bean-native-share-button-#{bean.id}"
     assert_select "form[data-testid=?]", "bean-duplicate-form-#{bean.id}"
     assert_select "form[data-testid=bean-finish-form]"
     assert_select "[data-testid=?][href=?]", "bean-adjust-inventory-link-#{bean.id}", new_bean_inventory_adjustment_path(bean)

@@ -28,7 +28,7 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
   test "workspace owner can see accepted invite details" do
     sign_in_as(users(:one))
     invite = workspace_invites(:member_invite)
-    accepted_at = Time.zone.local(2026, 6, 7, 10, 15, 0)
+    accepted_at = Time.find_zone("Europe/Berlin").local(2026, 6, 7, 10, 15, 0)
     invite.update!(email_address: "friend@example.com", accepted_by: users(:two), accepted_at:)
 
     get workspace_invites_path

@@ -153,7 +153,26 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to external_coffee_path(coffee)
-    assert_equal Time.zone.local(2026, 6, 8, 14, 45, 28), coffee.reload.occurred_at
+    assert_equal Time.find_zone("Europe/Berlin").local(2026, 6, 8, 14, 45, 28), coffee.reload.occurred_at
+  end
+
+  test "datetime field renders in user timezone" do
+    user = users(:one)
+    user.update!(time_zone: "Europe/Berlin")
+    sign_in_as(user)
+    coffee = workspaces(:household).external_coffees.create!(
+      user:,
+      drink_type: "Americano",
+      occurred_at: Time.utc(2026, 6, 14, 8, 15, 28),
+      currency: "EUR"
+    )
+
+    get edit_external_coffee_path(coffee)
+
+    assert_response :success
+    assert_select "input[type=datetime-local][name=?][value=?]",
+      "external_coffee[occurred_at]",
+      "2026-06-14T10:15:28"
   end
 
   test "show hero card renders brand mark identity images footer timestamp bean rating and symbol price" do
@@ -165,7 +184,7 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
       user:,
       drink_type: "Flat White",
       drink_size: "Large cup",
-      occurred_at: Time.zone.local(2026, 6, 9, 14, 5, 45),
+      occurred_at: Time.find_zone("Europe/Berlin").local(2026, 6, 9, 14, 5, 45),
       price_cents: 450,
       currency: "EUR",
       rating: 4
@@ -216,7 +235,10 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     get external_coffee_path(coffee), headers: { "HTTP_REFERER" => "http://www.example.com#{previous_path}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", previous_path, text: /#{Regexp.escape(I18n.t("shared.back_link.previous"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      previous_path,
+      I18n.t("shared.back_link.previous"),
+      I18n.t("shared.back_link.previous")
   end
 
   test "show back link ignores external referrers" do
@@ -229,7 +251,10 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     get external_coffee_path(coffee), headers: { "HTTP_REFERER" => "https://example.org/coffees" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", external_coffees_path, text: /#{Regexp.escape(I18n.t("external_coffees.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      external_coffees_path,
+      I18n.t("external_coffees.show.back"),
+      I18n.t("external_coffees.show.back")
   end
 
   test "viewer cannot create external coffee" do

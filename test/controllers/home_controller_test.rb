@@ -362,7 +362,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     user = users(:one)
     latest = brews(:morning_espresso)
     latest.update!(
-      occurred_at: Time.zone.local(2026, 5, 26, 12, 0, 0),
+      occurred_at: Time.find_zone("Europe/Berlin").local(2026, 5, 26, 12, 0, 0),
       rating: 3,
       notes: "Latest but not best."
     )
@@ -371,7 +371,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       bean: beans(:second_open_household),
       grinder: equipment(:household_grinder),
       machine: equipment(:household_machine),
-      occurred_at: Time.zone.local(2026, 5, 25, 12, 0, 0),
+      occurred_at: Time.find_zone("Europe/Berlin").local(2026, 5, 25, 12, 0, 0),
       bean_weight_grams: 18,
       ground_weight_grams: 18,
       dose_grams: 18,

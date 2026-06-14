@@ -6,9 +6,22 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
+  around_action :use_current_user_time_zone
+
   helper_method :current_workspace, :current_membership, :current_workspace_policy, :first_user_setup_available?
 
   private
+    def use_current_user_time_zone(&block)
+      resume_session
+      zone = Time.find_zone(Current.user&.time_zone)
+
+      if zone
+        Time.use_zone(zone, &block)
+      else
+        yield
+      end
+    end
+
     def normalize_decimal_attributes(attributes, *keys)
       keys.each do |key|
         next unless attributes.key?(key)

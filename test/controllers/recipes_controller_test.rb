@@ -34,7 +34,10 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
     get recipe_path(recipe), headers: { "HTTP_REFERER" => "http://www.example.com#{new_recipe_public_recipe_share_path(recipe)}" }
 
     assert_response :success
-    assert_select "a[data-testid=back-link][href=?]", recipes_path, text: /#{Regexp.escape(I18n.t("recipes.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      recipes_path,
+      I18n.t("recipes.show.back"),
+      I18n.t("recipes.show.back")
   end
 
   test "show renders finish ingredients and finish note" do

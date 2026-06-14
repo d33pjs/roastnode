@@ -86,6 +86,8 @@ en:
   shared:
     back_link:
       previous: "Back"
+    detail_actions:
+      more: "More actions"
     app_navigation:
       account: "Account"
       beans: "Beans"
@@ -1455,6 +1457,7 @@ en:
       time_formats:
         european_24h_seconds: "26.05.2026 14:37:04"
         us_12h_seconds: "05/26/2026 02:37:04 PM"
+      time_zone: "Timezone"
       title: "Profile"
       public_banner: "Public banner"
       username: "Username"

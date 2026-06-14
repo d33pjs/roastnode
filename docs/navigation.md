@@ -16,7 +16,8 @@ Roastnode detail pages should cross-link records wherever that helps a household
 - Brew detail pages show read-only related photo groups for the bean, grinder, machine, and selected preparation tools when photos exist.
 - Equipment event detail pages link affected equipment names to equipment detail pages.
 - Preparation tools have detail pages and brew detail tool links should point to those pages when the current tool record still exists.
-- Back links use the shared `shared/back_link` partial so they render as tap-friendly buttons on mobile. When the browser provides a same-origin previous page, the shared link returns there with a neutral "Back" label; direct visits, refreshes, self-referrers, external referrers, and share workflow referrers fall back to the explicit path passed by the view so share create/edit flows cannot loop. Brew log creation and brew detail pages opt out of previous-page behavior and always target the dashboard.
+- Back links use the shared `shared/back_link` partial as icon-only left-arrow buttons with `aria-label` and `title` text for accessibility and desktop hover. When the browser provides a same-origin previous page, the shared link returns there with a neutral accessible "Back" label; direct visits, refreshes, self-referrers, external referrers, and share workflow referrers fall back to the explicit path passed by the view so share create/edit flows cannot loop. Brew log creation and brew detail pages opt out of previous-page behavior and always target the dashboard.
+- Detail action groups use Material-symbol icon buttons with desktop hover titles. Pages with more than two actions keep the full icon strip on desktop, while mobile shows the primary action directly and collapses secondary actions into a More menu so users do not have to discover horizontal scrolling.
 
 ## Agent Notes
 

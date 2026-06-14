@@ -41,7 +41,10 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", preparation_tools(:wdt).name
-    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("preparation_tools.show.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      gear_path,
+      I18n.t("preparation_tools.show.back"),
+      I18n.t("preparation_tools.show.back")
     assert_select "[data-testid=preparation-tool-status]", I18n.t("preparation_tools.show.active")
     assert_select "[data-testid=preparation-tool-brew-count]", "1"
     assert_select "[data-testid=preparation-tool-total-ground]", "18g"
@@ -118,7 +121,10 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=preparation-tool-form-section][data-section=identity]"
-    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("preparation_tools.new.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      gear_path,
+      I18n.t("preparation_tools.new.back"),
+      I18n.t("preparation_tools.new.back")
     assert_select "[data-testid=preparation-tool-form-section][data-section=setup]"
     assert_select "[data-testid=preparation-tool-form-section][data-section=notes]"
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"
@@ -205,7 +211,10 @@ class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", I18n.t("preparation_tools.edit.title")
-    assert_select "a[data-testid=back-link][href=?]", gear_path, text: /#{Regexp.escape(I18n.t("preparation_tools.edit.back"))}/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?][title=?]",
+      gear_path,
+      I18n.t("preparation_tools.edit.back"),
+      I18n.t("preparation_tools.edit.back")
     assert_select "img[src=?]", media_attachment_path(existing_photo, variant: :thumbnail)
     assert_select "input[name=?][value=?]", "preparation_tool[position]", tool.position.to_s
     assert_select "input[type=file][name=?][multiple=multiple]", "preparation_tool[photos][]"

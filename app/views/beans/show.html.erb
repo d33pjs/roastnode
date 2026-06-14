@@ -1,50 +1,105 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-4xl px-6 py-10">
     <% purchase_url_href = bean_purchase_url_href(@bean.purchase_url) %>
-    <% bean_action_button_class = "inline-flex min-h-10 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
-    <% bean_primary_action_button_class = "inline-flex min-h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-md bg-stone-950 px-3 py-2 text-sm font-semibold text-white hover:bg-stone-800" %>
-    <% bean_action_form_class = "inline-flex shrink-0" %>
     <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <%= render "shared/back_link", label: t(".back"), path: beans_path %>
 
       <% if purchase_url_href.present? || current_workspace_policy.write? %>
-        <div data-testid="bean-detail-actions" class="flex min-w-0 max-w-full flex-1 gap-2 overflow-x-auto pb-1 sm:flex-nowrap sm:items-center sm:justify-end lg:w-auto lg:flex-none lg:overflow-visible lg:pb-0">
-          <% if purchase_url_href.present? %>
-            <%= link_to t(".rebuy"), purchase_url_href, target: "_blank", rel: "noopener", data: { testid: "bean-rebuy-link" }, class: bean_action_button_class %>
-          <% end %>
+        <% bean_actions = [] %>
+        <% if purchase_url_href.present? %>
+          <% bean_actions << {
+            icon: "shopping_bag",
+            label: t(".rebuy"),
+            path: purchase_url_href,
+            target: "_blank",
+            rel: "noopener",
+            testid: "bean-rebuy-link"
+          } %>
+        <% end %>
 
-          <% if current_workspace_policy.write? %>
-            <% if PublicBeanShare.publishable_bean?(@bean) %>
-              <% public_bean_share = @bean.public_bean_share %>
-              <% if public_bean_share.present? %>
-                <% if public_bean_share.enabled? && public_bean_share.manageable_by?(Current.user) %>
-                  <% public_share_title = public_bean_share.title.presence || PublicBeanShare.default_title_for(@bean) %>
-                  <%= render "shared/native_share_button",
-                    url: public_bean_page_url(public_bean_share.token),
-                    title: public_share_title,
-                    text: t("beans.native_share.text", title: public_share_title),
-                    label: t("shared.native_share.share_public_bean"),
-                    testid: "bean-native-share-button-#{@bean.id}" %>
-                <% end %>
-                <% if public_bean_share.manageable_by?(Current.user) %>
-                  <%= link_to t(".share_publicly"), edit_bean_public_bean_share_path(@bean), data: { testid: "bean-share-public-link-#{@bean.id}" }, class: bean_action_button_class %>
-                <% end %>
-              <% else %>
-                <%= link_to t(".share_publicly"), new_bean_public_bean_share_path(@bean), data: { testid: "bean-share-public-link-#{@bean.id}" }, class: bean_action_button_class %>
+        <% if current_workspace_policy.write? %>
+          <% if PublicBeanShare.publishable_bean?(@bean) %>
+            <% public_bean_share = @bean.public_bean_share %>
+            <% if public_bean_share.present? %>
+              <% if public_bean_share.enabled? && public_bean_share.manageable_by?(Current.user) %>
+                <% public_share_title = public_bean_share.title.presence || PublicBeanShare.default_title_for(@bean) %>
+                <% bean_actions << {
+                  kind: :native_share,
+                  icon: "ios_share",
+                  label: t("shared.native_share.share_public_bean"),
+                  url: public_bean_page_url(public_bean_share.token),
+                  title: public_share_title,
+                  text: t("beans.native_share.text", title: public_share_title),
+                  testid: "bean-native-share-button-#{@bean.id}"
+                } %>
               <% end %>
-            <% end %>
-            <%= button_to t(".duplicate"), duplicate_bean_path(@bean), method: :post, form: { class: bean_action_form_class, data: { testid: "bean-duplicate-form-#{@bean.id}" } }, class: bean_action_button_class %>
-            <% if @bean.stock? %>
-              <%= button_to t(".open_bag"), open_bag_bean_path(@bean), method: :patch, form: { class: bean_action_form_class, data: { testid: "bean-open-bag-form" } }, class: bean_primary_action_button_class %>
-            <% elsif @bean.archived? || @bean.finished? %>
-              <%= button_to t(".reopen"), reopen_bean_path(@bean), method: :patch, form: { class: bean_action_form_class }, class: bean_primary_action_button_class %>
+              <% if public_bean_share.manageable_by?(Current.user) %>
+                <% bean_actions << {
+                  icon: "public",
+                  label: t(".share_publicly"),
+                  path: edit_bean_public_bean_share_path(@bean),
+                  testid: "bean-share-public-link-#{@bean.id}"
+                } %>
+              <% end %>
             <% else %>
-              <%= button_to t(".finish"), finish_bean_path(@bean), method: :patch, form: { class: bean_action_form_class, data: { testid: "bean-finish-form" } }, class: bean_primary_action_button_class %>
+              <% bean_actions << {
+                icon: "public",
+                label: t(".share_publicly"),
+                path: new_bean_public_bean_share_path(@bean),
+                testid: "bean-share-public-link-#{@bean.id}"
+              } %>
             <% end %>
-            <%= link_to t(".adjust_inventory"), new_bean_inventory_adjustment_path(@bean), data: { testid: "bean-adjust-inventory-link-#{@bean.id}" }, class: bean_action_button_class %>
-            <%= link_to t(".edit"), edit_bean_path(@bean), data: { testid: "bean-edit-link-#{@bean.id}" }, class: bean_action_button_class %>
           <% end %>
-        </div>
+          <% bean_actions << {
+            kind: :button,
+            icon: "content_copy",
+            label: t(".duplicate"),
+            path: duplicate_bean_path(@bean),
+            method: :post,
+            form_testid: "bean-duplicate-form-#{@bean.id}"
+          } %>
+          <% if @bean.stock? %>
+            <% bean_actions << {
+              kind: :button,
+              icon: "inventory_2",
+              label: t(".open_bag"),
+              path: open_bag_bean_path(@bean),
+              method: :patch,
+              form_testid: "bean-open-bag-form"
+            } %>
+          <% elsif @bean.archived? || @bean.finished? %>
+            <% bean_actions << {
+              kind: :button,
+              icon: "refresh",
+              label: t(".reopen"),
+              path: reopen_bean_path(@bean),
+              method: :patch
+            } %>
+          <% else %>
+            <% bean_actions << {
+              kind: :button,
+              icon: "check_circle",
+              label: t(".finish"),
+              path: finish_bean_path(@bean),
+              method: :patch,
+              form_testid: "bean-finish-form"
+            } %>
+          <% end %>
+          <% bean_actions << {
+            icon: "scale",
+            label: t(".adjust_inventory"),
+            path: new_bean_inventory_adjustment_path(@bean),
+            testid: "bean-adjust-inventory-link-#{@bean.id}"
+          } %>
+          <% bean_actions << {
+            icon: "edit",
+            label: t(".edit"),
+            path: edit_bean_path(@bean),
+            primary: true,
+            testid: "bean-edit-link-#{@bean.id}"
+          } %>
+        <% end %>
+        <%= render "shared/detail_actions", testid: "bean-detail-actions", actions: bean_actions %>
       <% end %>
     </div>
 

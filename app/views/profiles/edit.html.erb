@@ -85,6 +85,14 @@
               {},
               class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
           </div>
+
+          <div class="sm:col-span-2">
+            <%= form.label :time_zone, t(".time_zone"), class: "block text-sm font-medium text-stone-700" %>
+            <%= form.select :time_zone,
+              ActiveSupport::TimeZone.all.map { |zone| [ zone.to_s, zone.tzinfo.name ] },
+              {},
+              class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+          </div>
         </div>
 
         <div>

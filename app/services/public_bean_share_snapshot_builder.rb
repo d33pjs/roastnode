@@ -16,7 +16,7 @@ class PublicBeanShareSnapshotBuilder
       "timeline" => timeline_payload,
       "photos" => photo_payloads,
       "brews" => brew_payloads,
-      "generated_at" => Time.current.iso8601
+      "generated_at" => time_string(Time.current)
     }
     payload["public_media"] = public_media_payloads
     payload
@@ -94,12 +94,12 @@ class PublicBeanShareSnapshotBuilder
 
       {
         "opened_on" => bean.opened_on&.iso8601,
-        "finished_at" => bean.finished_at&.iso8601,
-        "last_brew_at" => last_brew&.occurred_at&.iso8601,
-        "end_at" => end_time&.iso8601,
+        "finished_at" => time_string(bean.finished_at),
+        "last_brew_at" => time_string(last_brew&.occurred_at),
+        "end_at" => time_string(end_time),
         "brews" => brews.sort_by { |brew| [ brew.occurred_at, brew.created_at ] }.map do |brew|
           {
-            "occurred_at" => brew.occurred_at&.iso8601,
+            "occurred_at" => time_string(brew.occurred_at),
             "method" => brew.method,
             "rating" => brew.rating,
             "user" => user_payload(brew.user)
@@ -122,7 +122,7 @@ class PublicBeanShareSnapshotBuilder
 
     def common_brew_payload(brew)
       payload = {
-        "occurred_at" => brew.occurred_at&.iso8601,
+        "occurred_at" => time_string(brew.occurred_at),
         "method" => brew.method,
         "public_note" => brew.public_note,
         "bean_weight_grams" => decimal_string(brew.bean_weight_grams),
@@ -299,5 +299,9 @@ class PublicBeanShareSnapshotBuilder
       decimal = value.to_d
       decimal = decimal.round(precision) if precision
       decimal.to_s("F")
+    end
+
+    def time_string(value)
+      value&.utc&.iso8601
     end
 end

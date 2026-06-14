@@ -18,6 +18,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name=?]", "user[theme]"
     assert_select "select[name=?]", "user[number_format]"
     assert_select "select[name=?]", "user[time_format]"
+    assert_select "select[name=?]", "user[time_zone]"
     assert_select "select[name=?]", "user[default_brew_focus_field]"
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "notes"
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "photos"
@@ -61,6 +62,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
         theme: "dark",
         number_format: "dot_decimal",
         time_format: "us_12h_seconds",
+        time_zone: "Europe/Berlin",
         default_brew_focus_field: "dose_grams",
         hidden_brew_field_names: %w[rating channeling photos]
       }
@@ -72,6 +74,7 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "dark", user.theme
     assert_equal "dot_decimal", user.number_format
     assert_equal "us_12h_seconds", user.time_format
+    assert_equal "Europe/Berlin", user.time_zone
     assert_equal "dose_grams", user.default_brew_focus_field
     assert_equal %w[rating channeling photos], user.hidden_brew_field_names
   end

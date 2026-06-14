@@ -2,6 +2,8 @@
 <% share_text = local_assigns.fetch(:text, title) %>
 <% label = local_assigns.fetch(:label, t("shared.native_share.share_public_brew")) %>
 <% label_class = local_assigns.fetch(:label_class, "sr-only") %>
+<% icon = local_assigns.fetch(:icon, "ios_share") %>
+<% show_icon = local_assigns.fetch(:show_icon, true) %>
 
 <%= button_tag type: "button",
   class: button_class,
@@ -17,10 +19,6 @@
     native_share_failed_label_value: t("shared.native_share.failed"),
     testid: local_assigns[:testid]
   } do %>
-  <svg aria-hidden="true" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 16V4" />
-    <path d="m7 9 5-5 5 5" />
-    <path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4" />
-  </svg>
+  <%= material_symbol(icon) if show_icon %>
   <span data-native-share-target="label" class="<%= label_class %>"><%= label %></span>
 <% end %>

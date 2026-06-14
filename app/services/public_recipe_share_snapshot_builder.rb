@@ -52,7 +52,7 @@ class PublicRecipeShareSnapshotBuilder
       "bean" => bean_payload,
       "equipment" => equipment_payload,
       "tools" => tool_payloads,
-      "generated_at" => Time.current.iso8601
+      "generated_at" => Time.current.utc.iso8601
     }
     payload["public_media"] = public_media_payloads(payload)
     payload
