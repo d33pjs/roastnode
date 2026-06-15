@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+set -eu
+
+if [ "${SKIP_RUBOCOP_PRE_COMMIT:-}" = "1" ]; then
+  echo "Skipping RuboCop pre-commit hook because SKIP_RUBOCOP_PRE_COMMIT=1."
+  exit 0
+fi
+
+echo "== RuboCop =="
+RUBOCOP_CACHE_ROOT="${RUBOCOP_CACHE_ROOT:-tmp/rubocop}" bin/rubocop

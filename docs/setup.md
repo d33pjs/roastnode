@@ -78,6 +78,17 @@ bin/rails routes
 bin/rails console
 ```
 
+## Local Git Hooks
+
+`bin/setup` configures this checkout to use the versioned hooks in `.githooks`.
+The pre-commit hook runs `bin/rubocop` with the same repo-local cache path used by
+CI, so style failures are caught before a commit is created. CI still runs RuboCop
+as the authoritative gate because local hooks can be skipped or missing on another
+machine.
+
+If you need to bypass the local hook deliberately, use Git's `--no-verify` flag or
+set `SKIP_RUBOCOP_PRE_COMMIT=1` for that commit.
+
 ## Docker Compose Database
 
 Start only the database:

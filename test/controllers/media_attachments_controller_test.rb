@@ -413,5 +413,4 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
       )
       record.photos.attachments.last
     end
-
 end
