@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Create source archive
         run: git archive --format=tar.gz --output "$SOURCE_ARCHIVE" HEAD
