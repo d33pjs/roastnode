@@ -3,7 +3,7 @@ class BrewsController < ApplicationController
   before_action :set_brew, only: %i[show edit update taste serving destroy]
   before_action :set_recipe_guide, only: %i[new create]
   before_action :set_selected_method, only: %i[new create]
-  before_action :set_cup_style_suggestions, only: %i[show serving]
+  before_action :set_serving_suggestions, only: %i[new create edit update show serving]
 
   def index
     @brew_history_view = params[:view] == "hero" ? "hero" : "compact"
@@ -153,9 +153,26 @@ class BrewsController < ApplicationController
       @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :brewer, :user, :public_brew_share, brew_preparation_tools: :preparation_tool).find(params[:id])
     end
 
-    def set_cup_style_suggestions
+    def set_serving_suggestions
       history = current_workspace.brews.where.not(cup_style: [ nil, "" ]).distinct.order(:cup_style).pluck(:cup_style)
       @cup_style_suggestions = (ExternalCoffee::DRINK_TYPE_SUGGESTIONS + history).uniq
+      @guest_name_suggestions = (household_member_suggestions + saved_guest_name_suggestions).uniq
+    end
+
+    def household_member_suggestions
+      current_workspace.users.to_a
+        .map(&:display_label)
+        .compact_blank
+        .sort_by(&:downcase)
+    end
+
+    def saved_guest_name_suggestions
+      current_workspace.brews
+        .where(served_for_guest: true)
+        .where.not(guest_name: [ nil, "" ])
+        .distinct
+        .order(:guest_name)
+        .pluck(:guest_name)
     end
 
     def set_recipe_guide
@@ -525,6 +542,9 @@ class BrewsController < ApplicationController
         :channeling,
         :taste_balance,
         :rating,
+        :served_for_guest,
+        :guest_name,
+        :cup_style,
         :notes,
         :public_note,
         {

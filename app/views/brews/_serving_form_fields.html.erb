@@ -1,0 +1,33 @@
+<% label_class = "block text-sm font-bold text-rn-muted" %>
+<% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+
+<section data-testid="brew-serving-fields" data-section="serving" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.serving") %></h2>
+
+  <div class="mt-3 grid gap-3 sm:grid-cols-2">
+    <label class="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink">
+      <span><%= t("brews.form.served_for_guest") %></span>
+      <%= form.check_box :served_for_guest, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
+    </label>
+
+    <div>
+      <%= form.label :guest_name, t("brews.form.guest_name"), class: label_class %>
+      <%= form.text_field :guest_name, maxlength: 120, list: "brew_guest_name_suggestions", class: input_class %>
+      <datalist id="brew_guest_name_suggestions">
+        <% Array(@guest_name_suggestions).each do |suggestion| %>
+          <option value="<%= suggestion %>"></option>
+        <% end %>
+      </datalist>
+    </div>
+
+    <div class="sm:col-span-2">
+      <%= form.label :cup_style, t("brews.form.cup_style"), class: label_class %>
+      <%= form.text_field :cup_style, maxlength: 120, list: "brew_cup_style_suggestions", class: input_class %>
+      <datalist id="brew_cup_style_suggestions">
+        <% Array(@cup_style_suggestions).each do |suggestion| %>
+          <option value="<%= suggestion %>"></option>
+        <% end %>
+      </datalist>
+    </div>
+  </div>
+</section>

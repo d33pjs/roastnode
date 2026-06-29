@@ -79,7 +79,12 @@
 
           <div>
             <%= form.label :guest_name, t(".guest_name"), class: correction_label_class %>
-            <%= form.text_field :guest_name, maxlength: 120, class: correction_input_class %>
+            <%= form.text_field :guest_name, maxlength: 120, list: "brew_guest_name_suggestions", class: correction_input_class %>
+            <datalist id="brew_guest_name_suggestions">
+              <% Array(@guest_name_suggestions).each do |suggestion| %>
+                <option value="<%= suggestion %>"></option>
+              <% end %>
+            </datalist>
           </div>
 
           <div class="sm:col-span-2">

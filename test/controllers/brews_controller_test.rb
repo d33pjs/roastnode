@@ -110,6 +110,34 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=hidden][name=?][value=?]", "brew[method]", "espresso"
   end
 
+  test "new brew form renders serving fields with household and history suggestions" do
+    users(:one).update!(display_name: "Jens")
+    users(:two).update!(display_name: "Anna")
+    workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "espresso",
+      bean: beans(:second_open_household),
+      bean_weight_grams: 18,
+      served_for_guest: true,
+      guest_name: "Neighbor",
+      cup_style: "Cortado"
+    )
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "[data-testid=brew-serving-fields]"
+    assert_select "input[type=checkbox][name=?]", "brew[served_for_guest]"
+    assert_select "input[type=text][name=?][list=brew_guest_name_suggestions]", "brew[guest_name]"
+    assert_select "datalist#brew_guest_name_suggestions option[value=?]", "Jens"
+    assert_select "datalist#brew_guest_name_suggestions option[value=?]", "Anna"
+    assert_select "datalist#brew_guest_name_suggestions option[value=?]", "Neighbor"
+    assert_select "input[type=text][name=?][list=brew_cup_style_suggestions]", "brew[cup_style]"
+    assert_select "datalist#brew_cup_style_suggestions option[value=?]", "Americano"
+    assert_select "datalist#brew_cup_style_suggestions option[value=?]", "Cortado"
+  end
+
   test "disabled method tab is hidden but history remains visible" do
     users(:one).update!(enabled_brew_methods: %w[espresso])
     sign_in_as(users(:one))
@@ -151,6 +179,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[coffee_spoons]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[bean_weight_grams]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "brew[beverage_grams]"
+    assert_select "[data-testid=brew-serving-fields]"
+    assert_select "input[type=checkbox][name=?]", "brew[served_for_guest]"
+    assert_select "input[type=text][name=?][list=brew_guest_name_suggestions]", "brew[guest_name]"
+    assert_select "input[type=text][name=?][list=brew_cup_style_suggestions]", "brew[cup_style]"
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[brewer_id]", equipment(:household_brewer).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:paper_filter).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s, count: 0
@@ -853,6 +885,34 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 201.5.to_d, bean.reload.remaining_grams
     assert_equal [ "WDT", "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
     assert_equal 1, brew.photos.count
+  end
+
+  test "member can create espresso brew with serving metadata" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    bean = beans(:second_open_household)
+
+    post brews_path, params: {
+      brew: {
+        bean_id: bean.id,
+        grinder_id: equipment(:household_grinder).id,
+        machine_id: equipment(:household_machine).id,
+        bean_weight_grams: "18.5",
+        dose_grams: "18.2",
+        beverage_grams: "42",
+        total_time_seconds: "31",
+        served_for_guest: "1",
+        guest_name: "  Anna  ",
+        cup_style: "  Latte  "
+      }
+    }
+
+    brew = workspaces(:household).brews.order(:created_at).last
+    assert_redirected_to brew_path(brew)
+    assert_predicate brew, :served_for_guest?
+    assert_equal "Anna", brew.guest_name
+    assert_equal "Latte", brew.cup_style
   end
 
   test "creating brew for shared bean refreshes public bean snapshot" do
@@ -1638,8 +1698,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-detail-screen-label]", I18n.t("brews.show.detail_screen_label")
   end
 
-  test "writer sees serving correction form on brew detail with cup suggestions" do
+  test "writer sees serving correction form on brew detail with guest and cup suggestions" do
     sign_in_as(users(:one))
+    users(:one).update!(display_name: "Jens")
+    users(:two).update!(display_name: "Anna")
     brew = brews(:morning_espresso)
     workspaces(:household).brews.create!(
       user: users(:one),
@@ -1648,6 +1710,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       brewer: equipment(:household_brewer),
       machine_cups: 6,
       coffee_spoons: 6,
+      served_for_guest: true,
+      guest_name: "Neighbor",
       cup_style: "Batch Brew"
     )
 
@@ -1658,7 +1722,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action=?][method=post]", serving_brew_path(brew)
     assert_select "input[name=_method][value=patch]"
     assert_select "input[type=checkbox][name=?]", "brew[served_for_guest]"
-    assert_select "input[type=text][name=?]", "brew[guest_name]"
+    assert_select "input[type=text][name=?][list=brew_guest_name_suggestions]", "brew[guest_name]"
+    assert_select "datalist#brew_guest_name_suggestions option[value=?]", "Jens"
+    assert_select "datalist#brew_guest_name_suggestions option[value=?]", "Anna"
+    assert_select "datalist#brew_guest_name_suggestions option[value=?]", "Neighbor"
     assert_select "input[type=text][name=?][list=brew_cup_style_suggestions]", "brew[cup_style]"
     assert_select "datalist#brew_cup_style_suggestions option[value=?]", "Americano"
     assert_select "datalist#brew_cup_style_suggestions option[value=?]", "Batch Brew"

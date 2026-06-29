@@ -22,16 +22,29 @@ Change these with environment variables from `.env` or your shell.
 
 ## LAN Access
 
-Start Rails on all interfaces when testing from another host on the network:
+Start the development server through tmux so it survives agent command-session cleanup and can be stopped consistently:
 
 ```bash
-bin/rails server -p 3001 -b 0.0.0.0
+tmux new-session -d -s roastnode-dev -c "$PWD" 'bin/dev'
 ```
 
-For named LAN hosts, set a comma-separated allowlist before starting Rails:
+Attach to inspect logs:
 
 ```bash
-ROASTNODE_DEV_HOSTS=coffee-box.local bin/rails server -p 3001 -b 0.0.0.0
+tmux attach -t roastnode-dev
+```
+
+Stop it with Ctrl-C inside the attached tmux session, or send Ctrl-C from another shell:
+
+```bash
+tmux send-keys -t roastnode-dev C-c
+```
+
+When testing from another host on the network, keep `BINDING=0.0.0.0` and add named LAN hosts through `ROASTNODE_DEV_HOSTS` before starting `bin/dev`. The project `.env` can hold those defaults:
+
+```bash
+BINDING=0.0.0.0
+ROASTNODE_DEV_HOSTS=coffee-box.local,coffee-box.local:3001
 ```
 
 ### Local Passkey Origin

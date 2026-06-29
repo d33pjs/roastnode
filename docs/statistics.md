@@ -24,6 +24,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Equipment detail analytics through `EquipmentStatistics`.
 - Preparation tool detail analytics through `PreparationToolStatistics`.
 - Statistics links to all-time brew history through a page-level all-brews button and the total-brews card.
+- The dashboard's live time-since-last-coffee timer uses only non-guest brews plus External Coffee records. Brews marked as served for guests stay in history and inventory accounting but do not reset that timer.
 
 ## Cost Rules
 

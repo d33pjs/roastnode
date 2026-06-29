@@ -15,7 +15,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Automatic inventory deduction when a brew is saved.
 - Manual bean inventory adjustments for count corrections.
 - Brew correction flows for edit/delete with inventory adjustment.
-- Post-brew private serving metadata for whether a cup was served to a guest, an optional guest label, and the finished cup style such as Americano or Latte.
+- Private serving metadata during initial brew logging and post-brew correction for whether a cup was served to a guest, an optional guest label, and the finished cup style such as Americano or Latte.
 - Inventory adjustment history for brew consumption.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
@@ -36,7 +36,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - User espresso form focus preference for fast daily logging.
 - Browser-local unsaved draft recovery for new brew logs.
 - One-way ground-out to dose prefill while logging espresso.
-- Dashboard compact live time-since-last-coffee header, row-major four-column metric grid for mixed Brew and External Coffee daily/weekly cards, rough daily/weekly spend, unopened-stock versus open-bean inventory split, open-bean count, closed-bag daily/weekly counts, last-4-week trend line chart components, open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
+- Dashboard compact live time-since-last-coffee header that ignores brews marked as served for guests, row-major four-column metric grid for mixed Brew and External Coffee daily/weekly cards, rough daily/weekly spend, unopened-stock versus open-bean inventory split, open-bean count, closed-bag daily/weekly counts, last-4-week trend line chart components, open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
 - Dashboard bean stock shelf with unopened in-stock bags, quick-open actions, and bean cost metrics for stocked/open inventory.
 - Repeat Good Brew flow from private brew details and dashboard cockpit best brews, pre-filling targetable shot/setup values from the source brew while keeping taste, notes, media, and sharing fields fresh.
 - Bean index cards group bags by workflow state: open, stock, finished/used up, and archived. Open bags sort by latest brew use first, then opened date and name for beans without brew history. Historical bags stay below active stock/open bags. Stock cards expose quick-open and Rebuy actions.
@@ -198,11 +198,13 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 
 New brews redirect to the brew detail page after saving. That page is the intentional saved-brew screen: it shows the Hero Brew Card, quick post-brew correction panels, and the detailed private log below it.
 
-Workspace writers can update private serving metadata from the brew detail page without running the full inventory correction flow:
+Workspace writers can set private serving metadata while initially logging Espresso or Quick Drip, and can update it later from the brew detail page without running the full inventory correction flow:
 
 - whether the brew was served for a guest
-- optional guest label
+- optional guest label, stored as free text with suggestions from household member display labels and active-workspace guest history
 - optional cup style, stored as free text with suggestions from common drink styles and active-workspace brew history
+
+Free-text guest labels become future suggestions after they are saved on a brew. Guest-serving brews remain in private history and inventory accounting, but they do not reset the dashboard's live time-since-last-coffee timer.
 
 Serving updates do not change inventory, brew measurements, equipment, preparation-tool snapshots, taste, rating, notes, photos, public notes, or public links.
 
