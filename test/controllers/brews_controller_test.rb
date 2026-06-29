@@ -887,7 +887,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, brew.photos.count
   end
 
-  test "member can create espresso brew with serving metadata" do
+  test "member can create espresso brew with serving metadata from guest name" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
     sign_in_as(user)
@@ -902,7 +902,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
         dose_grams: "18.2",
         beverage_grams: "42",
         total_time_seconds: "31",
-        served_for_guest: "1",
+        served_for_guest: "0",
         guest_name: "  Anna  ",
         cup_style: "  Latte  "
       }
@@ -1758,6 +1758,23 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_equal "Ignored from serving correction", brew.notes
     assert_not_equal "Ignored public note", brew.public_note
     assert_equal original_adjustment, brew.inventory_adjustment.reload.delta_grams
+  end
+
+  test "serving correction infers guest serving from guest name" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    patch serving_brew_path(brew), params: {
+      brew: {
+        served_for_guest: "0",
+        guest_name: "  Anna  "
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    brew.reload
+    assert_predicate brew, :served_for_guest?
+    assert_equal "Anna", brew.guest_name
   end
 
   test "invalid serving correction re-renders brew detail" do

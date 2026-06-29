@@ -49,6 +49,7 @@ class Brew < ApplicationRecord
   has_many_attached :photos
 
   before_validation :set_defaults
+  before_validation :mark_served_for_guest_when_guest_name_present
   before_validation :clear_guest_name_unless_served_for_guest
   before_validation :set_quick_drip_consumed_grams
   before_validation :set_retention_marker
@@ -127,6 +128,10 @@ class Brew < ApplicationRecord
 
     def set_retention_marker
       self.retention_marker = calculated_retention_marker
+    end
+
+    def mark_served_for_guest_when_guest_name_present
+      self.served_for_guest = true if guest_name.present?
     end
 
     def clear_guest_name_unless_served_for_guest

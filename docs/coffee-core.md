@@ -204,7 +204,7 @@ Workspace writers can set private serving metadata while initially logging Espre
 - optional guest label, stored as free text with suggestions from household member display labels and active-workspace guest history
 - optional cup style, stored as free text with suggestions from common drink styles and active-workspace brew history
 
-Free-text guest labels become future suggestions after they are saved on a brew. Guest-serving brews remain in private history and inventory accounting, but they do not reset the dashboard's live time-since-last-coffee timer.
+Selecting or typing a guest label marks the brew as served for a guest, even if the guest checkbox is not explicitly toggled. Free-text guest labels become future suggestions after they are saved on a brew. Guest-serving brews remain in private history and inventory accounting, but they do not reset the dashboard's live time-since-last-coffee timer.
 
 Serving updates do not change inventory, brew measurements, equipment, preparation-tool snapshots, taste, rating, notes, photos, public notes, or public links.
 

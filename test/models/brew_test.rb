@@ -1,19 +1,20 @@
 require "test_helper"
 
 class BrewTest < ActiveSupport::TestCase
-  test "normalizes serving metadata and clears guest name when not served for guest" do
+  test "normalizes serving metadata and infers guest serving from guest name" do
     brew = brews(:morning_espresso)
 
     brew.update!(
-      served_for_guest: true,
+      served_for_guest: false,
       guest_name: "  Anna  ",
       cup_style: "  Americano  "
     )
 
+    assert_predicate brew, :served_for_guest?
     assert_equal "Anna", brew.guest_name
     assert_equal "Americano", brew.cup_style
 
-    brew.update!(served_for_guest: false, guest_name: "Anna")
+    brew.update!(served_for_guest: false, guest_name: "")
 
     assert_not brew.served_for_guest?
     assert_nil brew.guest_name
