@@ -18,6 +18,13 @@
         <h2 class="mt-1 truncate text-xl font-black text-rn-ink"><%= brew.bean.name %></h2>
         <p class="mt-1 truncate text-sm font-bold text-rn-ink"><%= brew.bean.roaster_name.presence || t("beans.index.unknown") %></p>
         <p class="mt-2 text-sm font-semibold text-rn-muted"><%= t("brews.show.logged_by") %>: <%= brew.user.display_label %></p>
+        <% if brew.cup_style.present? || brew.served_for_guest? %>
+          <p data-testid="brew-serving-chip-<%= brew.id %>" class="mt-2 inline-flex max-w-full items-center rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-xs font-extrabold text-rn-muted">
+            <span class="truncate">
+              <%= [ brew.cup_style, (brew.served_for_guest? ? (brew.guest_name.presence || t("brews.show.guest")) : nil) ].compact.join(" · ") %>
+            </span>
+          </p>
+        <% end %>
       </div>
       <div class="grid grid-cols-2 gap-2 text-sm sm:min-w-60">
         <% if brew.quick_drip? %>

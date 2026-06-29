@@ -14,7 +14,7 @@ class WorkspaceCsvExportBuilder
     ground_weight_grams dose_grams beverage_grams machine_cups coffee_spoons grams_per_coffee_spoon
     coffee_amount_source brew_ratio grind_setting brew_temperature_celsius
     total_time_seconds preinfusion_seconds first_drip_seconds channeling taste_balance rating
-    retention_marker notes created_at updated_at
+    served_for_guest guest_name cup_style retention_marker notes created_at updated_at
   ].freeze
 
   EXTERNAL_COFFEE_COLUMNS = %w[

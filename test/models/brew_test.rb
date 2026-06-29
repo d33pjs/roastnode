@@ -1,6 +1,50 @@
 require "test_helper"
 
 class BrewTest < ActiveSupport::TestCase
+  test "normalizes serving metadata and clears guest name when not served for guest" do
+    brew = brews(:morning_espresso)
+
+    brew.update!(
+      served_for_guest: true,
+      guest_name: "  Anna  ",
+      cup_style: "  Americano  "
+    )
+
+    assert_equal "Anna", brew.guest_name
+    assert_equal "Americano", brew.cup_style
+
+    brew.update!(served_for_guest: false, guest_name: "Anna")
+
+    assert_not brew.served_for_guest?
+    assert_nil brew.guest_name
+  end
+
+  test "stores blank serving strings as nil" do
+    brew = brews(:morning_espresso)
+
+    brew.update!(
+      served_for_guest: true,
+      guest_name: "   ",
+      cup_style: "   "
+    )
+
+    assert_nil brew.guest_name
+    assert_nil brew.cup_style
+  end
+
+  test "limits serving metadata length" do
+    brew = brews(:morning_espresso)
+    long_value = "a" * 121
+
+    brew.served_for_guest = true
+    brew.guest_name = long_value
+    brew.cup_style = long_value
+
+    assert_not brew.valid?
+    assert_includes brew.errors[:guest_name], "is too long (maximum is 120 characters)"
+    assert_includes brew.errors[:cup_style], "is too long (maximum is 120 characters)"
+  end
+
   test "creating espresso brew subtracts bean inventory and records adjustment" do
     bean = beans(:open_household)
 

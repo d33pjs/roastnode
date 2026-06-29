@@ -49,6 +49,7 @@ class Brew < ApplicationRecord
   has_many_attached :photos
 
   before_validation :set_defaults
+  before_validation :clear_guest_name_unless_served_for_guest
   before_validation :set_quick_drip_consumed_grams
   before_validation :set_retention_marker
   after_save :clear_quick_drip_amount_assignment_flags
@@ -62,6 +63,7 @@ class Brew < ApplicationRecord
   validates :total_time_seconds, :preinfusion_seconds, :first_drip_seconds,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :rating, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
+  validates :guest_name, :cup_style, length: { maximum: 120 }
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
   validate :quick_drip_required_fields
   validate :bean_belongs_to_workspace
@@ -109,6 +111,14 @@ class Brew < ApplicationRecord
     super
   end
 
+  def guest_name=(value)
+    super(value.to_s.strip.presence)
+  end
+
+  def cup_style=(value)
+    super(value.to_s.strip.presence)
+  end
+
   private
     def set_defaults
       self.method ||= "espresso"
@@ -117,6 +127,10 @@ class Brew < ApplicationRecord
 
     def set_retention_marker
       self.retention_marker = calculated_retention_marker
+    end
+
+    def clear_guest_name_unless_served_for_guest
+      self.guest_name = nil unless served_for_guest?
     end
 
     def set_quick_drip_consumed_grams

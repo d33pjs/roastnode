@@ -15,6 +15,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Automatic inventory deduction when a brew is saved.
 - Manual bean inventory adjustments for count corrections.
 - Brew correction flows for edit/delete with inventory adjustment.
+- Post-brew private serving metadata for whether a cup was served to a guest, an optional guest label, and the finished cup style such as Americano or Latte.
 - Inventory adjustment history for brew consumption.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
@@ -192,6 +193,20 @@ If neither the source bean nor a duplicated follow-up bag is open, repeat redire
 When Ground out and Dose are both visible, typing Ground out copies that value into Dose until the user manually edits Dose. Dose never writes back to Ground out.
 
 Brew ratings are optional, but when present they must be whole numbers from 1 through 5.
+
+## Post-Brew Serving Metadata
+
+New brews redirect to the brew detail page after saving. That page is the intentional saved-brew screen: it shows the Hero Brew Card, quick post-brew correction panels, and the detailed private log below it.
+
+Workspace writers can update private serving metadata from the brew detail page without running the full inventory correction flow:
+
+- whether the brew was served for a guest
+- optional guest label
+- optional cup style, stored as free text with suggestions from common drink styles and active-workspace brew history
+
+Serving updates do not change inventory, brew measurements, equipment, preparation-tool snapshots, taste, rating, notes, photos, public notes, or public links.
+
+Serving metadata is private by default. It can appear on private brew details and private brew history cards, and it is included in private workspace exports and instance backups. Public brew, bean, and recipe snapshots do not include guest labels, guest flags, or cup styles.
 
 ## Inventory Rules
 

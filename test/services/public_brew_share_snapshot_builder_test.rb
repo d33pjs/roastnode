@@ -18,7 +18,13 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
 
   test "builds a public-safe snapshot from selected records" do
     brew = brews(:morning_espresso)
-    brew.update!(public_note: "Public brew story.", notes: "Private brew note.")
+    brew.update!(
+      public_note: "Public brew story.",
+      notes: "Private brew note.",
+      served_for_guest: true,
+      guest_name: "Anna",
+      cup_style: "Latte"
+    )
     brew.bean.update!(public_note: "Public bean note.", notes: "Private bean note.", purchase_source: "Private cellar source.")
     brew.grinder.update!(public_note: "Public grinder note.", notes: "Private grinder note.")
     preparation_tools(:wdt).update!(public_note: "Public WDT note.", notes: "Private WDT note.")
@@ -75,6 +81,11 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_not_includes snapshot.to_json, "Private WDT note"
     assert_not_includes snapshot.to_json, "Private receipt"
     assert_not_includes snapshot.to_json, "Private cellar source"
+    assert_not_includes snapshot.to_json, "Anna"
+    assert_not_includes snapshot.to_json, "Latte"
+    assert_not_includes snapshot.to_json, "served_for_guest"
+    assert_not_includes snapshot.to_json, "guest_name"
+    assert_not_includes snapshot.to_json, "cup_style"
     assert_not_includes snapshot.to_json, "Local roaster"
     assert_not_includes snapshot.to_json, "jens-private-receipt.jpg"
     attachment_ids = collect_attachment_ids(snapshot)

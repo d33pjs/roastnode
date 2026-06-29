@@ -516,6 +516,8 @@ en:
       total_time: "Total time (s)"
     update:
       updated: "Brew corrected."
+    serving:
+      updated: "Serving updated."
     taste:
       quick_drip:
         sour: "Weak"
@@ -536,14 +538,18 @@ en:
       coffee_amount: "Coffee"
       coffee_spoons: "%{count} spoons"
       consumed: "Consumed"
+      cup_style: "Cup"
       delete: "Delete"
       delete_confirmation: "Delete this brew? Bean inventory will be corrected, but this cannot be undone."
       danger_zone: "Danger zone"
       danger_zone_body: "Delete this brew only when this log should be removed from the household history. Inventory changes from the brew will be reversed."
       details: "Details"
+      detail_screen_label: "Saved brew"
       dose: "Dose"
       edit: "Edit"
       first_drip: "First drip"
+      guest: "Guest"
+      guest_name: "Guest name"
       grind_setting: "Grind"
       grinder: "Grinder"
       ground_weight: "Ground out"
@@ -572,8 +578,12 @@ en:
       related_photos: "Related photos"
       related_tool_photos: "Preparation tool photos"
       retention: "Retention"
+      saved_brew: "Brew detail"
       save_as_recipe: "Save as recipe"
+      save_serving: "Save serving"
       save_taste: "Save taste"
+      served_for_guest: "Served for guest"
+      serving: "Serving"
       share_publicly: "Share publicly"
       taste: "Taste"
       temperature: "Temperature"
@@ -583,6 +593,7 @@ en:
       tools: "Tools"
       total_time: "Total time"
       unknown: "Unknown"
+      yes: "Yes"
       yield: "Beverage"
       yes: "Yes"
   external_coffees:

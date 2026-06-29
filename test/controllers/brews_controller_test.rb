@@ -1627,6 +1627,127 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=submit][value=?]", I18n.t("brews.show.save_taste")
   end
 
+  test "brew detail identifies saved brew screen" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "h1", I18n.t("brews.show.saved_brew")
+    assert_select "[data-testid=brew-detail-screen-label]", I18n.t("brews.show.detail_screen_label")
+  end
+
+  test "writer sees serving correction form on brew detail with cup suggestions" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    workspaces(:household).brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean: beans(:second_open_household),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      coffee_spoons: 6,
+      cup_style: "Batch Brew"
+    )
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-serving-correction]"
+    assert_select "form[action=?][method=post]", serving_brew_path(brew)
+    assert_select "input[name=_method][value=patch]"
+    assert_select "input[type=checkbox][name=?]", "brew[served_for_guest]"
+    assert_select "input[type=text][name=?]", "brew[guest_name]"
+    assert_select "input[type=text][name=?][list=brew_cup_style_suggestions]", "brew[cup_style]"
+    assert_select "datalist#brew_cup_style_suggestions option[value=?]", "Americano"
+    assert_select "datalist#brew_cup_style_suggestions option[value=?]", "Batch Brew"
+    assert_select "input[type=submit][value=?]", I18n.t("brews.show.save_serving")
+  end
+
+  test "writer can update only serving metadata from detail page" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    original_weight = brew.bean_weight_grams
+    original_adjustment = brew.inventory_adjustment.delta_grams
+
+    patch serving_brew_path(brew), params: {
+      brew: {
+        served_for_guest: "1",
+        guest_name: "  Anna  ",
+        cup_style: "  Americano  ",
+        bean_weight_grams: "30",
+        notes: "Ignored from serving correction",
+        public_note: "Ignored public note"
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    brew.reload
+    assert_predicate brew, :served_for_guest?
+    assert_equal "Anna", brew.guest_name
+    assert_equal "Americano", brew.cup_style
+    assert_equal original_weight, brew.bean_weight_grams
+    assert_not_equal "Ignored from serving correction", brew.notes
+    assert_not_equal "Ignored public note", brew.public_note
+    assert_equal original_adjustment, brew.inventory_adjustment.reload.delta_grams
+  end
+
+  test "invalid serving correction re-renders brew detail" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    patch serving_brew_path(brew), params: { brew: { cup_style: "a" * 121 } }
+
+    assert_response :unprocessable_entity
+    assert_select "[data-testid=brew-serving-correction]"
+    assert_nil brew.reload.cup_style
+  end
+
+  test "viewer cannot see or submit serving correction" do
+    memberships(:member).update!(role: "viewer")
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    brew = brews(:morning_espresso)
+
+    get brew_path(brew)
+    assert_response :success
+    assert_select "[data-testid=brew-serving-correction]", count: 0
+
+    patch serving_brew_path(brew), params: { brew: { served_for_guest: "1", cup_style: "Latte" } }
+    assert_redirected_to root_path
+    assert_not brew.reload.served_for_guest?
+  end
+
+  test "brew details and compact history render private serving metadata" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    brew.update!(served_for_guest: true, guest_name: "Anna", cup_style: "Latte")
+
+    get brew_path(brew)
+    assert_response :success
+    assert_select "[data-testid=brew-detail-cup]", "Latte"
+    assert_select "[data-testid=brew-detail-guest]", "Anna"
+
+    get brews_path
+    assert_response :success
+    assert_select "[data-testid=brew-serving-chip-#{brew.id}]", text: /Latte/
+    assert_select "[data-testid=brew-serving-chip-#{brew.id}]", text: /Anna/
+  end
+
+  test "serving update is scoped to active workspace" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    other_brew = brews(:other_workspace_brew)
+
+    patch serving_brew_path(other_brew), params: { brew: { served_for_guest: "1", cup_style: "Latte" } }
+
+    assert_response :not_found
+    assert_not other_brew.reload.served_for_guest?
+  end
+
   test "writer can update only brew taste fields from detail page" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)

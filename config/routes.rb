@@ -71,6 +71,7 @@ Rails.application.routes.draw do
   get "coffees" => "brews#index", as: :coffees
   resources :brews, only: %i[index new create show edit update destroy] do
     patch :taste, on: :member
+    patch :serving, on: :member
     resource :public_brew_share, only: %i[new create edit update destroy]
   end
   resources :external_coffees, only: %i[index new create show edit update destroy] do

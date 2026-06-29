@@ -3,7 +3,12 @@ require "test_helper"
 class RecipeSnapshotBuilderTest < ActiveSupport::TestCase
   test "builds public-safe target profile from a brew" do
     brew = brews(:morning_espresso)
-    brew.update!(public_note: "Sweet, repeatable shot.")
+    brew.update!(
+      public_note: "Sweet, repeatable shot.",
+      served_for_guest: true,
+      guest_name: "Anna",
+      cup_style: "Latte"
+    )
     brew.bean.update!(public_note: "Works well for milk drinks.")
     brew.record_links.create!(
       workspace: brew.workspace,
@@ -45,5 +50,10 @@ class RecipeSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal [ "Shot notes" ], snapshot.dig("source_brew", "links").map { |link| link["label"] }
     assert_no_match "Balanced morning shot.", snapshot.inspect
     assert_no_match "Private notes", snapshot.inspect
+    assert_no_match "Anna", snapshot.inspect
+    assert_no_match "Latte", snapshot.inspect
+    assert_no_match "served_for_guest", snapshot.inspect
+    assert_no_match "guest_name", snapshot.inspect
+    assert_no_match "cup_style", snapshot.inspect
   end
 end

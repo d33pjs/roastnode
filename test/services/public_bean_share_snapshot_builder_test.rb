@@ -46,7 +46,10 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
       rating: 5,
       channeling: true,
       taste_balance: "neutral",
-      grind_setting: "2.3"
+      grind_setting: "2.3",
+      served_for_guest: true,
+      guest_name: "Anna",
+      cup_style: "Latte"
     )
     quick_drip = bean.workspace.brews.create!(
       user: users(:two),
@@ -123,6 +126,11 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_not_includes snapshot.to_json, "Private receipt"
     assert_not_includes snapshot.to_json, "Private espresso note"
     assert_not_includes snapshot.to_json, "Private batch note"
+    assert_not_includes snapshot.to_json, "Anna"
+    assert_not_includes snapshot.to_json, "Latte"
+    assert_not_includes snapshot.to_json, "served_for_guest"
+    assert_not_includes snapshot.to_json, "guest_name"
+    assert_not_includes snapshot.to_json, "cup_style"
     assert_not_includes snapshot.to_json, "one@example.com"
     assert_not_includes snapshot.to_json, "private-bag-name.jpg"
     assert_includes collect_attachment_ids(snapshot), bean_photo.id

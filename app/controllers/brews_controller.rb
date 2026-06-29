@@ -1,8 +1,9 @@
 class BrewsController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create edit update taste destroy]
-  before_action :set_brew, only: %i[show edit update taste destroy]
+  before_action :authorize_workspace_write!, only: %i[new create edit update taste serving destroy]
+  before_action :set_brew, only: %i[show edit update taste serving destroy]
   before_action :set_recipe_guide, only: %i[new create]
   before_action :set_selected_method, only: %i[new create]
+  before_action :set_cup_style_suggestions, only: %i[show serving]
 
   def index
     @brew_history_view = params[:view] == "hero" ? "hero" : "compact"
@@ -121,6 +122,14 @@ class BrewsController < ApplicationController
     end
   end
 
+  def serving
+    if @brew.update(serving_brew_params)
+      redirect_to @brew, notice: t(".updated")
+    else
+      render :show, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     bean = @brew.bean
     @brew.destroy_with_inventory_reversal!
@@ -142,6 +151,11 @@ class BrewsController < ApplicationController
 
     def set_brew
       @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :brewer, :user, :public_brew_share, brew_preparation_tools: :preparation_tool).find(params[:id])
+    end
+
+    def set_cup_style_suggestions
+      history = current_workspace.brews.where.not(cup_style: [ nil, "" ]).distinct.order(:cup_style).pluck(:cup_style)
+      @cup_style_suggestions = (ExternalCoffee::DRINK_TYPE_SUGGESTIONS + history).uniq
     end
 
     def set_recipe_guide
@@ -530,6 +544,10 @@ class BrewsController < ApplicationController
 
     def taste_brew_params
       params.expect(brew: [ :taste_balance, :rating ])
+    end
+
+    def serving_brew_params
+      params.expect(brew: [ :served_for_guest, :guest_name, :cup_style ])
     end
 
     def prepare_record_links(record)

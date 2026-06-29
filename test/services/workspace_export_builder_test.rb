@@ -51,6 +51,11 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
 
   test "includes relationships needed to reconstruct workspace data" do
     duplicated = beans(:open_household).duplicate_for_new_bag!
+    brews(:morning_espresso).update!(
+      served_for_guest: true,
+      guest_name: "Anna",
+      cup_style: "Latte"
+    )
     payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at: Time.current).call
 
     membership = payload[:memberships].find { |row| row[:user_id] == users(:one).id }
@@ -61,6 +66,9 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_equal beans(:open_household).id, brew[:bean_id]
     assert_equal equipment(:household_grinder).id, brew[:grinder_id]
     assert_equal users(:one).id, brew[:user_id]
+    assert_equal true, brew[:served_for_guest]
+    assert_equal "Anna", brew[:guest_name]
+    assert_equal "Latte", brew[:cup_style]
 
     tool_snapshot = payload[:brew_preparation_tools].find { |row| row[:brew_id] == brews(:morning_espresso).id }
     assert_equal "WDT", tool_snapshot[:tool_name]

@@ -37,6 +37,12 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
   end
 
   test "exports brews as workspace-scoped csv rows with tool snapshots" do
+    brews(:morning_espresso).update!(
+      served_for_guest: true,
+      guest_name: "Anna",
+      cup_style: "Latte"
+    )
+
     csv = WorkspaceCsvExportBuilder.new(workspaces(:household)).brews_csv
     rows = CSV.parse(csv, headers: true)
 
@@ -44,6 +50,9 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     assert_includes rows.headers, "bean_name"
     assert_includes rows.headers, "preparation_tools"
     assert_includes rows.headers, "brew_ratio"
+    assert_includes rows.headers, "served_for_guest"
+    assert_includes rows.headers, "guest_name"
+    assert_includes rows.headers, "cup_style"
 
     brew_ids = rows.map { |row| row.fetch("id").to_i }
     assert_includes brew_ids, brews(:morning_espresso).id
@@ -53,6 +62,9 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     assert_equal brews(:morning_espresso).bean.name, exported.fetch("bean_name")
     assert_equal "WDT", exported.fetch("preparation_tools")
     assert_equal "1:2.22", exported.fetch("brew_ratio")
+    assert_equal "true", exported.fetch("served_for_guest")
+    assert_equal "Anna", exported.fetch("guest_name")
+    assert_equal "Latte", exported.fetch("cup_style")
   end
 
   test "exports quick drip csv columns" do

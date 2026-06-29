@@ -15,7 +15,7 @@ Workspace Export is the first Roastnode data portability feature.
 - Beans, equipment, preparation tools, brews, External Coffees, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
 - External Coffees include drink type, drink size, place text, private coordinates, price/currency, taste axes, rating, notes, public note, and photo metadata.
 - Rich bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
-- Brew method fields, including Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, and coffee amount source.
+- Brew method fields, including Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, and private serving metadata.
 - Quick Drip profile preferences are account-level data. Active workspace exports do not include enabled-method or grams-per-coffee-spoon preferences; full instance backup/readable export payloads include them so restores can rebuild user logging defaults.
 - Photo metadata for photo-enabled records.
 - Preparation tool lifecycle fields, including active status, position, and photo metadata.
@@ -40,7 +40,7 @@ CSV exports are separate spreadsheet-friendly downloads:
 
 The beans CSV includes flat bag metadata such as names, roaster, derived status (`stock`, `open`, `used_up`, or `archived`), remaining grams, roast data, variety information, purchase details, rating, notes, and timestamps.
 
-The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing, temperature, taste balance, rating, retention marker, notes, and timestamps.
+The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing, temperature, taste balance, rating, private guest/cup serving metadata, retention marker, notes, and timestamps.
 
 The External Coffees CSV includes occurred time, user labels, drink type, drink size, place name/location, private coordinates, price, currency, taste axes, rating, notes, public note, and timestamps.
 
@@ -88,7 +88,7 @@ Local IDs are included so relationships can be reconstructed inside a single exp
 
 ## Instance Backup Coverage
 
-Instance backups and empty-server restore preserve the same Quick Drip durable fields: brew method, brewer references, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, bean grind state, preparation tool method, and user enabled-method/spoon preferences. They also preserve External Coffee records and photos.
+Instance backups and empty-server restore preserve the same Quick Drip durable fields: brew method, brewer references, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, private serving metadata, bean grind state, preparation tool method, and user enabled-method/spoon preferences. They also preserve External Coffee records and photos.
 
 ## Deferred
 

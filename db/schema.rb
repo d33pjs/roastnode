@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_28_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -119,6 +119,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
     t.string "coffee_amount_source", default: "measured", null: false
     t.decimal "coffee_spoons", precision: 8, scale: 2
     t.datetime "created_at", null: false
+    t.string "cup_style"
     t.bigint "data_import_id"
     t.decimal "dose_grams", precision: 8, scale: 2
     t.integer "first_drip_seconds"
@@ -126,6 +127,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
     t.string "grind_setting"
     t.bigint "grinder_id"
     t.decimal "ground_weight_grams", precision: 8, scale: 2
+    t.string "guest_name"
     t.string "import_source"
     t.string "import_source_id"
     t.decimal "machine_cups", precision: 8, scale: 2
@@ -141,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_14_120000) do
     t.bigint "recipe_id"
     t.jsonb "recipe_snapshot", default: {}, null: false
     t.string "retention_marker", default: "unknown", null: false
+    t.boolean "served_for_guest", default: false, null: false
     t.string "taste_balance", default: "unknown", null: false
     t.integer "total_time_seconds"
     t.datetime "updated_at", null: false

@@ -53,11 +53,49 @@
       <% end %>
     </div>
 
+    <div class="mt-6">
+      <p data-testid="brew-detail-screen-label" class="text-xs font-black uppercase tracking-[0.12em] text-rn-muted"><%= t(".detail_screen_label") %></p>
+      <h1 class="mt-1 text-2xl font-black text-rn-ink sm:text-3xl"><%= t(".saved_brew") %></h1>
+    </div>
+
     <%= render "brews/hero_card", brew: @brew, card_class: "mt-5" %>
 
     <% if current_workspace_policy.write? %>
-      <% taste_correction_label_class = "block text-sm font-bold text-rn-muted" %>
-      <% taste_correction_input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+      <% correction_label_class = "block text-sm font-bold text-rn-muted" %>
+      <% correction_input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+      <section data-testid="brew-serving-correction" class="mt-6 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+        <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".serving") %></h2>
+        <%= form_with model: @brew, url: serving_brew_path(@brew), method: :patch, class: "mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end" do |form| %>
+          <% if @brew.errors.any? %>
+            <div class="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 sm:col-span-3">
+              <%= @brew.errors.full_messages.to_sentence %>
+            </div>
+          <% end %>
+
+          <label class="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink">
+            <span><%= t(".served_for_guest") %></span>
+            <%= form.check_box :served_for_guest, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
+          </label>
+
+          <div>
+            <%= form.label :guest_name, t(".guest_name"), class: correction_label_class %>
+            <%= form.text_field :guest_name, maxlength: 120, class: correction_input_class %>
+          </div>
+
+          <div class="sm:col-span-2">
+            <%= form.label :cup_style, t(".cup_style"), class: correction_label_class %>
+            <%= form.text_field :cup_style, maxlength: 120, list: "brew_cup_style_suggestions", class: correction_input_class %>
+            <datalist id="brew_cup_style_suggestions">
+              <% Array(@cup_style_suggestions).each do |suggestion| %>
+                <option value="<%= suggestion %>"></option>
+              <% end %>
+            </datalist>
+          </div>
+
+          <%= form.submit t(".save_serving"), class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>
+        <% end %>
+      </section>
+
       <section data-testid="brew-taste-correction" class="mt-6 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
         <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".adjust_taste") %></h2>
         <%= form_with model: @brew, url: taste_brew_path(@brew), method: :patch, class: "mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end" do |form| %>
@@ -68,12 +106,12 @@
           <% end %>
 
           <div class="sm:col-span-3">
-            <%= form.label :taste_balance, t(".taste"), class: taste_correction_label_class %>
+            <%= form.label :taste_balance, t(".taste"), class: correction_label_class %>
             <%= render "brews/taste_balance_choices", form: form, method: @brew.method %>
           </div>
 
           <div>
-            <%= form.label :rating, t(".rating"), class: taste_correction_label_class %>
+            <%= form.label :rating, t(".rating"), class: correction_label_class %>
             <%= render "brews/rating_choices", form: form %>
           </div>
 
@@ -98,6 +136,20 @@
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".bean") %></dt>
           <dd data-testid="brew-detail-bean" class="mt-1 text-sm font-semibold text-stone-950">
             <%= link_to @brew.bean.display_name, bean_path(@brew.bean), class: "text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+          </dd>
+        </div>
+        <div>
+          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".cup_style") %></dt>
+          <dd data-testid="brew-detail-cup" class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.cup_style.presence || t(".unknown") %></dd>
+        </div>
+        <div>
+          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".guest") %></dt>
+          <dd data-testid="brew-detail-guest" class="mt-1 text-sm font-semibold text-stone-950">
+            <% if @brew.served_for_guest? %>
+              <%= @brew.guest_name.presence || t(".yes") %>
+            <% else %>
+              <%= t(".no") %>
+            <% end %>
           </dd>
         </div>
         <% if @brew.quick_drip? %>

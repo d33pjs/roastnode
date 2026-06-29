@@ -21,7 +21,10 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
       bean: beans(:second_open_household),
       brewer: equipment(:household_brewer),
       machine_cups: 6,
-      coffee_spoons: 6
+      coffee_spoons: 6,
+      served_for_guest: true,
+      guest_name: "Anna",
+      cup_style: "Batch Brew"
     )
     external_coffee = workspaces(:household).external_coffees.create!(
       user:,
@@ -59,6 +62,9 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     assert_equal "6.0", brew_payload.fetch(:coffee_spoons)
     assert_equal "4.5", brew_payload.fetch(:grams_per_coffee_spoon)
     assert_equal "estimated_spoons", brew_payload.fetch(:coffee_amount_source)
+    assert_equal true, brew_payload.fetch(:served_for_guest)
+    assert_equal "Anna", brew_payload.fetch(:guest_name)
+    assert_equal "Batch Brew", brew_payload.fetch(:cup_style)
     external_coffee_payload = household_payload.fetch(:external_coffees).find { |coffee| coffee.fetch(:id) == external_coffee.id }
     assert_equal "Flat White", external_coffee_payload.fetch(:drink_type)
     assert_equal "Local Shop", external_coffee_payload.fetch(:place_name)
