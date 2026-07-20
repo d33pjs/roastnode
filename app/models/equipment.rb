@@ -18,6 +18,8 @@ class Equipment < ApplicationRecord
   has_many :equipment_events, through: :equipment_event_items
   has_many_attached :photos
 
+  before_validation :clear_machine_features_unless_machine
+
   scope :active, -> { where(archived_at: nil) }
 
   validates :name, presence: true
@@ -44,4 +46,13 @@ class Equipment < ApplicationRecord
       destroy!
     end
   end
+
+  private
+    def clear_machine_features_unless_machine
+      return if machine?
+
+      self.preinfusion_enabled = false
+      self.low_flow_start_enabled = false
+      self.flow_control_enabled = false
+    end
 end

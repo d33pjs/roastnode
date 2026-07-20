@@ -76,6 +76,14 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       machine_cups: 6,
       coffee_spoons: 6
     )
+    source_machine = equipment(:household_machine)
+    source_machine.update!(
+      preinfusion_enabled: true,
+      low_flow_start_enabled: true,
+      flow_control_enabled: true
+    )
+    espresso_brew = brews(:morning_espresso)
+    espresso_brew.update!(low_flow_start_seconds: 9, flow_control_used: true)
     external_coffee = workspaces(:household).external_coffees.create!(
       user: users(:one),
       drink_type: "Americano",
@@ -116,6 +124,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       external_coffee_drink_type: external_coffee.drink_type,
       external_photo_filename: external_photo.blob.filename.to_s,
       brewer_name: equipment(:household_brewer).name,
+      machine_name: source_machine.name,
       duplicated_bean_name: duplicated_bean.name,
       photo_filename: attachment.blob.filename.to_s
     }
@@ -130,6 +139,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     restored_quick_drip_bean = Bean.find_by!(name: original.fetch(:quick_drip_bean_name))
     restored_duplicate_bean = Bean.find_by!(name: original.fetch(:duplicated_bean_name))
     restored_quick_drip_brew = restored_workspace.brews.find_by!(method: "quick_drip", bean: restored_quick_drip_bean)
+    restored_machine = restored_workspace.equipment.find_by!(name: original.fetch(:machine_name))
+    restored_espresso_brew = restored_workspace.brews.find_by!(method: "espresso", machine: restored_machine)
     restored_external_coffee = restored_workspace.external_coffees.find_by!(drink_type: original.fetch(:external_coffee_drink_type))
 
     assert_equal original.fetch(:users), User.count
@@ -161,6 +172,11 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 6.to_d, restored_quick_drip_brew.coffee_spoons
     assert_equal 4.5.to_d, restored_quick_drip_brew.grams_per_coffee_spoon
     assert_equal "estimated_spoons", restored_quick_drip_brew.coffee_amount_source
+    assert_predicate restored_machine, :preinfusion_enabled?
+    assert_predicate restored_machine, :low_flow_start_enabled?
+    assert_predicate restored_machine, :flow_control_enabled?
+    assert_equal 9, restored_espresso_brew.low_flow_start_seconds
+    assert_predicate restored_espresso_brew, :flow_control_used?
     assert_equal "Restore Cafe", restored_external_coffee.place_name
     assert_equal "Cologne", restored_external_coffee.place_location
     assert_equal 390, restored_external_coffee.price_cents

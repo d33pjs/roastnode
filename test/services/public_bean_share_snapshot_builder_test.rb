@@ -170,6 +170,24 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "12.5", snapshot.dig("stats", "dead_grams")
   end
 
+  test "archives render as finished at the archive time and count leftover beans as dead grams" do
+    bean = beans(:open_household)
+    archived_at = Time.zone.parse("2026-05-29 13:45:00")
+    bean.update!(remaining_grams: 12.5)
+    bean.update_columns(archived_at:, finished_at: nil)
+
+    snapshot = PublicBeanShareSnapshotBuilder.new(
+      bean:,
+      title: "Archived bean",
+      selected_photo_attachment_ids: []
+    ).call
+
+    assert_equal "finished", snapshot.dig("bean", "public_status")
+    assert_equal archived_at.utc.iso8601, snapshot.dig("timeline", "finished_at")
+    assert_equal archived_at.utc.iso8601, snapshot.dig("timeline", "end_at")
+    assert_equal "12.5", snapshot.dig("stats", "dead_grams")
+  end
+
   test "includes enabled public brew share links for public bean brew rows" do
     bean = beans(:open_household)
     brew = brews(:morning_espresso)

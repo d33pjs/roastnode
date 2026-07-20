@@ -61,7 +61,7 @@ class Brew < ApplicationRecord
   validates :machine_cups, numericality: { greater_than: 0 }, allow_nil: true
   validates :coffee_spoons, :grams_per_coffee_spoon, numericality: { greater_than: 0 }, allow_nil: true
   validates :brew_temperature_celsius, numericality: { greater_than: 0 }, allow_nil: true
-  validates :total_time_seconds, :preinfusion_seconds, :first_drip_seconds,
+  validates :total_time_seconds, :preinfusion_seconds, :low_flow_start_seconds, :first_drip_seconds,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :rating, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
   validates :guest_name, :cup_style, length: { maximum: 120 }

@@ -49,6 +49,9 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
     assert_equal bean, brew.bean
     assert_equal "BC Grinder", brew.grinder.name
     assert_equal "BC Espresso Machine", brew.machine.name
+    assert_predicate brew.machine, :preinfusion_enabled?
+    assert_not_predicate brew.machine, :low_flow_start_enabled?
+    assert_not_predicate brew.machine, :flow_control_enabled?
     assert_equal 18.5.to_d, brew.bean_weight_grams
     assert_equal 18.3.to_d, brew.ground_weight_grams
     assert_equal 42.to_d, brew.beverage_grams

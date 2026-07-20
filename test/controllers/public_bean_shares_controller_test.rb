@@ -105,6 +105,16 @@ class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("public_bean_shares.unsupported_status"), flash[:alert]
   end
 
+  test "writer can open the share form for an archived opened bean" do
+    bean = beans(:archived_household)
+    sign_in_as(users(:one))
+
+    get new_bean_public_bean_share_path(bean)
+
+    assert_response :success
+    assert_select "h1", I18n.t("public_bean_shares.new.title")
+  end
+
   test "viewer cannot manage public bean shares" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)

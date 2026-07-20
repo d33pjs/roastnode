@@ -1,6 +1,27 @@
 require "test_helper"
 
 class BrewTest < ActiveSupport::TestCase
+  test "low flow start accepts only non-negative whole seconds" do
+    brew = brews(:morning_espresso)
+
+    brew.low_flow_start_seconds = 7
+    assert_predicate brew, :valid?
+
+    brew.low_flow_start_seconds = -1
+    assert_not_predicate brew, :valid?
+
+    brew.low_flow_start_seconds = 1.5
+    assert_not_predicate brew, :valid?
+  end
+
+  test "flow control usage can preserve unknown legacy history" do
+    brew = brews(:morning_espresso)
+
+    brew.update!(flow_control_used: nil)
+
+    assert_nil brew.reload.flow_control_used
+  end
+
   test "normalizes serving metadata and infers guest serving from guest name" do
     brew = brews(:morning_espresso)
 

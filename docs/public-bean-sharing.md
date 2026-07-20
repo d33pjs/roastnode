@@ -4,7 +4,7 @@ Public Bean Sharing lets workspace writers publish one curated bean bag page wit
 
 ## Included Now
 
-- One public share per opened, finished, or used-up bean bag.
+- One public share per opened, finished, used-up, or archived bean bag, provided the bag was opened before it was archived.
 - Unlisted public URL at `/b/:token`.
 - Optional per-share password gate.
 - Selected bean package photos only.
@@ -43,6 +43,8 @@ Workspace writers can create and manage public bean shares for their own publish
 The workspace settings page lists public bean shares with the public URL, enabled/protected state, linked bean, timestamps, total page views, capped recent full-IP view history, and open/edit/remove actions.
 
 Disabled shares and unknown tokens return `404 Not Found`. Password unlock state is scoped to the share token and current password fingerprint, so changing a share password invalidates previous browser unlocks.
+
+Archived opened bags stay shareable and continue to use the public `finished` presentation. Their archive time closes the public timeline, and any positive remaining inventory is counted as dead grams. Archiving does not automatically enable a disabled share.
 
 ## Snapshot Refresh
 

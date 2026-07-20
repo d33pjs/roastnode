@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_28_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_20_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -123,6 +123,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_120000) do
     t.bigint "data_import_id"
     t.decimal "dose_grams", precision: 8, scale: 2
     t.integer "first_drip_seconds"
+    t.boolean "flow_control_used"
     t.decimal "grams_per_coffee_spoon", precision: 8, scale: 2
     t.string "grind_setting"
     t.bigint "grinder_id"
@@ -130,6 +131,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_120000) do
     t.string "guest_name"
     t.string "import_source"
     t.string "import_source_id"
+    t.integer "low_flow_start_seconds"
     t.decimal "machine_cups", precision: 8, scale: 2
     t.bigint "machine_id"
     t.string "method", default: "espresso", null: false
@@ -181,12 +183,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_28_120000) do
     t.datetime "archived_at"
     t.datetime "created_at", null: false
     t.bigint "data_import_id"
+    t.boolean "flow_control_enabled", default: false, null: false
     t.string "import_source"
     t.string "import_source_id"
     t.string "kind", null: false
+    t.boolean "low_flow_start_enabled", default: false, null: false
     t.string "model"
     t.string "name", null: false
     t.text "notes"
+    t.boolean "preinfusion_enabled", default: false, null: false
     t.bigint "primary_photo_attachment_id"
     t.text "public_note"
     t.jsonb "raw_import_data", default: {}, null: false

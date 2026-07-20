@@ -145,6 +145,7 @@ class DemoDataSeeder
         machine: find_or_create_equipment!("Demo Espresso Machine", "machine", "Dual boiler"),
         brewer: find_or_create_equipment!("Demo Quick Drip Brewer", "brewer", "Thermos drip")
       }
+      @equipment.fetch(:machine).update!(preinfusion_enabled: true)
     end
 
     def ensure_preparation_tools!

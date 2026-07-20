@@ -108,7 +108,7 @@
   </div>
 
   <div data-testid="brew-chart-grid" class="brew-chart-grid bg-stone-50 px-1 py-1 text-stone-950 sm:px-4 sm:py-3">
-    <% preinfusion_x = brew_card_chart_x(brew.preinfusion_seconds, brew.total_time_seconds) || 172 %>
+    <% preinfusion_x = brew_card_chart_x(brew.preinfusion_seconds, brew.total_time_seconds) %>
     <% first_drip_x = brew_card_chart_x(brew.first_drip_seconds, brew.total_time_seconds) %>
     <% total_time_x = brew_card_chart_x(brew.total_time_seconds, brew.total_time_seconds) || 500 %>
     <% first_drip_label_x = first_drip_x ? [ first_drip_x + 12, 432 ].min : nil %>
@@ -161,7 +161,9 @@
 
       <path d="M44 9 C134 8, 224 8, 314 8 C390 7, 452 8, 500 11" fill="none" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" />
 
-      <line x1="<%= preinfusion_x %>" y1="25" x2="<%= preinfusion_x %>" y2="140" stroke="#78716c" stroke-width="2.5" stroke-dasharray="6 8" />
+      <% if preinfusion_x.present? %>
+        <line data-testid="brew-preinfusion-guide" x1="<%= preinfusion_x %>" y1="25" x2="<%= preinfusion_x %>" y2="140" stroke="#78716c" stroke-width="2.5" stroke-dasharray="6 8" />
+      <% end %>
       <% if first_drip_x.present? %>
         <line x1="<%= first_drip_x %>" y1="25" x2="<%= first_drip_x %>" y2="140" stroke="#0f766e" stroke-width="2.5" stroke-dasharray="4 7" />
       <% end %>
@@ -171,7 +173,9 @@
       <text x="8" y="135" font-size="13" fill="#57534e">0g</text>
       <text data-testid="brew-axis-max" x="6" y="52" font-size="13" fill="#57534e"><%= brew_card_grams(axis_max_grams) %></text>
       <text x="32" y="157" font-size="13" fill="#57534e">0s</text>
-      <text data-testid="brew-preinfusion-label" x="<%= [ preinfusion_x - 36, 54 ].max %>" y="157" font-size="13" fill="#57534e"><%= brew_card_seconds(brew.preinfusion_seconds) %> Preinfusion</text>
+      <% if preinfusion_x.present? %>
+        <text data-testid="brew-preinfusion-label" x="<%= [ preinfusion_x - 36, 54 ].max %>" y="157" font-size="13" fill="#57534e"><%= brew_card_seconds(brew.preinfusion_seconds) %> Preinfusion</text>
+      <% end %>
       <% if first_drip_x.present? %>
         <g data-testid="brew-first-drip-callout">
           <rect x="<%= first_drip_label_x - 7 %>" y="95" width="126" height="20" rx="5" fill="#f0fdfa" fill-opacity=".95" />

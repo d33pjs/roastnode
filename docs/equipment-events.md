@@ -15,6 +15,7 @@ Equipment Events records maintenance and service history for workspace equipment
 - Existing affected archived equipment remains available when editing an old event.
 - Workspace recent activity entries for equipment events.
 - Private photo management on equipment events, including viewing, download, primary selection, cropping, removal, and additive upload while editing.
+- Required event times use minute precision on desktop and mobile. The form is constrained to its card width and shows normal validation errors when a save fails, including when the time is missing.
 
 ## Event Types
 
@@ -39,6 +40,8 @@ The dashboard Recent activity section shows:
 - manual inventory adjustments
 
 It deliberately hides automatic brew inventory adjustments because the brew itself is already the user-facing activity.
+
+The dashboard requests the newest eight records from the merged feed. Each activity family must contribute enough candidates for that global limit before the records are merged and sorted; a busy brew history must not be truncated merely because a maintenance event is also present.
 
 ## Data Model
 

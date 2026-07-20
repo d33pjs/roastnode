@@ -215,6 +215,7 @@ class BeanconquerorImport
       {
         name: presence(raw["name"]) || "Imported #{kind}",
         kind:,
+        preinfusion_enabled: kind == "machine",
         notes: presence(raw["note"]),
         data_import:,
         import_source: SOURCE,

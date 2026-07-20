@@ -2,7 +2,7 @@ require "digest"
 require "openssl"
 
 class PublicBeanShare < ApplicationRecord
-  PUBLISHABLE_STATUSES = %w[open finished used_up].freeze
+  PUBLISHABLE_STATUSES = %w[open finished used_up archived].freeze
 
   has_secure_password :password, validations: false
 
@@ -34,7 +34,6 @@ class PublicBeanShare < ApplicationRecord
 
   def self.find_enabled_by_token!(token)
     joins(:bean)
-      .where(beans: { archived_at: nil })
       .where.not(beans: { opened_on: nil })
       .find_by!(token_digest: token_digest_for(token), enabled: true)
   end
@@ -132,7 +131,7 @@ class PublicBeanShare < ApplicationRecord
     def bean_must_be_publishable
       return if bean.blank? || publishable?
 
-      errors.add(:bean, "must be open, finished, or used up")
+      errors.add(:bean, "must be open, finished, used up, or archived after being opened")
     end
 
     def bean_photo_attachment_ids

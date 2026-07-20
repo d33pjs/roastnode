@@ -21,9 +21,9 @@ class EquipmentEvent < ApplicationRecord
   has_many_attached :photos
 
   before_validation :normalize_event_types
-  before_validation :set_occurred_at
 
   validates :event_type, presence: true
+  validates :occurred_at, presence: true
   validate :event_types_present
   validate :event_types_supported
   validate :affected_equipment_present
@@ -54,10 +54,6 @@ class EquipmentEvent < ApplicationRecord
 
       self.event_types = selected_types
       self.event_type = selected_types.first if selected_types.any?
-    end
-
-    def set_occurred_at
-      self.occurred_at ||= Time.current
     end
 
     def event_types_present

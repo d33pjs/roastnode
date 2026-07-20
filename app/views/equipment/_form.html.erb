@@ -3,7 +3,7 @@
 <% section_class = "grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
 <% section_title_class = "text-lg font-black text-rn-ink" %>
 
-<%= form_with model: equipment, class: "mt-6 grid gap-4" do |form| %>
+<%= form_with model: equipment, class: "mt-6 grid gap-4", data: { controller: "equipment-kind" } do |form| %>
   <% if equipment.errors.any? %>
     <div class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-800">
       <%= equipment.errors.full_messages.to_sentence %>
@@ -34,7 +34,11 @@
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <%= form.label :kind, t("equipment.form.kind"), class: label_class %>
-        <%= form.select :kind, Equipment.kinds.keys.map { |kind| [ kind.humanize, kind ] }, {}, class: input_class %>
+        <%= form.select :kind,
+          Equipment.kinds.keys.map { |kind| [ kind.humanize, kind ] },
+          {},
+          class: input_class,
+          data: { equipment_kind_target: "kind", action: "change->equipment-kind#kindChanged" } %>
       </div>
 
       <div>
@@ -43,6 +47,28 @@
       </div>
     </div>
   </section>
+
+  <fieldset
+    data-testid="equipment-machine-features"
+    data-equipment-kind-target="machineFeatures"
+    class="<%= section_class %>"
+    <%= "hidden" unless equipment.machine? %>
+  >
+    <legend class="<%= section_title_class %>"><%= t("equipment.form.machine_features.title") %></legend>
+    <p id="equipment-machine-features-hint" class="text-sm font-semibold text-rn-muted"><%= t("equipment.form.machine_features.hint") %></p>
+
+    <div class="grid gap-2 sm:grid-cols-3">
+      <% %i[preinfusion_enabled low_flow_start_enabled flow_control_enabled].each do |feature| %>
+        <label class="flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
+          <span><%= t("equipment.form.machine_features.#{feature}") %></span>
+          <%= form.check_box feature,
+            disabled: !equipment.machine?,
+            aria: { describedby: "equipment-machine-features-hint" },
+            class: "h-5 w-5 shrink-0 rounded border-rn-line text-[var(--rn-accent-strong)] focus:ring-[var(--rn-accent-strong)]" %>
+        </label>
+      <% end %>
+    </div>
+  </fieldset>
 
   <section data-testid="equipment-form-section" data-section="notes" class="<%= section_class %>">
     <div>

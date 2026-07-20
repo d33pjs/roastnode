@@ -40,7 +40,9 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     brews(:morning_espresso).update!(
       served_for_guest: true,
       guest_name: "Anna",
-      cup_style: "Latte"
+      cup_style: "Latte",
+      low_flow_start_seconds: 9,
+      flow_control_used: true
     )
 
     csv = WorkspaceCsvExportBuilder.new(workspaces(:household)).brews_csv
@@ -53,6 +55,8 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     assert_includes rows.headers, "served_for_guest"
     assert_includes rows.headers, "guest_name"
     assert_includes rows.headers, "cup_style"
+    assert_includes rows.headers, "low_flow_start_seconds"
+    assert_includes rows.headers, "flow_control_used"
 
     brew_ids = rows.map { |row| row.fetch("id").to_i }
     assert_includes brew_ids, brews(:morning_espresso).id
@@ -65,6 +69,8 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     assert_equal "true", exported.fetch("served_for_guest")
     assert_equal "Anna", exported.fetch("guest_name")
     assert_equal "Latte", exported.fetch("cup_style")
+    assert_equal "9", exported.fetch("low_flow_start_seconds")
+    assert_equal "true", exported.fetch("flow_control_used")
   end
 
   test "exports quick drip csv columns" do

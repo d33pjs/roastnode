@@ -21,6 +21,17 @@ class GearControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: preparation_tools(:other_workspace_tool).name, count: 0
   end
 
+  test "back link always returns to dashboard instead of reopening the referring action" do
+    sign_in_as(users(:one))
+
+    get gear_path, headers: { "HTTP_REFERER" => "http://www.example.com#{new_equipment_event_path}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?][aria-label=?]",
+      dashboard_path,
+      I18n.t("gear.index.back")
+  end
+
   test "member sees gear and maintenance action but not gear creation actions" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

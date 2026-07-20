@@ -60,4 +60,34 @@ class WorkspaceActivityFeedTest < ActiveSupport::TestCase
 
     assert_equal [ equipment_events(:grinder_cleaning), brews(:morning_espresso) ], records.first(2)
   end
+
+  test "limited feed fills the requested size when one activity type dominates" do
+    workspace = workspaces(:household)
+    bean = beans(:open_household)
+    user = users(:one)
+    machine = equipment(:household_machine)
+    grinder = equipment(:household_grinder)
+    equipment_events(:grinder_cleaning).update!(occurred_at: Time.zone.local(2026, 6, 1, 5, 0, 0))
+
+    9.times do |index|
+      workspace.brews.create!(
+        user:,
+        bean:,
+        grinder:,
+        machine:,
+        occurred_at: Time.zone.local(2026, 6, 2, 12, index, 0),
+        bean_weight_grams: 1,
+        ground_weight_grams: 1,
+        dose_grams: 1,
+        beverage_grams: 2,
+        taste_balance: "neutral"
+      )
+    end
+
+    records = WorkspaceActivityFeed.new(workspace).records(limit: 8)
+
+    assert_equal 8, records.size
+    assert records.all? { |record| record.is_a?(Brew) }
+    assert_equal records.sort_by { |record| [ record.occurred_at, record.created_at ] }.reverse, records
+  end
 end

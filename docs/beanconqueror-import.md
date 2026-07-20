@@ -41,6 +41,8 @@ Important mappings:
 - `BREWS.coffee_first_drip_time` -> first drip
 - `BREWS.coffee_blooming_time` -> pre-infusion
 
+Imported preparation methods enable the machine pre-infusion option because Beanconqueror blooming time maps to that field. Low-flow-start and flow-control settings are not inferred from imported source data.
+
 Unsupported or invalid records are skipped with warnings instead of failing the whole import.
 
 ## Deferred

@@ -11,6 +11,7 @@ Roastnode keeps daily logging fast by storing small per-user form preferences in
 - The profile page exposes the setting next to the landing screen preference.
 - Preferences apply to `BrewsController#new` and validation re-renders from `#create`.
 - Brew correction/edit forms do not autofocus or hide fields by default, because editing is a review task rather than the daily quick-entry path.
+- Machine extraction options are applied before these profile preferences on new espresso logs. Selecting a machine can expose its pre-infusion, low-flow-start, and flow-control fields; saved historical fields remain available on edit even when the machine configuration later changes.
 
 ## Supported Focus Fields
 
@@ -22,6 +23,7 @@ Roastnode keeps daily logging fast by storing small per-user form preferences in
 - `brew_temperature_celsius`
 - `total_time_seconds`
 - `preinfusion_seconds`
+- `low_flow_start_seconds`
 - `first_drip_seconds`
 - `notes`
 
@@ -38,10 +40,12 @@ Users can hide optional fields from the daily new espresso form:
 - `brew_temperature_celsius`
 - `total_time_seconds`
 - `preinfusion_seconds`
+- `low_flow_start_seconds`
 - `first_drip_seconds`
 - `taste_balance`
 - `rating`
 - `channeling`
+- `flow_control_used`
 - `notes`
 - `photos`
 
@@ -53,7 +57,7 @@ Quick Drip v1 uses method enablement and grams per coffee spoon from Profile, bu
 
 Spoon-only Quick Drip logs estimate consumed inventory from `coffee_spoons * grams_per_coffee_spoon`. Measured Ground coffee takes precedence, and the model falls back to 5g/spoon when no user preference is present.
 
-Quick Drip omits espresso-only fields: temperature, preinfusion, first drip, and channeling.
+Quick Drip omits espresso-only fields: temperature, preinfusion, low-flow start, first drip, channeling, and flow-control use.
 
 ## Deferred
 

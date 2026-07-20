@@ -10,6 +10,14 @@ Editing supports additive photos: newly uploaded files are attached without repl
 
 The equipment index shows each item's primary photo when one is selected, falling back to an initial badge when no photo exists.
 
+## Machine Extraction Options
+
+Owners and admins can configure which extraction controls a machine supports: pre-infusion, low-flow start, and flow control. These flags are machine-only settings and are cleared automatically when equipment is changed to a grinder or brewer. Existing machines are migrated with pre-infusion enabled so their current logging behavior stays available.
+
+Selecting a machine on a new espresso log shows only that machine's supported controls. Pre-infusion and low-flow start are measured in whole seconds; flow control records whether it was used for the shot. These settings control future data entry rather than rewriting history, so brew correction forms continue to expose saved extraction values even when a machine option is later disabled.
+
+Low-flow-start and flow-control values are private workspace log data in this slice. They are included in workspace exports and instance backups, but they are not added to curated public brew, bean, or recipe snapshots.
+
 ## Archive And Reopen
 
 `Equipment#archived_at` marks archived grinders, machines, and brewers. Archived equipment remains visible on its detail page and in historical brews/events, but it is excluded from new brew logging and new equipment-event selection.

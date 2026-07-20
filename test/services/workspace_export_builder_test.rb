@@ -54,7 +54,9 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     brews(:morning_espresso).update!(
       served_for_guest: true,
       guest_name: "Anna",
-      cup_style: "Latte"
+      cup_style: "Latte",
+      low_flow_start_seconds: 9,
+      flow_control_used: true
     )
     payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at: Time.current).call
 
@@ -69,6 +71,13 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_equal true, brew[:served_for_guest]
     assert_equal "Anna", brew[:guest_name]
     assert_equal "Latte", brew[:cup_style]
+    assert_equal 9, brew[:low_flow_start_seconds]
+    assert_equal true, brew[:flow_control_used]
+
+    machine = payload[:equipment].find { |row| row[:id] == equipment(:household_machine).id }
+    assert_equal true, machine[:preinfusion_enabled]
+    assert_equal true, machine[:low_flow_start_enabled]
+    assert_equal true, machine[:flow_control_enabled]
 
     tool_snapshot = payload[:brew_preparation_tools].find { |row| row[:brew_id] == brews(:morning_espresso).id }
     assert_equal "WDT", tool_snapshot[:tool_name]

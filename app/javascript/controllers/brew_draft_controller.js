@@ -5,7 +5,7 @@ export default class extends Controller {
   static values = { storageKey: String }
 
   connect() {
-    this.defaultFields = this.serializeFields()
+    this.defaultFields = this.serializeFields(this.restorableFields)
     this.inputHandler = () => this.persist()
     this.submitHandler = () => this.clear()
 
@@ -66,10 +66,10 @@ export default class extends Controller {
     }
   }
 
-  serializeFields() {
+  serializeFields(controls = this.storableFields) {
     const fields = {}
 
-    for (const field of this.storableFields) {
+    for (const field of controls) {
       if (field.type === "checkbox") {
         fields[field.name] ||= []
         if (field.checked) fields[field.name].push(field.value)
@@ -99,6 +99,13 @@ export default class extends Controller {
         }
       }
     }
+
+    this.notifyMachineSelectionChanged()
+  }
+
+  notifyMachineSelectionChanged() {
+    const selectedMachine = this.element.querySelector('input[type="radio"][name="brew[machine_id]"]:checked')
+    selectedMachine?.dispatchEvent(new Event("change", { bubbles: true }))
   }
 
   showNotice() {
@@ -110,7 +117,7 @@ export default class extends Controller {
   }
 
   get groupedFields() {
-    return this.storableFields.reduce((groups, field) => {
+    return this.restorableFields.reduce((groups, field) => {
       groups[field.name] ||= []
       groups[field.name].push(field)
       return groups
@@ -118,8 +125,12 @@ export default class extends Controller {
   }
 
   get storableFields() {
+    return this.restorableFields.filter((field) => !field.disabled)
+  }
+
+  get restorableFields() {
     return Array.from(this.element.elements).filter((field) => {
-      if (!field.name || field.disabled) return false
+      if (!field.name) return false
       if (field.type === "file") return false
       return ![ "button", "hidden", "reset", "submit" ].includes(field.type)
     })

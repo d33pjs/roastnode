@@ -51,6 +51,30 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, equipment.photos.count
   end
 
+  test "admin can create a machine with extraction features" do
+    admin = User.create!(email_address: "machine-admin@example.com", password: "password")
+    Membership.create!(workspace: workspaces(:household), user: admin, role: :admin)
+    admin.update!(active_workspace: workspaces(:household))
+    sign_in_as(admin)
+
+    assert_difference -> { workspaces(:household).equipment.machine.count }, 1 do
+      post equipment_index_path, params: {
+        equipment: {
+          name: "Flow machine",
+          kind: "machine",
+          preinfusion_enabled: "1",
+          low_flow_start_enabled: "1",
+          flow_control_enabled: "1"
+        }
+      }
+    end
+
+    machine = workspaces(:household).equipment.machine.order(:created_at).last
+    assert_predicate machine, :preinfusion_enabled?
+    assert_predicate machine, :low_flow_start_enabled?
+    assert_predicate machine, :flow_control_enabled?
+  end
+
   test "new includes photo upload" do
     sign_in_as(users(:one))
 
@@ -74,6 +98,32 @@ class EquipmentControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "select[name=?] option[value=brewer][selected]", "equipment[kind]"
+  end
+
+  test "machine form exposes extraction feature controls with progressive kind switching" do
+    sign_in_as(users(:one))
+
+    get new_equipment_path(kind: "machine")
+
+    assert_response :success
+    assert_select "form[data-controller~=equipment-kind]"
+    assert_select "select[name=?][data-equipment-kind-target=kind][data-action=?]",
+      "equipment[kind]",
+      "change->equipment-kind#kindChanged"
+    assert_select "fieldset[data-testid=equipment-machine-features][data-equipment-kind-target=machineFeatures]:not([hidden])"
+    assert_select "input[type=checkbox][name=?]:not([disabled])", "equipment[preinfusion_enabled]"
+    assert_select "input[type=checkbox][name=?]:not([disabled])", "equipment[low_flow_start_enabled]"
+    assert_select "input[type=checkbox][name=?]:not([disabled])", "equipment[flow_control_enabled]"
+  end
+
+  test "non-machine form hides and disables extraction feature controls without javascript" do
+    sign_in_as(users(:one))
+
+    get new_equipment_path(kind: "grinder")
+
+    assert_response :success
+    assert_select "fieldset[data-testid=equipment-machine-features][hidden]"
+    assert_select "fieldset[data-testid=equipment-machine-features] input[type=checkbox][disabled]", count: 3
   end
 
   test "edit renders current photos and updates equipment with added photos" do

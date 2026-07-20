@@ -16,6 +16,20 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label", text: equipment(:household_grinder).name
     assert_select "label", text: equipment(:other_workspace_grinder).name, count: 0
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment_event[photos][]"
+    assert_select "input[type=datetime-local][name=?][required=required][step='60'].rn-datetime-input.min-w-0.max-w-full", "equipment_event[occurred_at]"
+    datetime = css_select("input[type=datetime-local][name='equipment_event[occurred_at]']").first
+    assert_match(/\A\d{4}-\d{2}-\d{2}T\d{2}:\d{2}\z/, datetime["value"])
+  end
+
+  test "new maintenance back link returns to the previous app screen" do
+    sign_in_as(users(:one))
+
+    get new_equipment_event_path, headers: { "HTTP_REFERER" => "http://www.example.com#{dashboard_path}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?][aria-label=?]",
+      dashboard_path,
+      I18n.t("shared.back_link.previous")
   end
 
   test "new does not offer archived equipment" do
@@ -55,6 +69,50 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, event.photos.count
   end
 
+  test "member can backdate maintenance with minute precision" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    user_zone = Time.find_zone(user.time_zone)
+    date = user_zone.today - 1.day
+    occurred_at = user_zone.local(date.year, date.month, date.day, 8, 30, 0)
+
+    assert_difference -> { workspaces(:household).equipment_events.count }, 1 do
+      post equipment_events_path, params: {
+        equipment_event: {
+          event_types: [ "grinder_cleaning" ],
+          occurred_at: occurred_at.strftime("%Y-%m-%dT%H:%M"),
+          equipment_ids: [ equipment(:household_grinder).id ]
+        }
+      }
+    end
+
+    event = workspaces(:household).equipment_events.order(:created_at).last
+    assert_equal occurred_at, event.occurred_at
+  end
+
+  test "invalid maintenance renders a visible summary and field errors" do
+    sign_in_as(users(:one))
+
+    assert_no_difference -> { workspaces(:household).equipment_events.count } do
+      post equipment_events_path, params: {
+        equipment_event: {
+          event_types: [],
+          occurred_at: "",
+          equipment_ids: []
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[data-testid=equipment-event-error-summary][role=alert]"
+    assert_select "input[name=?][aria-invalid=true][aria-describedby=equipment-event-occurred-at-error]", "equipment_event[occurred_at]"
+    assert_select "#equipment-event-occurred-at-error", text: /can't be blank/
+    assert_select "#equipment-event-types-error", text: /must include at least one type/
+    assert_select "#equipment-event-equipment-error", text: /must include at least one item/
+    assert_select "a[data-testid=back-link][href=?][aria-label=?]", gear_path, I18n.t("equipment_events.new.back")
+  end
+
   test "show renders private photos through scoped media route" do
     sign_in_as(users(:one))
     attachment = attach_photo(equipment_events(:grinder_cleaning))
@@ -63,6 +121,16 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "img[src=?]", media_attachment_path(attachment, variant: :thumbnail)
+  end
+
+  test "show back link always returns to dashboard instead of reopening the form" do
+    sign_in_as(users(:one))
+    event = equipment_events(:grinder_cleaning)
+
+    get equipment_event_path(event), headers: { "HTTP_REFERER" => "http://www.example.com#{edit_equipment_event_path(event)}" }
+
+    assert_response :success
+    assert_select "a[data-testid=back-link][href=?][aria-label=?]", dashboard_path, I18n.t("equipment_events.show.back")
   end
 
   test "show exposes management and danger zone actions" do
@@ -170,6 +238,17 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "equipment_event[photos][]"
   end
 
+  test "edit renders a second-bearing maintenance timestamp at minute precision" do
+    sign_in_as(users(:one))
+    event = equipment_events(:grinder_cleaning)
+    event.update!(occurred_at: Time.find_zone(users(:one).time_zone).local(2026, 5, 26, 8, 30, 37))
+
+    get edit_equipment_event_path(event)
+
+    assert_response :success
+    assert_select "input[type=datetime-local][name=?][value='2026-05-26T08:30'][step='60']", "equipment_event[occurred_at]"
+  end
+
   test "update changes event details equipment links and adds photos" do
     sign_in_as(users(:one))
     event = equipment_events(:grinder_cleaning)
@@ -191,6 +270,18 @@ class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "grinder_deep_cleaning", event.event_type
     assert_equal "Deep clean with burr check.", event.notes
     assert_equal [ equipment(:household_grinder).id, equipment(:household_machine).id ].sort, event.equipment.ids.sort
+  end
+
+  test "invalid update falls back to the event detail instead of reopening the edit form" do
+    sign_in_as(users(:one))
+    event = equipment_events(:grinder_cleaning)
+
+    patch equipment_event_path(event), params: {
+      equipment_event: { event_types: [], occurred_at: "", equipment_ids: [] }
+    }, headers: { "HTTP_REFERER" => "http://www.example.com#{edit_equipment_event_path(event)}" }
+
+    assert_response :unprocessable_entity
+    assert_select "a[data-testid=back-link][href=?][aria-label=?]", equipment_event_path(event), I18n.t("equipment_events.edit.back")
   end
 
   test "destroy removes event and event item links" do

@@ -17,7 +17,7 @@ Roastnode keeps unsaved form values in the browser while a user is logging a new
 
 The controller stores normal form controls such as text fields, number fields, selects, checkboxes, radios, and text areas.
 
-It deliberately skips:
+It deliberately skips from saved payloads:
 
 - file inputs
 - hidden fields
@@ -25,6 +25,8 @@ It deliberately skips:
 - disabled fields
 
 Photos are not stored in browser drafts. Users should attach them again after returning to the form.
+
+Disabled named controls remain part of the restore/reset map even though they are not serialized into the current payload. This matters for machine-dependent espresso fields: a draft can select a different machine, restore its pre-infusion, low-flow-start, and flow-control values, and only then apply that machine's capability state. Discard likewise resets values that were disabled when the form first rendered, preventing stale extraction values from resurfacing after a later machine change.
 
 ## Boundaries
 

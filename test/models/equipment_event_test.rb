@@ -39,6 +39,18 @@ class EquipmentEventTest < ActiveSupport::TestCase
     assert_includes event.errors[:equipment], "must include at least one item"
   end
 
+  test "requires an occurred at time" do
+    event = EquipmentEvent.new(
+      workspace: workspaces(:household),
+      user: users(:one),
+      event_types: [ "other" ],
+      equipment: [ equipment(:household_grinder) ]
+    )
+
+    assert_not event.valid?
+    assert_includes event.errors[:occurred_at], "can't be blank"
+  end
+
   test "rejects equipment from another workspace" do
     event = EquipmentEvent.new(
       workspace: workspaces(:household),

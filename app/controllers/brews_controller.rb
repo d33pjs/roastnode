@@ -290,19 +290,21 @@ class BrewsController < ApplicationController
       return { bean: nil } unless bean
 
       @selected_preparation_tools = default_preparation_tools(last_brew, method: "espresso")
+      machine = default_equipment(last_brew&.machine)
       attributes = {
         bean:,
-        occurred_at: Time.current
+        occurred_at: Time.current,
+        machine:
       }
 
       return attributes unless last_brew
 
       attributes.merge(
         grinder: default_equipment(last_brew.grinder),
-        machine: default_equipment(last_brew.machine),
         grind_setting: last_brew.grind_setting,
         brew_temperature_celsius: last_brew.brew_temperature_celsius,
-        preinfusion_seconds: last_brew.preinfusion_seconds
+        preinfusion_seconds: machine&.preinfusion_enabled? ? last_brew.preinfusion_seconds : nil,
+        low_flow_start_seconds: machine&.low_flow_start_enabled? ? last_brew.low_flow_start_seconds : nil
       )
     end
 
@@ -343,11 +345,12 @@ class BrewsController < ApplicationController
 
       @repeat_target_bean = bean
       @selected_preparation_tools = default_preparation_tools(source_brew, method: source_brew.method)
+      machine = default_equipment(source_brew.machine)
       {
         bean:,
         occurred_at: Time.current,
         grinder: default_equipment(source_brew.grinder),
-        machine: default_equipment(source_brew.machine),
+        machine:,
         bean_weight_grams: source_brew.bean_weight_grams,
         ground_weight_grams: source_brew.ground_weight_grams,
         dose_grams: source_brew.dose_grams,
@@ -355,7 +358,8 @@ class BrewsController < ApplicationController
         grind_setting: source_brew.grind_setting,
         brew_temperature_celsius: source_brew.brew_temperature_celsius,
         total_time_seconds: source_brew.total_time_seconds,
-        preinfusion_seconds: source_brew.preinfusion_seconds,
+        preinfusion_seconds: machine&.preinfusion_enabled? ? source_brew.preinfusion_seconds : nil,
+        low_flow_start_seconds: machine&.low_flow_start_enabled? ? source_brew.low_flow_start_seconds : nil,
         first_drip_seconds: source_brew.first_drip_seconds
       }
     end
@@ -538,8 +542,10 @@ class BrewsController < ApplicationController
         :brew_temperature_celsius,
         :total_time_seconds,
         :preinfusion_seconds,
+        :low_flow_start_seconds,
         :first_drip_seconds,
         :channeling,
+        :flow_control_used,
         :taste_balance,
         :rating,
         :served_for_guest,

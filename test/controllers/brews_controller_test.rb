@@ -11,6 +11,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new defaults to current user's last active bean" do
+    brews(:morning_espresso).update!(low_flow_start_seconds: 7, flow_control_used: true)
     sign_in_as(users(:one))
 
     get new_brew_path
@@ -28,6 +29,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[brew_temperature_celsius]", "93.0"
     assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "28", count: 0
     assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "5"
+    assert_select "input[name=?][value=?]", "brew[low_flow_start_seconds]", "7"
+    assert_select "input[type=checkbox][name=?][checked]", "brew[flow_control_used]", count: 0
     assert_select "input[name=?][value=?]", "brew[first_drip_seconds]", "8", count: 0
     assert_select "input[name=?][value=?][checked]", "brew[rating]", "4", count: 0
     assert_select "input[type=datetime-local][name=?][required=required][step=?]", "brew[occurred_at]", "1"
@@ -36,6 +39,51 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:puck_screen).id.to_s
     assert_select "input[type=checkbox][name=?][value=?]", "brew[preparation_tool_ids][]", preparation_tools(:other_workspace_tool).id.to_s, count: 0
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
+  end
+
+  test "new espresso form exposes controls supported by the selected machine" do
+    machine = equipment(:household_machine)
+    machine.update!(preinfusion_enabled: true, low_flow_start_enabled: true, flow_control_enabled: true)
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "form[data-controller~=brew-machine-features]"
+    assert_select "input[type=radio][name=?][value=?][data-brew-machine-features-target=machine][data-preinfusion-enabled=true][data-low-flow-start-enabled=true][data-flow-control-enabled=true]",
+      "brew[machine_id]",
+      machine.id.to_s
+    assert_select "[data-brew-machine-features-target=feature][data-feature=preinfusion]:not([hidden]) input[name=?]:not([disabled])", "brew[preinfusion_seconds]"
+    assert_select "[data-brew-machine-features-target=feature][data-feature=lowFlowStart]:not([hidden]) input[name=?]:not([disabled])", "brew[low_flow_start_seconds]"
+    assert_select "[data-brew-machine-features-target=feature][data-feature=flowControl]:not([hidden]) input[type=checkbox][name=?]:not([disabled])", "brew[flow_control_used]"
+  end
+
+  test "new espresso form disables controls unsupported by the selected machine" do
+    equipment(:household_machine).update!(preinfusion_enabled: false, low_flow_start_enabled: false, flow_control_enabled: false)
+    sign_in_as(users(:one))
+
+    get new_brew_path
+
+    assert_response :success
+    assert_select "[data-brew-machine-features-target=feature][hidden]", count: 3
+    assert_select "[data-feature=preinfusion] input[name=?][disabled]", "brew[preinfusion_seconds]"
+    assert_select "[data-feature=lowFlowStart] input[name=?][disabled]", "brew[low_flow_start_seconds]"
+    assert_select "[data-feature=flowControl] input[name=?][disabled]", "brew[flow_control_used]", minimum: 1
+  end
+
+  test "edit keeps historical machine feature values available when capabilities are disabled" do
+    brew = brews(:morning_espresso)
+    brew.update!(low_flow_start_seconds: 7, flow_control_used: true)
+    brew.machine.update!(preinfusion_enabled: false, low_flow_start_enabled: false, flow_control_enabled: false)
+    sign_in_as(users(:one))
+
+    get edit_brew_path(brew)
+
+    assert_response :success
+    assert_select "form[data-controller~=brew-machine-features]", count: 0
+    assert_select "[data-feature=preinfusion]:not([hidden]) input[name=?]:not([disabled])", "brew[preinfusion_seconds]"
+    assert_select "[data-feature=lowFlowStart]:not([hidden]) input[name=?][value=7]:not([disabled])", "brew[low_flow_start_seconds]"
+    assert_select "[data-feature=flowControl]:not([hidden]) input[type=checkbox][name=?][checked]:not([disabled])", "brew[flow_control_used]"
   end
 
   test "new back link returns to dashboard even with an in-app referrer" do
@@ -71,6 +119,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "new falls back to household last brew defaults for a user without household brews" do
+    brews(:morning_espresso).update!(low_flow_start_seconds: 7, flow_control_used: true)
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
     sign_in_as(user)
@@ -84,6 +133,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[grind_setting]", "12"
     assert_select "input[name=?][value=?]", "brew[brew_temperature_celsius]", "93.0"
     assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "5"
+    assert_select "input[name=?][value=?]", "brew[low_flow_start_seconds]", "7"
+    assert_select "input[type=checkbox][name=?][checked]", "brew[flow_control_used]", count: 0
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
   end
 
@@ -193,8 +244,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=radio][name=?][value=?]", "brew[taste_balance]", "very_bitter", count: 0
     assert_select "input[name=?]", "brew[brew_temperature_celsius]", count: 0
     assert_select "input[name=?]", "brew[preinfusion_seconds]", count: 0
+    assert_select "input[name=?]", "brew[low_flow_start_seconds]", count: 0
     assert_select "input[name=?]", "brew[first_drip_seconds]", count: 0
     assert_select "input[name=?]", "brew[channeling]", count: 0
+    assert_select "input[name=?]", "brew[flow_control_used]", count: 0
   end
 
   test "new with repeat brew copies targetable values and keeps outcome fields fresh" do
@@ -207,11 +260,13 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       grind_setting: "12.5",
       brew_temperature_celsius: 92.5,
       preinfusion_seconds: 6,
+      low_flow_start_seconds: 7,
       first_drip_seconds: 9,
       total_time_seconds: 31,
       rating: 5,
       taste_balance: "sour",
       channeling: true,
+      flow_control_used: true,
       notes: "Do not copy private notes.",
       public_note: "Do not copy public notes."
     )
@@ -240,12 +295,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?]", "brew[grind_setting]", "12.5"
     assert_select "input[name=?][value=?]", "brew[brew_temperature_celsius]", "92.5"
     assert_select "input[name=?][value=?]", "brew[preinfusion_seconds]", "6"
+    assert_select "input[name=?][value=?]", "brew[low_flow_start_seconds]", "7"
     assert_select "input[name=?][value=?]", "brew[first_drip_seconds]", "9"
     assert_select "input[name=?][value=?]", "brew[total_time_seconds]", "31"
     assert_select "input[type=checkbox][name=?][value=?][checked]", "brew[preparation_tool_ids][]", preparation_tools(:wdt).id.to_s
     assert_select "input[name=?][value=?][checked]", "brew[rating]", "5", count: 0
     assert_select "input[name=?][value=?][checked]", "brew[taste_balance]", "sour", count: 0
     assert_select "input[name=?][checked]", "brew[channeling]", count: 0
+    assert_select "input[type=checkbox][name=?][checked]", "brew[flow_control_used]", count: 0
     assert_select "textarea[name=?]", "brew[notes]", text: ""
     assert_select "textarea[name=?]", "brew[public_note]", text: ""
     assert_select "input[name*='[record_links_attributes]'][value='Private reference']", count: 0
@@ -597,8 +654,12 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_appears_before "brew[ground_weight_grams]", "brew[dose_grams]"
     assert_appears_before "brew[dose_grams]", "brew[grind_setting]"
     assert_appears_before "brew[preinfusion_seconds]", "brew[first_drip_seconds]"
+    assert_appears_before "brew[preinfusion_seconds]", "brew[low_flow_start_seconds]"
+    assert_appears_before "brew[low_flow_start_seconds]", "brew[first_drip_seconds]"
     assert_appears_before "brew[first_drip_seconds]", "brew[total_time_seconds]"
     assert_appears_before "brew[total_time_seconds]", "brew[beverage_grams]"
+    assert_appears_before "brew[channeling]", "brew[flow_control_used]"
+    assert_appears_before "brew[flow_control_used]", "brew[photos][]"
     assert_appears_before "brew[channeling]", "brew[photos][]"
     assert_appears_before "brew[photos][]", "brew[grinder_id]"
     assert_appears_before "brew[machine_id]", "brew[brew_temperature_celsius]"
@@ -866,8 +927,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
               beverage_grams: "42",
               grind_setting: "14",
               total_time_seconds: "31",
+              low_flow_start_seconds: "7",
               taste_balance: "neutral",
               rating: "4",
+              flow_control_used: "1",
               photos: [ photo_upload ],
               preparation_tool_ids: [
                 preparation_tools(:wdt).id,
@@ -884,6 +947,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to brew_path(brew)
     assert_equal 201.5.to_d, bean.reload.remaining_grams
     assert_equal [ "WDT", "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+    assert_equal 7, brew.low_flow_start_seconds
+    assert_predicate brew, :flow_control_used?
     assert_equal 1, brew.photos.count
   end
 
@@ -1302,11 +1367,13 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       grind_setting: "12",
       brew_temperature_celsius: 93.0,
       preinfusion_seconds: 6,
+      low_flow_start_seconds: 7,
       first_drip_seconds: 8,
       total_time_seconds: 31,
       rating: 4,
       taste_balance: "neutral",
       channeling: true,
+      flow_control_used: true,
       notes: "Balanced morning shot."
     )
 
@@ -1365,10 +1432,24 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-detail-ground-weight]", "18,2g"
     assert_select "[data-testid=brew-detail-beverage]", "45g"
     assert_select "[data-testid=brew-detail-channeling]", "Yes"
+    assert_select "[data-testid=brew-detail-low-flow-start]", "7s"
+    assert_select "[data-testid=brew-detail-flow-control-used]", "Yes"
     assert_select "[data-testid=brew-detail-grinder] a[href=?]", equipment_path(brew.grinder), text: brew.grinder.name
     assert_select "[data-testid=brew-detail-machine] a[href=?]", equipment_path(brew.machine), text: brew.machine.name
     assert_select "a[data-testid=brew-detail-tool][href=?]", preparation_tool_path(preparation_tools(:wdt)), text: "WDT"
     assert_select "[data-testid=brew-detail-notes]", "Balanced morning shot."
+  end
+
+  test "espresso hero omits the preinfusion marker when no value was logged" do
+    brew = brews(:morning_espresso)
+    brew.update!(preinfusion_seconds: nil)
+    sign_in_as(users(:one))
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-preinfusion-guide]", count: 0
+    assert_select "[data-testid=brew-preinfusion-label]", count: 0
   end
 
   test "show renders hero ghost from brew time recipe snapshot" do

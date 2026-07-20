@@ -254,6 +254,10 @@
             <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.preinfusion_seconds) %></dd>
           </div>
           <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".low_flow_start") %></dt>
+            <dd data-testid="brew-detail-low-flow-start" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.low_flow_start_seconds) %></dd>
+          </div>
+          <div>
             <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".first_drip") %></dt>
             <dd class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_seconds(@brew.first_drip_seconds) %></dd>
           </div>
@@ -272,6 +276,10 @@
           <div>
             <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".channeling") %></dt>
             <dd data-testid="brew-detail-channeling" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_boolean(@brew.channeling) %></dd>
+          </div>
+          <div>
+            <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".flow_control_used") %></dt>
+            <dd data-testid="brew-detail-flow-control-used" class="mt-1 text-sm font-semibold text-stone-950"><%= brew_card_boolean(@brew.flow_control_used) %></dd>
           </div>
           <div>
             <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".retention") %></dt>

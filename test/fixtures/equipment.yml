@@ -10,6 +10,9 @@ household_machine:
   name: Bianca
   kind: machine
   model: Lelit Bianca
+  preinfusion_enabled: true
+  low_flow_start_enabled: true
+  flow_control_enabled: true
   notes: Main espresso machine.
 
 household_brewer:

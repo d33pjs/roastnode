@@ -37,6 +37,9 @@ class UserTest < ActiveSupport::TestCase
 
     user.default_brew_focus_field = "rating"
     assert_not_predicate user, :valid?
+
+    user.default_brew_focus_field = "low_flow_start_seconds"
+    assert_predicate user, :valid?
   end
 
   test "display formatting preferences are constrained to supported values" do
@@ -89,9 +92,9 @@ class UserTest < ActiveSupport::TestCase
   test "hidden brew field names keep only supported fields" do
     user = users(:one)
 
-    user.hidden_brew_field_names = [ "notes", "unsupported", "", "rating", "notes" ]
+    user.hidden_brew_field_names = [ "notes", "unsupported", "", "rating", "low_flow_start_seconds", "flow_control_used", "notes" ]
 
-    assert_equal %w[notes rating], user.hidden_brew_field_names
+    assert_equal %w[notes rating low_flow_start_seconds flow_control_used], user.hidden_brew_field_names
   end
 
   test "enabled brew methods default to espresso and quick drip and require one method" do

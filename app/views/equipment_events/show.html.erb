@@ -1,7 +1,7 @@
 <main class="min-h-screen bg-stone-50">
   <section class="mx-auto max-w-3xl px-6 py-10">
     <div data-testid="equipment-event-detail-header-controls" class="flex items-center justify-between gap-3">
-      <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
+      <%= render "shared/back_link", label: t(".back"), path: dashboard_path, prefer_referrer: false %>
 
       <% if current_workspace_policy.write? %>
         <%= render "shared/detail_actions",

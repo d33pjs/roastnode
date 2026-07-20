@@ -59,7 +59,7 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     )
 
     assert_not share.valid?
-    assert_includes share.errors[:bean], "must be open, finished, or used up"
+    assert_includes share.errors[:bean], "must be open, finished, used up, or archived after being opened"
   end
 
   test "requires opened bean lifecycle" do
@@ -79,7 +79,7 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     )
 
     assert_not share.valid?
-    assert_includes share.errors[:bean], "must be open, finished, or used up"
+    assert_includes share.errors[:bean], "must be open, finished, used up, or archived after being opened"
   end
 
   test "class publishable bean predicate requires opened publishable lifecycle" do
@@ -98,20 +98,23 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     finished_without_opened_on.update_columns(finished_at: Time.current)
     finished = beans(:open_household)
     finished.finish!
+    archived = beans(:archived_household)
 
     assert_not PublicBeanShare.publishable_bean?(nil)
     assert_not PublicBeanShare.publishable_bean?(stock)
     assert_not PublicBeanShare.publishable_bean?(finished_without_opened_on)
     assert PublicBeanShare.publishable_bean?(finished)
+    assert PublicBeanShare.publishable_bean?(archived)
   end
 
-  test "allows finished and used up bags" do
+  test "allows finished used up and archived bags" do
     finished = beans(:open_household)
     finished.finish!
     used_up = beans(:second_open_household)
     used_up.update!(remaining_grams: 0)
+    archived = beans(:archived_household)
 
-    [ finished, used_up ].each do |bean|
+    [ finished, used_up, archived ].each do |bean|
       share = PublicBeanShare.new(
         workspace: bean.workspace,
         bean:,
@@ -120,6 +123,19 @@ class PublicBeanShareTest < ActiveSupport::TestCase
       )
       assert share.valid?, share.errors.full_messages.to_sentence
     end
+  end
+
+  test "finds enabled archived bean shares by token" do
+    bean = beans(:archived_household)
+    share = PublicBeanShare.create!(
+      workspace: bean.workspace,
+      bean:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true
+    )
+
+    assert_equal share, PublicBeanShare.find_enabled_by_token!(share.token)
   end
 
   test "optional password protection works" do

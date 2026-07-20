@@ -153,6 +153,18 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-bean-journey-end-open-icon]", count: 0
   end
 
+  test "archived opened bean share remains public with a finished endpoint" do
+    bean = beans(:open_household)
+    bean.archive!
+    share = create_share(bean:, enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-hero-stat-remaining]", count: 0
+    assert_select "[data-testid=public-bean-journey-end][data-status=finished]"
+  end
+
   test "public page hides raw attachment ids and original filenames" do
     bean = beans(:open_household)
     photo = attach_photo_with_filename(bean, "private-bean-bag-original.jpg")

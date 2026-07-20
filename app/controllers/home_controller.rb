@@ -35,11 +35,7 @@ class HomeController < ApplicationController
       @open_beans = @open_bean_cockpit_entries.map(&:bean)
       @latest_coffee = latest_dashboard_coffee
       @latest_best_brew = dashboard_brews.where.not(rating: nil).order(rating: :desc, occurred_at: :desc, created_at: :desc).first
-      @recent_brews = current_workspace.brews.includes(:bean, :user).order(occurred_at: :desc, created_at: :desc).limit(5)
-      @recent_external_coffees = current_workspace.external_coffees.includes(:user).order(occurred_at: :desc, created_at: :desc).limit(5)
-      @recent_adjustments = current_workspace.inventory_adjustments.manual.includes(:bean, :user).order(occurred_at: :desc, created_at: :desc).limit(5)
-      @recent_equipment_events = current_workspace.equipment_events.includes(:equipment, :user).recent.limit(5)
-      @recent_activity = (@recent_brews.to_a + @recent_external_coffees.to_a + @recent_adjustments.to_a + @recent_equipment_events.to_a).sort_by(&:occurred_at).reverse.first(8)
+      @recent_activity = WorkspaceActivityFeed.new(current_workspace).records(limit: 8)
     end
 
     def dashboard_brews

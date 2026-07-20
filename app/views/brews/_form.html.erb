@@ -11,6 +11,9 @@
 <% if dose_sync_enabled %>
   <% form_data[:controller] = [form_data[:controller], "brew-dose-sync"].compact.join(" ") %>
 <% end %>
+<% if brew.espresso? && brew.new_record? %>
+  <% form_data[:controller] = [form_data[:controller], "brew-machine-features"].compact.join(" ") %>
+<% end %>
 
 <%= form_with model: brew, class: "mt-8 grid gap-5", data: form_data do |form| %>
   <% if brew.errors.any? %>

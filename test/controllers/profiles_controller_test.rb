@@ -20,8 +20,11 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name=?]", "user[time_format]"
     assert_select "select[name=?]", "user[time_zone]"
     assert_select "select[name=?]", "user[default_brew_focus_field]"
+    assert_select "select[name=?] option[value=low_flow_start_seconds]", "user[default_brew_focus_field]", text: I18n.t("profiles.edit.brew_focus_fields.low_flow_start_seconds")
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "notes"
     assert_select "input[type=checkbox][name=?][value=?]", "user[hidden_brew_field_names][]", "photos"
+    assert_select "input[type=checkbox][name=?][value=low_flow_start_seconds]", "user[hidden_brew_field_names][]"
+    assert_select "input[type=checkbox][name=?][value=flow_control_used]", "user[hidden_brew_field_names][]"
     assert_select "a[href=?]", edit_password_change_path, text: I18n.t("profiles.edit.change_password")
     assert_select "a[data-testid=back-link][href=?]", dashboard_path
   end

@@ -15,6 +15,7 @@ class User < ApplicationRecord
     brew_temperature_celsius
     total_time_seconds
     preinfusion_seconds
+    low_flow_start_seconds
     first_drip_seconds
     notes
   ].freeze
@@ -26,10 +27,12 @@ class User < ApplicationRecord
     brew_temperature_celsius
     total_time_seconds
     preinfusion_seconds
+    low_flow_start_seconds
     first_drip_seconds
     taste_balance
     rating
     channeling
+    flow_control_used
     notes
     photos
   ].freeze

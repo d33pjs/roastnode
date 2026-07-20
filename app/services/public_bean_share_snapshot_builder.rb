@@ -90,11 +90,11 @@ class PublicBeanShareSnapshotBuilder
 
     def timeline_payload
       last_brew = brews.first
-      end_time = bean.finished_at || last_brew&.occurred_at || Time.current
+      end_time = terminal_at || last_brew&.occurred_at || Time.current
 
       {
         "opened_on" => bean.opened_on&.iso8601,
-        "finished_at" => time_string(bean.finished_at),
+        "finished_at" => time_string(terminal_at),
         "last_brew_at" => time_string(last_brew&.occurred_at),
         "end_at" => time_string(end_time),
         "brews" => brews.sort_by { |brew| [ brew.occurred_at, brew.created_at ] }.map do |brew|
@@ -240,7 +240,7 @@ class PublicBeanShareSnapshotBuilder
     end
 
     def dead_grams
-      espresso_dead_grams + finished_remaining_dead_grams
+      espresso_dead_grams + terminal_remaining_dead_grams
     end
 
     def espresso_dead_grams
@@ -251,8 +251,8 @@ class PublicBeanShareSnapshotBuilder
       end
     end
 
-    def finished_remaining_dead_grams
-      return 0.to_d unless bean.finished? && bean.remaining_grams.present?
+    def terminal_remaining_dead_grams
+      return 0.to_d unless (bean.finished? || bean.archived?) && bean.remaining_grams.present?
 
       [ bean.remaining_grams.to_d, 0.to_d ].max
     end
@@ -281,8 +281,12 @@ class PublicBeanShareSnapshotBuilder
     def open_duration_days
       return if bean.opened_on.blank?
 
-      end_date = bean.finished_at&.to_date || brews.first&.occurred_at&.to_date || Date.current
+      end_date = terminal_at&.to_date || brews.first&.occurred_at&.to_date || Date.current
       [ (end_date - bean.opened_on).to_i, 0 ].max
+    end
+
+    def terminal_at
+      bean.finished_at || bean.archived_at
     end
 
     def count_by_present_value(values)

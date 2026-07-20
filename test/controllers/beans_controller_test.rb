@@ -819,6 +819,16 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", new_bean_public_bean_share_path(bean), text: I18n.t("beans.show.share_publicly")
   end
 
+  test "show links writer to create public bean share for archived opened bean" do
+    sign_in_as(users(:one))
+    bean = beans(:archived_household)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[href=?]", new_bean_public_bean_share_path(bean), text: I18n.t("beans.show.share_publicly")
+  end
+
   test "show links writer to edit existing public bean share for publishable bean" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

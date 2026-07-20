@@ -1,48 +1,83 @@
-<%= form_with model: equipment_event, class: "mt-8 grid gap-5 rounded-lg border border-stone-200 bg-white p-6 shadow-sm" do |form| %>
+<% label_class = "block text-sm font-extrabold text-rn-muted" %>
+<% input_class = "mt-1 block min-w-0 max-w-full w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+<% section_class = "grid min-w-0 gap-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" %>
+<% occurred_at_errors = equipment_event.errors.full_messages_for(:occurred_at) %>
+<% event_type_errors = equipment_event.errors.full_messages_for(:event_types) %>
+<% equipment_errors = equipment_event.errors.full_messages_for(:equipment) %>
+
+<%= form_with model: equipment_event, class: "mt-8 grid min-w-0 gap-4" do |form| %>
   <% if equipment_event.errors.any? %>
-    <div class="rounded-md border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-      <%= equipment_event.errors.full_messages.to_sentence %>
+    <div data-testid="equipment-event-error-summary" role="alert" class="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+      <p class="font-extrabold"><%= t("equipment_events.form.errors.heading") %></p>
+      <ul class="mt-2 list-disc space-y-1 pl-5 font-semibold">
+        <% equipment_event.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
     </div>
   <% end %>
 
-  <div>
-    <%= form.label :occurred_at, t("equipment_events.form.occurred_at"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.datetime_field :occurred_at, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
-  </div>
+  <section data-testid="equipment-event-time-section" class="<%= section_class %>">
+    <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("equipment_events.form.sections.time") %></h2>
+    <div class="min-w-0 overflow-hidden">
+      <%= form.label :occurred_at, t("equipment_events.form.occurred_at"), class: label_class %>
+      <%= form.datetime_local_field :occurred_at,
+        value: equipment_event.occurred_at&.in_time_zone&.strftime("%Y-%m-%dT%H:%M"),
+        required: true,
+        step: 60,
+        aria: {
+          invalid: occurred_at_errors.any? ? "true" : nil,
+          describedby: occurred_at_errors.any? ? "equipment-event-occurred-at-error" : nil
+        },
+        class: "#{input_class} rn-datetime-input" %>
+      <% if occurred_at_errors.any? %>
+        <p id="equipment-event-occurred-at-error" class="mt-2 text-sm font-bold text-red-700"><%= occurred_at_errors.to_sentence %></p>
+      <% end %>
+    </div>
+  </section>
 
-  <fieldset>
-    <legend class="text-sm font-medium text-stone-700"><%= t("equipment_events.form.event_types") %></legend>
-    <div class="mt-2 grid gap-2 sm:grid-cols-2">
+  <fieldset class="<%= section_class %>" aria-describedby="<%= "equipment-event-types-error" if event_type_errors.any? %>">
+    <legend class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("equipment_events.form.event_types") %></legend>
+    <div class="grid gap-2 sm:grid-cols-2">
       <% EquipmentEvent.event_types.keys.each do |event_type| %>
-        <label for="equipment_event_type_<%= event_type %>" class="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-800">
-          <%= check_box_tag "equipment_event[event_types][]", event_type, equipment_event.event_type_names.include?(event_type), id: "equipment_event_type_#{event_type}", class: "rounded border-stone-300 text-stone-950" %>
+        <label for="equipment_event_type_<%= event_type %>" class="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-2.5 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
           <span><%= EquipmentEvent.event_type_label(event_type) %></span>
+          <%= check_box_tag "equipment_event[event_types][]", event_type, equipment_event.event_type_names.include?(event_type), id: "equipment_event_type_#{event_type}", class: "h-5 w-5 shrink-0 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
         </label>
       <% end %>
     </div>
+    <% if event_type_errors.any? %>
+      <p id="equipment-event-types-error" class="text-sm font-bold text-red-700"><%= event_type_errors.to_sentence %></p>
+    <% end %>
   </fieldset>
 
-  <fieldset>
-    <legend class="text-sm font-medium text-stone-700"><%= t("equipment_events.form.equipment") %></legend>
-    <div class="mt-2 grid gap-2 sm:grid-cols-2">
+  <fieldset class="<%= section_class %>" aria-describedby="<%= "equipment-event-equipment-error" if equipment_errors.any? %>">
+    <legend class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("equipment_events.form.equipment") %></legend>
+    <div class="grid gap-2 sm:grid-cols-2">
       <% @equipment_options.each do |item| %>
-        <label for="<%= dom_id(item, :event) %>" class="flex items-center gap-2 rounded-md border border-stone-200 px-3 py-2 text-sm text-stone-800">
-          <%= check_box_tag "equipment_event[equipment_ids][]", item.id, equipment_event.equipment.include?(item), id: dom_id(item, :event), class: "rounded border-stone-300 text-stone-950" %>
-          <span><%= item.name %></span>
+        <label for="<%= dom_id(item, :event) %>" class="flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-2.5 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
+          <span class="min-w-0 truncate"><%= item.name %></span>
+          <%= check_box_tag "equipment_event[equipment_ids][]", item.id, equipment_event.equipment.include?(item), id: dom_id(item, :event), class: "h-5 w-5 shrink-0 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
         </label>
       <% end %>
     </div>
+    <% if equipment_errors.any? %>
+      <p id="equipment-event-equipment-error" class="text-sm font-bold text-red-700"><%= equipment_errors.to_sentence %></p>
+    <% end %>
   </fieldset>
 
-  <div>
-    <%= form.label :notes, t("equipment_events.form.notes"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.text_area :notes, rows: 4, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
-  </div>
+  <section class="<%= section_class %>">
+    <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("equipment_events.form.sections.details") %></h2>
+    <div>
+      <%= form.label :notes, t("equipment_events.form.notes"), class: label_class %>
+      <%= form.text_area :notes, rows: 4, class: input_class %>
+    </div>
 
-  <div>
-    <%= form.label :photos, t("equipment_events.form.photos"), class: "block text-sm font-medium text-stone-700" %>
-    <%= render "shared/photo_upload_input", form: %>
-  </div>
+    <div>
+      <%= form.label :photos, t("equipment_events.form.photos"), class: label_class %>
+      <%= render "shared/photo_upload_input", form: %>
+    </div>
+  </section>
 
-  <%= form.submit submit_label, class: "rounded-md bg-stone-950 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+  <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-accent-strong)] px-5 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
 <% end %>

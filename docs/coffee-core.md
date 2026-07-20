@@ -20,7 +20,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
 - Curated public espresso brew sharing with optional passwords, selected photos, and public buy/affiliate links.
-- Curated public bean sharing for opened, finished, or used-up bags with optional passwords, selected bean package photos, all-brew public summaries, and workspace settings management.
+- Curated public bean sharing for opened, finished, used-up, or previously opened archived bags with optional passwords, selected bean package photos, all-brew public summaries, and workspace settings management.
 - Private recipe profiles created from workspace brews, with editable exact espresso targets and prominent target markers.
 - Recipe-guided espresso logging that shows recipe targets without overwriting normal last-brew defaults.
 - Recipe JSON import/export for portable unlinked recipe snapshots, including finish ingredients and finish notes while excluding media internals.
@@ -78,7 +78,7 @@ Quick Drip requires:
 
 Measured Ground coffee takes precedence for inventory. Spoon-only logs estimate consumed grams from the user's Profile `grams_per_coffee_spoon`, falling back to 5g per spoon, and store the calculated value in `bean_weight_grams` for normal inventory deduction.
 
-Quick Drip omits espresso-only fields: temperature, preinfusion, first drip, and channeling. Quick Drip taste labels are Weak, Balanced, and Harsh for the existing sour/neutral/bitter values.
+Quick Drip omits espresso-only fields: temperature, preinfusion, low-flow start, first drip, channeling, and flow-control use. Quick Drip taste labels are Weak, Balanced, and Harsh for the existing sour/neutral/bitter values.
 
 ## Last-Brew Defaults
 
@@ -96,7 +96,8 @@ Espresso copied fields:
 - active preparation tools from the previous brew
 - grind setting
 - brew temperature
-- pre-infusion seconds
+- pre-infusion seconds, when the selected machine enables pre-infusion
+- low-flow-start seconds, when the selected machine enables low-flow start
 
 Fresh fields:
 
@@ -109,6 +110,7 @@ Fresh fields:
 - rating
 - notes
 - channeling
+- flow-control-used state
 - taste balance
 
 Quick Drip copied fields:
@@ -150,6 +152,7 @@ Espresso copied fields:
 - grind setting
 - brew temperature
 - pre-infusion seconds
+- low-flow-start seconds, when supported by the selected machine
 - first-drip seconds
 - total time seconds
 
@@ -172,6 +175,7 @@ Espresso fresh fields:
 - rating
 - taste balance
 - channeling
+- flow-control-used state
 - private notes
 - public note
 - photos

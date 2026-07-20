@@ -2,6 +2,10 @@
 <% hidden_brew_fields = Array(local_assigns.fetch(:hidden_brew_fields, [])) %>
 <% hide_brew_field = local_assigns.fetch(:hide_brew_field) %>
 <% dose_sync_enabled = !hide_brew_field.call(:ground_weight_grams) && !hide_brew_field.call(:dose_grams) %>
+<% machine_feature_gating = brew.new_record? %>
+<% preinfusion_visible = brew.persisted? || brew.machine&.preinfusion_enabled? %>
+<% low_flow_start_visible = brew.persisted? || brew.machine&.low_flow_start_enabled? %>
+<% flow_control_visible = brew.persisted? || brew.machine&.flow_control_enabled? %>
 
 <%= form.hidden_field :method, value: "espresso" %>
 
@@ -55,15 +59,30 @@
   </div>
 </section>
 
-<% extraction_fields = %w[preinfusion_seconds first_drip_seconds total_time_seconds beverage_grams channeling photos] %>
+<% extraction_fields = %w[preinfusion_seconds low_flow_start_seconds first_drip_seconds total_time_seconds beverage_grams channeling flow_control_used photos] %>
 <% unless extraction_fields.all? { |field| hide_brew_field.call(field) } %>
   <section data-testid="brew-form-section" data-section="extraction" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
     <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.extraction") %></h2>
     <div class="mt-3 grid gap-3 sm:grid-cols-2">
       <% unless hide_brew_field.call(:preinfusion_seconds) %>
-        <div>
+        <div
+          data-brew-machine-features-target="feature"
+          data-feature="preinfusion"
+          <%= "hidden" unless preinfusion_visible %>
+        >
           <%= form.label :preinfusion_seconds, t("brews.form.preinfusion"), class: "block text-sm font-bold text-rn-muted" %>
-          <%= form.number_field :preinfusion_seconds, inputmode: "numeric", autofocus: autofocus_field == "preinfusion_seconds", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+          <%= form.number_field :preinfusion_seconds, inputmode: "numeric", disabled: !preinfusion_visible, autofocus: autofocus_field == "preinfusion_seconds", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+        </div>
+      <% end %>
+
+      <% unless hide_brew_field.call(:low_flow_start_seconds) %>
+        <div
+          data-brew-machine-features-target="feature"
+          data-feature="lowFlowStart"
+          <%= "hidden" unless low_flow_start_visible %>
+        >
+          <%= form.label :low_flow_start_seconds, t("brews.form.low_flow_start"), class: "block text-sm font-bold text-rn-muted" %>
+          <%= form.number_field :low_flow_start_seconds, inputmode: "numeric", disabled: !low_flow_start_visible, autofocus: autofocus_field == "low_flow_start_seconds", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
         </div>
       <% end %>
 
@@ -92,6 +111,24 @@
         <label class="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink sm:col-span-2">
           <span><%= t("brews.form.channeling") %></span>
           <%= form.check_box :channeling, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
+        </label>
+      <% end %>
+
+      <% unless hide_brew_field.call(:flow_control_used) %>
+        <label
+          data-brew-machine-features-target="feature"
+          data-feature="flowControl"
+          class="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink sm:col-span-2"
+          <%= "hidden" unless flow_control_visible %>
+        >
+          <span><%= t("brews.form.flow_control_used") %></span>
+          <span>
+            <%= form.hidden_field :flow_control_used, value: "0", id: nil, disabled: !flow_control_visible %>
+            <%= form.check_box :flow_control_used,
+              { include_hidden: false, disabled: !flow_control_visible, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" },
+              "1",
+              "0" %>
+          </span>
         </label>
       <% end %>
 
@@ -130,13 +167,32 @@
     <div class="mt-2 grid gap-2 sm:grid-cols-2">
       <label for="brew_machine_id_none" class="flex cursor-pointer items-center justify-between rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
         <span><%= t("brews.form.none") %></span>
-        <%= form.radio_button :machine_id, "", id: "brew_machine_id_none", class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+        <%= form.radio_button :machine_id,
+          "",
+          id: "brew_machine_id_none",
+          data: {
+            brew_machine_features_target: ("machine" if machine_feature_gating),
+            action: ("change->brew-machine-features#machineChanged" if machine_feature_gating),
+            preinfusion_enabled: false,
+            low_flow_start_enabled: false,
+            flow_control_enabled: false
+          }.compact,
+          class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
       </label>
       <% @machines.each do |item| %>
         <label for="brew_machine_id_<%= item.id %>" class="grid cursor-pointer grid-cols-[2.75rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
           <%= render "shared/record_photo_thumb", record: item, testid: "brew-machine-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
           <span class="truncate text-sm font-extrabold text-rn-ink"><%= item.name %></span>
-          <%= form.radio_button :machine_id, item.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+          <%= form.radio_button :machine_id,
+            item.id,
+            data: {
+              brew_machine_features_target: ("machine" if machine_feature_gating),
+              action: ("change->brew-machine-features#machineChanged" if machine_feature_gating),
+              preinfusion_enabled: item.preinfusion_enabled?,
+              low_flow_start_enabled: item.low_flow_start_enabled?,
+              flow_control_enabled: item.flow_control_enabled?
+            }.compact,
+            class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
         </label>
       <% end %>
     </div>

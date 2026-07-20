@@ -108,6 +108,9 @@ class EquipmentController < ApplicationController
         :name,
         :kind,
         :model,
+        :preinfusion_enabled,
+        :low_flow_start_enabled,
+        :flow_control_enabled,
         :notes,
         :public_note,
         {

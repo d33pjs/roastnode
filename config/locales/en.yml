@@ -461,6 +461,8 @@ en:
       grind_setting: "Grind setting"
       ground_coffee: "Ground coffee (g)"
       ground_weight: "Ground out (g)"
+      flow_control_used: "Flow control used"
+      low_flow_start: "Low-flow start (s)"
       machine: "Machine"
       machine_cups: "Machine cups"
       none: "None"
@@ -552,6 +554,7 @@ en:
       dose: "Dose"
       edit: "Edit"
       first_drip: "First drip"
+      flow_control_used: "Flow control used"
       guest: "Guest"
       guest_name: "Guest name"
       grind_setting: "Grind"
@@ -560,6 +563,7 @@ en:
       first_drip_label: "%{seconds} First drip"
       logged_at: "Logged at"
       logged_by: "Logged by"
+      low_flow_start: "Low-flow start"
       machine: "Machine"
       machine_cups: "Machine cups"
       no: "No"
@@ -717,7 +721,7 @@ en:
     update:
       updated: "Public share saved."
   public_bean_shares:
-    unsupported_status: "Public sharing is only available for opened, finished, or used up bags."
+    unsupported_status: "Public sharing is only available for opened, finished, used up, or previously opened archived bags."
     create:
       created: "Public bean share saved."
     destroy:
@@ -938,6 +942,12 @@ en:
       update: "Save equipment"
     form:
       kind: "Kind"
+      machine_features:
+        flow_control_enabled: "Manual flow control"
+        hint: "Selected features become available while logging espresso with this machine."
+        low_flow_start_enabled: "Low-flow start"
+        preinfusion_enabled: "Preinfusion"
+        title: "Machine extraction features"
       model: "Model"
       name: "Name"
       notes: "Notes"
@@ -1012,8 +1022,9 @@ en:
       destroyed: "Equipment event deleted."
     edit:
       back: "Back to equipment event"
+      eyebrow: "Maintenance"
       photos: "Current photos"
-      title: "Edit equipment event"
+      title: "Edit maintenance log"
       update: "Save event"
     event_types:
       brewer_cleaning: "Brewer cleaning"
@@ -1027,14 +1038,20 @@ en:
       other: "Other"
     form:
       equipment: "Affected equipment"
+      errors:
+        heading: "Please check the highlighted fields."
       event_types: "Event types"
       notes: "Notes"
       occurred_at: "Occurred at"
       photos: "Photos"
+      sections:
+        details: "Details"
+        time: "Maintenance time"
     new:
       back: "Back to gear"
       create: "Save event"
-      title: "Log equipment event"
+      eyebrow: "Maintenance"
+      title: "Log maintenance"
     show:
       back: "Back to dashboard"
       byline: "Logged by %{user}"
@@ -1430,6 +1447,7 @@ en:
         first_drip_seconds: "First drip"
         grind_setting: "Grind setting"
         ground_weight_grams: "Ground out"
+        low_flow_start_seconds: "Low-flow start"
         notes: "Notes"
         preinfusion_seconds: "Preinfusion"
         total_time_seconds: "Total time"
@@ -1442,8 +1460,10 @@ en:
         channeling: "Channeling"
         dose_grams: "Dose"
         first_drip_seconds: "First drip"
+        flow_control_used: "Flow control used"
         grind_setting: "Grind setting"
         ground_weight_grams: "Ground out"
+        low_flow_start_seconds: "Low-flow start"
         notes: "Notes"
         photos: "Photos"
         preinfusion_seconds: "Preinfusion"

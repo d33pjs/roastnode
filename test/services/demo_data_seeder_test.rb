@@ -16,6 +16,7 @@ class DemoDataSeederTest < ActiveSupport::TestCase
     assert_equal 1, workspace.equipment_events.count
     assert_predicate workspace.beans.find_by!(name: "Demo Filter Ground"), :pre_ground?
     assert_equal "brewer", workspace.equipment.find_by!(name: "Demo Quick Drip Brewer").kind
+    assert_predicate workspace.equipment.find_by!(name: "Demo Espresso Machine"), :preinfusion_enabled?
     assert_equal "quick_drip", workspace.preparation_tools.find_by!(name: "Demo Paper Filter").brew_method
     assert_equal 1, workspace.brews.quick_drip.count
     workspace.brews.espresso.includes(:brew_preparation_tools).find_each do |brew|

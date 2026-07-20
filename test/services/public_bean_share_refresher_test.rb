@@ -46,11 +46,24 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_equal [], share.snapshot.fetch("photos")
   end
 
-  test "refresh disables shares when bean is no longer publishable" do
+  test "refresh keeps archived opened bean shares enabled and updates the terminal snapshot" do
     bean = beans(:open_household)
     share = create_share(bean)
 
     bean.archive!
+    PublicBeanShareRefresher.refresh(share)
+
+    assert share.reload.enabled?
+    assert_equal "finished", share.snapshot.dig("bean", "public_status")
+    assert_equal bean.archived_at.utc.iso8601, share.snapshot.dig("timeline", "finished_at")
+  end
+
+  test "refresh disables shares when bean no longer has an opened lifecycle" do
+    bean = beans(:open_household)
+    share = create_share(bean)
+
+    bean.apply_bag_status("stock")
+    bean.save!
     PublicBeanShareRefresher.refresh(share)
 
     assert_not share.reload.enabled?

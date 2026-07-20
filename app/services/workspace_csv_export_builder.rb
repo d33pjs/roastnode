@@ -13,7 +13,7 @@ class WorkspaceCsvExportBuilder
     grinder_id grinder_name machine_id machine_name brewer_id brewer_name preparation_tools bean_weight_grams
     ground_weight_grams dose_grams beverage_grams machine_cups coffee_spoons grams_per_coffee_spoon
     coffee_amount_source brew_ratio grind_setting brew_temperature_celsius
-    total_time_seconds preinfusion_seconds first_drip_seconds channeling taste_balance rating
+    total_time_seconds preinfusion_seconds low_flow_start_seconds first_drip_seconds channeling flow_control_used taste_balance rating
     served_for_guest guest_name cup_style retention_marker notes created_at updated_at
   ].freeze
 
