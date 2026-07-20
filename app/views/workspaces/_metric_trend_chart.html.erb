@@ -1,45 +1,17 @@
-<% points = dashboard_line_chart_points(comparison) %>
-<% area_points = dashboard_line_chart_area_points(comparison) %>
-<% baseline_y = dashboard_line_chart_baseline_y(comparison) %>
-<% current_point = dashboard_line_chart_current_point(comparison) %>
-
-<div data-testid="dashboard-metric-chart" class="pointer-events-none absolute inset-x-2 bottom-7 top-7 z-0 min-w-0 opacity-25">
-  <svg data-testid="dashboard-line-chart" class="h-full w-full overflow-visible" viewBox="0 0 160 72" role="img" aria-hidden="true" focusable="false" preserveAspectRatio="none">
-    <line x1="8" x2="152" y1="64" y2="64" stroke="currentColor" stroke-width="1" class="text-stone-200" vector-effect="non-scaling-stroke" />
-    <line x1="8" x2="152" y1="36" y2="36" stroke="currentColor" stroke-width="1" class="text-stone-100" vector-effect="non-scaling-stroke" />
-    <% if baseline_y.present? %>
-      <line
-        data-testid="dashboard-line-chart-average"
-        x1="8"
-        x2="152"
-        y1="<%= baseline_y %>"
-        y2="<%= baseline_y %>"
-        stroke="currentColor"
-        stroke-width="1.5"
-        stroke-dasharray="4 5"
-        class="text-stone-500"
-        vector-effect="non-scaling-stroke" />
-    <% end %>
-    <polygon points="<%= area_points %>" fill="<%= trend[:stroke] %>" opacity="0.14" />
-    <polyline
-      data-testid="dashboard-line-chart-line"
-      points="<%= points %>"
-      fill="none"
-      stroke="<%= trend[:stroke] %>"
-      stroke-width="3.25"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      vector-effect="non-scaling-stroke" />
-    <% if current_point.present? %>
-      <circle
-        data-testid="dashboard-line-chart-current"
-        cx="<%= current_point[:x] %>"
-        cy="<%= current_point[:y] %>"
-        r="4"
-        fill="var(--rn-surface)"
-        stroke="<%= trend[:stroke] %>"
-        stroke-width="3"
-        vector-effect="non-scaling-stroke" />
-    <% end %>
-  </svg>
+<div
+  data-controller="dashboard-metric-chart"
+  data-testid="dashboard-metric-chart"
+  data-dashboard-metric-chart-values-value="<%= comparison[:values].to_json %>"
+  data-dashboard-metric-chart-baseline-average-value="<%= comparison[:baseline_average] %>"
+  data-dashboard-metric-chart-scale-min-value="<%= comparison[:scale_min] %>"
+  data-dashboard-metric-chart-scale-max-value="<%= comparison[:scale_max] %>"
+  data-dashboard-metric-chart-direction-value="<%= comparison[:direction] %>"
+  class="pointer-events-none absolute inset-x-2 bottom-7 top-7 z-0 min-w-0"
+  aria-hidden="true">
+  <canvas
+    data-testid="dashboard-metric-chart-canvas"
+    data-dashboard-metric-chart-target="canvas"
+    class="h-full w-full"
+    aria-hidden="true"
+    tabindex="-1"></canvas>
 </div>

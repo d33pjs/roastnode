@@ -442,9 +442,21 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       assert_select "[data-testid=dashboard-metrics-grid] > article[data-testid=dashboard-metric-spent-this-week]"
       assert_select "[data-testid=dashboard-metrics-grid] > article.h-32", count: 12
       assert_select "[data-testid=dashboard-metric-coffees-today]", text: /#{I18n.t("workspaces.show.status.coffees_today")}/
-      assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-chart].absolute.opacity-25 svg[data-testid=dashboard-line-chart]"
-      assert_select "[data-testid=dashboard-metric-coffees-today] line[data-testid=dashboard-line-chart-average]"
-      assert_select "[data-testid=dashboard-metric-coffees-today] circle[data-testid=dashboard-line-chart-current]"
+      assert_select "[data-testid=dashboard-metric-chart][data-controller=dashboard-metric-chart][aria-hidden=true]", count: 6
+      assert_select "canvas[data-testid=dashboard-metric-chart-canvas][data-dashboard-metric-chart-target=canvas][aria-hidden=true][tabindex='-1']", count: 6
+      assert_select "[data-testid=dashboard-metric-chart] svg", count: 0
+
+      chart = css_select("[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-chart]").sole
+      assert_equal 5, JSON.parse(chart["data-dashboard-metric-chart-values-value"]).size
+      assert chart["data-dashboard-metric-chart-baseline-average-value"].present?
+      assert chart["data-dashboard-metric-chart-scale-min-value"].present?
+      assert chart["data-dashboard-metric-chart-scale-max-value"].present?
+      assert_includes %w[up down same new], chart["data-dashboard-metric-chart-direction-value"]
+
+      %w[open-beans stock-bags open-grams stock-grams closed-bags-today closed-bags-this-week].each do |metric|
+        assert_select "[data-testid=dashboard-metric-#{metric}] [data-testid=dashboard-metric-chart]", count: 0
+      end
+
       assert_select "[data-testid=dashboard-metric-coffees-today] [data-testid=dashboard-metric-trend-label].absolute", text: /last 4 weeks/
       assert_card_contains_in_order(
         "dashboard-metric-coffees-today",

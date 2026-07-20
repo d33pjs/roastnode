@@ -156,16 +156,16 @@
       <% dashboard_metric_cards.each do |card| %>
         <% comparison = card[:comparison] %>
         <% trend = {
-          "up" => { text_class: "text-emerald-700", stroke: "#047857" },
-          "down" => { text_class: "text-red-700", stroke: "#b91c1c" },
-          "same" => { text_class: "text-rn-muted", stroke: "#78716c" },
-          "new" => { text_class: "text-emerald-700", stroke: "#047857" }
-        }[comparison&.dig(:direction)] || { text_class: "text-rn-muted", stroke: "#78716c" } %>
+          "up" => { text_class: "rn-trend-up" },
+          "down" => { text_class: "rn-trend-down" },
+          "same" => { text_class: "rn-trend-neutral" },
+          "new" => { text_class: "rn-trend-up" }
+        }[comparison&.dig(:direction)] || { text_class: "rn-trend-neutral" } %>
         <% value_text_class = comparison.present? ? "text-2xl" : "text-4xl" %>
 
         <article data-testid="dashboard-metric-<%= card[:testid] %>" class="relative isolate h-32 min-w-0 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface p-3 shadow-sm sm:p-4">
           <% if comparison.present? %>
-            <%= render "workspaces/metric_trend_chart", comparison:, trend: %>
+            <%= render "workspaces/metric_trend_chart", comparison: %>
           <% end %>
 
           <div class="relative z-10 min-w-0">

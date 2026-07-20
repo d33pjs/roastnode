@@ -25,6 +25,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Preparation tool detail analytics through `PreparationToolStatistics`.
 - Statistics links to all-time brew history through a page-level all-brews button and the total-brews card.
 - The dashboard's live time-since-last-coffee timer uses only non-guest brews plus External Coffee records. Brews marked as served for guests stay in history and inventory accounting but do not reset that timer.
+- Six dashboard comparison cards render their last-four-period trend as quiet, non-interactive Chart.js line/area backgrounds. Chart.js 4.5.1 is vendored locally, loaded only when those Stimulus controllers connect, and the visible comparison sentence remains the accessible meaning.
 
 ## Cost Rules
 
@@ -53,4 +54,4 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Imported brews and beans count like native records.
 - Quick Drip is included in broad brew totals, consumed-grams totals, cost calculations when bean price is known, taste balance, method distributions, and brewer/preparation-tool usage analytics.
 - Channeling, retention, and grinder tendency metrics are espresso-only. Brewer and Quick Drip preparation-tool analytics should not imply channeling for Quick Drip.
-- ECharts/Stimulus interactivity is deferred.
+- Richer interactive charts on the dedicated statistics page remain deferred. The dashboard's decorative Chart.js microcharts do not change the server-owned analytics calculations or this statistics-page boundary.

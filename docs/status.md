@@ -1,6 +1,6 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-06-29
+Last reviewed: 2026-07-20
 
 This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
@@ -33,7 +33,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Beanconqueror import: conservative espresso-compatible JSON subset, raw import preservation, supported bean/equipment/preparation/brew metadata mapping, source UUID duplicate handling, warnings, and import reports.
 - Analytics: workspace statistics with relative/manual/all-time ranges, all-time bean detail analytics, equipment detail analytics, and preparation tool detail analytics, all workspace scoped and query backed. Quick Drip counts in broad brew/consumption totals and method distributions; channeling, retention, and grinder tendency stay espresso-only.
 - Production self-hosting guide: deployment assumptions, environment/secrets handling, SMTP sender configuration, storage volume guidance, Ansible-friendly Compose/env examples, digest-based image upgrades, backup validation, empty-server restore drills, and upgrade checks.
-- Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, icon-only mobile-friendly back links that avoid share workflow loops, Material-symbol detail action buttons with mobile More menus for dense action sets, shared rounded photo upload controls that preserve existing photos on empty edit saves, a compact dashboard live time-since-last-coffee header that ignores guest-serving brews, row-major mixed coffee metric cards with last-4-week trend line chart components, split unopened-stock/open-bean inventory cards with open-bean and closed-bag counts, rough daily/weekly spend cards, dashboard stock shelf with quick-open/Rebuy affordances and bean cost metrics, a dashboard open bean cockpit with open/roast age, remaining inventory pressure, latest coffee setup, and best-brew links, Gear-centered equipment/tool return paths, a compact global footer with a left-aligned GitHub badge plus right-aligned app version or configured Buy Me a Coffee support badge, cross-links between domain records, optional demo data, setup-installed pre-commit RuboCop hooks, and documentation for each shipped slice.
+- Presentation and setup polish: self-hosted Elms Sans, Roastnode brand assets, icon-only mobile-friendly back links that avoid share workflow loops, Material-symbol detail action buttons with mobile More menus for dense action sets, shared rounded photo upload controls that preserve existing photos on empty edit saves, a compact dashboard live time-since-last-coffee header that ignores guest-serving brews, row-major mixed coffee metric cards whose six comparison cards use locally vendored, lazily loaded Chart.js line/area backgrounds, split unopened-stock/open-bean inventory cards with open-bean and closed-bag counts, rough daily/weekly spend cards, dashboard stock shelf with quick-open/Rebuy affordances and bean cost metrics, a dashboard open bean cockpit with open/roast age, remaining inventory pressure, latest coffee setup, and best-brew links, Gear-centered equipment/tool return paths, a compact global footer with a left-aligned GitHub badge plus right-aligned app version or configured Buy Me a Coffee support badge, cross-links between domain records, optional demo data, setup-installed pre-commit RuboCop hooks, and documentation for each shipped slice.
 
 ## Changed From The Initial Idea
 
@@ -42,7 +42,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 - Last-brew defaults were narrowed after product testing. The current contract copies only setup fields: bean, grinder, machine, preparation tools, grind setting, temperature, and supported pre-infusion/low-flow-start seconds.
 - Beanconqueror compatibility means practical import first, not round-trip parity.
 - Quick Drip v1 intentionally covers private automatic drip/filter-style daily logging. Quick Drip brews can appear as public-safe summaries inside public bean shares, but standalone public Quick Drip brew share pages, Quick Drip recipes, Beanconqueror Quick Drip import, brewer cup/water calibration, and professional filter methods remain deferred.
-- The first analytics implementation is server-rendered/query-backed. ECharts/Stimulus interactivity remains optional future work.
+- Analytics calculations remain server-rendered/query-backed. The dashboard now uses Stimulus plus decorative Chart.js microcharts for six metric-card backgrounds, while richer interactive charts on the dedicated statistics page remain optional future work.
 - Public identity images are now split by context: normal app media stays private behind authenticated routes, while workspace logos and user avatars referenced by enabled public brew, bean, or recipe share snapshots can render through the relevant public share media whitelist.
 
 ## Private Open Topics
