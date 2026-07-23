@@ -1,4 +1,5 @@
 require "test_helper"
+require "vips"
 
 class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
   test "serves active workspace attachment" do
@@ -22,6 +23,26 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
     assert_match "inline", response.headers["Content-Disposition"]
     assert_match "thumbnail-photo.jpg", response.headers["Content-Disposition"]
+  end
+
+  test "processes a valid large image into a bounded Vips thumbnail" do
+    sign_in_as(users(:one))
+    attachment = nil
+    File.open(Rails.root.join("app/assets/images/brand/logo_mark_transparent.png")) do |file|
+      beans(:open_household).photos.attach(
+        io: file,
+        filename: "large-photo.png",
+        content_type: "image/png"
+      )
+      attachment = beans(:open_household).photos.attachments.last
+    end
+
+    get media_attachment_path(attachment, variant: :thumbnail)
+
+    assert_response :success
+    thumbnail = Vips::Image.new_from_buffer(response.body, "")
+    assert_equal 480, [ thumbnail.width, thumbnail.height ].max
+    assert_not_equal attachment.blob.download, response.body
   end
 
   test "does not serve unsupported media variant" do

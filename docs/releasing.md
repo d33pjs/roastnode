@@ -43,8 +43,15 @@ Configure these in the private Gitea repository when CI should upload source SBO
 - Variable `EXODOS_INVENTORYROOT_SYFT_SPDX_ID`: inventory root UUID for Syft SPDX source SBOM uploads.
 - Variable `EXODOS_INVENTORYROOT_SYFT_CDX_ID`: inventory root UUID for Syft CycloneDX source SBOM uploads.
 - Variable `EXODOS_INVENTORYROOT_CDX_CDX_ID`: inventory root UUID for cdxgen CycloneDX source SBOM uploads.
-- Variable `EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID`: inventory root UUID for mikebom SPDX 3.0.1 source SBOM uploads.
-- Variable `EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID`: inventory root UUID for mikebom CycloneDX 1.6 source SBOM uploads.
+- Variable `EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID`: inventory root UUID for Waybill SPDX 3.0.1 source SBOM uploads.
+- Variable `EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID`: inventory root UUID for Waybill CycloneDX 1.6 source SBOM uploads.
+
+Waybill is the renamed successor to mikebom. The two Gitea variable names retain
+`MIKEBOM` so existing repository configuration keeps working. The workflow pins
+both Waybill and cdxgen releases and verifies their published SHA-256 hashes
+before executing either downloaded binary. All external GitHub and Gitea Actions
+are pinned to immutable commit SHAs, with readable release-version comments kept
+beside the pins for review and Dependabot updates.
 
 ## Source SBOMs
 

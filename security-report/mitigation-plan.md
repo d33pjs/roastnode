@@ -1,5 +1,7 @@
 # Roastnode Security Audit Mitigation Plan
 
+Update on 2026-07-23: the dependency/runtime work described in finding 4 has been completed and superseded by `security-report/dependency-audit.md`. The original 2026-06-10 assessment remains below as historical context.
+
 Verified on 2026-06-10. Scope was limited to the supplied findings; no application code was changed.
 
 ## Ranked Findings

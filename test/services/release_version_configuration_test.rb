@@ -11,11 +11,29 @@ class ReleaseVersionConfigurationTest < Minitest::Test
     assert_match(/^ARG ROASTNODE_VERSION=development$/, dockerfile)
     assert_match(/FROM docker\.io\/library\/ruby:\$RUBY_VERSION-slim AS base\nARG ROASTNODE_VERSION/, dockerfile)
     assert_match(/ROASTNODE_VERSION="\$\{ROASTNODE_VERSION\}"/, dockerfile)
+    assert_equal ROOT.join(".ruby-version").read.strip, dockerfile[/^ARG RUBY_VERSION=(.+)$/, 1]
 
     workflow = YAML.load_file(ROOT.join(".github/workflows/release-container.yml"), aliases: true)
     build_step = workflow.fetch("jobs").fetch("publish").fetch("steps").find { |step| step["name"] == "Build and push image" }
 
-    assert_equal "docker/build-push-action@v6", build_step.fetch("uses")
+    assert_match(/\Adocker\/build-push-action@[0-9a-f]{40}\z/, build_step.fetch("uses"))
     assert_includes build_step.fetch("with").fetch("build-args"), "ROASTNODE_VERSION=${{ env.RELEASE_TAG }}"
+  end
+
+  def test_external_workflow_actions_are_pinned_to_immutable_commits
+    workflow_paths = ROOT.glob("{.github,.gitea}/workflows/*.{yml,yaml}")
+
+    workflow_paths.each do |path|
+      workflow = YAML.load_file(path, aliases: true)
+      workflow.fetch("jobs").each_value do |job|
+        job.fetch("steps", []).each do |step|
+          action = step["uses"]
+          next unless action
+          next if action.start_with?("./")
+
+          assert_match(/@[0-9a-f]{40}\z/, action, "#{path.relative_path_from(ROOT)} must pin #{action} to a full commit SHA")
+        end
+      end
+    end
   end
 end

@@ -11,7 +11,7 @@ class DashboardMetricChartControllerTest < ActiveSupport::TestCase
     assert_includes vendored_chart, "Chart.js v4.5.1"
     assert_includes third_party_licenses, "Chart.js 4.5.1"
     assert_includes third_party_licenses, "Copyright (c) 2014-2024 Chart.js Contributors"
-    assert_includes third_party_licenses, "@kurkle/color 0.3.4"
+    assert_includes third_party_licenses, "@kurkle/color 0.3.2"
     assert_includes third_party_licenses, "Copyright (c) 2018-2024 Jukka Kurkela"
     assert_not_includes importmap, "https://"
     assert_includes source, 'import("chart.js")'

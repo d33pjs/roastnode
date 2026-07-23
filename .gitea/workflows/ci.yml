@@ -14,7 +14,7 @@ jobs:
 
     services:
       postgres:
-        image: postgres:17.5
+        image: postgres:17.10
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -35,6 +35,10 @@ jobs:
       SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
       SOURCE_MIKEBOM_SPDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.spdx3.json
       SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
+      CDXGEN_VERSION: v12.8.1
+      CDXGEN_SHA256: 68383baba70f86046530994b1c741fa4693f83262370441ed21c43bff66e316f
+      WAYBILL_VERSION: v0.1.0-alpha.67
+      WAYBILL_SHA256: d438f0e3b431df7be7caca2c8a6d2f4578090ca0ba619fe3a32424168adc7540
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
@@ -48,10 +52,10 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libpq-dev libvips
 
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: set up ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           bundler-cache: true
 
@@ -71,7 +75,7 @@ jobs:
         run: bin/rails db:test:prepare test
 
       - name: Generate source Syft SPDX SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           format: spdx-json
           output-file: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
@@ -91,7 +95,7 @@ jobs:
             -F "file=@${SOURCE_SYFT_SPDX_SBOM};type=application/json"
 
       - name: Generate source Syft CycloneDX SBOM
-        uses: anchore/sbom-action@v0
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
           format: cyclonedx-json
           output-file: ${{ env.SOURCE_SYFT_CDX_SBOM }}
@@ -113,13 +117,20 @@ jobs:
       # Generate SBOM via cdxgen
       - name: Download cdxgen Open Source Binary
         run: |
-          mkdir -p $HOME/.local/bin
-          curl -sSfL https://github.com/CycloneDX/cdxgen/releases/latest/download/cdxgen-linux-amd64 -o $HOME/.local/bin/cdxgen
-          chmod +x $HOME/.local/bin/cdxgen
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          set -euo pipefail
+
+          download_dir="$(mktemp -d "${RUNNER_TEMP:-/tmp}/roastnode-cdxgen.XXXXXX")"
+          mkdir -p "$HOME/.local/bin"
+          asset="cdxgen-linux-amd64"
+          asset_path="${download_dir}/${asset}"
+          curl -fsSL "https://github.com/cdxgen/cdxgen/releases/download/${CDXGEN_VERSION}/${asset}" -o "$asset_path"
+          printf '%s  %s\n' "$CDXGEN_SHA256" "$asset_path" | sha256sum -c -
+          install -m 0755 "$asset_path" "$HOME/.local/bin/cdxgen"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/bin/cdxgen" --version
 
       - name: Generate SBOM via cdxgen binary
-        run: cdxgen -o ${SOURCE_CDX_CDX_SBOM}
+        run: cdxgen -o "${SOURCE_CDX_CDX_SBOM}" .
 
       - name: Upload source cdxgen CycloneDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_CDX_CDX_ID != '' }}
@@ -133,32 +144,34 @@ jobs:
             -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_CDX_CDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"cdxgen\",\"cyclonedx\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-cdxgen-cyclonedx\",\"unique\":true}]}" \
             -F "file=@${SOURCE_CDX_CDX_SBOM};type=application/json"
 
-      # Generate SBOMs via mikebom
-      - name: Download mikebom Open Source Binary
+      # Generate SBOMs via Waybill, the renamed successor to mikebom.
+      - name: Download Waybill Open Source Binary
         run: |
           set -euo pipefail
 
+          download_dir="$(mktemp -d "${RUNNER_TEMP:-/tmp}/roastnode-waybill.XXXXXX")"
           mkdir -p "$HOME/.local/bin"
-          tag="$(curl -fsSL https://api.github.com/repos/kusari-oss/mikebom/releases | ruby -rjson -e 'releases = JSON.parse(STDIN.read); release = releases.find { |item| !item.fetch("draft", false) }; abort "No mikebom release found" unless release; print release.fetch("tag_name")')"
-          asset="mikebom-${tag}-x86_64-unknown-linux-gnu.tar.gz"
+          asset="waybill-${WAYBILL_VERSION}-x86_64-unknown-linux-gnu.tar.gz"
           extract_dir="${asset%.tar.gz}"
-          curl -fsSL "https://github.com/kusari-oss/mikebom/releases/download/${tag}/${asset}" -o "${asset}"
-          tar -xzf "${asset}"
-          install -m 0755 "${extract_dir}/mikebom" "$HOME/.local/bin/mikebom"
+          asset_path="${download_dir}/${asset}"
+          curl -fsSL "https://github.com/kusari-oss/waybill/releases/download/${WAYBILL_VERSION}/${asset}" -o "$asset_path"
+          printf '%s  %s\n' "$WAYBILL_SHA256" "$asset_path" | sha256sum -c -
+          tar -xzf "$asset_path" -C "$download_dir"
+          install -m 0755 "${download_dir}/${extract_dir}/waybill" "$HOME/.local/bin/waybill"
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-          mikebom --version
+          "$HOME/.local/bin/waybill" --version
 
-      - name: Generate source mikebom SBOM
+      - name: Generate source Waybill SBOM
         run: |
           set -euo pipefail
 
-          mikebom --offline sbom scan \
+          waybill --offline sbom scan \
             --path . \
             --format cyclonedx-json,spdx-3-json \
             --output cyclonedx-json="${SOURCE_MIKEBOM_CDX_SBOM}" \
             --output spdx-3-json="${SOURCE_MIKEBOM_SPDX_SBOM}"
 
-      - name: Upload source mikebom SPDX SBOM to exodos.io
+      - name: Upload source Waybill SPDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID != '' }}
         run: |
           set -euo pipefail
@@ -170,7 +183,7 @@ jobs:
             -F "params={\"inventoryroot_id\":\"${EXODOS_INVENTORYROOT_MIKEBOM_SPDX_ID}\",\"tags\":[\"roastnode\",\"source\",\"mikebom\",\"spdx\",\"spdx-3.0.1\",\"sha-${GITHUB_SHA}\",{\"name\":\"latest-source-mikebom-spdx\",\"unique\":true}]}" \
             -F "file=@${SOURCE_MIKEBOM_SPDX_SBOM};type=application/json"
 
-      - name: Upload source mikebom CycloneDX SBOM to exodos.io
+      - name: Upload source Waybill CycloneDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_MIKEBOM_CDX_ID != '' }}
         run: |
           set -euo pipefail

@@ -1,12 +1,12 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-07-20
+Last reviewed: 2026-07-23
 
 This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
 ## Built Now
 
-- Rails 8.1 monolith at the repository root, with PostgreSQL, Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
+- Rails 8.1 monolith at the repository root, running Ruby 3.3.12 and PostgreSQL 17.10, with Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
 - Rails-native authentication, first-user setup for empty installs, password reset, signed-in password change flows, optional user passkeys with browser-picker login and passkey second factor, private-by-default app shell, and an instance admin dashboard with safe read-only checks plus backup controls.
 - Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with optional email delivery and optional username capture during invite signup, accepted invite status display, resend/re-invite for email-bound invites, private invite-only account creation, instance-admin email invites for creating separate new households while public registration remains disabled, member role management/removal, owner-only ownership transfer, owner-only workspace deletion, and workspace-scoped controller patterns.
 - Profile settings: display name, username-style display label, avatar, public banner, preferred landing screen, enabled brew methods, grams per coffee spoon for Quick Drip estimates, espresso focus field, hidden espresso fields, number format, time format, and per-user IANA timezone.
