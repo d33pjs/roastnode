@@ -64,6 +64,9 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
     workspace = workspaces(:household)
 
     BeanconquerorImport.new(workspace:, user: users(:one), json: beanconqueror_json).call
+    imported_bean = workspace.beans.find_by!(import_source: "beanconqueror", import_source_id: "bc-bean-1")
+    share = create_public_bean_share(imported_bean, user: users(:one))
+    share.update_columns(snapshot: share.snapshot.merge("no_op_marker" => "untouched"))
 
     assert_no_difference -> { workspace.beans.count } do
       assert_no_difference -> { workspace.brews.count } do
@@ -72,6 +75,35 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
         assert_equal 2, import.summary.dig("brews", "skipped")
       end
     end
+    assert_equal "untouched", share.reload.snapshot["no_op_marker"]
+  end
+
+  test "later import refreshes public comparison snapshots for an existing imported bean" do
+    workspace = workspaces(:household)
+    BeanconquerorImport.new(workspace:, user: users(:one), json: beanconqueror_json).call
+    imported_bean = workspace.beans.find_by!(import_source: "beanconqueror", import_source_id: "bc-bean-1")
+    imported_share = create_public_bean_share(imported_bean, user: users(:one))
+    peer_share = create_public_bean_share(beans(:open_household), user: users(:one))
+    other_workspace_share = create_public_bean_share(beans(:other_workspace_open), user: users(:two))
+    other_workspace_share.update_columns(snapshot: other_workspace_share.snapshot.merge("import_marker" => "untouched"))
+
+    assert_equal 1, imported_share.snapshot.dig("stats", "brew_count")
+    assert_equal 1, peer_share.snapshot.dig("comparisons", "average_rating", "rank")
+
+    payload = JSON.parse(beanconqueror_json)
+    later_brew = payload.fetch("BREWS").first.deep_dup
+    later_brew.fetch("config")["uuid"] = "bc-brew-2"
+    later_brew.fetch("config")["unix_timestamp"] = 1_777_777_200
+    later_brew["rating"] = 5
+    payload.fetch("BREWS") << later_brew
+
+    import = BeanconquerorImport.new(workspace:, user: users(:one), json: JSON.generate(payload)).call
+
+    assert_predicate import, :completed?
+    assert_equal 1, import.summary.dig("brews", "created")
+    assert_equal 2, imported_share.reload.snapshot.dig("stats", "brew_count")
+    assert_equal 2, peer_share.reload.snapshot.dig("comparisons", "average_rating", "rank")
+    assert_equal "untouched", other_workspace_share.reload.snapshot["import_marker"]
   end
 
   test "invalid json records failed import" do
@@ -99,6 +131,23 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
   end
 
   private
+    def create_public_bean_share(bean, user:)
+      PublicBeanShare.create!(
+        workspace: bean.workspace,
+        bean:,
+        created_by: user,
+        updated_by: user,
+        enabled: true,
+        title: "Shared bean",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title: "Shared bean",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
+
     def beanconqueror_json
       Rails.root.join("test/fixtures/files/beanconqueror_export.json").read
     end

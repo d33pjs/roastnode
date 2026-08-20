@@ -37,6 +37,8 @@ class BeanconquerorImport
       data_import.update!(status: "completed", summary:, warnings:)
     end
 
+    PublicBeanShareRefresher.refresh_comparisons_for(workspace) if summary.dig("brews", "created").to_i.positive?
+
     data_import
   end
 
