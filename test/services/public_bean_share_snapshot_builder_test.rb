@@ -153,6 +153,30 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "finished", snapshot.dig("bean", "public_status")
   end
 
+  test "includes workspace comparison ranks without peer bean details" do
+    bean = beans(:open_household)
+    comparison_bean = beans(:second_open_household)
+    comparison_bean.workspace.brews.create!(
+      user: users(:one),
+      bean: comparison_bean,
+      method: "espresso",
+      bean_weight_grams: 18,
+      rating: 5,
+      channeling: true
+    )
+
+    snapshot = PublicBeanShareSnapshotBuilder.new(
+      bean:,
+      title: "Shared bean",
+      selected_photo_attachment_ids: []
+    ).call
+
+    assert_equal({ "rank" => 2, "eligible_count" => 2 }, snapshot.dig("comparisons", "average_rating"))
+    assert_equal({ "rank" => 1, "eligible_count" => 2 }, snapshot.dig("comparisons", "channeling"))
+    assert_not_includes snapshot.to_json, comparison_bean.name
+    assert_no_internal_ids(snapshot)
+  end
+
   test "counts leftover remaining beans as dead grams when bag is finished" do
     bean = beans(:open_household)
     bean.update!(

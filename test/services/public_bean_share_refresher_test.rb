@@ -25,6 +25,30 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "New brew note"
   end
 
+  test "shares_for bean includes every public bean share in its workspace" do
+    bean = beans(:open_household)
+    first_share = create_share(bean)
+    second_share = create_share(beans(:second_open_household))
+    other_workspace_share = create_share(beans(:other_workspace_open), user: users(:two))
+
+    assert_equal [ first_share.id, second_share.id ].sort,
+      PublicBeanShareRefresher.shares_for(bean).pluck(:id).sort
+    assert_not_includes PublicBeanShareRefresher.shares_for(bean), other_workspace_share
+  end
+
+  test "shares_for brew includes every public bean share in its workspace" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:)
+    first_share = create_share(bean)
+    second_share = create_share(beans(:second_open_household))
+    other_workspace_share = create_share(beans(:other_workspace_open), user: users(:two))
+
+    assert_equal [ first_share.id, second_share.id ].sort,
+      PublicBeanShareRefresher.shares_for(brew).pluck(:id).sort
+    assert_not_includes PublicBeanShareRefresher.shares_for(brew), other_workspace_share
+  end
+
   test "shares_for user finds bean shares containing that users brews" do
     bean = beans(:open_household)
     brew = brews(:morning_espresso)
@@ -103,12 +127,12 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
   end
 
   private
-    def create_share(bean, selected_photo_attachment_ids: [])
+    def create_share(bean, selected_photo_attachment_ids: [], user: users(:one))
       PublicBeanShare.create!(
         workspace: bean.workspace,
         bean:,
-        created_by: users(:one),
-        updated_by: users(:one),
+        created_by: user,
+        updated_by: user,
         enabled: true,
         selected_photo_attachment_ids:,
         snapshot: PublicBeanShareSnapshotBuilder.new(

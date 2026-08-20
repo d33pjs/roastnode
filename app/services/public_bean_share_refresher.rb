@@ -12,10 +12,8 @@ class PublicBeanShareRefresher
       case record
       when PublicBeanShare
         PublicBeanShare.where(id: record.id)
-      when Bean
-        PublicBeanShare.where(bean_id: record.id)
-      when Brew
-        PublicBeanShare.where(bean_id: record.bean_id)
+      when Bean, Brew
+        PublicBeanShare.where(workspace_id: record.workspace_id)
       when Equipment
         PublicBeanShare
           .joins(bean: :brews)
