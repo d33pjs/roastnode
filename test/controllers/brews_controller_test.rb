@@ -790,6 +790,42 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "Public brew note."
   end
 
+  test "brew metric updates refresh peer public bean comparison snapshots" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    peer_bean = beans(:second_open_household)
+    peer_bean.workspace.brews.create!(
+      user: users(:one),
+      bean: peer_bean,
+      method: "espresso",
+      bean_weight_grams: 18,
+      rating: 5,
+      channeling: true
+    )
+    peer_share = create_public_bean_share_for(peer_bean)
+
+    assert_equal 2, peer_share.snapshot.dig("comparisons", "channeling", "rank")
+
+    patch brew_path(brew), params: {
+      brew: {
+        bean_id: brew.bean.id,
+        grinder_id: brew.grinder.id,
+        machine_id: brew.machine.id,
+        bean_weight_grams: brew.bean_weight_grams.to_s,
+        ground_weight_grams: brew.ground_weight_grams.to_s,
+        dose_grams: brew.dose_grams.to_s,
+        beverage_grams: brew.beverage_grams.to_s,
+        total_time_seconds: brew.total_time_seconds.to_s,
+        taste_balance: brew.taste_balance,
+        rating: "5",
+        channeling: "1"
+      }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_equal 1, peer_share.reload.snapshot.dig("comparisons", "channeling", "rank")
+  end
+
   test "moving brew to another bean refreshes old public bean snapshot" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)

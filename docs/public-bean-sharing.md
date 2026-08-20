@@ -54,6 +54,8 @@ Refresh triggers include:
 
 - the shared bean
 - brews for the shared bean
+- brew creation, correction, or deletion that can affect comparison ratings or channeling refreshes all public bean shares in that workspace, including the directly linked share
+- deleting a bean refreshes remaining public bean shares in its workspace when its brew metrics are removed from comparisons
 - public brew share enabled/title changes for brews on the shared bean
 - grinder, machine, or brewer records referenced by those brews
 - public links on the shared bean

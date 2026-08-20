@@ -110,6 +110,7 @@ class BeansController < ApplicationController
 
   def destroy
     @bean.destroy_with_history!
+    PublicBeanShareRefresher.refresh_comparisons_for(@bean)
     redirect_to beans_path, notice: t(".destroyed")
   end
 

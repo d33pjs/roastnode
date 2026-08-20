@@ -8,12 +8,18 @@ class PublicBeanShareRefresher
       shares_for(record).find_each { |share| refresh(share) }
     end
 
+    def refresh_comparisons_for(record)
+      comparison_shares_for(record).find_each { |share| refresh(share) }
+    end
+
     def shares_for(record)
       case record
       when PublicBeanShare
         PublicBeanShare.where(id: record.id)
-      when Bean, Brew
-        PublicBeanShare.where(workspace_id: record.workspace_id)
+      when Bean
+        PublicBeanShare.where(bean_id: record.id)
+      when Brew
+        PublicBeanShare.where(bean_id: record.bean_id)
       when Equipment
         PublicBeanShare
           .joins(bean: :brews)
@@ -33,6 +39,13 @@ class PublicBeanShareRefresher
       else
         PublicBeanShare.none
       end
+    end
+
+    def comparison_shares_for(record)
+      workspace_id = record.is_a?(Workspace) ? record.id : record.workspace_id
+      return PublicBeanShare.none if workspace_id.blank?
+
+      PublicBeanShare.where(workspace_id:)
     end
   end
 

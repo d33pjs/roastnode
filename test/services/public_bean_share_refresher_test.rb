@@ -25,18 +25,19 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "New brew note"
   end
 
-  test "shares_for bean includes every public bean share in its workspace" do
+  test "shares_for bean retains only its directly linked public bean share" do
     bean = beans(:open_household)
     first_share = create_share(bean)
     second_share = create_share(beans(:second_open_household))
     other_workspace_share = create_share(beans(:other_workspace_open), user: users(:two))
 
-    assert_equal [ first_share.id, second_share.id ].sort,
+    assert_equal [ first_share.id ],
       PublicBeanShareRefresher.shares_for(bean).pluck(:id).sort
+    assert_not_includes PublicBeanShareRefresher.shares_for(bean), second_share
     assert_not_includes PublicBeanShareRefresher.shares_for(bean), other_workspace_share
   end
 
-  test "shares_for brew includes every public bean share in its workspace" do
+  test "shares_for brew retains only its directly linked public bean share" do
     bean = beans(:open_household)
     brew = brews(:morning_espresso)
     brew.update!(bean:)
@@ -44,9 +45,35 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     second_share = create_share(beans(:second_open_household))
     other_workspace_share = create_share(beans(:other_workspace_open), user: users(:two))
 
-    assert_equal [ first_share.id, second_share.id ].sort,
+    assert_equal [ first_share.id ],
       PublicBeanShareRefresher.shares_for(brew).pluck(:id).sort
+    assert_not_includes PublicBeanShareRefresher.shares_for(brew), second_share
     assert_not_includes PublicBeanShareRefresher.shares_for(brew), other_workspace_share
+  end
+
+  test "refresh_comparisons_for brew refreshes peer shares in the same workspace only" do
+    brew = brews(:morning_espresso)
+    peer_bean = beans(:second_open_household)
+    peer_bean.workspace.brews.create!(
+      user: users(:one),
+      bean: peer_bean,
+      method: "espresso",
+      bean_weight_grams: 18,
+      rating: 5,
+      channeling: true
+    )
+    create_share(brew.bean)
+    peer_share = create_share(peer_bean)
+    other_workspace_share = create_share(beans(:other_workspace_open), user: users(:two))
+
+    assert_equal 2, peer_share.snapshot.dig("comparisons", "channeling", "rank")
+    other_workspace_share.update_columns(snapshot: other_workspace_share.snapshot.merge("comparison_marker" => "untouched"))
+    brew.update!(rating: 5, channeling: true)
+
+    PublicBeanShareRefresher.refresh_comparisons_for(brew)
+
+    assert_equal 1, peer_share.reload.snapshot.dig("comparisons", "channeling", "rank")
+    assert_equal "untouched", other_workspace_share.reload.snapshot["comparison_marker"]
   end
 
   test "shares_for user finds bean shares containing that users brews" do

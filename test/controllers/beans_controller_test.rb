@@ -1289,6 +1289,42 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal I18n.t("beans.destroy.destroyed"), flash[:notice]
   end
 
+  test "deleting a bean refreshes remaining public bean comparison snapshots" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    peer_bean = beans(:second_open_household)
+    peer_bean.workspace.brews.create!(
+      user: users(:one),
+      bean: peer_bean,
+      method: "espresso",
+      bean_weight_grams: 18,
+      rating: 5,
+      channeling: true
+    )
+    peer_share = PublicBeanShare.create!(
+      workspace: peer_bean.workspace,
+      bean: peer_bean,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true,
+      title: "Shared peer bean",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBeanShareSnapshotBuilder.new(
+        bean: peer_bean,
+        title: "Shared peer bean",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+
+    assert_equal 1, peer_share.snapshot.dig("comparisons", "average_rating", "rank")
+
+    delete bean_path(bean)
+
+    assert_redirected_to beans_path
+    assert_nil peer_share.reload.snapshot.dig("comparisons", "average_rating")
+    assert_nil peer_share.snapshot.dig("comparisons", "channeling")
+  end
+
   test "viewer cannot create bean" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)

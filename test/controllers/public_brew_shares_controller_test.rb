@@ -83,6 +83,9 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     user.update!(active_workspace: workspaces(:household))
     brew = create_brew_for(user)
     bean_share = create_public_bean_share_for(brew.bean, user:)
+    peer_share = create_public_bean_share_for(beans(:open_household), user:)
+    peer_updated_at = Time.zone.parse("2026-01-01 12:00:00")
+    peer_share.update_columns(updated_at: peer_updated_at)
     brew_row = bean_share.snapshot.fetch("brews").find { |row| row.fetch("occurred_at") == brew.occurred_at.iso8601 }
     assert_nil brew_row["public_share"]
     sign_in_as(user)
@@ -100,6 +103,7 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     linked_brew_row = bean_share.reload.snapshot.fetch("brews").find { |row| row.fetch("occurred_at") == brew.occurred_at.iso8601 }
     assert_equal public_brew_share.token, linked_brew_row.dig("public_share", "token")
     assert_equal "Shared linked shot", linked_brew_row.dig("public_share", "title")
+    assert_equal peer_updated_at, peer_share.reload.updated_at
   end
 
   test "post to existing share updates without creating duplicate" do
