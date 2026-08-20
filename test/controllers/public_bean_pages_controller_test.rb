@@ -52,6 +52,52 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-bean-details]", text: /Calendar Coffee/
   end
 
+  test "public page renders first and second place comparison badges" do
+    share = create_share(enabled: true)
+    set_comparisons(
+      share,
+      "average_rating" => { "rank" => 1, "eligible_count" => 8 },
+      "channeling" => { "rank" => 2, "eligible_count" => 6 }
+    )
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-average-rating-comparison-badge][aria-label='TOP 1 OF 8 BEANS'].border-amber-300"
+    assert_select "[data-testid=public-bean-average-rating-comparison-badge] svg[data-rank-icon=trophy][aria-hidden=true][focusable=false]"
+    assert_select "[data-testid=public-bean-channeling-comparison-badge][aria-label='TOP 2 OF 6 BEANS'].border-slate-300"
+    assert_select "[data-testid=public-bean-channeling-comparison-badge] svg[data-rank-icon=medal][aria-hidden=true][focusable=false]"
+  end
+
+  test "public page renders a bronze medal for third and no icon after the podium" do
+    share = create_share(enabled: true)
+    set_comparisons(
+      share,
+      "average_rating" => { "rank" => 3, "eligible_count" => 9 },
+      "channeling" => { "rank" => 4, "eligible_count" => 7 }
+    )
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-average-rating-comparison-badge][aria-label='TOP 3 OF 9 BEANS'].border-orange-300"
+    assert_select "[data-testid=public-bean-average-rating-comparison-badge] svg[data-rank-icon=medal]"
+    assert_select "[data-testid=public-bean-channeling-comparison-badge][aria-label='TOP 4 OF 7 BEANS'].border-rn-line"
+    assert_select "[data-testid=public-bean-channeling-comparison-badge] svg", count: 0
+  end
+
+  test "legacy public bean snapshots render without comparison badges" do
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot.delete("comparisons")
+    share.update!(snapshot:)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid$='-comparison-badge']", count: 0
+  end
+
   test "timeline clusters dense brews without rendering callout cards" do
     avatar = attach_named_photo(users(:one), :avatar, filename: "timeline-avatar.jpg")
     bean = beans(:open_household)
@@ -321,6 +367,12 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def set_comparisons(share, comparisons)
+      snapshot = share.snapshot.deep_dup
+      snapshot["comparisons"] = snapshot.fetch("comparisons", {}).deep_merge(comparisons)
+      share.update!(snapshot:)
+    end
+
     def create_share(bean: beans(:open_household), enabled:, password: nil, selected_photo_attachment_ids: [])
       bean.update!(public_note: "Public bean note.", notes: "Private bean note.")
       brews(:morning_espresso).update!(bean:, public_note: "Public brew note", notes: "Private brew note")

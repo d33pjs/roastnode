@@ -5,6 +5,7 @@
 <% stats = snapshot["stats"] || {} %>
 <% distributions = snapshot["distributions"] || {} %>
 <% timeline = snapshot["timeline"] || {} %>
+<% comparisons = snapshot["comparisons"] || {} %>
 <% photos = Array(snapshot["photos"]) %>
 <% brews = Array(snapshot["brews"]) %>
 <% unknown = t(".unknown") %>
@@ -49,6 +50,7 @@
                 <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-rn-line" %>"></span>
               <% end %>
             </div>
+            <%= render "comparison_badge", comparison: comparisons["average_rating"], metric: "average-rating" %>
           </div>
           <div data-testid="public-bean-hero-stat-status" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">
             <p class="text-xs font-black uppercase text-rn-muted"><%= t(".status") %></p>
@@ -107,6 +109,7 @@
       <div class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
         <p class="text-xs font-black uppercase text-rn-muted"><%= t(".channeling") %></p>
         <p class="mt-2 text-3xl font-black text-rn-ink"><%= public_bean_percent(stats["channeling_percent"]) %></p>
+        <%= render "comparison_badge", comparison: comparisons["channeling"], metric: "channeling" %>
       </div>
       <div class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
         <p class="text-xs font-black uppercase text-rn-muted"><%= t(".open_duration") %></p>

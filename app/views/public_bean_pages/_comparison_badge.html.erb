@@ -1,0 +1,33 @@
+<% if comparison.present? %>
+  <% rank = comparison["rank"] %>
+  <% count = comparison["eligible_count"] %>
+  <% copy = t("public_bean_pages.show.comparison_rank", rank:, count:) %>
+  <% award_classes = {
+    1 => "border-amber-300 bg-amber-50 text-amber-900",
+    2 => "border-slate-300 bg-slate-100 text-slate-800",
+    3 => "border-orange-300 bg-orange-50 text-orange-950"
+  } %>
+  <% badge_classes = award_classes.fetch(rank.to_i, "border-rn-line bg-[var(--rn-surface-muted)] text-rn-muted") %>
+
+  <span
+    data-testid="public-bean-<%= metric %>-comparison-badge"
+    aria-label="<%= copy %>"
+    role="img"
+    class="mt-3 inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.6875rem] font-black uppercase leading-none tracking-wide <%= badge_classes %>"
+  >
+    <% if rank.to_i == 1 %>
+      <svg data-rank-icon="trophy" aria-hidden="true" focusable="false" viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg">
+        <path d="M6 3.25h8v2.5c0 3.1-1.6 5.25-4 5.25S6 8.85 6 5.75v-2.5Z" fill="currentColor" opacity=".9"/>
+        <path d="M6 5H3.75v1.25A3.75 3.75 0 0 0 7.5 10M14 5h2.25v1.25A3.75 3.75 0 0 1 12.5 10M10 11v3m-2.75 2.75h5.5M8 14h4v2.75H8V14Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    <% elsif rank.to_i.in?([ 2, 3 ]) %>
+      <svg data-rank-icon="medal" aria-hidden="true" focusable="false" viewBox="0 0 20 20" fill="none" class="h-3.5 w-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg">
+        <path d="m6.5 2.75 2.2 4.1h2.6l2.2-4.1h-2.75L10 4.25l-.75-1.5H6.5Z" fill="currentColor" opacity=".55"/>
+        <circle cx="10" cy="11.5" r="4.25" fill="currentColor" opacity=".9"/>
+        <path d="m10 8.8.82 1.65 1.83.27-1.33 1.29.32 1.82L10 12.97l-1.64.86.32-1.82-1.33-1.29 1.83-.27L10 8.8Z" fill="white" opacity=".9"/>
+      </svg>
+    <% end %>
+
+    <span><%= copy %></span>
+  </span>
+<% end %>

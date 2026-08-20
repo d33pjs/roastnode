@@ -770,6 +770,7 @@ en:
       channeling: "Channeling"
       close_photo: "Close"
       coffee: "Coffee"
+      comparison_rank: "TOP %{rank} OF %{count} BEANS"
       continent: "Continent"
       consumed: "Consumed"
       country: "Country"
