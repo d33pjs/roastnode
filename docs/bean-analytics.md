@@ -13,7 +13,7 @@ Bean detail pages include the first drill-down analytics slice for a single bag 
 - Recent brews with grind setting, total time, and beverage yield.
 - Taste-balance distribution.
 - Retention-marker distribution.
-- Optional date range filters for brew-derived analytics.
+- All-time analytics across the bean's complete brew history.
 
 ## Data Rules
 
@@ -23,7 +23,7 @@ Bean detail pages include the first drill-down analytics slice for a single bag 
 - Brew links must go to private brew detail pages, not public share URLs.
 - Remaining percentage reflects the current bean inventory, including brew inventory deductions.
 - The bean list shows each bean's primary photo, derived bag status, and remaining amount as `remaining of bag size`; channeling stays on the bean detail analytics card through `BeanStatistics`.
-- Date range filters are inclusive and apply only to brew-derived bean analytics: brew count, consumed grams, averages, channeling, distributions, best brews, and recent brews.
+- Bean-detail analytics are always all-time. The page exposes no date-range inputs, and supplied date parameters are ignored.
 - Current bag facts stay unfiltered: remaining percentage and open age always reflect the bag as it is now.
 - Open bags count through today. Finished and archived bags stop on their respective lifecycle dates. Used-up bags stop on their latest brew date, falling back to today only when no brew exists. Stock bags have no open duration, and negative durations clamp to zero.
 - Average Rating and Channeling cards render live workspace comparison badges below their values using the same badge contract as public bean pages: `TOP N OF C BEANS`, gold/silver/bronze icon treatments for ranks 1–3, and a neutral text-only treatment for rank 4 and later.
