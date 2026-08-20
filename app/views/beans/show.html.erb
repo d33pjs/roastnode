@@ -262,11 +262,19 @@
               <%= t(".unknown") %>
             <% end %>
           </p>
+          <%= render "shared/bean_comparison_badge",
+            comparison: @bean_statistics[:comparisons]["average_rating"],
+            metric: "average-rating",
+            testid_prefix: "bean" %>
         </div>
         <div class="rounded-md bg-stone-50 p-4">
           <p class="text-xs font-bold uppercase text-stone-500"><%= t(".channeling_rate") %></p>
           <p data-testid="bean-channeling-rate" class="mt-1 text-2xl font-bold text-stone-950"><%= statistics_percent(@bean_statistics[:rates][:channeling_percent]) %></p>
           <p data-testid="bean-channeling-count" class="mt-1 text-xs font-semibold text-stone-500"><%= t(".channeling_count", count: @bean_statistics[:rates][:channeling_count], total: @bean_statistics[:rates][:channeling_brew_count], brews: t(".espresso_brews", count: @bean_statistics[:rates][:channeling_brew_count])) %></p>
+          <%= render "shared/bean_comparison_badge",
+            comparison: @bean_statistics[:comparisons]["channeling"],
+            metric: "channeling",
+            testid_prefix: "bean" %>
         </div>
       </div>
 

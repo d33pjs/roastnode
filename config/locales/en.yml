@@ -84,6 +84,7 @@ en:
     destroy:
       destroyed: "Photo removed."
   shared:
+    bean_comparison_rank: "TOP %{rank} OF %{count} BEANS"
     back_link:
       previous: "Back"
     detail_actions:
@@ -770,7 +771,6 @@ en:
       channeling: "Channeling"
       close_photo: "Close"
       coffee: "Coffee"
-      comparison_rank: "TOP %{rank} OF %{count} BEANS"
       continent: "Continent"
       consumed: "Consumed"
       country: "Country"

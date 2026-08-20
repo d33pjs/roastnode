@@ -952,6 +952,25 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       channeling: true,
       rating: 5
     )
+    beans(:second_open_household).brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      occurred_at: Time.zone.local(2026, 5, 24, 8, 15, 0),
+      bean_weight_grams: 18,
+      ground_weight_grams: 18,
+      dose_grams: 18,
+      beverage_grams: 42,
+      total_time_seconds: 28,
+      grind_setting: "11",
+      taste_balance: "neutral",
+      channeling: true,
+      rating: 3
+    )
+    comparisons = BeanComparisonRanker.new(bean:).call
+    rating_comparison = comparisons.fetch("average_rating")
+    channeling_comparison = comparisons.fetch("channeling")
 
     get bean_path(bean)
 
@@ -967,12 +986,37 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-consumed]", "37g"
     assert_select "[data-testid=bean-channeling-rate]", "50%"
     assert_select "[data-testid=bean-channeling-count]", text: /1 of 2 espresso brews/
+    assert_select(
+      "[data-testid=bean-average-rating-comparison-badge][aria-label=?]",
+      I18n.t(
+        "shared.bean_comparison_rank",
+        rank: rating_comparison.fetch("rank"),
+        count: rating_comparison.fetch("eligible_count")
+      )
+    )
+    assert_select(
+      "[data-testid=bean-channeling-comparison-badge][aria-label=?]",
+      I18n.t(
+        "shared.bean_comparison_rank",
+        rank: channeling_comparison.fetch("rank"),
+        count: channeling_comparison.fetch("eligible_count")
+      )
+    )
     assert_select "[data-testid=bean-best-brews] a[href=?]", brew_path(brew), text: /45g/
     assert_select "[data-testid=bean-recent-brews] a[href=?]", brew_path(brew), text: /10/
     assert_select "h3", I18n.t("beans.show.taste_balance")
     assert_select "h3", I18n.t("beans.show.retention_markers")
     assert_select "[data-testid=bean-grind-setting-distribution]", text: /10/
     assert_select "body", text: /Other Workspace Bean/, count: 0
+  end
+
+  test "show omits comparison badges when the bean has no current values" do
+    sign_in_as(users(:one))
+
+    get bean_path(beans(:second_open_household))
+
+    assert_response :success
+    assert_select "[data-testid^=bean-][data-testid$='-comparison-badge']", count: 0
   end
 
   test "show keeps bean analytics all time without date filters" do
