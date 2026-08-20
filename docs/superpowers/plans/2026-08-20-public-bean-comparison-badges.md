@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Rank only current beans in the shared bean's workspace.
+- Rank all non-deleted bean bags/records with usable metric data in the shared bean's workspace, regardless of lifecycle status (stock, open, finished, used-up, or archived); deleted records are naturally absent.
 - One rated brew qualifies for rating; one espresso brew qualifies for channeling.
 - Rating is rounded to one decimal before higher-is-better ranking.
 - Channeling is rounded to an integer percentage before lower-is-better ranking.

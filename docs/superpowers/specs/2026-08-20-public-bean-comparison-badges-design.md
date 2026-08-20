@@ -18,7 +18,7 @@ Private bean details, global instance-wide comparisons, trend history, weighted 
 
 ## Ranking Rules
 
-The comparison pool contains every current bean in the shared bean's workspace that has enough data for the metric. A bean does not need to be published or currently publishable to participate.
+The comparison pool contains all non-deleted bean bags in the shared bean's workspace that have enough usable data for the metric, regardless of lifecycle status (stock, open, finished, used-up, or archived). A bean does not need to be published or currently publishable to participate; deleted records are naturally absent.
 
 Average rating uses all espresso and Quick Drip brews whose rating is present. The per-bean mean is rounded to the same one-decimal value shown publicly before ranking. Higher is better. One rated brew makes a bean eligible.
 
