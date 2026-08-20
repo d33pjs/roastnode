@@ -52,6 +52,29 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-bean-details]", text: /Calendar Coffee/
   end
 
+  test "details, tasting notes, links, and public note render in one ordered flow" do
+    bean = beans(:open_household)
+    bean.record_links.create!(
+      label: "Roastmarket",
+      url: "https://example.test/beans",
+      kind: "buy",
+      visibility: "public"
+    )
+    share = create_share(bean:, enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-details]"
+    assert_select "[data-testid=public-bean-tasting-notes]", text: /Chocolate, cherry/
+    assert_select "[data-testid=public-bean-links] a[data-testid=public-bean-link][target=_blank][rel=noopener]", text: /Roastmarket/
+    assert_select "[data-testid=public-bean-public-note]", text: /Public bean note/
+    assert_appears_before 'data-testid="public-bean-details"', 'data-testid="public-bean-tasting-notes"'
+    assert_appears_before 'data-testid="public-bean-tasting-notes"', 'data-testid="public-bean-links"'
+    assert_appears_before 'data-testid="public-bean-links"', 'data-testid="public-bean-public-note"'
+    assert_no_match(/lg:grid-cols-\[minmax\(0,1fr\)_minmax\(18rem,24rem\)\]/, response.body)
+  end
+
   test "public page renders first and second place comparison badges" do
     share = create_share(enabled: true)
     set_comparisons(

@@ -123,59 +123,56 @@
       <%= render "stat_bar_list", title: t(".taste_balance"), distribution: distributions["taste_balance"], testid: "public-bean-taste-distribution" %>
     </section>
 
-    <section class="grid gap-6 border-t border-rn-line py-8 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,24rem)]">
-      <div>
-        <h2 class="text-2xl font-black text-rn-ink"><%= t(".details") %></h2>
-        <dl data-testid="public-bean-details" class="mt-4 grid gap-3 sm:grid-cols-2">
-          <% [
-            [ t(".origin"), bean["origin"] ],
-            [ t(".continent"), bean["continent"] ],
-            [ t(".process"), bean["process"] ],
-            [ t(".roast_date"), public_bean_date(bean["roast_date"]) ],
-            [ t(".roast_type"), bean["roast_type"] ],
-            [ t(".roast_level"), bean["roast_level"] ],
-            [ t(".country"), bean["country"] ],
-            [ t(".country_of_manufacturer"), bean["country_of_manufacturer"] ],
-            [ t(".manufacturer"), bean["manufacturer"] ],
-            [ t(".region"), bean["region"] ],
-            [ t(".farm"), bean["farm"] ],
-            [ t(".farmer"), bean["farmer"] ],
-            [ t(".elevation"), bean["elevation"] ],
-            [ t(".variety"), bean["variety"] ],
-            [ t(".harvested"), bean["harvested"] ],
-            [ t(".blend_type"), bean["blend_type"] ],
-            [ t(".blend_percentage"), bean["blend_percentage"] ]
-          ].select { |_label, value| value.present? }.each do |label, value| %>
-            <div class="rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 shadow-sm">
-              <dt class="text-xs font-black uppercase text-rn-muted"><%= label %></dt>
-              <dd class="mt-1 text-sm font-extrabold text-rn-ink"><%= value %></dd>
-            </div>
-          <% end %>
-        </dl>
-        <% if bean["tasting_notes"].present? %>
-          <p class="mt-4 rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-semibold leading-6 text-rn-muted shadow-sm"><%= bean["tasting_notes"] %></p>
+    <section class="border-t border-rn-line py-8">
+      <h2 class="text-2xl font-black text-rn-ink"><%= t(".details") %></h2>
+      <dl data-testid="public-bean-details" class="mt-4 grid gap-3 sm:grid-cols-2">
+        <% [
+          [ t(".origin"), bean["origin"] ],
+          [ t(".continent"), bean["continent"] ],
+          [ t(".process"), bean["process"] ],
+          [ t(".roast_date"), public_bean_date(bean["roast_date"]) ],
+          [ t(".roast_type"), bean["roast_type"] ],
+          [ t(".roast_level"), bean["roast_level"] ],
+          [ t(".country"), bean["country"] ],
+          [ t(".country_of_manufacturer"), bean["country_of_manufacturer"] ],
+          [ t(".manufacturer"), bean["manufacturer"] ],
+          [ t(".region"), bean["region"] ],
+          [ t(".farm"), bean["farm"] ],
+          [ t(".farmer"), bean["farmer"] ],
+          [ t(".elevation"), bean["elevation"] ],
+          [ t(".variety"), bean["variety"] ],
+          [ t(".harvested"), bean["harvested"] ],
+          [ t(".blend_type"), bean["blend_type"] ],
+          [ t(".blend_percentage"), bean["blend_percentage"] ]
+        ].select { |_label, value| value.present? }.each do |label, value| %>
+          <div class="rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 shadow-sm">
+            <dt class="text-xs font-black uppercase text-rn-muted"><%= label %></dt>
+            <dd class="mt-1 text-sm font-extrabold text-rn-ink"><%= value %></dd>
+          </div>
         <% end %>
-      </div>
+      </dl>
 
-      <aside class="grid content-start gap-4">
-        <% if bean["public_note"].present? %>
-          <section class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
-            <h2 class="text-xs font-black uppercase text-rn-muted"><%= t(".public_note") %></h2>
-            <p class="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-rn-muted"><%= bean["public_note"] %></p>
-          </section>
-        <% end %>
+      <% if bean["tasting_notes"].present? %>
+        <p data-testid="public-bean-tasting-notes" class="mt-4 rounded-2xl border border-rn-line bg-rn-surface px-4 py-3 text-sm font-semibold leading-6 text-rn-muted shadow-sm"><%= bean["tasting_notes"] %></p>
+      <% end %>
 
-        <% if bean.fetch("links", []).any? %>
-          <section class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
-            <h2 class="text-xs font-black uppercase text-rn-muted"><%= t(".links") %></h2>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <% bean.fetch("links", []).each do |link| %>
-                <%= link_to public_bean_link_label(link), link["url"], target: "_blank", rel: "noopener", data: { testid: "public-bean-link" }, class: "rounded-full bg-[var(--rn-accent-strong)] px-4 py-2 text-sm font-extrabold text-[#f8faf6] hover:opacity-90" %>
-              <% end %>
-            </div>
-          </section>
-        <% end %>
-      </aside>
+      <% if bean.fetch("links", []).any? %>
+        <section data-testid="public-bean-links" class="mt-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+          <h2 class="text-xs font-black uppercase text-rn-muted"><%= t(".links") %></h2>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <% bean.fetch("links", []).each do |link| %>
+              <%= link_to public_bean_link_label(link), link["url"], target: "_blank", rel: "noopener", data: { testid: "public-bean-link" }, class: "rounded-full bg-[var(--rn-accent-strong)] px-4 py-2 text-sm font-extrabold text-[#f8faf6] hover:opacity-90" %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+
+      <% if bean["public_note"].present? %>
+        <section data-testid="public-bean-public-note" class="mt-4 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+          <h2 class="text-xs font-black uppercase text-rn-muted"><%= t(".public_note") %></h2>
+          <p class="mt-3 whitespace-pre-line text-sm font-semibold leading-6 text-rn-muted"><%= bean["public_note"] %></p>
+        </section>
+      <% end %>
     </section>
 
     <section class="border-t border-rn-line py-8">
