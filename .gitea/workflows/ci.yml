@@ -35,10 +35,10 @@ jobs:
       SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
       SOURCE_MIKEBOM_SPDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.spdx3.json
       SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
-      CDXGEN_VERSION: v12.8.1
-      CDXGEN_SHA256: 68383baba70f86046530994b1c741fa4693f83262370441ed21c43bff66e316f
-      WAYBILL_VERSION: v0.1.0-alpha.67
-      WAYBILL_SHA256: d438f0e3b431df7be7caca2c8a6d2f4578090ca0ba619fe3a32424168adc7540
+      CDXGEN_VERSION: v12.8.4
+      CDXGEN_SHA256: 51de5a0a411163140d7f4bbcfd78f171166781ef50f8004b253da015689bda13
+      WAYBILL_VERSION: v0.2.0
+      WAYBILL_SHA256: 5f946e48de62f44d205ef92a21864f55fc49a7da4f71619aec0c1e4cd1c617bb
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
