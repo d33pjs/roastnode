@@ -1,4 +1,5 @@
 require "minitest/autorun"
+require "bundler"
 require "pathname"
 require "yaml"
 
@@ -49,5 +50,16 @@ class ReleaseVersionConfigurationTest < Minitest::Test
     assert_equal "${POSTGRES_IMAGE:-#{selected_image}}", production_compose.fetch("services").fetch("postgres").fetch("image")
     assert_equal selected_image, production_env[/^POSTGRES_IMAGE=(.+)$/, 1]
     assert_equal selected_image, gitea_ci.fetch("jobs").fetch("ci").fetch("services").fetch("postgres").fetch("image")
+  end
+
+  def test_dependency_audit_package_counts_match_the_lockfile
+    lockfile = Bundler::LockfileParser.new(ROOT.join("Gemfile.lock").read)
+    total_count = lockfile.specs.map(&:name).uniq.size
+    direct_count = lockfile.dependencies.size
+    transitive_count = total_count - direct_count
+    audit = ROOT.join("security-report/dependency-audit.md").read
+
+    assert_includes audit,
+      "- Ruby packages: #{total_count} unique locked specs (#{direct_count} direct declarations, #{transitive_count} transitive)."
   end
 end

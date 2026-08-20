@@ -7,7 +7,7 @@ RubySec advisory database.
 
 - Status: clean after remediation and the 2026-08-20 maintenance refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
-- Ruby packages: 136 package names (28 direct, 108 transitive).
+- Ruby packages: 135 unique locked specs (28 direct declarations, 107 transitive).
 - RubySec evidence: database commit `2faad0ccdfa19c7c57f965b90af99dd774eb0085`, containing 1,234 advisories and last updated at 2026-08-19 19:13:22 -0400; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories; any future exception requires documented evidence.
 - JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.0.6 scanned Rails 8.1.3.1 with 0 errors and 0 warnings.
