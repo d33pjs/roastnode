@@ -159,15 +159,52 @@ class BeanStatisticsTest < ActiveSupport::TestCase
     assert_equal({ "10" => 2, "1/3,0" => 1 }, statistics[:distributions][:grind_setting])
   end
 
+  test "stops open age when a bag is finished" do
+    travel_to Time.zone.local(2026, 6, 1, 12) do
+      bean = workspaces(:household).beans.create!(
+        name: "Finished open age",
+        bag_size_grams: 250,
+        remaining_grams: 14,
+        opened_on: Date.new(2026, 5, 10),
+        finished_at: Time.zone.local(2026, 5, 23, 9)
+      )
+
+      statistics = BeanStatistics.new(bean:).call
+
+      assert_equal 13, statistics[:totals][:open_age_days]
+      assert_equal 13, statistics[:totals][:finished_open_days]
+    end
+  end
+
+  test "stops used up open age at the latest brew" do
+    travel_to Time.zone.local(2026, 6, 1, 12) do
+      bean = workspaces(:household).beans.create!(
+        name: "Used up open age",
+        bag_size_grams: 250,
+        remaining_grams: 0,
+        opened_on: Date.new(2026, 5, 10)
+      )
+      create_brew(
+        bean:,
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        grind_setting: "10",
+        occurred_at: Time.zone.local(2026, 5, 22, 9, 30)
+      )
+
+      assert_equal 12, BeanStatistics.new(bean:).call[:totals][:open_age_days]
+    end
+  end
+
   private
-    def create_brew(bean:, grinder:, machine:, grind_setting:)
+    def create_brew(bean:, grinder:, machine:, grind_setting:, occurred_at: Time.zone.local(2026, 5, 24, 9, 30, 0))
       bean.workspace.brews.create!(
         workspace: bean.workspace,
         user: users(:one),
         bean:,
         grinder:,
         machine:,
-        occurred_at: Time.zone.local(2026, 5, 24, 9, 30, 0),
+        occurred_at:,
         bean_weight_grams: 18,
         ground_weight_grams: 18,
         dose_grams: 18,

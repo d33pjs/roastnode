@@ -212,6 +212,36 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "12.5", snapshot.dig("stats", "dead_grams")
   end
 
+  test "open bag duration runs through today when its latest brew predates today" do
+    travel_to Time.zone.local(2026, 5, 26, 12) do
+      bean = beans(:open_household)
+      bean.brews.first.update!(occurred_at: Time.zone.local(2026, 5, 20, 9))
+
+      snapshot = PublicBeanShareSnapshotBuilder.new(
+        bean:,
+        title: "Shared bean",
+        selected_photo_attachment_ids: []
+      ).call
+
+      assert_equal 16, snapshot.dig("stats", "open_duration_days")
+    end
+  end
+
+  test "archived bag duration stops at its archived date" do
+    travel_to Time.zone.local(2026, 6, 1, 12) do
+      bean = beans(:open_household)
+      bean.update_columns(archived_at: Time.zone.local(2026, 5, 21, 9), finished_at: nil)
+
+      snapshot = PublicBeanShareSnapshotBuilder.new(
+        bean:,
+        title: "Archived bean",
+        selected_photo_attachment_ids: []
+      ).call
+
+      assert_equal 11, snapshot.dig("stats", "open_duration_days")
+    end
+  end
+
   test "includes enabled public brew share links for public bean brew rows" do
     bean = beans(:open_household)
     brew = brews(:morning_espresso)

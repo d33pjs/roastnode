@@ -95,9 +95,10 @@ class BeanStatistics
     end
 
     def open_age_days
-      return nil if bean.opened_on.blank?
-
-      (Date.current - bean.opened_on).to_i
+      BeanOpenDuration.new(
+        bean:,
+        latest_brew_at: bean.brews.maximum(:occurred_at)
+      ).call
     end
 
     def rounded_average(values, precision:)

@@ -280,10 +280,10 @@ class PublicBeanShareSnapshotBuilder
     end
 
     def open_duration_days
-      return if bean.opened_on.blank?
-
-      end_date = terminal_at&.to_date || brews.first&.occurred_at&.to_date || Date.current
-      [ (end_date - bean.opened_on).to_i, 0 ].max
+      BeanOpenDuration.new(
+        bean:,
+        latest_brew_at: brews.filter_map(&:occurred_at).max
+      ).call
     end
 
     def terminal_at
