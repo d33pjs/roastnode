@@ -54,12 +54,17 @@ class ReleaseVersionConfigurationTest < Minitest::Test
 
   def test_dependency_audit_package_counts_match_the_lockfile
     lockfile = Bundler::LockfileParser.new(ROOT.join("Gemfile.lock").read)
-    total_count = lockfile.specs.map(&:name).uniq.size
-    direct_count = lockfile.dependencies.size
-    transitive_count = total_count - direct_count
+    spec_names = lockfile.specs.map(&:name).uniq
+    dependency_names = lockfile.dependencies.keys
+    locked_direct_names = spec_names & dependency_names
+    transitive_names = spec_names - dependency_names
+    unlocked_declaration_names = dependency_names - spec_names
     audit = ROOT.join("security-report/dependency-audit.md").read
 
+    assert_equal [ "tzinfo-data" ], unlocked_declaration_names
     assert_includes audit,
-      "- Ruby packages: #{total_count} unique locked specs (#{direct_count} direct declarations, #{transitive_count} transitive)."
+      "- Ruby packages: #{spec_names.size} unique locked specs: #{dependency_names.size} Gemfile declarations, " \
+      "#{locked_direct_names.size} locked direct specs, and #{transitive_names.size} transitive specs. " \
+      "`tzinfo-data` is declared but not locked for the selected platforms."
   end
 end

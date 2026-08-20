@@ -7,7 +7,7 @@ RubySec advisory database.
 
 - Status: clean after remediation and the 2026-08-20 maintenance refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
-- Ruby packages: 135 unique locked specs (28 direct declarations, 107 transitive).
+- Ruby packages: 135 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 108 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
 - RubySec evidence: database commit `2faad0ccdfa19c7c57f965b90af99dd774eb0085`, containing 1,234 advisories and last updated at 2026-08-19 19:13:22 -0400; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories; any future exception requires documented evidence.
 - JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.0.6 scanned Rails 8.1.3.1 with 0 errors and 0 warnings.
@@ -128,15 +128,59 @@ Ruby 4 and PostgreSQL 18 are separate major-runtime migrations, not routine depe
 - Chart.js 4.5.1 and its bundled `@kurkle/color` 0.3.2 dependency are current for the vendored asset.
 - Elms Sans remains pinned to the selected upstream source revision.
 
-## Verification Commands
+## Verification Commands and Results
+
+The final compatibility run on 2026-08-20 used these commands:
 
 ```text
-bundle check
-bundle outdated --strict
+/usr/bin/time -p bundle check
+# PASS: Gemfile dependencies satisfied.
+
+/usr/bin/time -p env RUBOCOP_CACHE_ROOT=tmp/rubocop bin/rubocop
+# PASS: 333 files inspected, no offenses.
+
+/usr/bin/time -p env POSTGRES_PORT=55433 PARALLEL_WORKERS=1 bin/rails test
+# PASS: 1,003 runs, 8,308 assertions, 0 failures, 0 errors, 0 skips.
+
+/usr/bin/time -p ruby test/services/release_version_configuration_test.rb
+# PASS at final Task 4 run: 4 runs, 53 assertions, 0 failures, 0 errors, 0 skips.
+
+/usr/bin/time -p env PATH=/Users/d33pjs/.rbenv/versions/3.3.12/bin:/usr/local/bin:/usr/bin:/bin RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 ROASTNODE_WEBAUTHN_ORIGIN=https://build.roastnode.invalid bin/rails assets:precompile
+# PASS in an isolated clone: Ruby 3.3.12, Tailwind CSS 4.3.3, and Propshaft completed successfully.
+
+/usr/bin/time -p docker build -t roastnode:dependency-refresh .
+# PASS: linux/arm64 image sha256:492fb876cacb2a440c202e78ae77a55663447d087e1d0fd0f94573ed14bfa615, 695,689,801 bytes.
+
+/usr/bin/time -p docker compose -f compose.yaml config --quiet
+# PASS: development Compose configuration valid.
+
+/usr/bin/time -p env ROASTNODE_ENV_FILE=production.env.example docker compose --env-file deploy/production.env.example -f deploy/compose.production.yml config --quiet
+# PASS: production Compose configuration valid with the committed example environment.
+
+/usr/bin/time -p bin/bundler-audit check --update
+# PASS: RubySec commit 2faad0ccdfa19c7c57f965b90af99dd774eb0085; no vulnerabilities.
+
+/usr/bin/time -p bin/bundler-audit check
+# PASS: no vulnerabilities.
+
+/usr/bin/time -p bin/importmap audit
+# PASS: no vulnerable packages.
+
+/usr/bin/time -p bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
+# PASS: 0 errors and 0 security warnings.
+
+/usr/bin/time -p bundle outdated --strict
+# PASS: Bundle up to date.
+
+/usr/bin/time -p bin/importmap outdated
+# PASS: no outdated packages.
+
 bundle outdated
-bin/bundler-audit check --update
-bin/importmap audit
-bin/importmap outdated
-bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
-env POSTGRES_PORT=55433 PARALLEL_WORKERS=1 bin/rails test test/services/release_version_configuration_test.rb test/assets/dashboard_metric_chart_controller_test.rb
+# Expected exit 1 during the residual review: only bindata 2.5.1 -> 3.0.0, constrained as documented above.
+
+git diff --check
+# PASS.
+
+git status --short
+# Clean after the completed Task 4 verification.
 ```
