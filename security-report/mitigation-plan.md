@@ -137,13 +137,13 @@ Confirmed local state:
 Upstream verification:
 - Ruby lists Ruby 3.3.11 released on 2026-03-26 and says 3.3 enters security maintenance after that release.
 - Ruby branches list 3.3 as security maintenance, with 3.4 and 4.0 in normal maintenance.
-- PostgreSQL versioning lists 17.10 as the current supported minor for major 17.
-- PostgreSQL 17.10 release notes include security fixes and say no dump/restore is required for 17.x. Because this app defaults to 17.5, also read 17.6 notes; they advise reindexing only for BRIN `numeric_minmax_multi_ops` indexes. Roastnode schema does not define BRIN indexes.
+- PostgreSQL versioning lists 17.11 as the current supported minor for major 17.
+- PostgreSQL's 17.11 release announcement includes security and bug fixes and says no dump/restore or `pg_upgrade` is required for this 17.x update.
 
 Mitigation:
 - Do now:
   - Update Ruby 3.3.7 to 3.3.11 in `.ruby-version`, `Dockerfile`, deployment docs, and setup docs.
-  - Update Postgres image defaults from `postgres:17.5` to `postgres:17.10` in deploy examples and docs.
+  - Update Postgres image defaults from `postgres:17.5` to `postgres:17.11` in deploy examples and docs.
   - Apply explicit patch-level gem updates: `bootsnap`, `rubyzip`, and safe transitive patches from the supplied outdated list.
 - Defer:
   - Ruby 3.4 or 4.0 migration. Plan separately because Ruby 3.3 is still supported for security fixes until the expected 2027-03-31 EOL.
@@ -155,11 +155,11 @@ Tests/checks:
 - `bin/brakeman --no-pager`
 - `bundle exec bundle-audit check --update`
 - `bin/rails test`
-- For runtime updates, rebuild the Docker image and smoke test boot against Postgres 17.10.
+- For runtime updates, rebuild the Docker image and smoke test boot against Postgres 17.11.
 
 ## Rejected Or Downgraded Items
 
 - Dependency audit finding is downgraded to Low/maintenance: supplied Brakeman and bundle-audit results were clean, and local dependency state matches the reported outdated list.
 - "Upgrade to Ruby 3.4/4.0 now" is rejected for this mitigation batch. The conservative security update is Ruby 3.3.11.
-- "Upgrade to PostgreSQL 18 now" is rejected for this mitigation batch. The conservative security update is PostgreSQL 17.10.
+- "Upgrade to PostgreSQL 18 now" is rejected for this mitigation batch. The conservative security update is PostgreSQL 17.11.
 - CSP alone is rejected as the primary fix for the Buy Me a Coffee issue. If the policy allows the remote script, the app still trusts third-party JavaScript in its own origin.

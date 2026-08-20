@@ -68,7 +68,7 @@ The Gitea workflow downloaded release binaries without verifying their contents,
 - cdxgen 12.8.1.
 - Waybill 0.1.0-alpha.67.
 
-The existing `MIKEBOM` environment-variable names remain as compatibility aliases for existing deployment configuration, but the installed and invoked tool is Waybill. The Gitea PostgreSQL service image was also updated from 17.5 to the current 17.10 patch.
+The existing `MIKEBOM` environment-variable names remain as compatibility aliases for existing deployment configuration, but the installed and invoked tool is Waybill. The Gitea PostgreSQL service image was also updated from 17.5 to the current 17.11 patch.
 
 All third-party workflow actions are pinned to reviewed full commit SHAs, with their release versions retained as comments so Dependabot can continue proposing updates. Downloaded scanner archives and extraction directories are staged outside the source tree so they do not contaminate the generated source SBOM.
 
@@ -80,7 +80,7 @@ All third-party workflow actions are pinned to reviewed full commit SHAs, with t
 
 ### Ruby 4 and PostgreSQL 18
 
-Ruby 4 and PostgreSQL 18 are separate major-runtime migrations, not routine dependency updates. Roastnode stays on Ruby 3.3.12 and PostgreSQL 17.10 for this maintenance change. Both are current supported patch releases for their selected branches; major upgrades should receive dedicated compatibility, data-migration, rollback, and deployment testing.
+Ruby 4 and PostgreSQL 18 are separate major-runtime migrations, not routine dependency updates. Roastnode stays on Ruby 3.3.12 and PostgreSQL 17.11 for this maintenance change. Both are current supported patch releases for their selected branches; major upgrades should receive dedicated compatibility, data-migration, rollback, and deployment testing.
 
 ## Supply-Chain and License Review
 

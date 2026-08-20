@@ -10,7 +10,7 @@ Bring every resolvable Roastnode dependency to its current compatible release, r
 
 Roastnode uses Bundler for direct and transitive Ruby dependencies, importmap with a locally vendored Chart.js distribution for JavaScript, SHA-pinned GitHub/Gitea workflow dependencies, Ruby and PostgreSQL container/runtime versions, and downloaded SBOM tools in CI.
 
-At design time, `bundle outdated --strict` reports compatible updates for Rails 8.1.3.1 and additional direct or transitive gems. The checked-out RubySec database reports no vulnerabilities but was last updated on 2026-07-22, so that result is not sufficient final evidence. Chart.js 4.5.1, Ruby 3.3.12, and PostgreSQL 17.10 are already the current releases for their selected lines according to their official release sources.
+At design time, `bundle outdated --strict` reports compatible updates for Rails 8.1.3.1 and additional direct or transitive gems. The checked-out RubySec database reports no vulnerabilities but was last updated on 2026-07-22, so that result is not sufficient final evidence. Chart.js 4.5.1 and Ruby 3.3.12 are already current for their selected lines, while PostgreSQL 17 requires the available 17.11 patch update.
 
 ## Upgrade Policy
 
@@ -27,7 +27,7 @@ Run the importmap audit and outdated checks. Compare the locally vendored Chart.
 
 Verify Ruby, PostgreSQL, Bundler, GitHub Actions, Gitea workflow actions, and downloaded CI tooling against their official release sources or package metadata. Update patch/minor references and reviewed immutable checksums or action SHAs when newer compatible releases exist. Preserve full-SHA pinning for workflow actions and checksum verification for downloaded executables.
 
-Ruby 3.3.12 and PostgreSQL 17.10 remain selected unless a newer patch in those same release lines appears during implementation. Major runtime upgrades require separate compatibility, deployment, backup, restore, and rollback designs.
+Ruby 3.3.12 and PostgreSQL 17.11 remain selected unless a newer patch in those same release lines appears during implementation. Major runtime upgrades require separate compatibility, deployment, backup, restore, and rollback designs.
 
 ## Security Verification
 

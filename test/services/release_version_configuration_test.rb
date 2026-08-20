@@ -36,4 +36,18 @@ class ReleaseVersionConfigurationTest < Minitest::Test
       end
     end
   end
+
+  def test_postgresql_image_patch_is_consistent_across_runtime_and_ci_defaults
+    selected_image = "postgres:17.11"
+
+    development_compose = YAML.load_file(ROOT.join("compose.yaml"), aliases: true)
+    production_compose = YAML.load_file(ROOT.join("deploy/compose.production.yml"), aliases: true)
+    gitea_ci = YAML.load_file(ROOT.join(".gitea/workflows/ci.yml"), aliases: true)
+    production_env = ROOT.join("deploy/production.env.example").read
+
+    assert_equal selected_image, development_compose.fetch("services").fetch("postgres").fetch("image")
+    assert_equal "${POSTGRES_IMAGE:-#{selected_image}}", production_compose.fetch("services").fetch("postgres").fetch("image")
+    assert_equal selected_image, production_env[/^POSTGRES_IMAGE=(.+)$/, 1]
+    assert_equal selected_image, gitea_ci.fetch("jobs").fetch("ci").fetch("services").fetch("postgres").fetch("image")
+  end
 end

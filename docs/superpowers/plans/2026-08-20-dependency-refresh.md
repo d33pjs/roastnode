@@ -107,7 +107,7 @@ Expected at plan time: `No outdated packages found` and `No vulnerable packages 
 
 - [ ] **Step 2: Verify runtime and database patch lines**
 
-Compare `.ruby-version`/Dockerfile with the official Ruby 3.3 release list and all PostgreSQL image references with the official PostgreSQL 17 version policy. Expected at plan time: Ruby 3.3.12 and PostgreSQL 17.10 are current, so no runtime/image file changes are needed.
+Compare `.ruby-version`/Dockerfile with the official Ruby 3.3 release list and all PostgreSQL image references with the official PostgreSQL 17 version policy. Ruby 3.3.12 remains current; update PostgreSQL from 17.10 to the current 17.11 patch in every runtime and CI image reference.
 
 - [ ] **Step 3: Verify immutable workflow dependencies**
 
@@ -166,7 +166,7 @@ In `security-report/dependency-audit.md`:
 - change the verification date to 2026-08-20;
 - list the direct/transitive gems changed by the final `Gemfile.lock` diff;
 - record the freshly updated RubySec result and importmap/Brakeman results;
-- record that Chart.js 4.5.1, Ruby 3.3.12, and PostgreSQL 17.10 were checked against official current-release sources if they remain unchanged;
+- record that Chart.js 4.5.1, Ruby 3.3.12, and PostgreSQL 17.11 were checked against official current-release sources;
 - update constrained/residual items from the final `bundle outdated` result;
 - replace the verification command list with the commands actually run in this plan.
 
@@ -235,4 +235,3 @@ git status --short
 ```
 
 Expected: security tools exit 0, no compatible updates remain, diff check is clean, and status contains only intentional uncommitted work (ideally none after the planned commits).
-
