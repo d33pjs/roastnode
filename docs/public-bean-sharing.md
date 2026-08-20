@@ -30,7 +30,7 @@ Badge copy is `TOP N OF C BEANS`. Rank 1 uses a gold trophy, rank 2 a silver med
 
 ## Privacy Contract
 
-Public bean shares render from `PublicBeanShare` snapshots. They must not render private notes, purchase source, purchase cost, private links, brew photos, raw record/database IDs, raw attachment IDs, original filenames, signed Active Storage URLs, private media routes, user email addresses, invite tokens, session data, admin data, export data, backup data, environment variables, or infrastructure secrets.
+Public bean shares render from `PublicBeanShare` snapshots. Snapshot open duration uses the shared lifecycle calculator also used by private bean analytics, so terminal dates follow the same rules. They must not render private notes, purchase source, purchase cost, private links, brew photos, raw record/database IDs, raw attachment IDs, original filenames, signed Active Storage URLs, private media routes, user email addresses, invite tokens, session data, admin data, export data, backup data, environment variables, or infrastructure secrets.
 
 Workspace comparisons enter the snapshot only as the shared bean's `rank` and `eligible_count` for each applicable metric. Competing bean names, identifiers, values, lifecycle states, and links remain private. Public bean controllers and views render these comparison results from the curated snapshot and must not query live private comparison beans.
 
@@ -79,7 +79,7 @@ Refresh triggers include:
 - workspace name/logo changes
 - brewer public-label/avatar changes for users whose brews appear on the public bean page
 
-Public pages still render from the refreshed snapshot. They do not read arbitrary live private fields at request time.
+Public pages still render from the refreshed snapshot. Open duration is calculated by the shared lifecycle calculator when the snapshot is built, while public comparison badges remain curated snapshot values rather than live comparison queries. Public pages do not read arbitrary live private fields at request time.
 
 Snapshots created before workspace comparisons were introduced remain valid. If the `comparisons` object or one of its metrics is absent, the public page renders normally without that badge.
 
