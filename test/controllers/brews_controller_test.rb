@@ -763,6 +763,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
     share = create_public_bean_share_for(brew.bean)
+    peer_share = create_public_bean_share_for(beans(:second_open_household))
+    peer_share.update_columns(snapshot: peer_share.snapshot.merge("metadata_marker" => "untouched"))
 
     patch brew_path(brew), params: {
       brew: {
@@ -788,6 +790,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Shot writeup", brew.record_links.first.label
     assert_equal "public", brew.record_links.first.visibility
     assert_includes share.reload.snapshot.fetch("brews").map { |row| row["public_note"] }, "Public brew note."
+    assert_equal "untouched", peer_share.reload.snapshot["metadata_marker"]
   end
 
   test "brew metric updates refresh peer public bean comparison snapshots" do

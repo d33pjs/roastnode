@@ -97,7 +97,7 @@ class BrewsController < ApplicationController
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
 
     @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
-    refresh_public_shares_for(@brew, comparisons: true)
+    refresh_public_shares_for(@brew, comparisons: comparison_inputs_changed?(@brew))
     redirect_to @brew, notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
     load_form_options(
@@ -113,7 +113,7 @@ class BrewsController < ApplicationController
 
   def taste
     if @brew.update(taste_brew_params)
-      refresh_public_shares_for(@brew, comparisons: true)
+      refresh_public_shares_for(@brew, comparisons: comparison_inputs_changed?(@brew))
       redirect_to @brew, notice: t(".updated")
     else
       render :show, status: :unprocessable_entity
@@ -584,6 +584,13 @@ class BrewsController < ApplicationController
       else
         PublicBeanShareRefresher.refresh_for(record)
       end
+    end
+
+    def comparison_inputs_changed?(brew)
+      brew.saved_change_to_bean_id? ||
+        brew.saved_change_to_method? ||
+        brew.saved_change_to_rating? ||
+        (brew.espresso? && brew.saved_change_to_channeling?)
     end
 
     def set_brew_form_preferences
