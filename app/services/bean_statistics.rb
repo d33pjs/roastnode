@@ -16,6 +16,7 @@ class BeanStatistics
       totals:,
       averages:,
       rates:,
+      comparisons:,
       distributions:,
       best_brews:,
       recent_brews:
@@ -66,6 +67,10 @@ class BeanStatistics
         channeling_brew_count: espresso_brews.size,
         channeling_percent: percentage(channeling_count, espresso_brews.size)
       }
+    end
+
+    def comparisons
+      @comparisons ||= BeanComparisonRanker.new(bean:).call
     end
 
     def distributions

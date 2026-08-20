@@ -12,7 +12,7 @@ class PublicBeanShareSnapshotBuilder
       "workspace" => workspace_payload,
       "bean" => bean_payload,
       "stats" => stats_payload,
-      "comparisons" => PublicBeanComparisonRanker.new(bean:).call,
+      "comparisons" => BeanComparisonRanker.new(bean:).call,
       "distributions" => distributions_payload,
       "timeline" => timeline_payload,
       "photos" => photo_payloads,

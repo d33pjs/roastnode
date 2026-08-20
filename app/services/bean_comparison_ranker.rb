@@ -1,4 +1,4 @@
-class PublicBeanComparisonRanker
+class BeanComparisonRanker
   def initialize(bean:)
     @bean = bean
   end

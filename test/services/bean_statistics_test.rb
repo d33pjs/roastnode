@@ -196,7 +196,55 @@ class BeanStatisticsTest < ActiveSupport::TestCase
     end
   end
 
+  test "includes live workspace comparison ranks" do
+    workspace = Workspace.create!(name: "Private rankings", kind: "household", default_currency: "EUR")
+    Membership.create!(workspace:, user: users(:one), role: "owner")
+    current = workspace.beans.create!(
+      name: "Current ranked bean",
+      bag_size_grams: 250,
+      remaining_grams: 200,
+      grind_state: "whole_bean",
+      opened_on: Date.current
+    )
+    peer = workspace.beans.create!(
+      name: "Peer ranked bean",
+      bag_size_grams: 250,
+      remaining_grams: 200,
+      grind_state: "whole_bean",
+      opened_on: Date.current
+    )
+    create_ranked_brew(bean: current, rating: 5, channeling: false)
+    create_ranked_brew(bean: peer, rating: 4, channeling: true)
+
+    statistics = BeanStatistics.new(bean: current).call
+
+    assert_equal(
+      { "rank" => 1, "eligible_count" => 2 },
+      statistics.dig(:comparisons, "average_rating")
+    )
+    assert_equal(
+      { "rank" => 1, "eligible_count" => 2 },
+      statistics.dig(:comparisons, "channeling")
+    )
+  end
+
   private
+    def create_ranked_brew(bean:, rating:, channeling:)
+      bean.workspace.brews.create!(
+        user: users(:one),
+        bean:,
+        grinder: bean.workspace.equipment.create!(name: "Ranking grinder", kind: "grinder"),
+        machine: bean.workspace.equipment.create!(name: "Ranking machine", kind: "machine"),
+        bean_weight_grams: 18,
+        ground_weight_grams: 18,
+        dose_grams: 18,
+        beverage_grams: 42,
+        method: "espresso",
+        rating:,
+        channeling:
+      )
+    end
+
     def create_brew(bean:, grinder:, machine:, grind_setting:, occurred_at: Time.zone.local(2026, 5, 24, 9, 30, 0))
       bean.workspace.brews.create!(
         workspace: bean.workspace,

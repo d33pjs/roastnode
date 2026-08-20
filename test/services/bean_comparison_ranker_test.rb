@@ -1,6 +1,6 @@
 require "test_helper"
 
-class PublicBeanComparisonRankerTest < ActiveSupport::TestCase
+class BeanComparisonRankerTest < ActiveSupport::TestCase
   test "ranks rounded average rating higher first with competition ties" do
     workspace = create_workspace("Ranking")
     first = create_bean(workspace:, name: "First")
@@ -34,7 +34,7 @@ class PublicBeanComparisonRankerTest < ActiveSupport::TestCase
     bean = create_bean(workspace: create_workspace("Single ranking"), name: "Only rated")
     create_brew(bean, rating: 5, channeling: false)
 
-    assert_nil PublicBeanComparisonRanker.new(bean:).call["average_rating"]
+    assert_nil BeanComparisonRanker.new(bean:).call["average_rating"]
   end
 
   test "ranks rounded channeling lower first with competition ties" do
@@ -66,7 +66,7 @@ class PublicBeanComparisonRankerTest < ActiveSupport::TestCase
     create_brew(other, rating: 5, channeling: false)
 
     assert_equal({ "rank" => 2, "eligible_count" => 2 }, comparison(current, "channeling"))
-    assert_nil PublicBeanComparisonRanker.new(bean: quick_drip_only).call["channeling"]
+    assert_nil BeanComparisonRanker.new(bean: quick_drip_only).call["channeling"]
   end
 
   private
@@ -75,7 +75,7 @@ class PublicBeanComparisonRankerTest < ActiveSupport::TestCase
     end
 
     def comparison(bean, metric)
-      PublicBeanComparisonRanker.new(bean:).call.fetch(metric)
+      BeanComparisonRanker.new(bean:).call.fetch(metric)
     end
 
     def public_average(bean)
