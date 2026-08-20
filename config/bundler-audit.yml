@@ -1,5 +1,4 @@
 # Audit all gems listed in the Gemfile for known security problems by running bin/bundler-audit.
-# CVEs that are not relevant to the application can be enumerated on the ignore list below.
+# Add an advisory only after documenting why it does not affect Roastnode.
 
-ignore:
-  - CVE-THAT-DOES-NOT-APPLY
+ignore: []

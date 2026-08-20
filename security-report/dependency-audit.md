@@ -1,14 +1,44 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-07-23 after a full compatible dependency upgrade.
+Verified on 2026-08-20 after refreshing every compatible dependency and the
+RubySec advisory database.
 
 ## Result
 
-- Status: clean after remediation.
+- Status: clean after remediation and the 2026-08-20 maintenance refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
-- Ruby packages: 138 package names before the upgrade (27 direct, 111 transitive); 136 after it (28 direct, 108 transitive).
-- Published Ruby advisories: 22 matches before the upgrade; 0 after it.
-- Post-upgrade checks: `bundle outdated --strict`, Bundler Audit, importmap audit, Brakeman, RuboCop, application tests, workflow YAML/shell validation, and a production Docker build.
+- Ruby packages: 136 package names (28 direct, 108 transitive).
+- RubySec evidence: database commit `2faad0ccdfa19c7c57f965b90af99dd774eb0085`, containing 1,234 advisories and last updated at 2026-08-19 19:13:22 -0400; 0 vulnerabilities matched.
+- Advisory policy: `config/bundler-audit.yml` has no ignored advisories; any future exception requires documented evidence.
+- JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.0.6 scanned Rails 8.1.3.1 with 0 errors and 0 warnings.
+- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; the only non-strict residual is the intentionally constrained `bindata` 3.x major release described below.
+
+## 2026-08-20 Compatible Refresh
+
+The final `Gemfile.lock` diff updated these direct dependencies:
+
+- Rails 8.1.3 to 8.1.3.1.
+- Bootsnap 1.24.6 to 1.25.0.
+- Brakeman 8.0.5 to 8.0.6.
+- CSV 3.3.5 to 3.3.6.
+- image_processing 2.0.2 to 2.0.3.
+- RubyZip 3.4.1 to 3.5.0.
+- Selenium WebDriver 4.46.0 to 4.47.0.
+- Solid Queue 1.5.0 to 1.6.0.
+- Thruster 0.1.23 to 0.1.25, including all locked native platforms.
+
+It also updated these transitive dependencies:
+
+- Action Cable, Action Mailbox, Action Mailer, Action Pack, Action Text, Action View, Active Job, Active Model, Active Record, Active Storage, Active Support, and Railties from 8.1.3 to 8.1.3.1.
+- ERB 6.0.6 to 6.0.7; et-orbi 1.4.0 to 1.4.1; io-console 0.8.2 to 0.9.2; JSON 2.21.1 to 2.21.2; Msgpack 1.8.3 to 1.8.4; net-imap 0.6.4.1 to 0.6.6; and Rack 3.2.6 to 3.2.7.
+- RBS 4.0.3 to 4.1.3; Reline 0.6.3 to 0.7.0; RuboCop 1.88.2 to 1.89.0; RuboCop Performance 1.26.1 to 1.27.0; and RuboCop Rails 2.36.0 to 2.37.0.
+- SSHKit 1.25.0 to 1.25.1; TPM Key Attestation 0.14.1 to 0.14.2; and Zeitwerk 2.8.2 to 2.8.3.
+
+The non-gem inventory refresh updated PostgreSQL 17.10 to 17.11, cdxgen
+12.8.1 to 12.8.4, Waybill 0.1.0-alpha.67 to 0.2.0, and compatible
+full-SHA-pinned workflow actions. Official current-release sources were checked
+on 2026-08-20: Ruby 3.3.12, PostgreSQL 17.11, and Chart.js 4.5.1 are current for
+their selected release lines.
 
 ## Remediated Findings
 
@@ -36,7 +66,7 @@ Severity before remediation: Medium.
 - Bundler was updated from 4.0.9 to 4.0.17.
 - Compatible direct and transitive gems were updated, including Kamal, Selenium, Solid Cable, Solid Queue, Tailwind CSS, Thruster, RuboCop, Nokogiri, JSON, and Rails HTML Sanitizer.
 
-Rails remains at the current compatible 8.1.3 release.
+Rails is now at the current compatible 8.1.3.1 release.
 
 ### DEP-003 — Image processing major upgrade
 
@@ -65,8 +95,8 @@ Severity before remediation: Medium.
 
 The Gitea workflow downloaded release binaries without verifying their contents, and its `mikebom` source had been renamed upstream. The workflow now pins both the version and SHA-256 checksum for:
 
-- cdxgen 12.8.1.
-- Waybill 0.1.0-alpha.67.
+- cdxgen 12.8.4.
+- Waybill 0.2.0.
 
 The existing `MIKEBOM` environment-variable names remain as compatibility aliases for existing deployment configuration, but the installed and invoked tool is Waybill. The Gitea PostgreSQL service image was also updated from 17.5 to the current 17.11 patch.
 
@@ -76,7 +106,14 @@ All third-party workflow actions are pinned to reviewed full commit SHAs, with t
 
 ### `bindata` 3.x
 
-`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.0, but the installed WebAuthn and TPM key-attestation dependency constraints require the 2.x line. Version 2.5.1 has no matching RubySec advisory, so this is accepted until its parents widen their constraints.
+`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.0, but WebAuthn 3.4.3 and TPM Key Attestation 0.14.2 both require `bindata ~> 2.4`. Version 2.5.1 has no matching RubySec advisory, so this is accepted until both parents widen their constraints.
+
+### cdxgen 13.x
+
+cdxgen 13.0.1 is a newer major release. Roastnode remains on the newest 12.x
+release, 12.8.4, under the approved no-major maintenance scope. Moving to 13.x
+requires a separate CI/SBOM output-compatibility review; the pinned 12.8.4 Linux
+binary is protected by its published SHA-256 checksum.
 
 ### Ruby 4 and PostgreSQL 18
 
@@ -96,10 +133,10 @@ Ruby 4 and PostgreSQL 18 are separate major-runtime migrations, not routine depe
 ```text
 bundle check
 bundle outdated --strict
+bundle outdated
 bin/bundler-audit check --update
 bin/importmap audit
+bin/importmap outdated
 bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error
-bin/rubocop
-bin/rails test
-docker build .
+env POSTGRES_PORT=55433 PARALLEL_WORKERS=1 bin/rails test test/services/release_version_configuration_test.rb test/assets/dashboard_metric_chart_controller_test.rb
 ```
