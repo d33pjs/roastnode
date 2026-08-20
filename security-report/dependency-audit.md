@@ -140,16 +140,16 @@ The final compatibility run on 2026-08-20 used these commands:
 # PASS: 333 files inspected, no offenses.
 
 /usr/bin/time -p env POSTGRES_PORT=55433 PARALLEL_WORKERS=1 bin/rails test
-# PASS: 1,003 runs, 8,308 assertions, 0 failures, 0 errors, 0 skips.
+# PASS: 1,004 runs, 8,318 assertions, 0 failures, 0 errors, 0 skips.
 
 /usr/bin/time -p ruby test/services/release_version_configuration_test.rb
-# PASS at final Task 4 run: 4 runs, 53 assertions, 0 failures, 0 errors, 0 skips.
+# PASS on the final reviewed head: 4 runs, 54 assertions, 0 failures, 0 errors, 0 skips.
 
 /usr/bin/time -p env PATH=/Users/d33pjs/.rbenv/versions/3.3.12/bin:/usr/local/bin:/usr/bin:/bin RAILS_ENV=production SECRET_KEY_BASE_DUMMY=1 ROASTNODE_WEBAUTHN_ORIGIN=https://build.roastnode.invalid bin/rails assets:precompile
-# PASS in an isolated clone: Ruby 3.3.12, Tailwind CSS 4.3.3, and Propshaft completed successfully.
+# PASS on the final reviewed head: Ruby 3.3.12, Tailwind CSS 4.3.3, and Propshaft completed successfully.
 
 /usr/bin/time -p docker build -t roastnode:dependency-refresh .
-# PASS: linux/arm64 image sha256:492fb876cacb2a440c202e78ae77a55663447d087e1d0fd0f94573ed14bfa615, 695,689,801 bytes.
+# PASS: linux/arm64 image sha256:adc7087d16a219f4c08a9aa4e557778a9900bd6c762a9b70be3d3ec6c69f0f3a, 695,866,433 bytes.
 
 /usr/bin/time -p docker compose -f compose.yaml config --quiet
 # PASS: development Compose configuration valid.
