@@ -1,7 +1,8 @@
 class CreateActivityEvents < ActiveRecord::Migration[8.1]
   MAX_TEXT = 160
   MAX_ARRAY = 10
-  SENSITIVE = %r{https?://|rails/active_storage|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|(?:password|digest|token|secret|session|signed_id|attachment|filename|ip_address|file_path|error)\s*[:=]}i
+  SENSITIVE = %r{[a-z][a-z0-9+.-]*://|rails/active_storage|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|(?:password|digest|token|secret|session|signed_id|attachment|filename|ip_address|file_path|error)\s*[:=]}i
+  ABSOLUTE_PATH = %r{\A(?:/|\.\./|[a-z]:[\\/]|\\\\)}i
 
   class ActivityRow < ActiveRecord::Base
     self.table_name = "activity_events"
@@ -314,7 +315,7 @@ class CreateActivityEvents < ActiveRecord::Migration[8.1]
 
     def safe_label(value)
       text = value.to_s.strip.squish
-      return "[redacted]" if text.match?(SENSITIVE) || text.start_with?("/", "../")
+      return "[redacted]" if text.match?(SENSITIVE) || text.match?(ABSOLUTE_PATH)
 
       text.first(MAX_TEXT).presence || "Unknown"
     end

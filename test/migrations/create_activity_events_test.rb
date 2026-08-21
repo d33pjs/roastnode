@@ -112,6 +112,19 @@ class CreateActivityEventsTest < ActiveSupport::TestCase
     )
   end
 
+  test "backfill sanitizer redacts non-http URLs and absolute filesystem paths" do
+    unsafe_values = [
+      "s3://private-bucket/key",
+      "file:///private/backup",
+      "C:\\backups\\archive.zip",
+      "\\\\server\\share"
+    ]
+
+    sanitized_values = unsafe_values.map { |value| CreateActivityEvents.new.send(:safe_label, value) }
+
+    assert_equal Array.new(unsafe_values.length, "[redacted]"), sanitized_values
+  end
+
   test "backfill does not invent history and metadata contains no secrets" do
     ActivityEvent.delete_all
     migration = CreateActivityEvents.new
