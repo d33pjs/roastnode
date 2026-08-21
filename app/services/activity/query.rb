@@ -38,13 +38,18 @@ module Activity
       attr_reader :workspace, :membership, :user, :category, :actor_filter, :start_date, :end_date
 
       def authorized_scope
+        return ActivityEvent.none unless valid_active_workspace_membership?
+
         visibilities = membership&.can_manage_workspace? ? %w[workspace workspace_admin] : %w[workspace]
-        authorized_membership = membership && workspace && user &&
-          membership.workspace_id == workspace.id && membership.user_id == user.id
-        workspace_rows = authorized_membership ? ActivityEvent.where(workspace:, visibility: visibilities) : ActivityEvent.none
+        workspace_rows = ActivityEvent.where(workspace:, visibility: visibilities)
         return workspace_rows unless user&.instance_admin?
 
         workspace_rows.or(ActivityEvent.where(workspace_id: nil, visibility: "instance_admin"))
+      end
+
+      def valid_active_workspace_membership?
+        membership && workspace && user &&
+          membership.workspace_id == workspace.id && membership.user_id == user.id
       end
 
       def apply_filters(scope)
@@ -67,7 +72,9 @@ module Activity
         return scope.where(actor_id: integer_id) if kind == "user" && integer_id
         if kind == "former"
           label = Base64.urlsafe_decode64(id.to_s)
-          return scope.where(actor_id: nil).where("metadata ->> 'actor_label' = ?", label)
+          return scope.where(actor_id: nil)
+            .where("metadata ->> 'actor_kind' = ?", "user")
+            .where("metadata ->> 'actor_label' = ?", label)
         end
 
         scope.none

@@ -25,6 +25,18 @@ class Activity::QueryTest < ActiveSupport::TestCase
     assert_empty query(user: users(:two), membership: memberships(:owner)).events
   end
 
+  test "instance admins require a valid active-workspace membership for every activity scope" do
+    user = users(:one)
+    user.update!(instance_admin: true)
+
+    [ nil, memberships(:other_owner), memberships(:member) ].each do |membership|
+      invalid_query = query(user:, membership:)
+
+      assert_empty invalid_query.events
+      assert_empty invalid_query.actor_options
+    end
+  end
+
   test "instance admin receives instance rows but status alone never grants workspace-admin rows" do
     user = users(:one)
     user.update!(instance_admin: true)
@@ -84,6 +96,26 @@ class Activity::QueryTest < ActiveSupport::TestCase
     assert_empty query(category: "not-a-category").events
     assert_empty query(actor: "user:not-an-id").events
     assert query(start_date: "31/31/2026", end_date: "bad").events.exists?
+  end
+
+  test "former and system actor selectors stay distinct when labels collide" do
+    former = ActivityEvent.create!(
+      workspace: workspaces(:household), category: "coffee", action: "brew.updated",
+      occurred_at: Time.current, visibility: "workspace",
+      metadata: { "actor_kind" => "user", "actor_label" => "System" }
+    )
+    system = ActivityEvent.create!(
+      workspace: workspaces(:household), category: "coffee", action: "brew.updated",
+      occurred_at: Time.current, visibility: "workspace",
+      metadata: { "actor_kind" => "system", "actor_label" => "System" }
+    )
+    former_selector = "former:#{Base64.urlsafe_encode64('System', padding: false)}"
+
+    former_ids = query(actor: former_selector).events.pluck(:id)
+    system_ids = query(actor: "system").events.pluck(:id)
+
+    assert_equal [ former.id ], former_ids
+    assert_equal [ system.id ], system_ids
   end
 
   test "missing or cross-workspace membership grants no workspace rows" do
