@@ -1,0 +1,70 @@
+morning_brew_created:
+  workspace: household
+  actor: one
+  category: coffee
+  action: brew.created
+  occurred_at: 2026-06-01 08:00:00
+  visibility: workspace
+  subject: morning_espresso (Brew)
+  metadata:
+    actor_kind: user
+    actor_label: Jens
+    record_kind: brew
+    subject_label: Espresso with House Espresso
+    method: espresso
+
+quick_drip_created:
+  workspace: household
+  actor: one
+  category: coffee
+  action: brew.created
+  occurred_at: 2026-06-01 09:00:00
+  visibility: workspace
+  metadata:
+    actor_kind: user
+    actor_label: Jens
+    record_kind: brew
+    subject_label: Quick Drip with Filter Beans
+    method: quick_drip
+
+workspace_invite_created:
+  workspace: household
+  actor: one
+  category: household_administration
+  action: workspace_invite.created
+  occurred_at: 2026-06-01 10:00:00
+  visibility: workspace_admin
+  metadata:
+    actor_kind: user
+    actor_label: Jens
+    record_kind: workspace_invite
+    subject_label: Member invite
+    role: member
+
+other_workspace_brew:
+  workspace: other_household
+  actor: two
+  category: coffee
+  action: brew.created
+  occurred_at: 2026-06-01 11:00:00
+  visibility: workspace
+  subject: other_workspace_brew (Brew)
+  metadata:
+    actor_kind: user
+    actor_label: Petra
+    record_kind: brew
+    subject_label: Espresso with Other Beans
+    method: espresso
+
+scheduled_backup_succeeded:
+  category: system_security
+  action: instance_backup_run.succeeded
+  occurred_at: 2026-06-01 12:00:00
+  visibility: instance_admin
+  metadata:
+    actor_kind: system
+    actor_label: System
+    record_kind: instance_backup_run
+    subject_label: Full instance archive
+    backup_kind: full_archive
+    status: succeeded

@@ -30,6 +30,7 @@ class Workspace < ApplicationRecord
   has_many :public_brew_shares, dependent: :destroy
   has_many :public_recipe_shares, dependent: :destroy
   has_many :public_bean_shares, dependent: :destroy
+  has_many :activity_events
   has_one_attached :logo
   has_one_attached :banner
 

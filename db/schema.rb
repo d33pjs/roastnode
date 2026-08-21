@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_20_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_20_120000) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "activity_events", force: :cascade do |t|
+    t.string "action", null: false
+    t.bigint "actor_id"
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "occurred_at", null: false
+    t.bigint "subject_id"
+    t.string "subject_type"
+    t.datetime "updated_at", null: false
+    t.string "visibility", null: false
+    t.bigint "workspace_id"
+    t.index ["actor_id"], name: "index_activity_events_on_actor_id"
+    t.index ["occurred_at", "id"], name: "idx_activity_instance_time", where: "(workspace_id IS NULL)"
+    t.index ["subject_type", "subject_id"], name: "idx_activity_subject"
+    t.index ["visibility", "workspace_id", "occurred_at", "id"], name: "idx_activity_visibility_workspace_time"
+    t.index ["workspace_id", "actor_id", "occurred_at", "id"], name: "idx_activity_workspace_actor_time"
+    t.index ["workspace_id", "category", "occurred_at", "id"], name: "idx_activity_workspace_category_time"
+    t.index ["workspace_id", "occurred_at", "id"], name: "idx_activity_workspace_time"
+    t.index ["workspace_id"], name: "index_activity_events_on_workspace_id"
+    t.check_constraint "subject_type IS NULL AND subject_id IS NULL OR subject_type IS NOT NULL AND subject_id IS NOT NULL", name: "activity_events_subject_pair"
+    t.check_constraint "visibility::text = 'instance_admin'::text AND workspace_id IS NULL OR (visibility::text = ANY (ARRAY['workspace'::character varying, 'workspace_admin'::character varying]::text[])) AND workspace_id IS NOT NULL", name: "activity_events_visibility_scope"
   end
 
   create_table "beans", force: :cascade do |t|
@@ -574,6 +598,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_20_120000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "activity_events", "users", column: "actor_id", on_delete: :nullify
+  add_foreign_key "activity_events", "workspaces", on_delete: :cascade
   add_foreign_key "beans", "beans", column: "duplicated_from_bean_id"
   add_foreign_key "beans", "data_imports"
   add_foreign_key "beans", "workspaces"
