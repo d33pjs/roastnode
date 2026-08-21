@@ -28,3 +28,9 @@ The locale keys are scoped under `public_bean_shares.form`, the exact requested 
 ## Concerns
 
 Database-backed tests require a PostgreSQL instance reachable from the test process; the sandbox denied localhost access on port 55433.
+
+## Rerun Evidence
+
+- `POSTGRES_PORT=55433 PARALLEL_WORKERS=1 bin/rails test test/controllers/public_bean_shares_controller_test.rb`: passed, 13 runs, 80 assertions, 0 failures, 0 errors, 0 skips.
+- `POSTGRES_PORT=55433 PARALLEL_WORKERS=1 bin/rails test`: reached the suite with database access but failed with two `ActiveRecord::Deadlocked` errors (`RecipeTest#test_source_brew_can_be_deleted_while_recipe_keeps_its_profile` and `WorkspacesControllerTest#test_admin_cannot_transfer_ownership`). The suite still ran concurrently despite `PARALLEL_WORKERS=1`; these are unrelated test-environment deadlocks.
+- `bin/rubocop`: passed, 335 files inspected, no offenses.
