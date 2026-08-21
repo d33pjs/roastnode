@@ -39,6 +39,19 @@ module PublicBeanSharesHelper
     "#{public_bean_decimal(value)}/5"
   end
 
+  def public_bean_share_title(snapshot)
+    snapshot ||= {}
+    return snapshot["title"] if snapshot["title"].present?
+
+    bean = snapshot["bean"] || {}
+    type_fallback = [ bean["roast_type"], bean["blend_type"] ]
+      .compact_blank
+      .map(&:humanize)
+      .join(" · ")
+
+    type_fallback.presence || t("public_bean_pages.show.share_title_missing")
+  end
+
   def public_bean_ratio(brew)
     dose = public_bean_decimal_value(brew["dose_grams"].presence || brew["bean_weight_grams"])
     beverage = public_bean_decimal_value(brew["beverage_grams"])

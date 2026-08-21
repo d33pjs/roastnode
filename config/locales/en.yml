@@ -813,6 +813,7 @@ en:
       roast_date: "Roast date"
       roast_level: "Roast level"
       roast_type: "Roast type"
+      share_title_missing: "404 — share title not found"
       status: "Status"
       taste_balance: "Taste balance"
       time: "Time"

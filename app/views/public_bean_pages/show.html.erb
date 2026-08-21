@@ -36,10 +36,8 @@
     <section class="mt-4 grid overflow-hidden rounded-3xl border border-rn-line bg-rn-surface shadow-sm lg:grid-cols-[minmax(0,1fr)_24rem] lg:items-stretch">
       <div class="min-w-0 p-5 sm:p-8">
         <p class="text-sm font-black uppercase text-rn-muted"><%= bean["roaster_name"].presence || unknown %></p>
-        <h1 class="mt-2 text-4xl font-black leading-tight text-rn-ink sm:text-6xl"><%= bean["name"].presence || snapshot["title"].presence || unknown %></h1>
-        <% if bean["display_name"].present? && bean["display_name"] != bean["name"] %>
-          <p class="mt-4 text-xl font-extrabold text-rn-muted"><%= bean["display_name"] %></p>
-        <% end %>
+        <h1 data-testid="public-bean-coffee-name" class="mt-2 text-4xl font-black leading-tight text-rn-ink sm:text-6xl"><%= bean["name"].presence || snapshot["title"].presence || unknown %></h1>
+        <p data-testid="public-bean-share-title" class="mt-4 text-xl font-extrabold text-rn-muted"><%= public_bean_share_title(snapshot) %></p>
 
         <div class="mt-6 grid gap-3 sm:grid-cols-2 <%= finished_bag ? "lg:grid-cols-3" : "lg:grid-cols-4" %>">
           <div data-testid="public-bean-hero-stat-average-rating" class="rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3">

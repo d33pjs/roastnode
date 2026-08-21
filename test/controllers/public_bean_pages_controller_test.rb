@@ -3,6 +3,19 @@ require "test_helper"
 class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
   include PhotoTestHelper
 
+  test "hero shows the share title between the coffee name and statistic cards" do
+    share = create_share(enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-coffee-name]", text: share.snapshot.dig("bean", "name")
+    assert_select "[data-testid=public-bean-share-title]", text: "Shared bean"
+    assert_select "[data-testid=public-bean-share-title]", text: share.snapshot.dig("bean", "display_name"), count: 0
+    assert_appears_before "data-testid=\"public-bean-coffee-name\"", "data-testid=\"public-bean-share-title\""
+    assert_appears_before "data-testid=\"public-bean-share-title\"", "data-testid=\"public-bean-hero-stat-average-rating\""
+  end
+
   test "disabled share returns not found" do
     share = create_share(enabled: false)
 

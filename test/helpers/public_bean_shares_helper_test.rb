@@ -1,6 +1,39 @@
 require "test_helper"
 
 class PublicBeanSharesHelperTest < ActionView::TestCase
+  test "share title prefers the snapshot title" do
+    snapshot = {
+      "title" => "Sunday spro club",
+      "bean" => { "roast_type" => "espresso", "blend_type" => "blend" }
+    }
+
+    assert_equal "Sunday spro club", public_bean_share_title(snapshot)
+  end
+
+  test "share title falls back to normalized roast and blend types" do
+    snapshot = {
+      "title" => "",
+      "bean" => { "roast_type" => "espresso", "blend_type" => "blend" }
+    }
+
+    assert_equal "Espresso · Blend", public_bean_share_title(snapshot)
+  end
+
+  test "share title uses the single available type" do
+    snapshot = {
+      "title" => nil,
+      "bean" => { "roast_type" => "quick_drip", "blend_type" => nil }
+    }
+
+    assert_equal "Quick drip", public_bean_share_title(snapshot)
+  end
+
+  test "share title uses the missing-title message when no fallback data exists" do
+    snapshot = { "title" => "", "bean" => {} }
+
+    assert_equal "404 — share title not found", public_bean_share_title(snapshot)
+  end
+
   test "timeline items cluster nearby brews and preserve relative order" do
     timeline = {
       "opened_on" => "2026-06-01",
