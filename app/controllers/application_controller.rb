@@ -52,6 +52,48 @@ class ApplicationController < ActionController::Base
       !User.exists?
     end
 
+    def with_workspace_activity(action:, subject:, occurred_at: nil, details: {}, visibility: nil)
+      result = false
+      ActiveRecord::Base.transaction do
+        result = yield
+        raise ActiveRecord::Rollback unless result
+
+        Activity::Emitter.record!(
+          action: resolve_activity_value(action),
+          workspace: current_workspace,
+          actor: Current.user,
+          subject: resolve_activity_value(subject),
+          occurred_at: resolve_activity_value(occurred_at) || Time.current,
+          visibility:,
+          details: resolve_activity_value(details)
+        )
+      end
+      result
+    end
+
+    def with_account_activity(action:, user:, subject: user, details: {})
+      result = false
+      ActiveRecord::Base.transaction do
+        result = yield
+        raise ActiveRecord::Rollback unless result
+
+        workspace = user.active_workspace
+        Activity::Emitter.record!(
+          action:,
+          workspace:,
+          actor: user,
+          subject:,
+          visibility: workspace ? "workspace_admin" : "instance_admin",
+          details:
+        )
+      end
+      result
+    end
+
+    def resolve_activity_value(value)
+      value.respond_to?(:call) ? value.call : value
+    end
+
     def authorize_workspace_admin!
       return if current_workspace_policy.manage?
 
