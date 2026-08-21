@@ -68,7 +68,7 @@ class ApplicationController < ActionController::Base
           details: resolve_activity_value(details)
         )
       end
-      result
+      result || false
     end
 
     def with_account_activity(action:, user:, subject: user, details: {})

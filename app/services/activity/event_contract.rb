@@ -165,6 +165,39 @@ module Activity
       "instance_backup_run.failed" => { "backup_kind" => %w[full_archive readable_json], "status" => %w[failed] }
     }.freeze
 
+    BASE_METADATA_SCHEMA = {
+      "actor_kind" => { type: :string, values: %w[user system] },
+      "actor_label" => { type: :string },
+      "record_kind" => { type: :string },
+      "subject_label" => { type: :string }
+    }.freeze
+
+    METADATA_KEY_SCHEMAS = {
+      "method" => { type: :string, values: %w[espresso quick_drip] },
+      "status" => { type: :string, values: %w[stock open finished used_up archived] },
+      "amount_grams" => { type: :decimal_string },
+      "event_types" => {
+        type: :string_array,
+        values: %w[
+          grinder_cleaning grinder_deep_cleaning machine_descaling machine_backflush brewer_cleaning
+          brewer_descaling filter_change burr_change other
+        ]
+      },
+      "equipment_labels" => { type: :string_array },
+      "enabled" => { type: :boolean },
+      "role" => { type: :string, values: %w[owner admin member viewer] },
+      "source" => { type: :string, values: %w[beanconqueror] },
+      "backup_kind" => { type: :string, values: %w[full_archive readable_json] },
+      "file_size_bytes" => { type: :integer, minimum: 0 },
+      "source_label" => { type: :string },
+      "from_role" => { type: :string, values: %w[owner admin member viewer] },
+      "to_role" => { type: :string, values: %w[owner admin member viewer] },
+      "export_kind" => { type: :string, values: %w[json beans_csv brews_csv external_coffees_csv media_zip] },
+      "authentication_method" => { type: :string, values: %w[password passkey passkey_second_factor invited_signup] },
+      "created_count" => { type: :integer, minimum: 0 },
+      "skipped_count" => { type: :integer, minimum: 0 }
+    }.freeze
+
     module_function
 
     def fetch(action)
@@ -176,6 +209,7 @@ module Activity
       automatic_metadata_keys = AUTOMATIC_METADATA_ACTIONS.filter_map do |key, actions|
         key if actions.include?(action)
       end
+      metadata_keys = (automatic_metadata_keys + DETAIL_KEYS.fetch(action, [])).uniq
       {
         category:,
         visibility: visibility_for(action),
@@ -185,9 +219,18 @@ module Activity
         summary: SUMMARY_OVERRIDES.fetch(action, suffix),
         detail_keys: DETAIL_KEYS.fetch(action, []),
         automatic_metadata_keys:,
-        metadata_keys: (automatic_metadata_keys + DETAIL_KEYS.fetch(action, [])).uniq,
+        metadata_keys:,
+        metadata_schema: BASE_METADATA_SCHEMA.merge(
+          metadata_keys.index_with { |key| metadata_schema_for(action, key) }
+        ),
         detail_values: DETAIL_VALUES.fetch(action, {})
       }
+    end
+
+    def metadata_schema_for(action, key)
+      schema = METADATA_KEY_SCHEMAS.fetch(key)
+      allowed_values = DETAIL_VALUES.dig(action, key)
+      allowed_values ? schema.merge(values: allowed_values) : schema
     end
 
     def visibility_for(action)

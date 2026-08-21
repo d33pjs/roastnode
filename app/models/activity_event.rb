@@ -49,14 +49,21 @@ class ActivityEvent < ApplicationRecord
       validate_activity_subject_contract(definition) if subject
       return unless metadata.is_a?(Hash)
 
-      allowed = %w[actor_kind actor_label record_kind subject_label] + definition.fetch(:metadata_keys)
+      allowed = definition.fetch(:metadata_schema).keys
       errors.add(:metadata, "contains unsupported keys") if metadata.keys.map(&:to_s).difference(allowed).any?
       errors.add(:metadata, "is too large") if metadata.to_json.bytesize > 2.kilobytes
-      errors.add(:metadata, "has an invalid actor kind") unless %w[user system].include?(metadata["actor_kind"])
-      metadata.each_value do |value|
+      actor_kind_schema = definition.fetch(:metadata_schema).fetch("actor_kind")
+      unless Activity::Metadata.value_matches_schema?(metadata["actor_kind"], actor_kind_schema)
+        errors.add(:metadata, "has an invalid actor kind")
+      end
+      metadata.each do |key, value|
         valid_value = value.is_a?(String) || value.is_a?(Numeric) || value == true || value == false || value.nil? ||
           (value.is_a?(Array) && value.all? { |item| item.is_a?(String) })
         errors.add(:metadata, "must stay flat") unless valid_value
+        schema = definition.fetch(:metadata_schema)[key.to_s]
+        unless schema && Activity::Metadata.value_matches_schema?(value, schema)
+          errors.add(:metadata, "contains a value that does not match its action schema")
+        end
         text_values = value.is_a?(Array) ? value : [ value ]
         if text_values.any? { |item| item.is_a?(String) && Activity::Metadata.unsafe_text?(item) }
           errors.add(:metadata, "contains unsafe text")
@@ -65,9 +72,6 @@ class ActivityEvent < ApplicationRecord
           errors.add(:metadata, "contains overlong text")
         end
         errors.add(:metadata, "contains too many values") if value.is_a?(Array) && value.length > Activity::Metadata::MAX_ARRAY
-      end
-      definition.fetch(:detail_values).each do |key, values|
-        errors.add(:metadata, "contains an unsupported #{key}") if metadata.key?(key) && !values.include?(metadata[key].to_s)
       end
     rescue KeyError
       errors.add(:action, "is not supported")
@@ -79,15 +83,9 @@ class ActivityEvent < ApplicationRecord
         return
       end
 
-      subject_workspace_id = if subject.is_a?(Workspace)
-        subject.id
-      elsif subject.respond_to?(:workspace_id)
-        subject.workspace_id
-      end
-      if workspace_id.present? && subject_workspace_id.present? && subject_workspace_id != workspace_id
-        errors.add(:subject, "belongs to another workspace")
-      elsif workspace_id.blank? && subject_workspace_id.present? && !subject.is_a?(Workspace)
-        errors.add(:subject, "cannot be workspace-scoped for instance activity")
-      end
+      return if Activity::SubjectScope.compatible?(subject:, workspace:)
+
+      message = workspace_id.present? ? "belongs to another workspace" : "cannot be workspace-scoped for instance activity"
+      errors.add(:subject, message)
     end
 end

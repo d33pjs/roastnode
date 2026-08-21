@@ -67,6 +67,36 @@ class Activity::EmitterTest < ActiveSupport::TestCase
     end
   end
 
+  test "rejects cross-workspace user and passkey subjects while allowing compatible account placement" do
+    assert_raises(ArgumentError) do
+      Activity::Emitter.record!(
+        action: "profile.updated", workspace: workspaces(:other_household), actor: users(:two), subject: users(:one)
+      )
+    end
+    assert_raises(ArgumentError) do
+      Activity::Emitter.record!(
+        action: "passkey.created", workspace: workspaces(:other_household), actor: users(:two),
+        subject: passkey_credentials(:one_touch_id)
+      )
+    end
+
+    user_event = Activity::Emitter.record!(
+      action: "profile.updated", workspace: workspaces(:household), actor: users(:one), subject: users(:one)
+    )
+    passkey_event = Activity::Emitter.record!(
+      action: "passkey.created", workspace: workspaces(:household), actor: users(:one),
+      subject: passkey_credentials(:one_touch_id)
+    )
+    instance_event = Activity::Emitter.record!(
+      action: "passkey.created", workspace: nil, actor: users(:one),
+      subject: passkey_credentials(:one_touch_id), visibility: "instance_admin"
+    )
+
+    assert_equal workspaces(:household), user_event.workspace
+    assert_equal workspaces(:household), passkey_event.workspace
+    assert_nil instance_event.workspace
+  end
+
   test "redacts path url and secret-shaped label text" do
     users(:one).update!(display_name: "https://private.example/token=abc")
 
@@ -83,6 +113,17 @@ class Activity::EmitterTest < ActiveSupport::TestCase
     [ "s3://private-bucket/key", "file://private/path", "C:\\private\\file", "\\\\server\\share" ].each do |unsafe_text|
       assert_equal "[redacted]", Activity::Metadata.safe_text(unsafe_text)
     end
+  end
+
+  test "redacts Windows parent paths through runtime emission" do
+    users(:one).update!(display_name: "..\\private\\backup")
+
+    event = Activity::Emitter.record!(
+      action: "profile.updated", workspace: workspaces(:household), actor: users(:one), subject: users(:one)
+    )
+
+    assert_equal "[redacted]", event.metadata.fetch("actor_label")
+    assert_no_match(/private|backup/i, event.metadata.to_json)
   end
 
   test "sanitizes every item in automatic subject-derived arrays" do
@@ -160,8 +201,83 @@ class Activity::EmitterTest < ActiveSupport::TestCase
     assert_raises(ActiveRecord::RecordInvalid) { unsafe_array_event.save! }
   end
 
+  test "metadata schema rejects invalid caller and automatic value types" do
+    data_import = DataImport.create!(
+      workspace: workspaces(:household), user: users(:one), source: "beanconqueror", status: "completed"
+    )
+    backup_profile = InstanceBackupProfile.new(name: "Full archive", backup_kind: "full_archive")
+    backup_run = backup_profile.instance_backup_runs.build(
+      backup_kind: "full_archive", status: "succeeded", file_size_bytes: 42
+    )
+
+    assert_raises(ArgumentError) do
+      Activity::Metadata.build(
+        action: "data_import.completed", actor: users(:one), subject: data_import,
+        details: { "created_count" => "private note" }
+      )
+    end
+    assert_raises(ArgumentError) do
+      Activity::Emitter.record!(
+        action: "data_import.completed", workspace: workspaces(:household), actor: users(:one), subject: data_import,
+        details: { "created_count" => "private note" }
+      )
+    end
+    assert_raises(ArgumentError) do
+      Activity::Metadata.build(
+        action: "instance_backup_run.succeeded", actor: nil, subject: backup_run,
+        details: { "backup_kind" => "full_archive", "status" => "succeeded", "file_size_bytes" => [ "unknown" ] }
+      )
+    end
+    assert_raises(ArgumentError) { Activity::Metadata.safe_value([ { "label" => "private" } ]) }
+  end
+
+  test "direct writes enforce the complete per-action metadata schema" do
+    base = {
+      occurred_at: Time.current,
+      metadata: { "actor_kind" => "user", "actor_label" => "Jens" }
+    }
+    invalid_count = ActivityEvent.new(base.merge(
+      workspace: workspaces(:household), actor: users(:one), category: "system_security",
+      action: "data_import.completed", visibility: "workspace_admin",
+      metadata: base.fetch(:metadata).merge("created_count" => "private note")
+    ))
+    invalid_file_size = ActivityEvent.new(base.merge(
+      category: "system_security", action: "instance_backup_run.succeeded", visibility: "instance_admin",
+      metadata: base.fetch(:metadata).merge(
+        "backup_kind" => "full_archive", "status" => "succeeded", "file_size_bytes" => [ "unknown" ]
+      )
+    ))
+    invalid_enabled = ActivityEvent.new(base.merge(
+      workspace: workspaces(:household), actor: users(:one), category: "sharing_recipes",
+      action: "public_brew_share.updated", visibility: "workspace",
+      metadata: base.fetch(:metadata).merge("enabled" => "maybe")
+    ))
+    invalid_array_item = ActivityEvent.new(base.merge(
+      workspace: workspaces(:household), actor: users(:one), category: "gear_maintenance",
+      action: "equipment_event.created", visibility: "workspace",
+      metadata: base.fetch(:metadata).merge("event_types" => [ { "name" => "grinder_cleaning" } ])
+    ))
+
+    [ invalid_count, invalid_file_size, invalid_enabled, invalid_array_item ].each do |event|
+      assert_not event.valid?
+      assert_includes event.errors[:metadata], "contains a value that does not match its action schema"
+      assert_raises(ActiveRecord::RecordInvalid) { event.save! }
+    end
+  end
+
+  test "direct writes still require a schema-valid actor kind" do
+    event = ActivityEvent.new(
+      workspace: workspaces(:household), actor: users(:one), category: "coffee",
+      action: "brew.created", occurred_at: Time.current, visibility: "workspace",
+      metadata: { "actor_label" => "Jens" }
+    )
+
+    assert_not event.valid?
+    assert_includes event.errors[:metadata], "has an invalid actor kind"
+  end
+
   test "direct model writes reject arbitrary URI schemes and absolute paths" do
-    [ "s3://private-bucket/key", "file://private/path", "C:\\private\\file", "\\\\server\\share" ].each do |unsafe_text|
+    [ "s3://private-bucket/key", "file://private/path", "C:\\private\\file", "\\\\server\\share", "..\\private\\backup" ].each do |unsafe_text|
       event = ActivityEvent.new(
         workspace: workspaces(:household), actor: users(:one), category: "coffee",
         action: "brew.created", occurred_at: Time.current, visibility: "workspace",
@@ -171,6 +287,42 @@ class Activity::EmitterTest < ActiveSupport::TestCase
       assert_not event.valid?
       assert_includes event.errors[:metadata], "contains unsafe text"
     end
+  end
+
+  test "direct writes reject cross-workspace user and passkey subjects" do
+    base = {
+      workspace: workspaces(:other_household), actor: users(:two), category: "system_security",
+      occurred_at: Time.current, visibility: "workspace_admin",
+      metadata: { "actor_kind" => "user", "actor_label" => "Petra" }
+    }
+    wrong_user = ActivityEvent.new(base.merge(action: "profile.updated", subject: users(:one)))
+    wrong_passkey = ActivityEvent.new(
+      base.merge(action: "passkey.created", subject: passkey_credentials(:one_touch_id))
+    )
+    valid_user = ActivityEvent.new(
+      base.merge(workspace: workspaces(:household), actor: users(:one), action: "profile.updated", subject: users(:one))
+    )
+    valid_passkey = ActivityEvent.new(
+      base.merge(
+        workspace: workspaces(:household), actor: users(:one), action: "passkey.created",
+        subject: passkey_credentials(:one_touch_id)
+      )
+    )
+    valid_instance_passkey = ActivityEvent.new(
+      base.merge(
+        workspace: nil, actor: users(:one), action: "passkey.created", visibility: "instance_admin",
+        subject: passkey_credentials(:one_touch_id)
+      )
+    )
+
+    [ wrong_user, wrong_passkey ].each do |event|
+      assert_not event.valid?
+      assert_includes event.errors[:subject], "belongs to another workspace"
+      assert_raises(ActiveRecord::RecordInvalid) { event.save! }
+    end
+    assert_predicate valid_user, :valid?
+    assert_predicate valid_passkey, :valid?
+    assert_predicate valid_instance_passkey, :valid?
   end
 
   test "direct model writes enforce action category visibility subject type and workspace" do
@@ -257,6 +409,26 @@ class Activity::EmitterTest < ActiveSupport::TestCase
         end
       end
     end
+    assert_equal original_notes, brew.reload.notes
+  ensure
+    Current.reset
+  end
+
+  test "workspace wrapper normalizes a nil mutation result to false and rolls back" do
+    user = users(:one)
+    user.update!(active_workspace: workspaces(:household))
+    Current.session = user.sessions.create!
+    brew = brews(:morning_espresso)
+    original_notes = brew.notes
+
+    result = assert_no_difference -> { ActivityEvent.count } do
+      ApplicationController.new.send(:with_workspace_activity, action: "brew.updated", subject: brew) do
+        brew.update!(notes: "Must roll back from nil")
+        nil
+      end
+    end
+
+    assert_equal false, result
     assert_equal original_notes, brew.reload.notes
   ensure
     Current.reset

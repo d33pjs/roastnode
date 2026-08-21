@@ -3,7 +3,7 @@ module Activity
     MAX_TEXT = 160
     MAX_ARRAY = 10
     SENSITIVE = %r{[a-z][a-z0-9+.-]*://|rails/active_storage|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|(?:password|digest|token|secret|session|signed_id|attachment|filename|ip_address|file_path|error)\s*[:=]}i
-    ABSOLUTE_PATH = %r{\A(?:/|\.\./|[a-z]:[\\/]|\\\\)}i
+    ABSOLUTE_PATH = %r{\A(?:/|\.\.[\\/]|[a-z]:[\\/]|\\\\)}i
 
     module_function
 
@@ -12,18 +12,15 @@ module Activity
       details = details.to_h.stringify_keys
       unexpected = details.keys - definition.fetch(:detail_keys)
       raise ArgumentError, "unsupported activity details: #{unexpected.join(', ')}" if unexpected.any?
-      definition.fetch(:detail_values).each do |key, allowed|
-        next unless details.key?(key)
-        raise ArgumentError, "unsupported #{key} for #{action}" unless allowed.include?(details.fetch(key).to_s)
-      end
-
       automatic_details = auto_details(subject).slice(*definition.fetch(:automatic_metadata_keys))
 
-      actor_payload(actor)
+      payload = actor_payload(actor)
         .merge(subject_payload(subject))
         .merge(automatic_details.transform_values { |value| safe_value(value) })
         .merge(details.transform_values { |value| safe_value(value) })
         .compact
+      validate_schema!(action:, payload:, schema: definition.fetch(:metadata_schema))
+      payload
     end
 
     def actor_payload(actor)
@@ -83,9 +80,39 @@ module Activity
       case value
       when String, Symbol then safe_text(value)
       when Numeric, TrueClass, FalseClass, NilClass then value
-      when Array then value.first(MAX_ARRAY).map { |item| safe_text(item) }
+      when Array
+        unless value.all? { |item| item.is_a?(String) || item.is_a?(Symbol) }
+          raise ArgumentError, "activity metadata arrays must contain only text"
+        end
+
+        value.first(MAX_ARRAY).map { |item| safe_text(item) }
       else raise ArgumentError, "activity metadata must be flat JSON scalars"
       end
+    end
+
+    def validate_schema!(action:, payload:, schema:)
+      payload.each do |key, value|
+        next if value_matches_schema?(value, schema.fetch(key))
+
+        raise ArgumentError, "unsupported #{key} for #{action}"
+      end
+    end
+
+    def value_matches_schema?(value, schema)
+      type_matches = case schema.fetch(:type)
+      when :string then value.is_a?(String)
+      when :string_array then value.is_a?(Array) && value.all? { |item| item.is_a?(String) }
+      when :boolean then value == true || value == false
+      when :integer then value.is_a?(Integer)
+      when :decimal_string then value.is_a?(String) && value.match?(/\A-?\d+(?:\.\d+)?\z/)
+      else false
+      end
+      return false unless type_matches
+      return false if schema[:minimum] && value < schema.fetch(:minimum)
+      return true unless schema[:values]
+
+      values = value.is_a?(Array) ? value : [ value ]
+      values.all? { |item| schema.fetch(:values).include?(item) }
     end
 
     def safe_text(value)

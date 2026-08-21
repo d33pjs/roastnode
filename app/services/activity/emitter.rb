@@ -31,9 +31,7 @@ module Activity
       if subject && subject.class.base_class.name != expected_subject_type
         raise ArgumentError, "activity subject type does not match action"
       end
-      return unless workspace && subject
-      subject_workspace_id = subject.is_a?(Workspace) ? subject.id : subject.workspace_id if subject.respond_to?(:workspace_id) || subject.is_a?(Workspace)
-      return if subject_workspace_id.nil? || subject_workspace_id == workspace.id
+      return if SubjectScope.compatible?(subject:, workspace:)
 
       raise ArgumentError, "activity subject belongs to another workspace"
     end
