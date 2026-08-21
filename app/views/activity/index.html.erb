@@ -6,35 +6,36 @@
       <h1 class="mt-2 text-4xl font-black text-rn-ink"><%= t(".title") %></h1>
     </header>
 
+    <% filter_input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-rn-surface px-3 py-2.5 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    <%= form_with url: activity_path, method: :get, class: "mt-6 grid gap-3 md:grid-cols-5" do |form| %>
+      <div>
+        <%= form.label :category, t(".category"), class: "block text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted" %>
+        <%= form.select :category, options_for_select(ActivityEvent::CATEGORIES.map { |value| [t("activity.categories.#{value}"), value] }, params[:category]), { include_blank: t(".all_categories") }, data: { testid: "activity-category" }, class: filter_input_class %>
+      </div>
+      <div>
+        <%= form.label :actor, t(".actor"), class: "block text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted" %>
+        <%= form.select :actor, options_for_select(@actor_options.map { |option| [option.label, option.value] }, params[:actor]), { include_blank: t(".all_actors") }, data: { testid: "activity-actor" }, class: filter_input_class %>
+      </div>
+      <div>
+        <%= form.label :start_date, t(".start_date"), class: "block text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted" %>
+        <%= form.date_field :start_date, value: params[:start_date], data: { testid: "activity-start-date" }, class: filter_input_class %>
+      </div>
+      <div>
+        <%= form.label :end_date, t(".end_date"), class: "block text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted" %>
+        <%= form.date_field :end_date, value: params[:end_date], data: { testid: "activity-end-date" }, class: filter_input_class %>
+      </div>
+      <%= form.submit t(".filter"), class: "self-end rounded-2xl bg-[var(--rn-accent-strong)] px-4 py-2.5 font-extrabold text-[#f8faf6] hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-[var(--rn-accent-strong)] focus:ring-offset-2" %>
+    <% end %>
+
     <% if @activity.any? %>
       <div class="mt-8 overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
-        <% @activity.records.each do |activity| %>
-          <% if activity.is_a?(Brew) %>
-            <%= link_to brew_path(activity), data: { testid: "activity-card" }, class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
-              <p class="font-extrabold text-rn-ink"><%= t(".brew", bean: activity.bean.name) %></p>
-              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".brew_type") %> | <%= activity.user.display_label %></p>
-            <% end %>
-          <% elsif activity.is_a?(ExternalCoffee) %>
-            <%= link_to external_coffee_path(activity), data: { testid: "activity-card" }, class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
-              <p class="font-extrabold text-rn-ink"><%= t(".external_coffee", drink: activity.drink_type) %></p>
-              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".external_coffee_type") %> | <%= activity.user.display_label %></p>
-            <% end %>
-          <% elsif activity.is_a?(EquipmentEvent) %>
-            <%= link_to equipment_event_path(activity), data: { testid: "activity-card" }, class: "block border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
-              <p class="font-extrabold text-rn-ink"><%= t(".equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>
-              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".equipment_type") %> | <%= activity.user.display_label %></p>
-            <% end %>
-          <% else %>
-            <div data-testid="activity-card" class="border-b border-rn-line p-4 last:border-b-0">
-              <p class="font-extrabold text-rn-ink"><%= t(".adjustment", bean: activity.bean.name, amount: profile_number(activity.delta_grams, precision: 1)) %></p>
-              <p class="mt-1 text-sm font-semibold text-rn-ink"><%= profile_timestamp(activity.occurred_at) %> | <%= t(".inventory_type") %> | <%= activity.user.display_label %></p>
-            </div>
-          <% end %>
-        <% end %>
+        <%= render partial: "activity/event", collection: @activity.records, as: :event %>
       </div>
       <%= render "shared/history_pagination", paginator: @activity, params: request.query_parameters.except("page") %>
     <% else %>
-      <p class="mt-8 rounded-2xl border border-rn-line bg-rn-surface p-5 text-sm font-semibold text-rn-ink"><%= t(".empty") %></p>
+      <p data-testid="activity-empty" class="mt-8 rounded-2xl border border-rn-line bg-rn-surface p-5 text-sm font-semibold text-rn-ink">
+        <%= t(@activity_filters_active ? ".filtered_empty" : ".empty") %>
+      </p>
     <% end %>
   </section>
 </main>

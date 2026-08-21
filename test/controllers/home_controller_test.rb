@@ -154,10 +154,28 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", bean_path(beans(:open_household)), text: /#{beans(:open_household).name}/
     assert_select "a[href=?]", bean_path(beans(:other_workspace_open)), count: 0
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
-    assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
     assert_select "[data-testid=dashboard-recent-activity-heading] a[href=?]", activity_path, text: I18n.t("workspaces.show.view_all")
     assert_select "p", text: I18n.t("workspaces.show.activity.adjustment", amount: "-18", bean: beans(:open_household).name), count: 0
     assert_select "p", text: I18n.t("workspaces.show.status.brews_this_week")
+  end
+
+  test "dashboard and full history use the same ledger card partial" do
+    users(:one).update!(display_name: "Jens")
+    9.times do |index|
+      Activity::Emitter.record!(
+        action: index.zero? ? "brew.created" : "brew.updated",
+        workspace: workspaces(:household), actor: users(:one),
+        subject: brews(:morning_espresso), occurred_at: Time.zone.local(2026, 8, 21, 12) - index.minutes
+      )
+    end
+    sign_in_as(users(:one))
+
+    get dashboard_path
+    assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-card]", count: 8
+    assert_select "[data-symbol=local_cafe]", minimum: 1
+
+    get activity_path
+    assert_select "[data-testid=activity-card] [data-testid=activity-summary]", minimum: 1
   end
 
   test "workspace dashboard renders open bean primary photos and refreshed sections" do
@@ -299,8 +317,8 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=dashboard-open-beans].min-w-0"
     assert_select "[data-testid=dashboard-recent-activity].min-w-0"
-    assert_select "[data-testid=dashboard-recent-activity] a.min-w-0"
-    assert_select "[data-testid=dashboard-recent-activity] p.break-words"
+    assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-card].min-w-0"
+    assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-summary].break-words"
     assert_select "[data-testid=dashboard-latest-coffee-card].min-w-0"
     assert_select "[data-testid=dashboard-latest-coffee-card] > a.min-w-0"
   end
@@ -325,7 +343,7 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
   test "workspace dashboard shows manual inventory adjustments in recent activity" do
     bean = beans(:open_household)
-    bean.inventory_adjustments.create!(
+    adjustment = bean.inventory_adjustments.create!(
       workspace: bean.workspace,
       user: users(:one),
       delta_grams: 12.5,
@@ -333,12 +351,18 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       note: "Found extra beans.",
       occurred_at: Time.zone.local(2026, 5, 27, 10, 15, 0)
     )
+    users(:one).update!(display_name: "Jens")
+    Activity::Emitter.record!(
+      action: "inventory_adjustment.created", workspace: bean.workspace, actor: users(:one), subject: adjustment,
+      occurred_at: adjustment.occurred_at
+    )
     sign_in_as(users(:one))
 
     get root_path
 
     assert_response :success
-    assert_select "p", text: I18n.t("workspaces.show.activity.adjustment", amount: "12,5", bean: bean.name)
+    assert_select "[data-testid=activity-summary]",
+      text: I18n.t("activity.events.adjusted", actor: "Jens", subject: bean.display_name, amount_grams: "12.5")
   end
 
   test "root honors log espresso landing preference while dashboard remains accessible" do

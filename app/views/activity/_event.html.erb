@@ -1,0 +1,17 @@
+<% presenter = Activity::Presenter.new(event, helpers: self) %>
+<% card = capture do %>
+  <span data-testid="activity-icon-container" class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full <%= presenter.icon_container_classes %>"><%= material_symbol(presenter.icon) %></span>
+  <span class="min-w-0">
+    <span data-testid="activity-summary" class="block break-words font-extrabold text-rn-ink"><%= presenter.summary %></span>
+    <span class="mt-1 block text-sm text-rn-muted">
+      <%= profile_timestamp(presenter.timestamp) %> · <%= presenter.category_label %>
+      <% if presenter.restricted? %><span data-testid="activity-restricted" class="ml-1 font-semibold">· <%= t("activity.index.restricted") %></span><% end %>
+    </span>
+  </span>
+<% end %>
+<% attributes = { data: { testid: "activity-card", visibility: event.visibility }, class: "flex min-w-0 gap-3 border-b border-rn-line p-4 last:border-b-0" } %>
+<% if presenter.path %>
+  <%= link_to presenter.path, **attributes.merge(class: "#{attributes[:class]} hover:bg-[var(--rn-surface-muted)] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[var(--rn-accent-strong)]") do %><%= card %><% end %>
+<% else %>
+  <%= tag.div(card, **attributes) %>
+<% end %>

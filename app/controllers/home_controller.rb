@@ -35,7 +35,9 @@ class HomeController < ApplicationController
       @open_beans = @open_bean_cockpit_entries.map(&:bean)
       @latest_coffee = latest_dashboard_coffee
       @latest_best_brew = dashboard_brews.where.not(rating: nil).order(rating: :desc, occurred_at: :desc, created_at: :desc).first
-      @recent_activity = WorkspaceActivityFeed.new(current_workspace).records(limit: 8)
+      @recent_activity = Activity::Query.new(
+        workspace: current_workspace, membership: current_membership, user: Current.user
+      ).events.limit(8)
     end
 
     def dashboard_brews

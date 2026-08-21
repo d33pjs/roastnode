@@ -323,29 +323,7 @@
         </div>
         <div class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
           <% if @recent_activity.any? %>
-            <% @recent_activity.each do |activity| %>
-              <% if activity.is_a?(Brew) %>
-                <%= link_to brew_path(activity), class: "block min-w-0 border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
-                  <p class="min-w-0 break-words font-extrabold text-rn-ink"><%= t(".activity.brew", bean: activity.bean.name) %></p>
-                  <p class="mt-1 min-w-0 text-sm text-rn-muted"><%= profile_timestamp(activity.occurred_at) %></p>
-                <% end %>
-              <% elsif activity.is_a?(ExternalCoffee) %>
-                <%= link_to external_coffee_path(activity), class: "block min-w-0 border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
-                  <p class="min-w-0 break-words font-extrabold text-rn-ink"><%= t(".activity.external_coffee", drink: activity.drink_type) %></p>
-                  <p class="mt-1 min-w-0 text-sm text-rn-muted"><%= profile_timestamp(activity.occurred_at) %></p>
-                <% end %>
-              <% elsif activity.is_a?(EquipmentEvent) %>
-                <%= link_to equipment_event_path(activity), class: "block min-w-0 border-b border-rn-line p-4 last:border-b-0 hover:bg-[var(--rn-surface-muted)]" do %>
-                  <p class="min-w-0 break-words font-extrabold text-rn-ink"><%= t(".activity.equipment_event", event: activity.event_type_summary, equipment: activity.equipment.map(&:name).to_sentence) %></p>
-                  <p class="mt-1 min-w-0 text-sm text-rn-muted"><%= profile_timestamp(activity.occurred_at) %></p>
-                <% end %>
-              <% else %>
-                <div class="min-w-0 border-b border-rn-line p-4 last:border-b-0">
-                  <p class="min-w-0 break-words font-extrabold text-rn-ink"><%= t(".activity.adjustment", bean: activity.bean.name, amount: profile_number(activity.delta_grams, precision: 1)) %></p>
-                  <p class="mt-1 min-w-0 text-sm text-rn-muted"><%= profile_timestamp(activity.occurred_at) %></p>
-                </div>
-              <% end %>
-            <% end %>
+            <%= render partial: "activity/event", collection: @recent_activity, as: :event %>
           <% else %>
             <p class="p-4 text-sm text-rn-muted"><%= t(".no_activity") %></p>
           <% end %>

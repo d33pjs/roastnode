@@ -2,17 +2,6 @@ require "test_helper"
 
 class ActivityControllerTest < ActionDispatch::IntegrationTest
   test "index shows workspace activity newest first" do
-    workspace = workspaces(:household)
-    adjustment = workspace.inventory_adjustments.create!(
-      bean: beans(:open_household),
-      user: users(:one),
-      delta_grams: 12.5,
-      reason: "manual",
-      note: "Found extra beans.",
-      occurred_at: Time.zone.local(2026, 6, 1, 10, 0, 0)
-    )
-    brews(:morning_espresso).update!(occurred_at: Time.zone.local(2026, 6, 1, 9, 0, 0))
-    equipment_events(:grinder_cleaning).update!(occurred_at: Time.zone.local(2026, 6, 1, 8, 0, 0))
     sign_in_as(users(:one))
 
     get activity_path
@@ -20,24 +9,17 @@ class ActivityControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", I18n.t("activity.index.title")
     assert_select "[data-testid=activity-card]", minimum: 3
-    assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /#{beans(:open_household).name}/
-    assert_select "a[href=?]", equipment_event_path(equipment_events(:grinder_cleaning)), text: /Grinder cleaning/
-    assert_select "p", text: I18n.t("activity.index.adjustment", amount: "12,5", bean: adjustment.bean.name)
+    assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /Espresso with House Espresso/
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
-    assert_appears_before "12,5", beans(:open_household).name
-    assert_appears_before beans(:open_household).name, "Grinder cleaning"
+    assert_appears_before "Member invite", "Quick Drip with Filter Beans"
+    assert_appears_before "Quick Drip with Filter Beans", "Espresso with House Espresso"
   end
 
   test "index paginates activity" do
-    workspace = workspaces(:household)
     21.times do |index|
-      workspace.inventory_adjustments.create!(
-        bean: beans(:open_household),
-        user: users(:one),
-        delta_grams: index + 1,
-        reason: "manual",
-        note: "Correction #{index}",
-        occurred_at: Time.zone.local(2026, 6, 1, 12, 0, 0) - index.minutes
+      Activity::Emitter.record!(
+        action: "brew.updated", workspace: workspaces(:household), actor: users(:one),
+        subject: brews(:morning_espresso), occurred_at: Time.zone.local(2026, 8, 21, 12) - index.minutes
       )
     end
     sign_in_as(users(:one))
@@ -53,16 +35,61 @@ class ActivityControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=history-previous-page][href=?]", activity_path(page: 1)
   end
 
-  test "viewer can read activity history" do
-    memberships(:member).update!(role: "viewer")
-    user = users(:two)
-    user.update!(active_workspace: workspaces(:household))
-    sign_in_as(user)
+  test "filters authorized ledger rows and preserves filters in pagination" do
+    users(:one).update!(display_name: "Jens")
+    21.times do |index|
+      Activity::Emitter.record!(
+        action: "brew.updated", workspace: workspaces(:household), actor: users(:one),
+        subject: brews(:morning_espresso), occurred_at: Time.zone.local(2026, 8, 21, 12) - index.minutes
+      )
+    end
+    sign_in_as(users(:one))
 
-    get activity_path
+    get activity_path, params: {
+      category: "coffee", actor: "user:#{users(:one).id}",
+      start_date: "2026-08-21", end_date: "2026-08-21"
+    }
 
     assert_response :success
-    assert_select "h1", I18n.t("activity.index.title")
+    assert_select "[data-testid=activity-card]", count: 20
+    assert_select "select[data-testid=activity-category] option[value=coffee][selected]"
+    assert_select "[data-testid=activity-actor] option[value=?]", "user:#{users(:one).id}", text: "Jens"
+    assert_select "label[for=category]", text: "Category"
+    assert_select "label[for=actor]", text: "User"
+    assert_select "label[for=start_date]", text: "Start date"
+    assert_select "label[for=end_date]", text: "End date"
+    assert_select "[data-testid=history-next-page][href*=?]", "category=coffee"
+    assert_select "[data-testid=history-next-page][href*=?]", "actor=user%3A#{users(:one).id}"
+  end
+
+  test "viewer does not receive restricted cards and anonymous public reads do not write ledger rows" do
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    sign_in_as(users(:two))
+
+    get activity_path
+    assert_response :success
+    assert_select "[data-visibility=workspace_admin]", count: 0
+
+    share = PublicBrewShare.create!(
+      workspace: workspaces(:household), brew: brews(:morning_espresso),
+      created_by: users(:one), updated_by: users(:one), title: "Public brew story",
+      enabled: true, snapshot: {}
+    )
+    delete session_path
+    assert_no_difference -> { ActivityEvent.count } do
+      get public_brew_page_path(share.token)
+    end
+  end
+
+  test "active filters with no matches render the filtered empty state" do
+    sign_in_as(users(:one))
+
+    get activity_path, params: { category: "coffee", start_date: "1900-01-01", end_date: "1900-01-01" }
+
+    assert_response :success
+    assert_select "[data-testid=activity-card]", count: 0
+    assert_select "[data-testid=activity-empty]", text: I18n.t("activity.index.filtered_empty")
   end
 
   private
