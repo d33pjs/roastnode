@@ -316,16 +316,16 @@
         </div>
       </section>
 
-      <section data-testid="dashboard-recent-activity" class="min-w-0">
+      <section data-testid="dashboard-recent-activity" class="min-w-0 rounded-3xl border border-stone-800 bg-stone-950 p-4 shadow-xl shadow-stone-950/15 sm:p-5 lg:col-span-2">
         <div data-testid="dashboard-recent-activity-heading" class="mb-4 flex min-w-0 items-center justify-between gap-4">
-          <h2 class="text-xl font-black text-rn-ink"><%= t(".recent_activity") %></h2>
-          <%= link_to t(".view_all"), activity_path, class: "text-sm font-bold text-rn-ink hover:underline" %>
+          <h2 class="text-xl font-black text-stone-50"><%= t(".recent_activity") %></h2>
+          <%= link_to t(".view_all"), activity_path, class: "text-sm font-extrabold text-amber-200 hover:text-amber-100 hover:underline" %>
         </div>
-        <div class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
+        <div data-testid="dashboard-recent-activity-panel" class="overflow-hidden rounded-2xl border border-stone-800 bg-stone-950">
           <% if @recent_activity.any? %>
             <%= render partial: "activity/event", collection: @recent_activity, as: :event %>
           <% else %>
-            <p class="p-4 text-sm text-rn-muted"><%= t(".no_activity") %></p>
+            <p class="p-4 text-sm text-stone-400"><%= t(".no_activity") %></p>
           <% end %>
         </div>
       </section>

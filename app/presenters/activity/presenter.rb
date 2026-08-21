@@ -27,41 +27,50 @@ module Activity
 
     def actor_label = metadata.fetch("actor_label", I18n.t("activity.events.system"))
     def timestamp = event.occurred_at
-    def category_label = I18n.t("activity.categories.#{event.category}", default: I18n.t("activity.categories.unknown"))
-    def icon = definition&.fetch(:icon) || "more_vert"
-    def icon_container_classes = CATEGORY_ICON_CLASSES.fetch(event.category, NEUTRAL_ICON_CLASSES)
+    def category_label = definition ? I18n.t("activity.categories.#{definition.fetch(:category)}") : I18n.t("activity.categories.unknown")
+    def icon = definition && path ? definition.fetch(:icon) : "more_vert"
+    def icon_container_classes = definition ? CATEGORY_ICON_CLASSES.fetch(definition.fetch(:category)) : NEUTRAL_ICON_CLASSES
     def restricted? = event.visibility != "workspace"
 
     def path
-      return unless definition && (subject = event.subject)
+      return @path if defined?(@path)
 
-      case subject
-      when Brew then helpers.brew_path(subject)
-      when ExternalCoffee then helpers.external_coffee_path(subject)
-      when Bean then helpers.bean_path(subject)
-      when Equipment then helpers.equipment_path(subject)
-      when PreparationTool then helpers.preparation_tool_path(subject)
-      when EquipmentEvent then helpers.equipment_event_path(subject)
-      when InventoryAdjustment then helpers.bean_path(subject.bean) if subject.bean
-      when Recipe then helpers.recipe_path(subject)
-      when PublicBrewShare then helpers.brew_path(subject.brew) if subject.brew
-      when PublicBeanShare then helpers.bean_path(subject.bean) if subject.bean
-      when PublicRecipeShare then helpers.recipe_path(subject.recipe) if subject.recipe
-      when DataImport then helpers.beanconqueror_import_path(subject)
-      end
+      @path = resolve_path
     rescue ActiveRecord::RecordNotFound
-      nil
+      @path = nil
     end
 
     private
       attr_reader :event, :helpers
 
+      def resolve_path
+        return unless definition && (subject = event.subject)
+
+        case subject
+        when Brew then helpers.brew_path(subject)
+        when ExternalCoffee then helpers.external_coffee_path(subject)
+        when Bean then helpers.bean_path(subject)
+        when Equipment then helpers.equipment_path(subject)
+        when PreparationTool then helpers.preparation_tool_path(subject)
+        when EquipmentEvent then helpers.equipment_event_path(subject)
+        when InventoryAdjustment then helpers.bean_path(subject.bean) if subject.bean
+        when Recipe then helpers.recipe_path(subject)
+        when PublicBrewShare then helpers.brew_path(subject.brew) if subject.brew
+        when PublicBeanShare then helpers.bean_path(subject.bean) if subject.bean
+        when PublicRecipeShare then helpers.recipe_path(subject.recipe) if subject.recipe
+        when DataImport then helpers.beanconqueror_import_path(subject)
+        end
+      end
+
       def metadata = event.metadata.to_h
 
       def definition
-        @definition ||= EventContract.fetch(event.action)
+        return @definition if defined?(@definition)
+
+        candidate = EventContract.fetch(event.action)
+        @definition = candidate.fetch(:category) == event.category ? candidate : nil
       rescue KeyError
-        nil
+        @definition = nil
       end
   end
 end

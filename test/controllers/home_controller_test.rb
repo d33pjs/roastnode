@@ -172,6 +172,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
 
     get dashboard_path
     assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-card]", count: 8
+    assert_select "[data-testid=dashboard-recent-activity].bg-stone-950", count: 1
+    assert_select "[data-testid=dashboard-recent-activity-panel]", count: 1
+    assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-category-label].uppercase", minimum: 1
     assert_select "[data-symbol=local_cafe]", minimum: 1
 
     get activity_path
@@ -317,8 +320,11 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=dashboard-open-beans].min-w-0"
     assert_select "[data-testid=dashboard-recent-activity].min-w-0"
+    assert_select "[data-testid=dashboard-recent-activity].lg\\:col-span-2"
     assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-card].min-w-0"
+    assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-card].py-3"
     assert_select "[data-testid=dashboard-recent-activity] [data-testid=activity-summary].break-words"
+    assert_select "[data-testid=dashboard-recent-activity-panel]", count: 1
     assert_select "[data-testid=dashboard-latest-coffee-card].min-w-0"
     assert_select "[data-testid=dashboard-latest-coffee-card] > a.min-w-0"
   end

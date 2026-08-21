@@ -71,6 +71,18 @@ class Activity::QueryTest < ActiveSupport::TestCase
     end
   end
 
+  test "includes External Coffee ledger events in the authorized workspace relation" do
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one), drink_type: "Black Coffee", occurred_at: Time.zone.local(2026, 6, 9, 12)
+    )
+    event = Activity::Emitter.record!(
+      action: "external_coffee.created", workspace: workspaces(:household), actor: users(:one),
+      subject: coffee, occurred_at: coffee.occurred_at
+    )
+
+    assert_includes query.events, event
+  end
+
   test "actor options include former snapshots and system from authorized rows only" do
     former = ActivityEvent.create!(
       workspace: workspaces(:household), category: "coffee", action: "brew.updated",

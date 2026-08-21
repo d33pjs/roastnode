@@ -11,6 +11,11 @@ class ActivityControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=activity-card]", minimum: 3
     assert_select "a[href=?]", brew_path(brews(:morning_espresso)), text: /Espresso with House Espresso/
     assert_select "a[href=?]", brew_path(brews(:other_workspace_brew)), count: 0
+    assert_select "[data-testid=activity-filter-panel].bg-stone-950", count: 1
+    assert_select "[data-testid=activity-feed-panel].bg-stone-950", count: 1
+    assert_select "[data-testid=activity-icon-container].h-10.w-10.ring-2", minimum: 1
+    assert_select "[data-testid=activity-category-label].uppercase", minimum: 1
+    assert_select "[data-testid=activity-summary].text-stone-50", minimum: 1
     assert_appears_before "Member invite", "Quick Drip with Filter Beans"
     assert_appears_before "Quick Drip with Filter Beans", "Espresso with House Espresso"
   end
@@ -60,6 +65,25 @@ class ActivityControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for=end_date]", text: "End date"
     assert_select "[data-testid=history-next-page][href*=?]", "category=coffee"
     assert_select "[data-testid=history-next-page][href*=?]", "actor=user%3A#{users(:one).id}"
+    assert_select "[data-testid=history-next-page][href*=?]", "start_date=2026-08-21"
+    assert_select "[data-testid=history-next-page][href*=?]", "end_date=2026-08-21"
+  end
+
+  test "renders External Coffee activity through the authorized shared card" do
+    users(:one).update!(display_name: "Jens")
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one), drink_type: "Black Coffee", occurred_at: Time.zone.local(2026, 6, 9, 12)
+    )
+    Activity::Emitter.record!(
+      action: "external_coffee.created", workspace: workspaces(:household), actor: users(:one),
+      subject: coffee, occurred_at: coffee.occurred_at
+    )
+    sign_in_as(users(:one))
+
+    get activity_path
+
+    assert_response :success
+    assert_select "a[data-testid=activity-card][href=?]", external_coffee_path(coffee), text: /Jens logged Black Coffee/
   end
 
   test "viewer does not receive restricted cards and anonymous public reads do not write ledger rows" do
@@ -90,6 +114,18 @@ class ActivityControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=activity-card]", count: 0
     assert_select "[data-testid=activity-empty]", text: I18n.t("activity.index.filtered_empty")
+  end
+
+  test "an empty authorized ledger without filters renders the unfiltered empty state" do
+    ActivityEvent.where(workspace: workspaces(:household)).delete_all
+    sign_in_as(users(:one))
+
+    get activity_path
+
+    assert_response :success
+    assert_select "[data-testid=activity-feed-panel]", count: 0
+    assert_select "[data-testid=activity-card]", count: 0
+    assert_select "[data-testid=activity-empty]", text: I18n.t("activity.index.empty")
   end
 
   private
