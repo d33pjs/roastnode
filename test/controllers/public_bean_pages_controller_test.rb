@@ -16,6 +16,34 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_appears_before "data-testid=\"public-bean-share-title\"", "data-testid=\"public-bean-hero-stat-average-rating\""
   end
 
+  test "hero title ignores an unknown blend type in a blank snapshot title" do
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["title"] = ""
+    snapshot["bean"]["roast_type"] = "espresso"
+    snapshot["bean"]["blend_type"] = "unknown"
+    share.update!(title: "", snapshot:)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-share-title]", text: "Espresso"
+  end
+
+  test "hero title uses the exact missing copy when both types are unknown" do
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["title"] = ""
+    snapshot["bean"]["roast_type"] = "unknown"
+    snapshot["bean"]["blend_type"] = "unknown"
+    share.update!(title: "", snapshot:)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-share-title]", text: "404 — share title not found"
+  end
+
   test "disabled share returns not found" do
     share = create_share(enabled: false)
 

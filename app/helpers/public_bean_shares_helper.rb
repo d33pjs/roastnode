@@ -45,6 +45,7 @@ module PublicBeanSharesHelper
 
     bean = snapshot["bean"] || {}
     type_fallback = [ bean["roast_type"], bean["blend_type"] ]
+      .reject { |value| value == "unknown" }
       .compact_blank
       .map(&:humanize)
       .join(" · ")

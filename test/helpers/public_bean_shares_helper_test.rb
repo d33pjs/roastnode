@@ -22,14 +22,17 @@ class PublicBeanSharesHelperTest < ActionView::TestCase
   test "share title uses the single available type" do
     snapshot = {
       "title" => nil,
-      "bean" => { "roast_type" => "quick_drip", "blend_type" => nil }
+      "bean" => { "roast_type" => "espresso", "blend_type" => "unknown" }
     }
 
-    assert_equal "Quick drip", public_bean_share_title(snapshot)
+    assert_equal "Espresso", public_bean_share_title(snapshot)
   end
 
   test "share title uses the missing-title message when no fallback data exists" do
-    snapshot = { "title" => "", "bean" => {} }
+    snapshot = {
+      "title" => "",
+      "bean" => { "roast_type" => "unknown", "blend_type" => "unknown" }
+    }
 
     assert_equal "404 — share title not found", public_bean_share_title(snapshot)
   end
