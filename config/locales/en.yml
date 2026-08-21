@@ -744,6 +744,8 @@ en:
       photos: "Public bean photos"
       settings: "Share settings"
       title: "Share title"
+      title_help: "Shown below the large coffee name on the public bean page. Leave blank to use the roast type and blend type (for example, Espresso · Blend). If neither is available, visitors see ‘404 — share title not found’."
+      title_placeholder: "Italian coffee called—it wants its hand gestures back."
     new:
       back: "Back to bean"
       create: "Create public bean share"

@@ -11,6 +11,7 @@ Public Bean Sharing lets workspace writers publish one curated bean bag page wit
 - Snapshot-driven public bean page with remaining inventory for open bags, brew count, public status, consumed grams, dead grams, average rating, channeling rate, taste balance, rating distribution, grinder-setting distribution, open duration, and a compact clustered timeline.
 - Privacy-safe `TOP N OF C BEANS` workspace comparison badges for average rating and channeling when at least two bean bags qualify for the metric.
 - The timeline uses opened and finished/current endpoint markers, brew/count dots on the line, and lane-stacked date plus rating labels above or below the line so dense brew groups stay readable on mobile.
+- A public hero ordered as roaster, large coffee name, and share title before the metric cards. A blank share title falls back to the available roast and blend types (for example, `Espresso · Blend`), then to `404 — share title not found` when neither type exists.
 - All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards with rating metric cards. Espresso rows that already have an enabled public brew page show the named public brew link as a compact chip near the date and method.
 - A full-width details flow ordered as detail cards, taste profile, public Links, and public note. Missing optional sections are omitted without moving Links into a desktop sidebar.
 - Workspace settings management with URL, enabled/protected state, view count, and recent IP history.
@@ -65,6 +66,8 @@ Archived opened bags stay shareable and continue to use the public `finished` pr
 ## Snapshot Refresh
 
 Public bean shares stay snapshot based, but public-safe source changes refresh affected shares.
+
+An intentionally blank share title remains blank in the share record and snapshot during refresh so the public page can apply the roast/blend fallback consistently.
 
 Refresh triggers include:
 

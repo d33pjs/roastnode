@@ -13,7 +13,12 @@ class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", I18n.t("public_bean_shares.new.title")
     assert_select "input[type=checkbox][name=?]", "public_bean_share[enabled]"
-    assert_select "input[name=?]", "public_bean_share[title]"
+    assert_select "input[name=?][placeholder=?]",
+      "public_bean_share[title]",
+      "Italian coffee called—it wants its hand gestures back."
+    assert_select "[data-testid=public-bean-share-title-help]", text: /below the large coffee name/i
+    assert_select "[data-testid=public-bean-share-title-help]", text: /Espresso · Blend/
+    assert_select "[data-testid=public-bean-share-title-help]", text: /404 — share title not found/
     assert_select "input[type=password][name=?]", "public_bean_share[password]"
     assert_select "input[type=checkbox][name=?][value=?]", "public_bean_share[selected_photo_attachment_ids][]", photo.id.to_s
   end

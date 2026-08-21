@@ -20,7 +20,8 @@
 
     <div>
       <%= form.label :title, t(".title"), class: label_class %>
-      <%= form.text_field :title, class: input_class %>
+      <%= form.text_field :title, placeholder: t(".title_placeholder"), class: input_class %>
+      <p data-testid="public-bean-share-title-help" class="mt-1 text-sm font-semibold text-rn-muted"><%= t(".title_help") %></p>
     </div>
 
     <div>
