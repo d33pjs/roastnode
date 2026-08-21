@@ -61,7 +61,7 @@ class PublicBeanShareRefresher
     end
 
     selected_photo_attachment_ids = share.valid_selected_photo_attachment_ids
-    title = share.title.presence || PublicBeanShare.default_title_for(share.bean)
+    title = share.title
     snapshot = PublicBeanShareSnapshotBuilder.new(
       bean: share.bean,
       title:,

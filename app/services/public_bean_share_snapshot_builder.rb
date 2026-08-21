@@ -8,7 +8,7 @@ class PublicBeanShareSnapshotBuilder
 
   def call
     payload = {
-      "title" => title.presence || PublicBeanShare.default_title_for(bean),
+      "title" => title,
       "workspace" => workspace_payload,
       "bean" => bean_payload,
       "stats" => stats_payload,

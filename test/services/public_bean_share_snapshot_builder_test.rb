@@ -153,6 +153,16 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "finished", snapshot.dig("bean", "public_status")
   end
 
+  test "preserves an intentionally blank share title for public fallback rendering" do
+    snapshot = PublicBeanShareSnapshotBuilder.new(
+      bean: beans(:open_household),
+      title: "",
+      selected_photo_attachment_ids: []
+    ).call
+
+    assert_equal "", snapshot.fetch("title")
+  end
+
   test "includes workspace comparison ranks without peer bean details" do
     bean = beans(:open_household)
     comparison_bean = beans(:second_open_household)

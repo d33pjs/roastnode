@@ -13,6 +13,17 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_equal "Updated public note", share.reload.snapshot.dig("bean", "public_note")
   end
 
+  test "refresh preserves a cleared title for public fallback rendering" do
+    bean = beans(:open_household)
+    share = create_share(bean)
+    share.update!(title: "", snapshot: share.snapshot.merge("title" => ""))
+
+    PublicBeanShareRefresher.refresh(share)
+
+    assert_equal "", share.reload.title
+    assert_equal "", share.snapshot.fetch("title")
+  end
+
   test "refreshes shares for brew changes" do
     bean = beans(:open_household)
     brew = brews(:morning_espresso)
