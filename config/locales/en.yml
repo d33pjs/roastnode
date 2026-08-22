@@ -481,9 +481,14 @@ en:
       espresso: "Espresso"
       quick_drip: "Quick Drip"
     recipients:
+      a_guest: "a guest"
+      badge: "For %{recipient}"
+      byline: "Logged by %{logger} for %{recipient}"
       former_member: "%{name} (former household member)"
       guest: "Guest"
+      me: "me"
       myself: "Myself"
+      themself: "themself"
     native_share:
       text: "Shared brew: %{title}"
     shared_marker: "Shared"

@@ -196,7 +196,12 @@ class BrewsController < ApplicationController
     ].freeze
 
     def set_brew
-      @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :brewer, :user, :recipient_user, :public_brew_share, brew_preparation_tools: :preparation_tool).find(params[:id])
+      @brew = current_workspace.brews.includes(
+        :bean, :grinder, :machine, :brewer, :public_brew_share,
+        user: { avatar_attachment: :blob },
+        recipient_user: { avatar_attachment: :blob },
+        brew_preparation_tools: :preparation_tool
+      ).find(params[:id])
     end
 
     def set_serving_suggestions
@@ -262,7 +267,12 @@ class BrewsController < ApplicationController
     def brew_history_scope
       current_workspace
         .brews
-        .includes(:bean, :user, :recipient_user, :grinder, :machine, :brewer, :public_brew_share, brew_preparation_tools: :preparation_tool)
+        .includes(
+          :bean, :grinder, :machine, :brewer, :public_brew_share,
+          user: { avatar_attachment: :blob },
+          recipient_user: { avatar_attachment: :blob },
+          brew_preparation_tools: :preparation_tool
+        )
         .order(occurred_at: :desc, created_at: :desc)
     end
 

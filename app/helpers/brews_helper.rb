@@ -1,4 +1,8 @@
 module BrewsHelper
+  def brew_recipient_presenter(brew)
+    BrewRecipientPresenter.new(brew:, workspace: current_workspace)
+  end
+
   def brew_card_timestamp(brew)
     profile_timestamp(brew.occurred_at)
   end

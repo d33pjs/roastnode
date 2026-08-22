@@ -1514,8 +1514,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
     assert_select "body", text: /one@example.com/, count: 0
-    assert_select "[data-testid=brew-byline]", "Logged by Jens"
-    assert_select "[data-testid=brew-byline] img[data-testid=brew-user-avatar][src=?]", media_attachment_path(avatar, variant: :thumbnail)
+    assert_select "[data-testid=brew-byline]", "Logged by Jens for themself"
+    assert_select "[data-testid=brew-byline] img[data-testid=brew-logger-avatar][src=?]", media_attachment_path(avatar, variant: :thumbnail)
     assert_select "[data-testid=brew-metrics].grid-cols-3"
     assert_select "[data-testid=brew-dose]", "18,2g"
     assert_select "[data-testid=brew-beverage]", count: 0
@@ -1743,8 +1743,79 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brews(:morning_espresso))
 
     assert_response :success
-    assert_select "[data-testid=brew-byline]", "Logged by unknown username"
+    assert_select "[data-testid=brew-byline]", "Logged by unknown username for themself"
     assert_select "body", text: /one@example.com/, count: 0
+  end
+
+  test "private brew cards present self member and guest recipients consistently" do
+    logger = users(:one)
+    recipient = users(:two)
+    logger.update!(display_name: "Jens")
+    recipient.update!(display_name: "Petra")
+    brew = brews(:morning_espresso)
+    sign_in_as(logger)
+
+    get brew_path(brew)
+    assert_select "[data-testid=brew-card-header] [data-testid=brew-recipient-badge]", count: 0
+    assert_select "[data-testid=brew-recipient-badge][class*=?]", "bg-sky-100" do
+      assert_select "span", "For me"
+    end
+    assert_select "[data-testid=brew-recipient-badge] svg[data-symbol=person]"
+    assert_select "[data-testid=brew-recipient-byline].text-stone-200", "Logged by Jens for themself"
+    assert_select "[data-testid=brew-detail-recipient]", "For me"
+
+    brew.update!(recipient_kind: "household_member", recipient_user: recipient)
+    get brew_path(brew)
+    assert_select "[data-testid=brew-recipient-badge][class*=?]", "bg-orange-100" do
+      assert_select "span", "For Petra"
+    end
+    assert_select "[data-testid=brew-recipient-badge] svg[data-symbol=home]"
+    assert_select "[data-testid=brew-recipient-byline]", "Logged by Jens for Petra"
+    assert_select "[data-testid=brew-detail-recipient]", "For Petra"
+
+    brew.update!(recipient_kind: "guest", recipient_name: "A very long private guest recipient name")
+    get brew_path(brew)
+    assert_select "[data-testid=brew-recipient-badge][class*=?]", "bg-emerald-100" do
+      assert_select "span", "For A very long private guest recipient name"
+    end
+    assert_select "[data-testid=brew-recipient-badge] svg[data-symbol=groups]"
+    assert_select "[data-testid=brew-recipient-badge] svg[data-symbol=groups] path[d=?]", ApplicationHelper::MATERIAL_SYMBOL_PATHS.fetch("groups")
+    assert_select "[data-testid=brew-recipient-byline] .min-w-0", minimum: 1
+
+    brew.update!(recipient_kind: "guest", recipient_name: nil)
+    get brews_path
+    assert_select "[data-testid=brew-history-compact-card] [data-testid=brew-recipient-byline].text-rn-muted", "Logged by Jens for a guest"
+    assert_select "[data-testid=brew-history-compact-card] [data-testid=brew-recipient-badge][class*=?]", "bg-emerald-100" do
+      assert_select "span", "For a guest"
+    end
+    assert_select "[data-testid=brew-history-compact-card] [data-testid=brew-cup-badge]", count: 0
+  end
+
+  test "private recipient cards suppress former recipient and former logger avatars independently" do
+    logger = users(:one)
+    recipient = users(:two)
+    logger.update!(display_name: "Jens")
+    recipient.update!(display_name: "Petra")
+    brew = brews(:morning_espresso)
+    attach_named_photo(logger, :avatar, filename: "jens.jpg")
+    attach_named_photo(recipient, :avatar, filename: "petra.jpg")
+    brew.update!(recipient_kind: "household_member", recipient_user: recipient)
+    sign_in_as(logger)
+
+    memberships(:member).destroy!
+    get brew_path(brew)
+    assert_select "[data-testid=brew-recipient-badge]", "For Petra"
+    assert_select "img[data-testid=brew-recipient-avatar]", count: 0
+    assert_select "img[data-testid=brew-logger-avatar]", count: 1
+
+    Membership.create!(workspace: workspaces(:household), user: recipient, role: "member")
+    memberships(:owner).destroy!
+    recipient.update!(active_workspace: workspaces(:household))
+    sign_in_as(recipient)
+    get brew_path(brew)
+    assert_select "[data-testid=brew-recipient-badge]", "For Petra"
+    assert_select "img[data-testid=brew-logger-avatar]", count: 0
+    assert_select "img[data-testid=brew-recipient-avatar]", count: 1
   end
 
   test "show omits bean processing from private hero card descriptor" do

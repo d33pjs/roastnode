@@ -1,0 +1,12 @@
+<% surface = local_assigns.fetch(:surface, :dark) %>
+<% text_class, ring_class = surface == :dark ? [ "text-stone-200", "ring-white/30" ] : [ "text-rn-muted", "ring-rn-line" ] %>
+
+<div data-testid="brew-recipient-byline" class="flex min-w-0 items-center gap-1.5 text-xs <%= text_class %>">
+  <% if presenter.logger_avatar_attachment %>
+    <%= image_tag media_attachment_path(presenter.logger_avatar_attachment, variant: :thumbnail), alt: "", data: { testid: "brew-logger-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 #{ring_class}" %>
+  <% end %>
+  <% if presenter.recipient_avatar_attachment %>
+    <%= image_tag media_attachment_path(presenter.recipient_avatar_attachment, variant: :thumbnail), alt: "", data: { testid: "brew-recipient-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 #{ring_class}" %>
+  <% end %>
+  <span class="min-w-0 truncate"><%= presenter.byline_text %></span>
+</div>

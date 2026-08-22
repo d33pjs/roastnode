@@ -102,7 +102,7 @@ class DashboardMetrics
     end
 
     def latest_brew_at
-      workspace.brews.where(served_for_guest: false).maximum(:occurred_at)
+      workspace.brews.where.not(recipient_kind: :guest).maximum(:occurred_at)
     end
 
     def latest_external_coffee_at

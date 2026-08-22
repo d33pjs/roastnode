@@ -570,6 +570,28 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-chart-grid]", count: 0
   end
 
+  test "dashboard hero uses the private recipient byline and eager-loaded avatars" do
+    logger = users(:one)
+    recipient = users(:two)
+    logger.update!(display_name: "Jens")
+    recipient.update!(display_name: "Petra")
+    attach_named_photo(logger, :avatar, filename: "jens.jpg")
+    attach_named_photo(recipient, :avatar, filename: "petra.jpg")
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: recipient)
+    sign_in_as(logger)
+
+    get dashboard_path
+
+    assert_response :success
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-recipient-badge][class*=?]", "bg-orange-100" do
+      assert_select "span", "For Petra"
+    end
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-recipient-byline].text-stone-200", "Logged by Jens for Petra"
+    assert_select "[data-testid=dashboard-latest-coffee-card] img[data-testid=brew-logger-avatar]"
+    assert_select "[data-testid=dashboard-latest-coffee-card] img[data-testid=brew-recipient-avatar]"
+  end
+
   test "shows onboarding for signed-in user without workspace" do
     user = User.create!(email_address: "workspace-needed@example.com", password: "password")
     sign_in_as(user)

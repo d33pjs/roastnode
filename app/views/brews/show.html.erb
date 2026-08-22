@@ -1,3 +1,4 @@
+<% presenter = brew_recipient_presenter(@brew) %>
 <main class="min-h-screen bg-stone-50">
   <%= render "brews/hero_card_styles" %>
 
@@ -126,13 +127,7 @@
         <div>
           <dt class="text-xs font-bold uppercase text-stone-500"><%= t("brews.form.served_to") %></dt>
           <dd data-testid="brew-detail-recipient" class="mt-1 text-sm font-semibold text-stone-950">
-            <% if @brew.recipient_self? %>
-              <%= t("brews.recipients.myself") %>
-            <% elsif @brew.recipient_household_member? %>
-              <%= @brew.recipient_user.display_label %>
-            <% else %>
-              <%= @brew.recipient_name.presence || t("brews.recipients.guest") %>
-            <% end %>
+            <%= presenter.badge_text %>
           </dd>
         </div>
         <% if @brew.quick_drip? %>

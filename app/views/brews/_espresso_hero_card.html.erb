@@ -4,7 +4,7 @@
 <% brew_photo = brew_card_photo_attachment(brew) %>
 <% grinder_photo = brew.grinder&.primary_photo_attachment %>
 <% machine_photo = brew.machine&.primary_photo_attachment %>
-<% user_avatar = brew.user.avatar.attachment if brew.user.avatar.attached? %>
+<% presenter = brew_recipient_presenter(brew) %>
 <% workspace_logo = current_workspace.logo.attachment if current_workspace.logo.attached? %>
 <% recipe_targets = brew_card_recipe_targets(brew) %>
 <% recipe_dose_grams = brew_card_recipe_target_decimal(recipe_targets, "dose_grams") %>
@@ -44,11 +44,11 @@
           <% if brew_card_bean_descriptor(brew.bean).present? %>
             <p class="mt-2 text-sm text-stone-300"><%= brew_card_bean_descriptor(brew.bean) %></p>
           <% end %>
-          <div data-testid="brew-byline" class="mt-2 flex items-center gap-1.5 text-xs text-stone-400">
-            <% if user_avatar.present? %>
-              <%= image_tag media_attachment_path(user_avatar, variant: :thumbnail), alt: "", data: { testid: "brew-user-avatar" }, class: "h-5 w-5 shrink-0 rounded-full object-contain ring-1 ring-white/20" %>
-            <% end %>
-            <span><%= t("brews.show.byline", user: brew.user.display_label) %></span>
+          <div data-testid="brew-byline" class="mt-2">
+            <%= render "brews/recipient_byline", presenter:, surface: :dark %>
+          </div>
+          <div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+            <%= render "brews/recipient_badge", presenter: %>
           </div>
         </div>
 

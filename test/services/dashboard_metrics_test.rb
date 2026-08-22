@@ -45,13 +45,21 @@ class DashboardMetricsTest < ActiveSupport::TestCase
     end
   end
 
-  test "last coffee timer ignores brews served for guests" do
+  test "last coffee timer ignores guest recipients but retains self and household recipients" do
     travel_to Time.zone.local(2026, 6, 10, 12, 0, 0) do
       move_existing_coffees_out_of_range
       own_brew = brews(:morning_espresso)
       own_brew.update!(
-        occurred_at: Time.zone.local(2026, 6, 10, 8, 0, 0),
-        served_for_guest: false
+        occurred_at: Time.zone.local(2026, 6, 10, 8, 0, 0)
+      )
+      household_brew = @workspace.brews.create!(
+        user: @user,
+        method: "espresso",
+        bean: @bean,
+        bean_weight_grams: 18,
+        occurred_at: Time.zone.local(2026, 6, 10, 9, 0, 0),
+        recipient_kind: "household_member",
+        recipient_user: users(:two)
       )
       @workspace.brews.create!(
         user: @user,
@@ -59,13 +67,13 @@ class DashboardMetricsTest < ActiveSupport::TestCase
         bean: @bean,
         bean_weight_grams: 18,
         occurred_at: Time.zone.local(2026, 6, 10, 9, 0, 0),
-        served_for_guest: true,
-        guest_name: "Anna"
+        recipient_kind: "guest",
+        recipient_name: "Anna"
       )
 
       metrics = DashboardMetrics.new(workspace: @workspace, now: Time.current).call
 
-      assert_equal own_brew.occurred_at.to_i, metrics[:last_coffee_at].to_i
+      assert_equal household_brew.occurred_at.to_i, metrics[:last_coffee_at].to_i
     end
   end
 
