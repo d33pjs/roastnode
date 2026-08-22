@@ -1,4 +1,5 @@
 require "test_helper"
+require Rails.root.join("test/support/activity_event_contract_coverage")
 
 class Activity::EventContractTest < ActiveSupport::TestCase
   test "every action has one valid category visibility icon summary and override policy" do
@@ -32,14 +33,42 @@ class Activity::EventContractTest < ActiveSupport::TestCase
     end
   end
 
+  test "focused coverage scanner ignores a disconnected action literal" do
+    source = <<~RUBY
+      note = "brew.created"
+    RUBY
+
+    assert_empty Activity::EventContractCoverage.actions_in(source)
+  end
+
+  test "focused coverage scanner recognizes a literal action in an activity assertion" do
+    source = <<~RUBY
+      assert_activity_event(action: "brew.created", workspace: workspace) do
+        post brews_path
+      end
+    RUBY
+
+    assert_equal [ "brew.created" ], Activity::EventContractCoverage.actions_in(source)
+  end
+
+  test "focused coverage scanner recognizes literal actions in an exact multi-event assertion" do
+    source = <<~RUBY
+      assert_activity_events(actions: [ "workspace.created", "household_invite.accepted" ], workspace: workspace, actor: user) do
+        post accept_household_invite_path(token)
+      end
+    RUBY
+
+    assert_equal %w[household_invite.accepted workspace.created], Activity::EventContractCoverage.actions_in(source).sort
+  end
+
   test "every registered action has focused mutation or operation test coverage" do
-    test_source = Dir[Rails.root.join("test/{controllers,services,jobs}/**/*_test.rb")].sort.filter_map do |path|
+    covered_actions = Dir[Rails.root.join("test/{controllers,services,jobs,migrations}/**/*_test.rb")].sort.filter_map do |path|
       next if path.end_with?("event_contract_test.rb")
-      File.read(path)
-    end.join("\n")
+      Activity::EventContractCoverage.actions_in(File.read(path))
+    end.flatten.uniq
 
     Activity::EventContract.actions.each do |action|
-      assert_includes test_source, %("#{action}"), "add a focused assertion for #{action}"
+      assert_includes covered_actions, action, "add a focused assertion for #{action}"
     end
   end
 end

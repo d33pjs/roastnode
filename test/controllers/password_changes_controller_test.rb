@@ -89,15 +89,19 @@ class PasswordChangesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(user)
     old_current_session_id = Current.session.id
 
-    before_event_ids = ActivityEvent.pluck(:id)
+    events = nil
     assert_changes -> { user.reload.password_digest } do
-      patch password_change_path, params: {
-        user: {
-          current_password: "password",
-          password: "new-password",
-          password_confirmation: "new-password"
+      events = assert_activity_events(
+        actions: [ "password.changed", "session.signed_in" ], workspace: user.active_workspace, actor: user
+      ) do
+        patch password_change_path, params: {
+          user: {
+            current_password: "password",
+            password: "new-password",
+            password_confirmation: "new-password"
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to edit_profile_path
@@ -105,9 +109,7 @@ class PasswordChangesControllerTest < ActionDispatch::IntegrationTest
     assert_not Session.exists?(old_current_session_id)
     assert_equal 1, user.sessions.count
     assert cookies[:session_id].present?
-    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
-    assert_equal %w[password.changed session.signed_in], events.map(&:action).sort
-    assert events.all? { |event| event.workspace == user.active_workspace && event.actor == user && event.subject == user }
+    assert events.all? { |event| event.subject == user }
     assert_equal "password", events.find { |event| event.action == "session.signed_in" }.metadata.fetch("authentication_method")
 
     get dashboard_path

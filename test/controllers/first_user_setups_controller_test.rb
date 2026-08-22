@@ -25,15 +25,20 @@ class FirstUserSetupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create makes the first user an instance admin and signs them in" do
-    before_event_ids = ActivityEvent.pluck(:id)
+    events = nil
     assert_difference -> { User.count }, 1 do
-      post first_user_setup_path, params: {
-        user: {
-          email_address: "owner@example.com",
-          password: "password",
-          password_confirmation: "password"
+      events = assert_activity_events(
+        actions: [ "instance.first_user_created", "session.signed_in" ], workspace: nil,
+        actor: -> { User.find_by!(email_address: "owner@example.com") }
+      ) do
+        post first_user_setup_path, params: {
+          user: {
+            email_address: "owner@example.com",
+            password: "password",
+            password_confirmation: "password"
+          }
         }
-      }
+      end
     end
 
     user = User.find_by!(email_address: "owner@example.com")
@@ -41,10 +46,7 @@ class FirstUserSetupsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate user, :instance_admin?
     assert user.sessions.exists?
     assert cookies[:session_id].present?
-    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
-    assert_equal %w[instance.first_user_created session.signed_in], events.map(&:action).sort
-    assert_includes events.map(&:action), "instance.first_user_created"
-    assert events.all? { |event| event.workspace.nil? && event.actor == user && event.subject == user }
+    assert events.all? { |event| event.subject == user }
     assert events.all? { |event| event.visibility == "instance_admin" }
 
     follow_redirect!

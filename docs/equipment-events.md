@@ -33,15 +33,7 @@ An equipment event stores event types in `event_types`. The legacy `event_type` 
 
 ## Timeline Rules
 
-The dashboard Recent activity section shows:
-
-- brews
-- equipment events
-- manual inventory adjustments
-
-It deliberately hides automatic brew inventory adjustments because the brew itself is already the user-facing activity.
-
-The dashboard requests the newest eight records from the merged feed. Each activity family must contribute enough candidates for that global limit before the records are merged and sorted; a busy brew history must not be truncated merely because a maintenance event is also present.
+The dashboard Recent activity section shows the newest eight authorized `Activity::Query` events across the general audit ledger. It deliberately omits automatic brew inventory adjustments because the brew itself is already the user-facing activity.
 
 Equipment Event creation keeps its required domain occurrence time in the audit ledger. Corrections, deletion, media changes, and related gear lifecycle actions use commit time; visibility, safe snapshots, and omitted failures are defined in [Activity audit](activity-audit.md).
 

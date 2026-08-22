@@ -67,25 +67,27 @@ class InstanceBackupJobsTest < ActiveJob::TestCase
     )
     run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
 
-    assert_difference -> { ActivityEvent.where(action: "instance_backup_run.succeeded").count }, 1 do
+    event = assert_activity_event(
+      action: "instance_backup_run.succeeded", workspace: nil, actor: nil, subject: run
+    ) do
       with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { Struct.new(:call).new("zip-bytes") }) do
         InstanceBackupJob.perform_now(run)
       end
     end
-    event = ActivityEvent.where(action: "instance_backup_run.succeeded").last
     assert_nil event.workspace
     assert_equal "System", event.metadata.fetch("actor_label")
     assert_no_match(/file_path|checksum|storage\//i, event.metadata.to_json)
 
     failed_run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
-    assert_difference -> { ActivityEvent.where(action: "instance_backup_run.failed").count }, 1 do
+    failed_event = assert_activity_event(
+      action: "instance_backup_run.failed", workspace: nil, actor: nil, subject: failed_run
+    ) do
       assert_raises(RuntimeError) do
         with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { raise "storage_path=/private/secret token=abc" }) do
           InstanceBackupJob.perform_now(failed_run)
         end
       end
     end
-    failed_event = ActivityEvent.where(action: "instance_backup_run.failed").last
     assert_equal "failed", failed_event.metadata.fetch("status")
     assert_no_match(/storage|private|secret|token|abc/i, failed_event.metadata.to_json)
   end

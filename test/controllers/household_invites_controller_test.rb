@@ -54,20 +54,25 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
 
   test "invite signup creates account and separate owned household" do
     invite = household_invites(:active_household_invite)
-    before_event_ids = ActivityEvent.pluck(:id)
+    events = nil
 
     assert_difference -> { User.count }, 1 do
       assert_difference -> { Workspace.count }, 1 do
         assert_difference -> { Membership.owner.count }, 1 do
-          post signup_household_invite_path(invite.token), params: {
-            user: {
-              email_address: invite.email_address,
-              display_name: "New Owner",
-              password: "password",
-              password_confirmation: "password"
-            },
-            workspace: { name: "New Household" }
-          }
+          events = assert_activity_events(
+            actions: [ "household_invite.accepted", "session.signed_in", "workspace.created" ],
+            workspace: -> { invite.reload.workspace }, actor: -> { User.find_by!(email_address: invite.email_address) }
+          ) do
+            post signup_household_invite_path(invite.token), params: {
+              user: {
+                email_address: invite.email_address,
+                display_name: "New Owner",
+                password: "password",
+                password_confirmation: "password"
+              },
+              workspace: { name: "New Household" }
+            }
+          end
         end
       end
     end
@@ -83,9 +88,6 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal user, invite.accepted_by
     assert invite.accepted_at.present?
     assert user.sessions.exists?
-    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
-    assert_equal %w[household_invite.accepted session.signed_in workspace.created], events.map(&:action).sort
-    assert events.all? { |event| event.workspace == workspace && event.actor == user }
     assert_equal "invited_signup", events.find { |event| event.action == "session.signed_in" }.metadata.fetch("authentication_method")
   end
 
@@ -294,12 +296,17 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     user = User.create!(email_address: invite.email_address, password: "password")
     sign_in_as(user)
 
-    before_event_ids = ActivityEvent.pluck(:id)
+    events = nil
     assert_difference -> { Workspace.count }, 1 do
       assert_difference -> { Membership.owner.count }, 1 do
-        post accept_household_invite_path(invite.token), params: {
-          workspace: { name: "Existing Account Household" }
-        }
+        events = assert_activity_events(
+          actions: [ "household_invite.accepted", "workspace.created" ],
+          workspace: -> { invite.reload.workspace }, actor: user
+        ) do
+          post accept_household_invite_path(invite.token), params: {
+            workspace: { name: "Existing Account Household" }
+          }
+        end
       end
     end
 
@@ -309,9 +316,6 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal workspace, user.reload.active_workspace
     assert_equal "owner", user.membership_for(workspace).role
     assert_nil invite.created_by.membership_for(workspace)
-    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
-    assert_equal %w[household_invite.accepted workspace.created], events.map(&:action).sort
-    assert events.all? { |event| event.workspace == workspace && event.actor == user }
     assert_equal invite, events.find { |event| event.action == "household_invite.accepted" }.subject
   end
 

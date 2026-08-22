@@ -142,14 +142,16 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
   end
 
   test "failed import logs status without raw parser error" do
-    before_ids = ActivityEvent.pluck(:id)
-    data_import = BeanconquerorImport.new(
-      workspace: workspaces(:household), user: users(:one), json: "{token=secret"
-    ).call
+    data_import = nil
+    event = assert_activity_event(
+      action: "data_import.failed", workspace: workspaces(:household), actor: users(:one)
+    ) do
+      data_import = BeanconquerorImport.new(
+        workspace: workspaces(:household), user: users(:one), json: "{token=secret"
+      ).call
+    end
 
-    events = ActivityEvent.where.not(id: before_ids).order(:id).to_a
-    assert_equal [ "data_import.failed" ], events.map(&:action)
-    event = ActivityEvent.find_by!(action: "data_import.failed", subject: data_import)
+    assert_equal data_import, event.subject
     assert_equal({ "source" => "beanconqueror" }, event.metadata.slice("source"))
     assert_no_match(/token|secret|parser|warning|\{/i, event.metadata.values.join(" "))
   end

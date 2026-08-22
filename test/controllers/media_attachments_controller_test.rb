@@ -38,21 +38,45 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     external_coffee = ExternalCoffee.create!(
       workspace: workspaces(:household), user: users(:one), drink_type: "Flat White"
     )
-    records = {
-      beans(:open_household) => "bean.media_updated",
-      brews(:morning_espresso) => "brew.media_updated",
-      external_coffee => "external_coffee.media_updated",
-      equipment(:household_grinder) => "equipment.media_updated",
-      preparation_tools(:wdt) => "preparation_tool.media_updated",
-      equipment_events(:grinder_cleaning) => "equipment_event.media_updated",
-      recipes(:household_recipe) => "recipe.media_updated"
-    }
+    bean = beans(:open_household)
+    bean_attachment = attach_photo(bean)
+    assert_activity_event(action: "bean.media_updated", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      delete media_attachment_path(bean_attachment)
+    end
 
-    records.each do |record, action|
-      attachment = attach_photo(record)
-      assert_activity_event(action:, workspace: workspaces(:household), actor: users(:one), subject: record) do
-        delete media_attachment_path(attachment)
-      end
+    brew = brews(:morning_espresso)
+    brew_attachment = attach_photo(brew)
+    assert_activity_event(action: "brew.media_updated", workspace: brew.workspace, actor: users(:one), subject: brew) do
+      delete media_attachment_path(brew_attachment)
+    end
+
+    coffee_attachment = attach_photo(external_coffee)
+    assert_activity_event(action: "external_coffee.media_updated", workspace: external_coffee.workspace, actor: users(:one), subject: external_coffee) do
+      delete media_attachment_path(coffee_attachment)
+    end
+
+    equipment = equipment(:household_grinder)
+    equipment_attachment = attach_photo(equipment)
+    assert_activity_event(action: "equipment.media_updated", workspace: equipment.workspace, actor: users(:one), subject: equipment) do
+      delete media_attachment_path(equipment_attachment)
+    end
+
+    preparation_tool = preparation_tools(:wdt)
+    tool_attachment = attach_photo(preparation_tool)
+    assert_activity_event(action: "preparation_tool.media_updated", workspace: preparation_tool.workspace, actor: users(:one), subject: preparation_tool) do
+      delete media_attachment_path(tool_attachment)
+    end
+
+    equipment_event = equipment_events(:grinder_cleaning)
+    event_attachment = attach_photo(equipment_event)
+    assert_activity_event(action: "equipment_event.media_updated", workspace: equipment_event.workspace, actor: users(:one), subject: equipment_event) do
+      delete media_attachment_path(event_attachment)
+    end
+
+    recipe = recipes(:household_recipe)
+    recipe_attachment = attach_photo(recipe)
+    assert_activity_event(action: "recipe.media_updated", workspace: recipe.workspace, actor: users(:one), subject: recipe) do
+      delete media_attachment_path(recipe_attachment)
     end
 
     workspace = workspaces(:household)
