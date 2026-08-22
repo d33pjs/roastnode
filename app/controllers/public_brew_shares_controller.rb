@@ -32,8 +32,14 @@ class PublicBrewSharesController < ApplicationController
 
   def destroy
     redirect_target = params[:return_to] == "workspace" ? edit_workspace_path(anchor: "public-shares") : @brew
-    @share.destroy!
-    PublicBeanShareRefresher.refresh_for(@brew)
+    PublicBrewShare.transaction do
+      @share.destroy!
+      PublicBeanShareRefresher.refresh_for(@brew)
+      Activity::Emitter.record!(
+        action: "public_brew_share.deleted", workspace: current_workspace,
+        actor: Current.user, subject: @share
+      )
+    end
 
     redirect_to redirect_target, notice: t(".destroyed")
   end
@@ -68,6 +74,8 @@ class PublicBrewSharesController < ApplicationController
     end
 
     def save_share!
+      was_new = @share.new_record?
+      was_enabled = @share.enabled?
       PublicBrewShare.transaction do
         @share.assign_attributes(
           title: share_params[:title],
@@ -81,8 +89,24 @@ class PublicBrewSharesController < ApplicationController
           selected_photo_attachment_ids: permitted_selected_photo_attachment_ids,
           updated_by: Current.user
         )
+        PublicBeanShareRefresher.refresh_for(@brew)
+        Activity::Emitter.record!(
+          action: share_activity_action(prefix: "public_brew_share", was_new:, was_enabled:),
+          workspace: current_workspace, actor: Current.user, subject: @share
+        )
       end
-      PublicBeanShareRefresher.refresh_for(@brew)
+    end
+
+    def share_activity_action(prefix:, was_new:, was_enabled:)
+      if was_new
+        @share.enabled? ? "#{prefix}.published" : "#{prefix}.created"
+      elsif !was_enabled && @share.enabled?
+        "#{prefix}.published"
+      elsif was_enabled && !@share.enabled?
+        "#{prefix}.disabled"
+      else
+        "#{prefix}.updated"
+      end
     end
 
     def apply_password_changes

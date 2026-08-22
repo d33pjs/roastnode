@@ -1,6 +1,33 @@
 require "test_helper"
 
 class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
+  test "share draft publish edit disable and delete emit one safe action each" do
+    user = users(:one)
+    bean = beans(:open_household)
+    sign_in_as(user)
+
+    assert_activity_event(action: "public_bean_share.created", workspace: bean.workspace, actor: user) do
+      post bean_public_bean_share_path(bean), params: {
+        public_bean_share: { title: "House bean", enabled: "0", password: "secret-share-password" }
+      }
+    end
+    share = bean.reload.public_bean_share
+    assert_activity_event(action: "public_bean_share.published", workspace: bean.workspace, actor: user, subject: share) do
+      patch bean_public_bean_share_path(bean), params: { public_bean_share: { title: "House bean", enabled: "1" } }
+    end
+    assert_activity_event(action: "public_bean_share.updated", workspace: bean.workspace, actor: user, subject: share) do
+      patch bean_public_bean_share_path(bean), params: { public_bean_share: { title: "New safe title", enabled: "1" } }
+    end
+    assert_activity_event(action: "public_bean_share.disabled", workspace: bean.workspace, actor: user, subject: share) do
+      patch bean_public_bean_share_path(bean), params: { public_bean_share: { title: "New safe title", enabled: "0" } }
+    end
+    event = assert_activity_event(action: "public_bean_share.deleted", workspace: bean.workspace, actor: user) do
+      delete bean_public_bean_share_path(bean)
+    end
+    assert_equal %w[actor_kind actor_label enabled record_kind subject_label].sort, event.metadata.keys.sort
+    assert_no_match(/secret-share-password|token|digest|attachment|https?:\/\//i, event.metadata.to_json)
+  end
+
   test "writer can open new share form for own publishable bean" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

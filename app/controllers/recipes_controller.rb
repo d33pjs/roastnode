@@ -44,8 +44,13 @@ class RecipesController < ApplicationController
     assign_record_link_attributes(@recipe)
     recipe_photo = recipe_photo_from_params(source_brew)
 
-    if @recipe.save
-      replace_recipe_photo(@recipe, recipe_photo) if recipe_photo
+    created = with_workspace_activity(action: "recipe.created", subject: -> { @recipe }) do
+      saved = @recipe.save
+      replace_recipe_photo(@recipe, recipe_photo) if saved && recipe_photo
+      saved
+    end
+
+    if created
       redirect_to @recipe, notice: t(".created")
     else
       prepare_record_links(@recipe)
@@ -63,8 +68,13 @@ class RecipesController < ApplicationController
     @recipe.assign_attributes(title: profile["title"], profile: profile)
     assign_record_link_attributes(@recipe)
 
-    if @recipe.save
-      replace_recipe_photo(@recipe, uploaded_photos.first) if uploaded_photos.any?
+    updated = with_workspace_activity(action: "recipe.updated", subject: @recipe) do
+      saved = @recipe.save
+      replace_recipe_photo(@recipe, uploaded_photos.first) if saved && uploaded_photos.any?
+      saved
+    end
+
+    if updated
       redirect_to @recipe, notice: t(".updated")
     else
       prepare_record_links(@recipe)
@@ -73,7 +83,9 @@ class RecipesController < ApplicationController
   end
 
   def destroy
-    @recipe.destroy
+    with_workspace_activity(action: "recipe.deleted", subject: @recipe) do
+      @recipe.destroy!
+    end
     redirect_to recipes_path, notice: t(".destroyed")
   end
 
@@ -82,7 +94,13 @@ class RecipesController < ApplicationController
   end
 
   def export
-    send_data JSON.pretty_generate(RecipeExporter.new(@recipe).call),
+    payload = JSON.pretty_generate(RecipeExporter.new(@recipe).call)
+    ActivityEvent.transaction do
+      Activity::Emitter.record!(
+        action: "recipe.exported", workspace: current_workspace, actor: Current.user, subject: @recipe
+      )
+    end
+    send_data payload,
       filename: @recipe.export_filename,
       type: "application/json",
       disposition: "attachment"
@@ -96,11 +114,14 @@ class RecipesController < ApplicationController
       return
     end
 
-    recipe = RecipeImporter.new(
-      workspace: current_workspace,
-      user: Current.user,
-      json: uploaded_file.read
-    ).call
+    recipe = nil
+    with_workspace_activity(action: "recipe.imported", subject: -> { recipe }) do
+      recipe = RecipeImporter.new(
+        workspace: current_workspace,
+        user: Current.user,
+        json: uploaded_file.read
+      ).call
+    end
 
     redirect_to recipe, notice: t(".created")
   rescue RecipeImporter::ImportError => error
@@ -242,7 +263,7 @@ class RecipesController < ApplicationController
     def replace_recipe_photo(recipe, attachable)
       previous_attachments = recipe.photos.attachments.to_a
       recipe.photos.attach(attachable)
-      new_attachment = recipe.photos.attachments.order(:id).last
+      new_attachment = recipe.photos.attachments.max_by(&:id)
       return unless new_attachment
 
       recipe.set_primary_photo!(new_attachment)

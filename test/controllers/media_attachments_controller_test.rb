@@ -2,6 +2,72 @@ require "test_helper"
 require "vips"
 
 class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
+  test "primary crop and remove emit one parent media event without attachment internals" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    first = attach_photo(bean)
+    second = attach_photo(bean)
+
+    events = []
+    events << assert_activity_event(
+      action: "bean.media_updated", workspace: bean.workspace, actor: users(:one), subject: bean
+    ) do
+      patch primary_media_attachment_path(second)
+    end
+    events << assert_activity_event(
+      action: "bean.media_updated", workspace: bean.workspace, actor: users(:one), subject: bean
+    ) do
+      patch crop_media_attachment_path(second), params: {
+        crop: { file: photo_upload(filename: "cropped.jpg"), mode: "new", primary: "1" }
+      }
+    end
+    events << assert_activity_event(
+      action: "bean.media_updated", workspace: bean.workspace, actor: users(:one), subject: bean
+    ) do
+      delete media_attachment_path(first)
+    end
+
+    events.each do |event|
+      assert_equal %w[actor_kind actor_label record_kind subject_label status].sort, event.metadata.keys.sort
+      assert_no_match(/attachment|filename|rails\/active_storage|media_attachments/i, event.metadata.to_json)
+    end
+  end
+
+  test "media reads do not emit activity" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:open_household))
+
+    assert_no_difference -> { ActivityEvent.count } do
+      get media_attachment_path(attachment)
+      assert_response :success
+      get download_media_attachment_path(attachment)
+      assert_response :success
+    end
+  end
+
+  test "public refresher failure rolls back primary media change snapshot writes and activity" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    first = attach_photo(bean)
+    second = attach_photo(bean)
+    bean.set_primary_photo!(first)
+    share = create_public_bean_share_for(bean, selected_photo_attachment_ids: [ first.id, second.id ])
+    original_snapshot = share.snapshot.deep_dup
+    failing_refresh = lambda do |_record|
+      share.update!(snapshot: share.snapshot.merge("rollback_marker" => "media"))
+      raise "public bean refresh failed"
+    end
+
+    assert_no_difference -> { ActivityEvent.count } do
+      with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_for, failing_refresh) do
+        assert_raises(RuntimeError) { patch primary_media_attachment_path(second) }
+      end
+    end
+
+    assert_equal first.id, bean.reload.primary_photo_attachment_id
+    assert_equal original_snapshot, share.reload.snapshot
+  end
+
   test "serves active workspace attachment" do
     sign_in_as(users(:one))
     attachment = attach_photo(beans(:open_household))

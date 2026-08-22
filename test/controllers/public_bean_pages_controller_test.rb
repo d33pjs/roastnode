@@ -6,7 +6,9 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
   test "hero shows the share title between the coffee name and statistic cards" do
     share = create_share(enabled: true)
 
-    get public_bean_page_path(share.token)
+    assert_no_difference -> { ActivityEvent.count } do
+      get public_bean_page_path(share.token)
+    end
 
     assert_response :success
     assert_select "[data-testid=public-bean-coffee-name]", text: share.snapshot.dig("bean", "name")

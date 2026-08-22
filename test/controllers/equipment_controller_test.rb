@@ -1,6 +1,48 @@
 require "test_helper"
 
 class EquipmentControllerTest < ActionDispatch::IntegrationTest
+  test "gear recipe share and media action registry is complete" do
+    expected = %w[
+      equipment.created equipment.updated equipment.archived equipment.reopened equipment.deleted equipment.media_updated
+      preparation_tool.created preparation_tool.updated preparation_tool.archived preparation_tool.reopened
+      preparation_tool.deleted preparation_tool.media_updated equipment_event.created equipment_event.updated
+      equipment_event.deleted equipment_event.media_updated recipe.created recipe.imported recipe.updated recipe.exported
+      recipe.deleted recipe.media_updated public_brew_share.created public_brew_share.published
+      public_brew_share.updated public_brew_share.disabled public_brew_share.deleted public_bean_share.created
+      public_bean_share.published public_bean_share.updated public_bean_share.disabled public_bean_share.deleted
+      public_recipe_share.created public_recipe_share.published public_recipe_share.updated
+      public_recipe_share.disabled public_recipe_share.deleted
+    ]
+
+    assert_equal expected.sort, Activity::EventContract.actions.grep(
+      /\A(?:equipment|preparation_tool|equipment_event|recipe|public_brew_share|public_bean_share|public_recipe_share)\./
+    ).sort
+  end
+
+  test "equipment mutations emit one lifecycle action each" do
+    sign_in_as(users(:one))
+
+    assert_activity_event(action: "equipment.created", workspace: workspaces(:household), actor: users(:one)) do
+      post equipment_index_path, params: { equipment: { name: "Audit grinder", kind: "grinder" } }
+    end
+    item = workspaces(:household).equipment.find_by!(name: "Audit grinder")
+
+    assert_activity_event(action: "equipment.updated", workspace: item.workspace, actor: users(:one), subject: item) do
+      patch equipment_path(item), params: { equipment: { name: "Audit grinder 2", kind: "grinder" } }
+    end
+    assert_activity_event(action: "equipment.archived", workspace: item.workspace, actor: users(:one), subject: item) do
+      patch archive_equipment_path(item)
+    end
+    assert_activity_event(action: "equipment.reopened", workspace: item.workspace, actor: users(:one), subject: item) do
+      patch reopen_equipment_path(item)
+    end
+    event = assert_activity_event(action: "equipment.deleted", workspace: item.workspace, actor: users(:one)) do
+      delete equipment_path(item)
+    end
+
+    assert_equal "Audit grinder 2", event.metadata.fetch("subject_label")
+  end
+
   test "index lists active workspace equipment only" do
     sign_in_as(users(:one))
 

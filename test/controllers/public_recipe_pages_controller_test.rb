@@ -4,7 +4,9 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
   test "disabled share returns not found" do
     share = create_share(enabled: false)
 
-    get public_recipe_page_path(share.token)
+    assert_no_difference -> { ActivityEvent.count } do
+      get public_recipe_page_path(share.token)
+    end
 
     assert_response :not_found
   end
@@ -13,7 +15,9 @@ class PublicRecipePagesControllerTest < ActionDispatch::IntegrationTest
     share = create_share(enabled: true)
     share.workspace.update!(buy_me_a_coffee_url: "https://buymeacoffee.com/roastnode")
 
-    get public_recipe_page_path(share.token)
+    assert_no_difference -> { ActivityEvent.count } do
+      get public_recipe_page_path(share.token)
+    end
 
     assert_response :success
     assert_select "[data-testid=public-recipe-page]"

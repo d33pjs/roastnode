@@ -4,7 +4,9 @@ class PublicRecipeMediaControllerTest < ActionDispatch::IntegrationTest
   test "serves selected recipe photo through opaque handle" do
     share, photo = create_share_with_photo(enabled: true)
 
-    get public_recipe_media_path(share.token, share.public_media_handle_for(photo.id), variant: "thumbnail")
+    assert_no_difference -> { ActivityEvent.count } do
+      get public_recipe_media_path(share.token, share.public_media_handle_for(photo.id), variant: "thumbnail")
+    end
 
     assert_response :success
     assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]

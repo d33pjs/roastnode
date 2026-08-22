@@ -24,8 +24,17 @@ class EquipmentEventsController < ApplicationController
     @equipment_event.user = Current.user
     @equipment_event.equipment = Equipment.where(id: equipment_ids)
 
-    if @equipment_event.save
-      @equipment_event.photos.attach(photos) if photos.any?
+    created = with_workspace_activity(
+      action: "equipment_event.created",
+      subject: -> { @equipment_event },
+      occurred_at: -> { @equipment_event.occurred_at }
+    ) do
+      saved = @equipment_event.save
+      @equipment_event.photos.attach(photos) if saved && photos.any?
+      saved
+    end
+
+    if created
       redirect_to @equipment_event, notice: t(".created")
     else
       render :new, status: :unprocessable_entity
@@ -39,11 +48,15 @@ class EquipmentEventsController < ApplicationController
     equipment_ids = Array(attributes.delete(:equipment_ids)).reject(&:blank?)
     event_types = Array(attributes.delete(:event_types)).reject(&:blank?)
 
-    @equipment_event.assign_attributes(attributes.merge(event_types:, event_type: event_types.first))
-    @equipment_event.equipment = Equipment.where(id: equipment_ids)
+    updated = with_workspace_activity(action: "equipment_event.updated", subject: @equipment_event) do
+      @equipment_event.assign_attributes(attributes.merge(event_types:, event_type: event_types.first))
+      @equipment_event.equipment = Equipment.where(id: equipment_ids)
+      saved = @equipment_event.save
+      @equipment_event.photos.attach(photos) if saved && photos.any?
+      saved
+    end
 
-    if @equipment_event.save
-      @equipment_event.photos.attach(photos) if photos.any?
+    if updated
       redirect_to @equipment_event, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity
@@ -51,7 +64,10 @@ class EquipmentEventsController < ApplicationController
   end
 
   def destroy
-    @equipment_event.destroy!
+    @equipment_event.equipment.load
+    with_workspace_activity(action: "equipment_event.deleted", subject: @equipment_event) do
+      @equipment_event.destroy!
+    end
     redirect_to dashboard_path, notice: t(".destroyed")
   end
 

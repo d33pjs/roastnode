@@ -1,6 +1,36 @@
 require "test_helper"
 
 class RecipesControllerTest < ActionDispatch::IntegrationTest
+  test "recipe create update export delete and import emit distinct actions" do
+    user = users(:one)
+    workspace = workspaces(:household)
+    sign_in_as(user)
+
+    assert_activity_event(action: "recipe.created", workspace:, actor: user) do
+      post recipes_path, params: {
+        recipe: { source_brew_id: brews(:morning_espresso).id, title: "Audit recipe" }
+      }
+    end
+    recipe = workspace.recipes.find_by!(title: "Audit recipe")
+
+    assert_activity_event(action: "recipe.updated", workspace:, actor: user, subject: recipe) do
+      patch recipe_path(recipe), params: { recipe: { title: "Audit recipe updated" } }
+    end
+    assert_activity_event(action: "recipe.exported", workspace:, actor: user, subject: recipe) do
+      get export_recipe_path(recipe)
+    end
+    deleted_event = assert_activity_event(action: "recipe.deleted", workspace:, actor: user) do
+      delete recipe_path(recipe)
+    end
+    assert_equal "Audit recipe updated", deleted_event.metadata.fetch("subject_label")
+
+    assert_activity_event(action: "recipe.imported", workspace:, actor: user) do
+      post import_recipes_path, params: {
+        recipe_import: { file: fixture_file_upload("recipe_export.json", "application/json") }
+      }
+    end
+  end
+
   test "index lists active workspace recipes only and navigation includes recipes" do
     sign_in_as(users(:one))
 
@@ -126,12 +156,14 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
   test "writer import rejects malformed json" do
     sign_in_as(users(:one))
 
-    assert_no_difference -> { workspaces(:household).recipes.count } do
-      post import_recipes_path, params: {
-        recipe_import: {
-          file: fixture_file_upload("bad_recipe_export.json", "application/json")
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_difference -> { workspaces(:household).recipes.count } do
+        post import_recipes_path, params: {
+          recipe_import: {
+            file: fixture_file_upload("bad_recipe_export.json", "application/json")
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to recipes_path

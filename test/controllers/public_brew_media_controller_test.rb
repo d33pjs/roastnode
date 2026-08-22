@@ -6,7 +6,9 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     photo = attach_photo(brew)
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
 
-    get public_media_path_for(share, photo)
+    assert_no_difference -> { ActivityEvent.count } do
+      get public_media_path_for(share, photo)
+    end
     assert_response :success
     assert_equal "image/jpeg", response.media_type
     assert_match "public-brew-media", response.headers["Content-Disposition"]

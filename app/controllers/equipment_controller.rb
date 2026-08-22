@@ -34,9 +34,14 @@ class EquipmentController < ApplicationController
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
     @equipment = current_workspace.equipment.new(attributes)
 
-    if @equipment.save
-      @equipment.photos.attach(photos) if photos.any?
-      refresh_public_shares_for(@equipment)
+    created = with_workspace_activity(action: "equipment.created", subject: -> { @equipment }) do
+      saved = @equipment.save
+      @equipment.photos.attach(photos) if saved && photos.any?
+      refresh_public_shares_for(@equipment) if saved
+      saved
+    end
+
+    if created
       redirect_to gear_path, notice: t(".created")
     else
       prepare_record_links(@equipment)
@@ -48,9 +53,14 @@ class EquipmentController < ApplicationController
     attributes = equipment_params
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
 
-    if @equipment.update(attributes)
-      @equipment.photos.attach(photos) if photos.any?
-      refresh_public_shares_for(@equipment)
+    updated = with_workspace_activity(action: "equipment.updated", subject: @equipment) do
+      saved = @equipment.update(attributes)
+      @equipment.photos.attach(photos) if saved && photos.any?
+      refresh_public_shares_for(@equipment) if saved
+      saved
+    end
+
+    if updated
       redirect_to gear_path, notice: t(".updated")
     else
       prepare_record_links(@equipment)
@@ -59,23 +69,32 @@ class EquipmentController < ApplicationController
   end
 
   def archive
-    @equipment.archive!
-    refresh_public_shares_for(@equipment)
+    with_workspace_activity(action: "equipment.archived", subject: @equipment) do
+      @equipment.archive!
+      refresh_public_shares_for(@equipment)
+      true
+    end
     redirect_to gear_path, notice: t(".archived")
   end
 
   def reopen
-    @equipment.reopen!
-    refresh_public_shares_for(@equipment)
+    with_workspace_activity(action: "equipment.reopened", subject: @equipment) do
+      @equipment.reopen!
+      refresh_public_shares_for(@equipment)
+      true
+    end
     redirect_to gear_path, notice: t(".reopened")
   end
 
   def destroy
     public_brew_share_ids = PublicBrewShareRefresher.shares_for(@equipment).pluck(:id)
     public_bean_share_ids = PublicBeanShareRefresher.shares_for(@equipment).pluck(:id)
-    @equipment.destroy_with_history!
-    refresh_public_brew_shares(public_brew_share_ids)
-    refresh_public_bean_shares(public_bean_share_ids)
+    with_workspace_activity(action: "equipment.deleted", subject: @equipment) do
+      @equipment.destroy_with_history!
+      refresh_public_brew_shares(public_brew_share_ids)
+      refresh_public_bean_shares(public_bean_share_ids)
+      true
+    end
     redirect_to gear_path, notice: t(".destroyed")
   end
 

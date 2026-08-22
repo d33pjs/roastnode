@@ -1,6 +1,33 @@
 require "test_helper"
 
 class PublicRecipeSharesControllerTest < ActionDispatch::IntegrationTest
+  test "share draft publish edit disable and delete emit one safe action each" do
+    user = users(:one)
+    recipe = recipes(:household_recipe)
+    sign_in_as(user)
+
+    assert_activity_event(action: "public_recipe_share.created", workspace: recipe.workspace, actor: user) do
+      post recipe_public_recipe_share_path(recipe), params: {
+        public_recipe_share: { title: "House recipe", enabled: "0", password: "secret-share-password" }
+      }
+    end
+    share = recipe.reload.public_recipe_share
+    assert_activity_event(action: "public_recipe_share.published", workspace: recipe.workspace, actor: user, subject: share) do
+      patch recipe_public_recipe_share_path(recipe), params: { public_recipe_share: { title: "House recipe", enabled: "1" } }
+    end
+    assert_activity_event(action: "public_recipe_share.updated", workspace: recipe.workspace, actor: user, subject: share) do
+      patch recipe_public_recipe_share_path(recipe), params: { public_recipe_share: { title: "New safe title", enabled: "1" } }
+    end
+    assert_activity_event(action: "public_recipe_share.disabled", workspace: recipe.workspace, actor: user, subject: share) do
+      patch recipe_public_recipe_share_path(recipe), params: { public_recipe_share: { title: "New safe title", enabled: "0" } }
+    end
+    event = assert_activity_event(action: "public_recipe_share.deleted", workspace: recipe.workspace, actor: user) do
+      delete recipe_public_recipe_share_path(recipe)
+    end
+    assert_equal %w[actor_kind actor_label enabled record_kind subject_label].sort, event.metadata.keys.sort
+    assert_no_match(/secret-share-password|token|digest|attachment|https?:\/\//i, event.metadata.to_json)
+  end
+
   test "writer can open new share form for own recipe" do
     sign_in_as(users(:one))
 

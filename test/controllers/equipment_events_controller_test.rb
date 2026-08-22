@@ -1,6 +1,46 @@
 require "test_helper"
 
 class EquipmentEventsControllerTest < ActionDispatch::IntegrationTest
+  test "equipment event mutations emit at domain occurrence then commit time" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    occurred_at = Time.find_zone(user.time_zone).local(2026, 5, 24, 7, 45)
+
+    created_event = assert_activity_event(
+      action: "equipment_event.created", workspace: workspaces(:household), actor: user
+    ) do
+      post equipment_events_path, params: {
+        equipment_event: {
+          event_types: [ "grinder_cleaning" ], occurred_at: occurred_at.strftime("%Y-%m-%dT%H:%M"),
+          equipment_ids: [ equipment(:household_grinder).id ]
+        }
+      }
+    end
+    event = workspaces(:household).equipment_events.order(:id).last
+    assert_equal occurred_at, created_event.occurred_at
+
+    updated_event = assert_activity_event(
+      action: "equipment_event.updated", workspace: event.workspace, actor: user, subject: event
+    ) do
+      patch equipment_event_path(event), params: {
+        equipment_event: {
+          event_types: [ "burr_change" ], occurred_at: occurred_at.strftime("%Y-%m-%dT%H:%M"),
+          equipment_ids: [ equipment(:household_grinder).id ]
+        }
+      }
+    end
+    assert_in_delta Time.current, updated_event.occurred_at, 2.seconds
+
+    deleted_event = assert_activity_event(
+      action: "equipment_event.deleted", workspace: event.workspace, actor: user
+    ) do
+      delete equipment_event_path(event)
+    end
+    assert_equal [ "burr_change" ], deleted_event.metadata.fetch("event_types")
+    assert_equal [ equipment(:household_grinder).name ], deleted_event.metadata.fetch("equipment_labels")
+  end
+
   test "new shows event form with active workspace equipment" do
     sign_in_as(users(:one))
 

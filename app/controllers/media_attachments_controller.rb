@@ -3,6 +3,17 @@ class MediaAttachmentsController < ApplicationController
 
   THUMBNAIL_VARIANT = "thumbnail"
   THUMBNAIL_TRANSFORMATIONS = { resize_to_limit: [ 480, 480 ] }.freeze
+  MEDIA_ACTIVITY_ACTIONS = {
+    "Bean" => "bean.media_updated",
+    "Brew" => "brew.media_updated",
+    "ExternalCoffee" => "external_coffee.media_updated",
+    "Recipe" => "recipe.media_updated",
+    "Equipment" => "equipment.media_updated",
+    "PreparationTool" => "preparation_tool.media_updated",
+    "EquipmentEvent" => "equipment_event.media_updated",
+    "Workspace" => "workspace.media_updated",
+    "User" => "profile.media_updated"
+  }.freeze
 
   before_action :set_attachment
   before_action :ensure_attachment_in_current_workspace!
@@ -33,8 +44,11 @@ class MediaAttachmentsController < ApplicationController
     record = @attachment.record
     return head :not_found unless record.respond_to?(:set_primary_photo!)
 
-    record.set_primary_photo!(@attachment)
-    refresh_public_shares_for(record)
+    record.transaction do
+      record.set_primary_photo!(@attachment)
+      refresh_public_shares_for(record)
+      record_media_activity!(record)
+    end
 
     redirect_back_or_to record_path(record), notice: t(".updated")
   end
@@ -43,8 +57,11 @@ class MediaAttachmentsController < ApplicationController
     return unless ensure_write_policy!
 
     record = @attachment.record
-    @attachment.destroy!
-    refresh_public_shares_for(record)
+    record.transaction do
+      @attachment.destroy!
+      refresh_public_shares_for(record)
+      record_media_activity!(record)
+    end
 
     redirect_back_or_to record_path(record), notice: t(".destroyed")
   end
@@ -121,8 +138,9 @@ class MediaAttachmentsController < ApplicationController
         new_attachment = record.photos.attachments.max_by(&:id)
         @attachment.destroy! if overwrite
         record.set_primary_photo!(new_attachment) if make_primary || (overwrite && was_primary)
+        refresh_public_shares_for(record)
+        record_media_activity!(record)
       end
-      refresh_public_shares_for(record)
 
       notice_key = overwrite ? ".updated" : ".created"
       redirect_to record_path(record), notice: t(notice_key)
@@ -199,5 +217,12 @@ class MediaAttachmentsController < ApplicationController
     def refresh_public_shares_for(record)
       PublicBrewShareRefresher.refresh_for(record)
       PublicBeanShareRefresher.refresh_for(record)
+    end
+
+    def record_media_activity!(record)
+      action = MEDIA_ACTIVITY_ACTIONS.fetch(record.class.base_class.name)
+      Activity::Emitter.record!(
+        action:, workspace: current_workspace, actor: Current.user, subject: record
+      )
     end
 end

@@ -1,6 +1,34 @@
 require "test_helper"
 
 class PreparationToolsControllerTest < ActionDispatch::IntegrationTest
+  test "preparation tool mutations emit one lifecycle action each" do
+    sign_in_as(users(:one))
+
+    assert_activity_event(action: "preparation_tool.created", workspace: workspaces(:household), actor: users(:one)) do
+      post preparation_tools_path, params: {
+        preparation_tool: { name: "Audit tool", brew_method: "espresso", position: "99" }
+      }
+    end
+    tool = workspaces(:household).preparation_tools.find_by!(name: "Audit tool")
+
+    assert_activity_event(action: "preparation_tool.updated", workspace: tool.workspace, actor: users(:one), subject: tool) do
+      patch preparation_tool_path(tool), params: {
+        preparation_tool: { name: "Audit tool 2", brew_method: "espresso", position: "99" }
+      }
+    end
+    assert_activity_event(action: "preparation_tool.archived", workspace: tool.workspace, actor: users(:one), subject: tool) do
+      patch archive_preparation_tool_path(tool)
+    end
+    assert_activity_event(action: "preparation_tool.reopened", workspace: tool.workspace, actor: users(:one), subject: tool) do
+      patch reopen_preparation_tool_path(tool)
+    end
+    event = assert_activity_event(action: "preparation_tool.deleted", workspace: tool.workspace, actor: users(:one)) do
+      delete preparation_tool_path(tool)
+    end
+
+    assert_equal "Audit tool 2", event.metadata.fetch("subject_label")
+  end
+
   test "index lists active workspace tools only" do
     sign_in_as(users(:one))
     preparation_tools(:wdt).update!(position: 20)

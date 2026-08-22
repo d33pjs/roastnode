@@ -1,6 +1,93 @@
 require "test_helper"
 
 class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
+  test "share draft publish edit disable and delete emit one safe action each" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    assert_activity_event(action: "public_brew_share.created", workspace: brew.workspace, actor: users(:one)) do
+      post brew_public_brew_share_path(brew), params: {
+        public_brew_share: { title: "House recipe", enabled: "0", password: "secret-share-password" }
+      }
+    end
+    share = brew.reload.public_brew_share
+    assert_activity_event(action: "public_brew_share.published", workspace: brew.workspace, actor: users(:one), subject: share) do
+      patch brew_public_brew_share_path(brew), params: { public_brew_share: { title: "House recipe", enabled: "1" } }
+    end
+    assert_activity_event(action: "public_brew_share.updated", workspace: brew.workspace, actor: users(:one), subject: share) do
+      patch brew_public_brew_share_path(brew), params: { public_brew_share: { title: "New safe title", enabled: "1" } }
+    end
+    assert_activity_event(action: "public_brew_share.disabled", workspace: brew.workspace, actor: users(:one), subject: share) do
+      patch brew_public_brew_share_path(brew), params: { public_brew_share: { title: "New safe title", enabled: "0" } }
+    end
+    event = assert_activity_event(action: "public_brew_share.deleted", workspace: brew.workspace, actor: users(:one)) do
+      delete brew_public_brew_share_path(brew)
+    end
+    assert_equal %w[actor_kind actor_label enabled record_kind subject_label].sort, event.metadata.keys.sort
+    assert_no_match(/secret-share-password|token|digest|attachment|https?:\/\//i, event.metadata.to_json)
+  end
+
+  test "bean-share refresher failure rolls back public brew share creation activity and snapshot writes" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    bean_share = create_public_bean_share_for(brew.bean, user: users(:one))
+    original_bean_snapshot = bean_share.snapshot.deep_dup
+    failing_refresh = lambda do |_record|
+      bean_share.update!(snapshot: bean_share.snapshot.merge("rollback_marker" => "create"))
+      raise "public bean refresh failed"
+    end
+
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_difference -> { PublicBrewShare.count } do
+        with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_for, failing_refresh) do
+          assert_raises(RuntimeError) do
+            post brew_public_brew_share_path(brew), params: {
+              public_brew_share: { title: "Must roll back", enabled: "1" }
+            }
+          end
+        end
+      end
+    end
+    assert_equal original_bean_snapshot, bean_share.reload.snapshot
+  end
+
+  test "bean-share refresher failure rolls back public brew share update and destroy with no activity" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    share = create_share_for(brew, user: users(:one), enabled: false, title: "Original title")
+    bean_share = create_public_bean_share_for(brew.bean, user: users(:one))
+    original_share_snapshot = share.snapshot.deep_dup
+    original_bean_snapshot = bean_share.snapshot.deep_dup
+    failing_refresh = lambda do |_record|
+      bean_share.update!(snapshot: bean_share.snapshot.merge("rollback_marker" => "mutation"))
+      raise "public bean refresh failed"
+    end
+
+    assert_no_difference -> { ActivityEvent.count } do
+      with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_for, failing_refresh) do
+        assert_raises(RuntimeError) do
+          patch brew_public_brew_share_path(brew), params: {
+            public_brew_share: { title: "Changed title", enabled: "1" }
+          }
+        end
+      end
+    end
+    assert_equal "Original title", share.reload.title
+    assert_not share.enabled?
+    assert_equal original_share_snapshot, share.snapshot
+    assert_equal original_bean_snapshot, bean_share.reload.snapshot
+
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_difference -> { PublicBrewShare.count } do
+        with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_for, failing_refresh) do
+          assert_raises(RuntimeError) { delete brew_public_brew_share_path(brew) }
+        end
+      end
+    end
+    assert PublicBrewShare.exists?(share.id)
+    assert_equal original_bean_snapshot, bean_share.reload.snapshot
+  end
+
   test "writer can open new share form for own brew" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))

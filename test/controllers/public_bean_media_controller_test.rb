@@ -9,7 +9,9 @@ class PublicBeanMediaControllerTest < ActionDispatch::IntegrationTest
     share = create_share(bean:, selected_photo_attachment_ids: [ photo.id ])
     handle = share.public_media_handle_for(photo.id)
 
-    get public_bean_media_path(share.token, handle)
+    assert_no_difference -> { ActivityEvent.count } do
+      get public_bean_media_path(share.token, handle)
+    end
 
     assert_response :success
     assert_equal "image/jpeg", response.media_type

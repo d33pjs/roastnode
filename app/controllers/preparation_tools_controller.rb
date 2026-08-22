@@ -32,9 +32,14 @@ class PreparationToolsController < ApplicationController
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
     @preparation_tool = current_workspace.preparation_tools.new(attributes)
 
-    if @preparation_tool.save
-      @preparation_tool.photos.attach(photos) if photos.any?
-      refresh_public_brew_shares_for(@preparation_tool)
+    created = with_workspace_activity(action: "preparation_tool.created", subject: -> { @preparation_tool }) do
+      saved = @preparation_tool.save
+      @preparation_tool.photos.attach(photos) if saved && photos.any?
+      refresh_public_brew_shares_for(@preparation_tool) if saved
+      saved
+    end
+
+    if created
       redirect_to gear_path, notice: t(".created")
     else
       prepare_record_links(@preparation_tool)
@@ -46,9 +51,14 @@ class PreparationToolsController < ApplicationController
     attributes = preparation_tool_params
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
 
-    if @preparation_tool.update(attributes)
-      @preparation_tool.photos.attach(photos) if photos.any?
-      refresh_public_brew_shares_for(@preparation_tool)
+    updated = with_workspace_activity(action: "preparation_tool.updated", subject: @preparation_tool) do
+      saved = @preparation_tool.update(attributes)
+      @preparation_tool.photos.attach(photos) if saved && photos.any?
+      refresh_public_brew_shares_for(@preparation_tool) if saved
+      saved
+    end
+
+    if updated
       redirect_to gear_path, notice: t(".updated")
     else
       prepare_record_links(@preparation_tool)
@@ -57,21 +67,30 @@ class PreparationToolsController < ApplicationController
   end
 
   def archive
-    @preparation_tool.archive!
-    refresh_public_brew_shares_for(@preparation_tool)
+    with_workspace_activity(action: "preparation_tool.archived", subject: @preparation_tool) do
+      @preparation_tool.archive!
+      refresh_public_brew_shares_for(@preparation_tool)
+      true
+    end
     redirect_to gear_path, notice: t(".archived")
   end
 
   def reopen
-    @preparation_tool.reopen!
-    refresh_public_brew_shares_for(@preparation_tool)
+    with_workspace_activity(action: "preparation_tool.reopened", subject: @preparation_tool) do
+      @preparation_tool.reopen!
+      refresh_public_brew_shares_for(@preparation_tool)
+      true
+    end
     redirect_to gear_path, notice: t(".reopened")
   end
 
   def destroy
     share_ids = PublicBrewShareRefresher.shares_for(@preparation_tool).pluck(:id)
-    @preparation_tool.destroy_with_history!
-    refresh_public_brew_shares(share_ids)
+    with_workspace_activity(action: "preparation_tool.deleted", subject: @preparation_tool) do
+      @preparation_tool.destroy_with_history!
+      refresh_public_brew_shares(share_ids)
+      true
+    end
     redirect_to gear_path, notice: t(".destroyed")
   end
 

@@ -30,7 +30,13 @@ class PublicRecipeSharesController < ApplicationController
   end
 
   def destroy
-    @share.destroy!
+    PublicRecipeShare.transaction do
+      @share.destroy!
+      Activity::Emitter.record!(
+        action: "public_recipe_share.deleted", workspace: current_workspace,
+        actor: Current.user, subject: @share
+      )
+    end
 
     redirect_to @recipe, notice: t(".destroyed")
   end
@@ -59,6 +65,8 @@ class PublicRecipeSharesController < ApplicationController
     end
 
     def save_share!
+      was_new = @share.new_record?
+      was_enabled = @share.enabled?
       PublicRecipeShare.transaction do
         @share.assign_attributes(
           title: share_params[:title],
@@ -72,6 +80,22 @@ class PublicRecipeSharesController < ApplicationController
           selected_photo_attachment_ids: permitted_selected_photo_attachment_ids,
           updated_by: Current.user
         )
+        Activity::Emitter.record!(
+          action: share_activity_action(prefix: "public_recipe_share", was_new:, was_enabled:),
+          workspace: current_workspace, actor: Current.user, subject: @share
+        )
+      end
+    end
+
+    def share_activity_action(prefix:, was_new:, was_enabled:)
+      if was_new
+        @share.enabled? ? "#{prefix}.published" : "#{prefix}.created"
+      elsif !was_enabled && @share.enabled?
+        "#{prefix}.published"
+      elsif was_enabled && !@share.enabled?
+        "#{prefix}.disabled"
+      else
+        "#{prefix}.updated"
       end
     end
 
