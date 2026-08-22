@@ -152,7 +152,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.string "grind_setting"
     t.bigint "grinder_id"
     t.decimal "ground_weight_grams", precision: 8, scale: 2
-    t.string "guest_name"
     t.string "import_source"
     t.string "import_source_id"
     t.integer "low_flow_start_seconds"
@@ -168,8 +167,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.jsonb "raw_import_data", default: {}, null: false
     t.bigint "recipe_id"
     t.jsonb "recipe_snapshot", default: {}, null: false
+    t.string "recipient_kind", default: "self", null: false
+    t.string "recipient_name"
+    t.bigint "recipient_user_id"
     t.string "retention_marker", default: "unknown", null: false
-    t.boolean "served_for_guest", default: false, null: false
     t.string "taste_balance", default: "unknown", null: false
     t.integer "total_time_seconds"
     t.datetime "updated_at", null: false
@@ -182,10 +183,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.index ["machine_id"], name: "index_brews_on_machine_id"
     t.index ["primary_photo_attachment_id"], name: "index_brews_on_primary_photo_attachment_id"
     t.index ["recipe_id"], name: "index_brews_on_recipe_id"
+    t.index ["recipient_user_id"], name: "index_brews_on_recipient_user_id"
     t.index ["user_id"], name: "index_brews_on_user_id"
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_brews_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
     t.index ["workspace_id"], name: "index_brews_on_workspace_id"
+    t.check_constraint "((recipient_kind = 'self' AND recipient_user_id IS NULL AND recipient_name IS NULL) OR (recipient_kind = 'household_member' AND recipient_user_id IS NOT NULL AND recipient_name IS NULL) OR (recipient_kind = 'guest' AND recipient_user_id IS NULL))", name: "brews_recipient_shape"
   end
 
   create_table "data_imports", force: :cascade do |t|
@@ -611,6 +614,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
   add_foreign_key "brews", "equipment", column: "grinder_id"
   add_foreign_key "brews", "equipment", column: "machine_id"
   add_foreign_key "brews", "recipes"
+  add_foreign_key "brews", "users", column: "recipient_user_id"
   add_foreign_key "brews", "users"
   add_foreign_key "brews", "workspaces"
   add_foreign_key "data_imports", "users"

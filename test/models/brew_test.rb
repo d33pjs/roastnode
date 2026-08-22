@@ -22,35 +22,40 @@ class BrewTest < ActiveSupport::TestCase
     assert_nil brew.reload.flow_control_used
   end
 
-  test "normalizes serving metadata and infers guest serving from guest name" do
+  test "supports recipient kinds and normalizes guest recipient names" do
     brew = brews(:morning_espresso)
 
     brew.update!(
-      served_for_guest: false,
-      guest_name: "  Anna  ",
+      recipient_kind: "guest",
+      recipient_name: "  Anna  ",
       cup_style: "  Americano  "
     )
 
-    assert_predicate brew, :served_for_guest?
-    assert_equal "Anna", brew.guest_name
+    assert_predicate brew, :recipient_guest?
+    assert_equal "Anna", brew.recipient_name
     assert_equal "Americano", brew.cup_style
 
-    brew.update!(served_for_guest: false, guest_name: "")
+    brew.update!(recipient_kind: "self")
 
-    assert_not brew.served_for_guest?
-    assert_nil brew.guest_name
+    assert_predicate brew, :recipient_self?
+    assert_nil brew.recipient_name
+
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+
+    assert_predicate brew, :recipient_household_member?
+    assert_equal users(:two), brew.recipient_user
   end
 
-  test "stores blank serving strings as nil" do
+  test "stores blank recipient strings as nil" do
     brew = brews(:morning_espresso)
 
     brew.update!(
-      served_for_guest: true,
-      guest_name: "   ",
+      recipient_kind: "guest",
+      recipient_name: "   ",
       cup_style: "   "
     )
 
-    assert_nil brew.guest_name
+    assert_nil brew.recipient_name
     assert_nil brew.cup_style
   end
 
@@ -58,13 +63,46 @@ class BrewTest < ActiveSupport::TestCase
     brew = brews(:morning_espresso)
     long_value = "a" * 121
 
-    brew.served_for_guest = true
-    brew.guest_name = long_value
+    brew.recipient_kind = "guest"
+    brew.recipient_name = long_value
     brew.cup_style = long_value
 
     assert_not brew.valid?
-    assert_includes brew.errors[:guest_name], "is too long (maximum is 120 characters)"
+    assert_includes brew.errors[:recipient_name], "is too long (maximum is 120 characters)"
     assert_includes brew.errors[:cup_style], "is too long (maximum is 120 characters)"
+  end
+
+  test "normalizes logger selected as household recipient to self" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: brew.user, recipient_name: "Ignored")
+    assert_predicate brew, :recipient_self?
+    assert_nil brew.recipient_user
+    assert_nil brew.recipient_name
+  end
+
+  test "requires a current workspace user when a household recipient is newly selected" do
+    outsider = User.create!(email_address: "recipient-outsider@example.test", password: "password")
+    brew = brews(:morning_espresso)
+    brew.assign_attributes(recipient_kind: "household_member", recipient_user: outsider)
+    assert_not brew.valid?
+    assert_includes brew.errors[:recipient_user], "must belong to the workspace"
+  end
+
+  test "preserves a former household recipient on unrelated historical edits" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    memberships(:member).destroy!
+    assert brew.update(notes: "Historical correction")
+    assert_equal users(:two), brew.reload.recipient_user
+  end
+
+  test "database rejects an impossible recipient shape" do
+    brew = brews(:morning_espresso)
+    assert_raises ActiveRecord::StatementInvalid do
+      Brew.transaction(requires_new: true) do
+        brew.update_columns(recipient_kind: "household_member", recipient_user_id: nil, recipient_name: nil)
+      end
+    end
   end
 
   test "creating espresso brew subtracts bean inventory and records adjustment" do

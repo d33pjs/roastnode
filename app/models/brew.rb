@@ -33,6 +33,14 @@ class Brew < ApplicationRecord
     exchange: "exchange"
   }, prefix: :retention
 
+  enum :recipient_kind, {
+    self: "self",
+    household_member: "household_member",
+    guest: "guest"
+  }, prefix: :recipient
+
+  attr_accessor :recipient_selection
+
   belongs_to :workspace
   belongs_to :user
   belongs_to :data_import, optional: true
@@ -41,6 +49,10 @@ class Brew < ApplicationRecord
   belongs_to :machine, class_name: "Equipment", optional: true
   belongs_to :brewer, class_name: "Equipment", optional: true
   belongs_to :recipe, optional: true
+  belongs_to :recipient_user,
+    class_name: "User",
+    optional: true,
+    inverse_of: :received_brews
 
   has_one :inventory_adjustment, dependent: :restrict_with_exception
   has_one :public_brew_share, dependent: :destroy
@@ -49,8 +61,7 @@ class Brew < ApplicationRecord
   has_many_attached :photos
 
   before_validation :set_defaults
-  before_validation :mark_served_for_guest_when_guest_name_present
-  before_validation :clear_guest_name_unless_served_for_guest
+  before_validation :normalize_recipient
   before_validation :set_quick_drip_consumed_grams
   before_validation :set_retention_marker
   after_save :clear_quick_drip_amount_assignment_flags
@@ -64,7 +75,7 @@ class Brew < ApplicationRecord
   validates :total_time_seconds, :preinfusion_seconds, :low_flow_start_seconds, :first_drip_seconds,
     numericality: { only_integer: true, greater_than_or_equal_to: 0 }, allow_nil: true
   validates :rating, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
-  validates :guest_name, :cup_style, length: { maximum: 120 }
+  validates :recipient_name, :cup_style, length: { maximum: 120 }
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
   validate :quick_drip_required_fields
   validate :bean_belongs_to_workspace
@@ -72,6 +83,7 @@ class Brew < ApplicationRecord
   validate :equipment_matches_expected_kind
   validate :method_specific_equipment
   validate :recipe_belongs_to_workspace
+  validate :recipient_user_belongs_to_workspace_when_selected
 
   def snapshot_preparation_tools!(tools)
     brew_preparation_tools.destroy_all
@@ -112,7 +124,7 @@ class Brew < ApplicationRecord
     super
   end
 
-  def guest_name=(value)
+  def recipient_name=(value)
     super(value.to_s.strip.presence)
   end
 
@@ -130,12 +142,21 @@ class Brew < ApplicationRecord
       self.retention_marker = calculated_retention_marker
     end
 
-    def mark_served_for_guest_when_guest_name_present
-      self.served_for_guest = true if guest_name.present?
-    end
-
-    def clear_guest_name_unless_served_for_guest
-      self.guest_name = nil unless served_for_guest?
+    def normalize_recipient
+      case recipient_kind
+      when "household_member"
+        if recipient_user_id.present? && recipient_user_id == user_id
+          self.recipient_kind = "self"
+          self.recipient_user = nil
+        end
+        self.recipient_name = nil
+      when "guest"
+        self.recipient_user = nil
+      else
+        self.recipient_kind = "self"
+        self.recipient_user = nil
+        self.recipient_name = nil
+      end
     end
 
     def set_quick_drip_consumed_grams
@@ -271,6 +292,18 @@ class Brew < ApplicationRecord
       return if recipe.blank? || workspace.blank? || recipe.workspace_id == workspace_id
 
       errors.add(:recipe, "must belong to the workspace")
+    end
+
+    def recipient_user_belongs_to_workspace_when_selected
+      return unless recipient_household_member?
+      if recipient_user.blank?
+        errors.add(:recipient_user, "must be selected")
+        return
+      end
+      return unless new_record? || will_save_change_to_recipient_kind? || will_save_change_to_recipient_user_id?
+      return if workspace&.users&.exists?(id: recipient_user_id)
+
+      errors.add(:recipient_user, "must belong to the workspace")
     end
 
     def clear_quick_drip_amount_assignment_flags
