@@ -188,7 +188,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.index ["workspace_id", "import_source", "import_source_id"], name: "idx_brews_import_identity", unique: true, where: "((import_source IS NOT NULL) AND (import_source_id IS NOT NULL))"
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
     t.index ["workspace_id"], name: "index_brews_on_workspace_id"
-    t.check_constraint "((recipient_kind = 'self' AND recipient_user_id IS NULL AND recipient_name IS NULL) OR (recipient_kind = 'household_member' AND recipient_user_id IS NOT NULL AND recipient_name IS NULL) OR (recipient_kind = 'guest' AND recipient_user_id IS NULL))", name: "brews_recipient_shape"
+    t.check_constraint "recipient_kind::text = 'self'::text AND recipient_user_id IS NULL AND recipient_name IS NULL OR recipient_kind::text = 'household_member'::text AND recipient_user_id IS NOT NULL AND recipient_name IS NULL OR recipient_kind::text = 'guest'::text AND recipient_user_id IS NULL", name: "brews_recipient_shape"
   end
 
   create_table "data_imports", force: :cascade do |t|
@@ -614,8 +614,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
   add_foreign_key "brews", "equipment", column: "grinder_id"
   add_foreign_key "brews", "equipment", column: "machine_id"
   add_foreign_key "brews", "recipes"
-  add_foreign_key "brews", "users", column: "recipient_user_id"
   add_foreign_key "brews", "users"
+  add_foreign_key "brews", "users", column: "recipient_user_id"
   add_foreign_key "brews", "workspaces"
   add_foreign_key "data_imports", "users"
   add_foreign_key "data_imports", "workspaces"
