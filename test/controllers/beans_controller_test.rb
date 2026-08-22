@@ -645,6 +645,72 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil bean.archived_at
   end
 
+  test "update route emits bean opened when stock becomes open" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    bean.apply_bag_status("stock")
+    bean.save!
+
+    assert_activity_event(action: "bean.opened", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch bean_path(bean), params: {
+        bean: {
+          bag_status: "open",
+          name: bean.name,
+          bag_size_grams: bean.bag_size_grams.to_s,
+          remaining_grams: bean.remaining_grams.to_s
+        }
+      }
+    end
+
+    assert_redirected_to bean_path(bean)
+    assert_equal "open", bean.reload.bag_status
+    assert_equal 0, ActivityEvent.where(action: "bean.updated", subject: bean).count
+  end
+
+  test "update route emits bean finished when open becomes finished" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+
+    assert_activity_event(action: "bean.finished", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch bean_path(bean), params: {
+        bean: {
+          bag_status: "finished",
+          name: bean.name,
+          bag_size_grams: bean.bag_size_grams.to_s,
+          remaining_grams: bean.remaining_grams.to_s,
+          opened_on: bean.opened_on.iso8601
+        }
+      }
+    end
+
+    assert_redirected_to bean_path(bean)
+    assert_equal "finished", bean.reload.bag_status
+    assert_equal 0, ActivityEvent.where(action: "bean.updated", subject: bean).count
+  end
+
+  test "update route emits bean reopened when finished becomes open" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    bean.apply_bag_status("finished")
+    bean.save!
+
+    assert_activity_event(action: "bean.reopened", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch bean_path(bean), params: {
+        bean: {
+          bag_status: "open",
+          name: bean.name,
+          bag_size_grams: bean.bag_size_grams.to_s,
+          remaining_grams: bean.remaining_grams.to_s,
+          opened_on: bean.opened_on.iso8601
+        }
+      }
+    end
+
+    assert_redirected_to bean_path(bean)
+    assert_equal "open", bean.reload.bag_status
+    assert_equal 0, ActivityEvent.where(action: "bean.updated", subject: bean).count
+  end
+
   test "writer can close and reopen bean" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
@@ -693,15 +759,23 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     source = beans(:open_household)
     attach_photo(source)
+    event = nil
 
     assert_difference -> { workspaces(:household).beans.count }, 1 do
-      assert_activity_event(action: "bean.duplicated", workspace: source.workspace, actor: users(:one)) do
+      event = assert_activity_event(action: "bean.duplicated", workspace: source.workspace, actor: users(:one)) do
         post duplicate_bean_path(source)
       end
     end
 
     duplicate = workspaces(:household).beans.order(:created_at).last
+    contract = Activity::EventContract.fetch("bean.duplicated")
+    expected_metadata_keys = %w[actor_kind actor_label record_kind subject_label] +
+      contract.fetch(:automatic_metadata_keys) + contract.fetch(:detail_keys)
     assert_redirected_to edit_bean_path(duplicate)
+    assert_equal duplicate, event.subject
+    assert_equal [ "source_label" ], contract.fetch(:detail_keys)
+    assert_equal expected_metadata_keys.sort, event.metadata.keys.sort
+    assert_equal source.display_name, event.metadata.fetch("source_label")
     assert_equal source.name, duplicate.name
     assert_equal Time.find_zone!("Europe/Berlin").today, duplicate.opened_on
     assert_equal duplicate.bag_size_grams, duplicate.remaining_grams
@@ -1482,14 +1556,6 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
-    def with_stubbed_singleton_method(target, method_name, replacement)
-      original = target.method(method_name)
-      target.define_singleton_method(method_name, replacement)
-      yield
-    ensure
-      target.define_singleton_method(method_name, original)
-    end
-
     def assert_appears_before(first, second)
       first_index = response.body.index(first)
       second_index = response.body.index(second)

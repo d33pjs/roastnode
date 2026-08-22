@@ -2382,14 +2382,6 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
-    def with_stubbed_singleton_method(target, method_name, replacement)
-      original = target.method(method_name)
-      target.define_singleton_method(method_name, replacement)
-      yield
-    ensure
-      target.define_singleton_method(method_name, original)
-    end
-
     def assert_appears_before(first, second)
       first_index = response.body.index(first)
       second_index = response.body.index(second)

@@ -78,14 +78,15 @@ class BrewsController < ApplicationController
     @draft_storage_key = brew_draft_storage_key
     apply_recipe_snapshot
 
-    previous_status = @brew.bean&.bag_status
+    bean = @brew.bean
+    previous_status = bean&.bag_status
     created = with_workspace_activity(
       action: "brew.created", subject: -> { @brew }, occurred_at: -> { @brew.occurred_at }
     ) do
       saved = save_brew_with_preparation_tools
       if saved
         refresh_public_shares_for(@brew, comparisons: true)
-        record_used_up_transition!(@brew.bean, previous_status:)
+        record_used_up_transition!(bean, previous_status:) if bean
       end
       saved
     end
@@ -626,17 +627,6 @@ class BrewsController < ApplicationController
         brew.saved_change_to_method? ||
         brew.saved_change_to_rating? ||
         (brew.espresso? && brew.saved_change_to_channeling?)
-    end
-
-    def record_used_up_transition!(bean, previous_status:)
-      return unless bean
-
-      bean.reload
-      return unless previous_status != "used_up" && bean.used_up?
-
-      Activity::Emitter.record!(
-        action: "bean.used_up", workspace: current_workspace, actor: Current.user, subject: bean
-      )
     end
 
     def set_brew_form_preferences

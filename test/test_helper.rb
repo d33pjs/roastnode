@@ -4,6 +4,7 @@ require "rails/test_help"
 require_relative "test_helpers/session_test_helper"
 require_relative "test_helpers/activity_event_test_helper"
 require_relative "test_helpers/passkey_test_helper"
+require_relative "test_helpers/singleton_method_stub_test_helper"
 
 module ActiveSupport
   class TestCase
@@ -18,6 +19,7 @@ module ActiveSupport
 
     # Add more helper methods to be used by all tests here...
     include PasskeyTestHelper
+    include SingletonMethodStubTestHelper
 
     private
       def clear_action_controller_cache_store

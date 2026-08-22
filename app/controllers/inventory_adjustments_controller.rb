@@ -54,13 +54,4 @@ class InventoryAdjustmentsController < ApplicationController
         :note
       ]), *DECIMAL_INVENTORY_ADJUSTMENT_FIELDS)
     end
-
-    def record_used_up_transition!(bean, previous_status:)
-      bean.reload
-      return unless previous_status != "used_up" && bean.used_up?
-
-      Activity::Emitter.record!(
-        action: "bean.used_up", workspace: current_workspace, actor: Current.user, subject: bean
-      )
-    end
 end

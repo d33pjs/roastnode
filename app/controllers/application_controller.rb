@@ -94,6 +94,15 @@ class ApplicationController < ActionController::Base
       value.respond_to?(:call) ? value.call : value
     end
 
+    def record_used_up_transition!(bean, previous_status:)
+      bean.reload
+      return unless previous_status != "used_up" && bean.used_up?
+
+      Activity::Emitter.record!(
+        action: "bean.used_up", workspace: current_workspace, actor: Current.user, subject: bean
+      )
+    end
+
     def authorize_workspace_admin!
       return if current_workspace_policy.manage?
 
