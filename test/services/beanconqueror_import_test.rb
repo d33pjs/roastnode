@@ -113,6 +113,89 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
     assert_match "Invalid JSON", import.warnings.first
   end
 
+  test "completed import emits one safe summary and historical brew events" do
+    json = file_fixture("beanconqueror_export.json").read
+
+    assert_difference -> { ActivityEvent.where(action: "data_import.completed").count }, 1 do
+      @data_import = BeanconquerorImport.new(
+        workspace: workspaces(:household), user: users(:one), json:
+      ).call
+    end
+
+    event = ActivityEvent.where(action: "data_import.completed", subject: @data_import).last
+    assert_equal @data_import.summary.values.sum { |part| part.fetch("created", 0) }, event.metadata.fetch("created_count")
+    assert_equal @data_import.summary.values.sum { |part| part.fetch("skipped", 0) }, event.metadata.fetch("skipped_count")
+    imported_brew = @data_import.brews.first!
+    brew_event = ActivityEvent.find_by!(action: "brew.created", subject: imported_brew)
+    assert_equal imported_brew.occurred_at, brew_event.occurred_at
+    assert_no_match(/warning|raw_payload|uuid|note/i, event.metadata.to_json)
+  end
+
+  test "failed import logs status without raw parser error" do
+    data_import = BeanconquerorImport.new(
+      workspace: workspaces(:household), user: users(:one), json: "{token=secret"
+    ).call
+
+    event = ActivityEvent.find_by!(action: "data_import.failed", subject: data_import)
+    assert_equal({ "source" => "beanconqueror" }, event.metadata.slice("source"))
+    assert_no_match(/token|secret|parser|warning|\{/i, event.metadata.values.join(" "))
+  end
+
+  test "activity persistence failure propagates instead of counting an imported Brew as skipped" do
+    workspace = workspaces(:household)
+    counts = lambda do
+      [ DataImport.count, workspace.beans.count, workspace.equipment.count,
+        workspace.preparation_tools.count, workspace.brews.count,
+        InventoryAdjustment.where(workspace:).count, ActivityEvent.count ]
+    end
+    before_counts = counts.call
+    original_record = Activity::Emitter.method(:record!)
+    failing_record = lambda do |**attributes|
+      if attributes.fetch(:action) == "brew.created"
+        raise ActiveRecord::RecordInvalid.new(ActivityEvent.new)
+      end
+
+      original_record.call(**attributes)
+    end
+
+    with_stubbed_singleton_method(Activity::Emitter, :record!, failing_record) do
+      error = assert_raises(ActiveRecord::RecordInvalid) do
+        BeanconquerorImport.new(workspace:, user: users(:one), json: beanconqueror_json).call
+      end
+      assert_instance_of ActivityEvent, error.record
+    end
+
+    assert_equal before_counts, counts.call
+    assert_not workspace.brews.exists?(import_source: "beanconqueror", import_source_id: "bc-brew-1")
+  end
+
+  test "public comparison refresh failure rolls back import rows activity and snapshots" do
+    workspace = workspaces(:household)
+    share = create_public_bean_share(beans(:open_household), user: users(:one))
+    original_snapshot = share.snapshot.deep_dup
+    counts = lambda do
+      [ DataImport.count, workspace.beans.count, workspace.equipment.count,
+        workspace.preparation_tools.count, workspace.brews.count,
+        InventoryAdjustment.where(workspace:).count, ActivityEvent.count ]
+    end
+    before_counts = counts.call
+    failing_refresh = lambda do |_workspace|
+      share.update!(snapshot: share.snapshot.merge("rollback_marker" => true))
+      raise "comparison refresh failed"
+    end
+
+    with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_comparisons_for, failing_refresh) do
+      assert_raises(RuntimeError) do
+        BeanconquerorImport.new(workspace:, user: users(:one), json: beanconqueror_json).call
+      end
+    end
+
+    assert_equal before_counts, counts.call
+    assert_equal original_snapshot, share.reload.snapshot
+    assert_not workspace.beans.exists?(import_source: "beanconqueror", import_source_id: "bc-bean-1")
+    assert_not workspace.brews.exists?(import_source: "beanconqueror", import_source_id: "bc-brew-1")
+  end
+
   test "invalid bean url does not skip imported bean" do
     workspace = workspaces(:household)
     payload = JSON.parse(beanconqueror_json)

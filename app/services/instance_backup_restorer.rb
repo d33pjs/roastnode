@@ -1,11 +1,27 @@
 class InstanceBackupRestorer
   class RestoreError < StandardError; end
 
+  ACTIVITY_SUBJECT_MAPS = {
+    "User" => :@user_map,
+    "Workspace" => :@workspace_map,
+    "Membership" => :@membership_map,
+    "WorkspaceInvite" => :@workspace_invite_map,
+    "DataImport" => :@data_import_map,
+    "Bean" => :@bean_map,
+    "Equipment" => :@equipment_map,
+    "PreparationTool" => :@preparation_tool_map,
+    "Brew" => :@brew_map,
+    "ExternalCoffee" => :@external_coffee_map,
+    "EquipmentEvent" => :@equipment_event_map,
+    "InventoryAdjustment" => :@inventory_adjustment_map
+  }.freeze
+
   def initialize(archive_source)
     @archive_bytes = InstanceBackupArchiveValidator.archive_bytes_for(archive_source)
     @user_map = {}
     @workspace_map = {}
     @membership_map = {}
+    @workspace_invite_map = {}
     @data_import_map = {}
     @bean_map = {}
     @equipment_map = {}
@@ -13,6 +29,7 @@ class InstanceBackupRestorer
     @brew_map = {}
     @external_coffee_map = {}
     @equipment_event_map = {}
+    @inventory_adjustment_map = {}
     @attachment_map = {}
     @active_workspace_targets = {}
     @bean_remaining_grams = {}
@@ -44,6 +61,7 @@ class InstanceBackupRestorer
       restore_media_files
       restore_primary_photos
       restore_active_workspaces
+      restore_activity_events
       reset_exported_bean_inventory
     end
 
@@ -55,6 +73,9 @@ class InstanceBackupRestorer
 
     def empty_instance?
       [
+        ActivityEvent,
+        InstanceBackupRun,
+        InstanceBackupProfile,
         User,
         Workspace,
         Membership,
@@ -132,7 +153,7 @@ class InstanceBackupRestorer
       workspace_payloads.each do |workspace_payload|
         workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
         Array(workspace_payload["workspace_invites"]).each do |row|
-          WorkspaceInvite.create!(
+          invite = WorkspaceInvite.create!(
             workspace:,
             created_by: @user_map.fetch(row.fetch("created_by_id")),
             accepted_by: optional_lookup(@user_map, row["accepted_by_id"]),
@@ -144,6 +165,7 @@ class InstanceBackupRestorer
             created_at: time(row["created_at"]),
             updated_at: time(row["updated_at"])
           )
+          @workspace_invite_map[old_id(row)] = invite
         end
       end
     end
@@ -401,7 +423,7 @@ class InstanceBackupRestorer
       workspace_payloads.each do |workspace_payload|
         workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
         workspace_payload.fetch("inventory_adjustments").each do |row|
-          InventoryAdjustment.create!(
+          adjustment = InventoryAdjustment.create!(
             workspace:,
             bean: @bean_map.fetch(row.fetch("bean_id")),
             brew: optional_lookup(@brew_map, row["brew_id"]),
@@ -413,6 +435,7 @@ class InstanceBackupRestorer
             created_at: time(row["created_at"]),
             updated_at: time(row["updated_at"])
           )
+          @inventory_adjustment_map[old_id(row)] = adjustment
         end
       end
     end
@@ -467,6 +490,74 @@ class InstanceBackupRestorer
       end
     end
 
+    def restore_activity_events
+      workspace_payloads.each do |workspace_payload|
+        archived_workspace_id = old_id(workspace_payload.fetch("workspace"))
+        workspace = @workspace_map.fetch(archived_workspace_id)
+        Array(workspace_payload["activity_events"]).each do |row|
+          restore_activity_event(row, workspace:, archived_workspace_id:)
+        end
+      end
+      Array(payload["instance_activity_events"]).each do |row|
+        restore_activity_event(row, workspace: nil, archived_workspace_id: nil)
+      end
+    end
+
+    def restore_activity_event(row, workspace:, archived_workspace_id:)
+      unless row.fetch("workspace_id") == archived_workspace_id
+        raise RestoreError, "Archive activity workspace does not match its scope."
+      end
+
+      action = row.fetch("action")
+      definition = Activity::EventContract.fetch(action)
+      unless row.fetch("category") == definition.fetch(:category) &&
+          definition.fetch(:visibilities).include?(row.fetch("visibility"))
+        raise RestoreError, "Archive contains an invalid activity event."
+      end
+      archived_subject_type = row["subject_type"]
+      archived_subject_id = row["subject_id"]
+      unless archived_subject_type.present? == archived_subject_id.present?
+        raise RestoreError, "Archive contains an invalid activity event."
+      end
+      if archived_subject_type.present? && archived_subject_type != definition.fetch(:subject_type)
+        raise RestoreError, "Archive activity subject type does not match its action."
+      end
+
+      subject_map = ACTIVITY_SUBJECT_MAPS[archived_subject_type]
+      subject = subject_map && instance_variable_get(subject_map)[archived_subject_id]
+      validate_restored_activity_subject!(subject, workspace:)
+      ActivityEvent.create!(
+        workspace:,
+        actor: @user_map[row["actor_id"]],
+        category: row.fetch("category"),
+        action:,
+        occurred_at: time(row.fetch("occurred_at")),
+        visibility: row.fetch("visibility"),
+        subject:,
+        metadata: row.fetch("metadata").deep_dup,
+        created_at: time(row.fetch("created_at")),
+        updated_at: time(row.fetch("updated_at"))
+      )
+    rescue ActiveRecord::RecordInvalid, KeyError, ArgumentError
+      raise RestoreError, "Archive contains an invalid activity event."
+    end
+
+    def validate_restored_activity_subject!(subject, workspace:)
+      return unless subject
+
+      subject_workspace_id = if subject.is_a?(Workspace)
+        subject.id
+      elsif subject.respond_to?(:workspace_id)
+        subject.workspace_id
+      end
+      if workspace && subject_workspace_id.present? && subject_workspace_id != workspace.id
+        raise RestoreError, "Archive activity subject belongs to another workspace."
+      end
+      if workspace.nil? && subject_workspace_id.present? && !subject.is_a?(Workspace)
+        raise RestoreError, "Archive instance activity subject cannot be workspace-scoped."
+      end
+    end
+
     def reset_exported_bean_inventory
       @bean_remaining_grams.each do |old_id, remaining_grams|
         @bean_map.fetch(old_id).update!(remaining_grams:)
@@ -484,6 +575,7 @@ class InstanceBackupRestorer
         external_coffees: @external_coffee_map.size,
         equipment_events: @equipment_event_map.size,
         inventory_adjustments: InventoryAdjustment.count,
+        activity_events: ActivityEvent.count,
         media_files: @attachment_map.size
       }
     end

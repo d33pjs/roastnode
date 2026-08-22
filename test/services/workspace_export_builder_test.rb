@@ -138,6 +138,16 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_equal({ "name" => "Source Bean" }, bean_payload[:raw_import_data])
   end
 
+  test "workspace export contains only that workspace ledger and preserves safe snapshots" do
+    payload = WorkspaceExportBuilder.new(workspaces(:household)).call
+
+    ids = payload.fetch(:activity_events).map { |row| row.fetch(:id) }
+    assert_includes ids, activity_events(:morning_brew_created).id
+    assert_not_includes ids, activity_events(:other_workspace_brew).id
+    assert payload.fetch(:activity_events).all? { |row| row.fetch(:workspace_id) == workspaces(:household).id }
+    assert_no_match(/password|digest|token|signed_id|attachment|filename|https?:\/\//i, payload.fetch(:activity_events).to_json)
+  end
+
   private
     def attach_photo(record)
       File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|

@@ -37,11 +37,15 @@ class InstanceBackupProfile < ApplicationRecord
     last_enqueued_at.blank? || now >= last_enqueued_at + schedule_interval
   end
 
-  def enqueue_run!(now: Time.current, track_schedule: true)
+  def enqueue_run!(actor: nil, now: Time.current, track_schedule: true)
     transaction do
       run = instance_backup_runs.create!(backup_kind:)
       update!(last_enqueued_at: now) if track_schedule
       InstanceBackupJob.perform_later(run)
+      Activity::Emitter.record!(
+        action: "instance_backup_run.queued", workspace: nil, actor:, subject: run,
+        details: { backup_kind:, status: "queued" }
+      )
       run
     end
   end

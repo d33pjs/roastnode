@@ -13,6 +13,7 @@ class InstanceReadableExportBuilder
       generated_at: timestamp(generated_at),
       users: users_payload,
       workspaces: workspaces_payload,
+      instance_activity_events: ActivityEvent.where(workspace_id: nil).order(:id).map { |event| Activity::ExportSerializer.call(event) },
       media_files:
     }
   end

@@ -59,4 +59,52 @@ class InstanceBackupJobsTest < ActiveJob::TestCase
     assert_equal 0, disabled.instance_backup_runs.count
     assert_predicate due.reload.last_enqueued_at, :present?
   end
+
+  test "successful and failed runs emit safe instance events" do
+    profile = InstanceBackupProfile.create!(
+      name: "Full archive", backup_kind: "full_archive", enabled: true, schedule: "manual",
+      storage_path: @backup_root.relative_path_from(Rails.root).to_s, retention_count: 7
+    )
+    run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
+
+    assert_difference -> { ActivityEvent.where(action: "instance_backup_run.succeeded").count }, 1 do
+      with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { Struct.new(:call).new("zip-bytes") }) do
+        InstanceBackupJob.perform_now(run)
+      end
+    end
+    event = ActivityEvent.where(action: "instance_backup_run.succeeded").last
+    assert_nil event.workspace
+    assert_equal "System", event.metadata.fetch("actor_label")
+    assert_no_match(/file_path|checksum|storage\//i, event.metadata.to_json)
+
+    failed_run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
+    assert_difference -> { ActivityEvent.where(action: "instance_backup_run.failed").count }, 1 do
+      assert_raises(RuntimeError) do
+        with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { raise "storage_path=/private/secret token=abc" }) do
+          InstanceBackupJob.perform_now(failed_run)
+        end
+      end
+    end
+    failed_event = ActivityEvent.where(action: "instance_backup_run.failed").last
+    assert_equal "failed", failed_event.metadata.fetch("status")
+    assert_no_match(/storage|private|secret|token|abc/i, failed_event.metadata.to_json)
+  end
+
+  test "retention cleanup failure does not contradict a successful run" do
+    profile = InstanceBackupProfile.create!(
+      name: "Full archive", backup_kind: "full_archive", enabled: true, schedule: "manual",
+      storage_path: @backup_root.relative_path_from(Rails.root).to_s, retention_count: 7
+    )
+    run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
+
+    with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { Struct.new(:call).new("zip-bytes") }) do
+      with_stubbed_singleton_method(profile, :enforce_retention!, -> { raise "retention failed" }) do
+        InstanceBackupJob.perform_now(run)
+      end
+    end
+
+    assert_equal "succeeded", run.reload.status
+    assert_equal 1, ActivityEvent.where(action: "instance_backup_run.succeeded", subject: run).count
+    assert_equal 0, ActivityEvent.where(action: "instance_backup_run.failed", subject: run).count
+  end
 end

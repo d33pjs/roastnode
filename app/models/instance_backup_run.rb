@@ -17,16 +17,35 @@ class InstanceBackupRun < ApplicationRecord
     path = instance_backup_profile.storage_root.join(filename_for(extension, now))
     File.binwrite(path, bytes)
 
-    update!(
-      status: "succeeded",
-      finished_at: Time.current,
-      file_path: path.to_s,
-      file_size_bytes: bytes.bytesize,
-      checksum_sha256: Digest::SHA256.hexdigest(bytes)
-    )
-    instance_backup_profile.enforce_retention!
+    transaction do
+      update!(
+        status: "succeeded",
+        finished_at: Time.current,
+        file_path: path.to_s,
+        file_size_bytes: bytes.bytesize,
+        checksum_sha256: Digest::SHA256.hexdigest(bytes)
+      )
+      Activity::Emitter.record!(
+        action: "instance_backup_run.succeeded", workspace: nil, subject: self,
+        details: { backup_kind:, status: "succeeded", file_size_bytes: bytes.bytesize }
+      )
+    end
+
+    begin
+      instance_backup_profile.enforce_retention!
+    rescue StandardError => cleanup_error
+      Rails.logger.warn("Backup retention cleanup failed: #{cleanup_error.class}")
+    end
   rescue StandardError => error
-    update!(status: "failed", finished_at: Time.current, error_message: "#{error.class}: #{error.message}") if persisted?
+    if persisted?
+      transaction do
+        update!(status: "failed", finished_at: Time.current, error_message: "#{error.class}: #{error.message}")
+        Activity::Emitter.record!(
+          action: "instance_backup_run.failed", workspace: nil, subject: self,
+          details: { backup_kind:, status: "failed" }
+        )
+      end
+    end
     raise
   end
 

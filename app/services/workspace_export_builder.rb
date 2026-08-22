@@ -23,7 +23,8 @@ class WorkspaceExportBuilder
       brew_preparation_tools: brew_preparation_tools_payload,
       equipment_events: equipment_events_payload,
       equipment_event_items: equipment_event_items_payload,
-      inventory_adjustments: inventory_adjustments_payload
+      inventory_adjustments: inventory_adjustments_payload,
+      activity_events: workspace.activity_events.reorder(:id).map { |event| Activity::ExportSerializer.call(event) }
     }
   end
 

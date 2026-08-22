@@ -101,4 +101,31 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     assert_equal Digest::SHA256.hexdigest(attachment.blob.download),
       manifest.fetch("files").find { |file| file.fetch("path") == media_path }.fetch("sha256")
   end
+
+  test "readable and full archive exports preserve workspace and instance activity" do
+    readable = InstanceReadableExportBuilder.new(generated_at: Time.zone.parse("2026-08-21 12:00:00")).call
+    household = readable.fetch(:workspaces).find do |workspace_payload|
+      workspace_payload.dig(:workspace, :id) == workspaces(:household).id
+    end
+
+    assert_includes household.fetch(:activity_events).map { |row| row.fetch(:id) },
+      activity_events(:morning_brew_created).id
+    assert_includes readable.fetch(:instance_activity_events).map { |row| row.fetch(:id) },
+      activity_events(:scheduled_backup_succeeded).id
+
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+    Zip::File.open_buffer(archive_bytes) do |zip|
+      archived = JSON.parse(zip.read("data/instance-readable-export.json"))
+      archived_household = archived.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "id") == workspaces(:household).id
+      end
+
+      assert_includes archived_household.fetch("activity_events").map { |row| row.fetch("id") },
+        activity_events(:morning_brew_created).id
+      assert_includes archived.fetch("instance_activity_events").map { |row| row.fetch("id") },
+        activity_events(:scheduled_backup_succeeded).id
+    end
+  end
 end

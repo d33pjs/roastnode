@@ -15,29 +15,29 @@ class BeanconquerorImport
   end
 
   def call
-    payload = parse_payload
-    return failed_import(payload[:warning]) if payload[:error]
+    parsed = parse_payload
+    return failed_import(parsed[:warning]) if parsed[:error]
 
-    @payload = payload[:data]
-    @data_import = DataImport.create!(
-      workspace:,
-      user:,
-      source: SOURCE,
-      status: "pending",
-      raw_payload: @payload,
-      summary: @summary,
-      warnings: @warnings
-    )
-
+    @payload = parsed.fetch(:data)
     ActiveRecord::Base.transaction do
+      @data_import = DataImport.create!(
+        workspace:, user:, source: SOURCE, status: "pending", raw_payload: payload,
+        summary:, warnings:
+      )
       import_beans
       import_mills
       import_preparations
       import_brews
       data_import.update!(status: "completed", summary:, warnings:)
-    end
+      PublicBeanShareRefresher.refresh_comparisons_for(workspace) if summary.dig("brews", "created").to_i.positive?
 
-    PublicBeanShareRefresher.refresh_comparisons_for(workspace) if summary.dig("brews", "created").to_i.positive?
+      created_count = summary.values.sum { |part| part.fetch("created", 0).to_i }
+      skipped_count = summary.values.sum { |part| part.fetch("skipped", 0).to_i }
+      Activity::Emitter.record!(
+        action: "data_import.completed", workspace:, actor: user, subject: data_import,
+        details: { source: SOURCE, created_count:, skipped_count: }
+      )
+    end
 
     data_import
   end
@@ -52,15 +52,17 @@ class BeanconquerorImport
     end
 
     def failed_import(warning)
-      DataImport.create!(
-        workspace:,
-        user:,
-        source: SOURCE,
-        status: "failed",
-        summary:,
-        warnings: [ warning ],
-        raw_payload: {}
-      )
+      DataImport.transaction do
+        @data_import = DataImport.create!(
+          workspace:, user:, source: SOURCE, status: "failed", summary:,
+          warnings: [ warning ], raw_payload: {}
+        )
+        Activity::Emitter.record!(
+          action: "data_import.failed", workspace:, actor: user, subject: data_import,
+          details: { source: SOURCE }
+        )
+        data_import
+      end
     end
 
     def import_beans
@@ -167,8 +169,13 @@ class BeanconquerorImport
 
         brew = workspace.brews.create!(brew_attributes(raw, source_id, bean, bean_weight))
         brew.snapshot_preparation_tools!(preparation_tools_for(raw))
+        Activity::Emitter.record!(
+          action: "brew.created", workspace:, actor: user, subject: brew, occurred_at: brew.occurred_at
+        )
         created("brews")
       rescue ActiveRecord::RecordInvalid => error
+        raise if error.record.is_a?(ActivityEvent)
+
         skip("brews", "Brew #{source_id || "unknown"} skipped: #{error.record.errors.full_messages.to_sentence}.")
       end
     end

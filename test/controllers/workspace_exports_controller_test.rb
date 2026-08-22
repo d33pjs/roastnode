@@ -108,6 +108,40 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
+  test "each successful workspace export emits exactly its allowlisted kind" do
+    sign_in_as(users(:one))
+    cases = [
+      [ workspace_export_path, "json" ],
+      [ workspace_export_beans_path, "beans_csv" ],
+      [ workspace_export_brews_path, "brews_csv" ],
+      [ workspace_export_external_coffees_path, "external_coffees_csv" ],
+      [ workspace_export_media_path, "media_zip" ]
+    ]
+
+    cases.each do |path, export_kind|
+      event = assert_activity_event(
+        action: "workspace_export.generated", workspace: workspaces(:household),
+        actor: users(:one), subject: workspaces(:household)
+      ) do
+        get path
+      end
+      assert_response :success
+      assert_equal export_kind, event.metadata.fetch("export_kind")
+    end
+  end
+
+  test "external coffees generation exception emits no export activity" do
+    sign_in_as(users(:one))
+    failing_export = Object.new
+    failing_export.define_singleton_method(:external_coffees_csv) { raise "csv generation failed" }
+
+    assert_no_difference -> { ActivityEvent.count } do
+      with_stubbed_singleton_method(WorkspaceCsvExportBuilder, :new, ->(*) { failing_export }) do
+        assert_raises(RuntimeError) { get workspace_export_external_coffees_path }
+      end
+    end
+  end
+
   private
     def attach_photo(record)
       File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
