@@ -20,6 +20,13 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
     assert_match "public-brew-thumbnail", response.headers["Content-Disposition"]
     assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
+
+    get public_media_path_for(share, photo, variant: "hero")
+    assert_response :success
+    assert_equal "hero", response.headers["X-Roastnode-Media-Variant"]
+    assert_match "public-brew-hero", response.headers["Content-Disposition"]
+    assert_no_match "photo.jpg", response.headers["Content-Disposition"]
+    assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
   end
 
   test "rejects unselected photo" do
@@ -93,6 +100,9 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
 
     get public_media_path_for(share, attachment)
 
+    assert_response :not_found
+
+    get public_media_path_for(share, attachment, variant: "hero")
     assert_response :not_found
   end
 

@@ -154,6 +154,23 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_match "thumbnail-photo.jpg", response.headers["Content-Disposition"]
   end
 
+  test "hero variant is bounded without crop semantics" do
+    assert_equal "hero", MediaAttachmentsController::HERO_VARIANT
+    assert_equal({ resize_to_limit: [ 1200, 1200 ] }, MediaAttachmentsController::HERO_TRANSFORMATIONS)
+    assert_not_includes MediaAttachmentsController::HERO_TRANSFORMATIONS.keys, :resize_to_fill
+    sign_in_as(users(:one))
+    attachment = attach_large_raster(beans(:open_household))
+
+    get media_attachment_path(attachment, variant: :hero)
+
+    assert_response :success
+    assert_equal "hero", response.headers["X-Roastnode-Media-Variant"]
+    assert_match "inline", response.headers["Content-Disposition"]
+    assert_match "hero-large-photo.png", response.headers["Content-Disposition"]
+    hero = Vips::Image.new_from_buffer(response.body, "")
+    assert_equal 1200, [ hero.width, hero.height ].max
+  end
+
   test "processes a valid large image into a bounded Vips thumbnail" do
     sign_in_as(users(:one))
     attachment = nil
@@ -191,6 +208,9 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
 
     get download_media_attachment_path(attachment)
+    assert_response :not_found
+
+    get media_attachment_path(attachment, variant: :hero)
     assert_response :not_found
   end
 
@@ -561,6 +581,17 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
         filename:,
         content_type:
       )
+      record.photos.attachments.last
+    end
+
+    def attach_large_raster(record)
+      File.open(Rails.root.join("app/assets/images/brand/logo_only_white_bg.png")) do |file|
+        record.photos.attach(
+          io: file,
+          filename: "large-photo.png",
+          content_type: "image/png"
+        )
+      end
       record.photos.attachments.last
     end
 end

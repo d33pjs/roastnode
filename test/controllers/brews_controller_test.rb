@@ -1508,8 +1508,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-workspace].truncate"
     assert_select "[data-testid=brew-workspace] img[data-testid=brew-workspace-logo][src=?]", media_attachment_path(workspace_logo, variant: :thumbnail)
     assert_select "img[data-testid=brew-card-brand-mark][src*=?]", "logo_mark_transparent"
-    assert_select "[data-testid=brew-title-block] + [data-testid=brew-bean-photo-frame] img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo, variant: :thumbnail)
-    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(bean_photo, variant: :thumbnail)
+    assert_select "[data-testid=brew-hero-backdrop][aria-hidden=true].pointer-events-none.grid.grid-cols-2"
+    assert_select "img[data-testid=brew-hero-bean-image][src=?].object-contain", media_attachment_path(bean_photo, variant: :hero)
+    assert_select "[data-testid=brew-bean-photo-frame]", count: 0
     assert_select "[data-testid=brew-bean-link]", count: 0
     assert_select "[data-testid=brew-timestamp]", "26.05.2026 11:22:08"
     assert_select "[data-testid=brew-workspace]", workspaces(:household).name
@@ -1647,8 +1648,68 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get brew_path(brew)
 
     assert_response :success
-    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
-    assert_select "img[data-testid=brew-bean-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
+    assert_select "img[data-testid=brew-hero-bean-image][src=?].object-contain", media_attachment_path(primary, variant: :hero)
+    assert_select "img[data-testid=brew-hero-bean-image][src=?]", media_attachment_path(first, variant: :hero), count: 0
+  end
+
+  test "private heroes keep independent two-photo backdrops across every method and image state" do
+    sign_in_as(users(:one))
+
+    %w[espresso quick_drip].product([ [], [ :bean ], [ :brew ], [ :bean, :brew ] ]).each do |method, photos|
+      brew = create_fresh_hero_brew(method:)
+      bean_photo = attach_large_hero_photo(brew.bean) if photos.include?(:bean)
+      brew_photo = attach_large_hero_photo(brew) if photos.include?(:brew)
+      brew.bean.set_primary_photo!(bean_photo) if bean_photo
+      brew.set_primary_photo!(brew_photo) if brew_photo
+
+      get brew_path(brew)
+
+      assert_response :success, "#{method} #{photos.inspect}"
+      assert_select "[data-testid=brew-hero-backdrop][aria-hidden=true].pointer-events-none.grid.grid-cols-2", 1
+      assert_select "[data-testid=brew-hero-bean-half].bg-black", 1
+      assert_select "[data-testid=brew-hero-brew-half].bg-black", 1
+      assert_select "[data-testid=brew-hero-overlay].relative.z-10", 1
+      assert_select "[data-testid=brew-bean-photo-frame]", count: 0
+
+      if bean_photo
+        assert_select "img[data-testid=brew-hero-bean-image][src=?].object-contain", media_attachment_path(bean_photo, variant: :hero)
+      else
+        assert_select "img[data-testid=brew-hero-bean-image]", count: 0
+      end
+
+      if brew_photo
+        assert_select "img[data-testid=brew-hero-brew-image][src=?].object-cover", media_attachment_path(brew_photo, variant: :hero)
+      else
+        assert_select "img[data-testid=brew-hero-brew-image]", count: 0
+      end
+
+      assert_select "[data-testid=brew-hero-center-blend]", count: (bean_photo && brew_photo ? 1 : 0)
+
+      if method == "espresso"
+        assert_select "[data-testid=brew-chart-grid]", 1
+        assert_select "[data-testid=brew-hero-upper] [data-testid=brew-chart-grid]", count: 0
+      else
+        assert_select "[data-testid=brew-chart-grid]", count: 0
+        assert_select "[data-testid=brew-equipment-footer]", 1
+        assert_select "[data-testid=brew-hero-upper] [data-testid=brew-equipment-footer]", count: 0
+      end
+    end
+  end
+
+  test "hero history renders the shared two-photo backdrop" do
+    brew = brews(:morning_espresso)
+    bean_photo = attach_large_hero_photo(brew.bean)
+    brew_photo = attach_large_hero_photo(brew)
+    brew.bean.set_primary_photo!(bean_photo)
+    brew.set_primary_photo!(brew_photo)
+    sign_in_as(users(:one))
+
+    get coffees_path(view: "hero", filter: "brews")
+
+    assert_response :success
+    assert_select "[data-testid=brew-history-hero-card] [data-testid=brew-hero-backdrop]", minimum: 1
+    assert_select "[data-testid=brew-history-hero-card] img[data-testid=brew-hero-bean-image][src=?]", media_attachment_path(bean_photo, variant: :hero)
+    assert_select "[data-testid=brew-history-hero-card] img[data-testid=brew-hero-brew-image][src=?]", media_attachment_path(brew_photo, variant: :hero)
   end
 
   test "hero brew card shows tiny primary equipment photos" do
@@ -2582,5 +2643,44 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
         rating: 5,
         notes: "Do not copy."
       )
+    end
+
+    def create_fresh_hero_brew(method:)
+      bean = workspaces(:household).beans.create!(
+        name: "Hero #{method} #{SecureRandom.hex(4)}",
+        bag_size_grams: 250,
+        remaining_grams: 200,
+        opened_on: Date.current,
+        roast_type: "espresso",
+        blend_type: "unknown",
+        grind_state: "whole_bean"
+      )
+      attributes = {
+        workspace: workspaces(:household),
+        user: users(:one),
+        bean:,
+        method:,
+        bean_weight_grams: 18,
+        taste_balance: "neutral"
+      }
+      attributes.merge!(
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        dose_grams: 18,
+        beverage_grams: 40,
+        total_time_seconds: 28
+      ) if method == "espresso"
+      attributes.merge!(
+        brewer: equipment(:household_brewer),
+        machine_cups: 6
+      ) if method == "quick_drip"
+      workspaces(:household).brews.create!(attributes)
+    end
+
+    def attach_large_hero_photo(record)
+      File.open(Rails.root.join("app/assets/images/brand/logo_mark_transparent.png")) do |file|
+        record.photos.attach(io: file, filename: "hero-photo.png", content_type: "image/png")
+      end
+      record.photos.attachments.last
     end
 end

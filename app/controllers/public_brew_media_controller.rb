@@ -3,6 +3,9 @@ class PublicBrewMediaController < ApplicationController
 
   THUMBNAIL_VARIANT = MediaAttachmentsController::THUMBNAIL_VARIANT
   THUMBNAIL_TRANSFORMATIONS = MediaAttachmentsController::THUMBNAIL_TRANSFORMATIONS
+  HERO_VARIANT = MediaAttachmentsController::HERO_VARIANT
+  HERO_TRANSFORMATIONS = MediaAttachmentsController::HERO_TRANSFORMATIONS
+  MEDIA_VARIANTS = MediaAttachmentsController::MEDIA_VARIANTS
 
   allow_unauthenticated_access
 
@@ -13,10 +16,12 @@ class PublicBrewMediaController < ApplicationController
   before_action :ensure_safe_image_attachment!
 
   def show
-    return send_thumbnail if params[:variant] == THUMBNAIL_VARIANT
-    return head :not_found if params[:variant].present?
+    return send_blob(disposition: "inline") if params[:variant].blank?
 
-    send_blob(disposition: "inline")
+    transformations = MEDIA_VARIANTS[params[:variant]]
+    return head :not_found unless transformations
+
+    send_variant(params[:variant], transformations)
   end
 
   private
@@ -53,28 +58,28 @@ class PublicBrewMediaController < ApplicationController
         filename: public_filename
     end
 
-    def send_thumbnail
+    def send_variant(name, transformations)
       return head :not_found unless safe_image_attachment? && @attachment.blob.image?
 
-      response.set_header("X-Roastnode-Media-Variant", THUMBNAIL_VARIANT)
+      response.set_header("X-Roastnode-Media-Variant", name)
       send_blob(
         disposition: "inline",
-        data: thumbnail_data
+        data: variant_data(transformations, name)
       )
     end
 
-    def thumbnail_data
-      @attachment.blob.variant(THUMBNAIL_TRANSFORMATIONS).processed.download
+    def variant_data(transformations, name)
+      @attachment.blob.variant(transformations).processed.download
     rescue LoadError => error
-      log_thumbnail_fallback(error)
+      log_variant_fallback(name, error)
       @attachment.blob.download
     rescue => error
-      log_thumbnail_fallback(error)
+      log_variant_fallback(name, error)
       @attachment.blob.download
     end
 
-    def log_thumbnail_fallback(error)
-      Rails.logger.info("Falling back to public thumbnail original #{public_attachment_log_id}: #{error.class}")
+    def log_variant_fallback(name, error)
+      Rails.logger.info("Falling back to public #{name} original #{public_attachment_log_id}: #{error.class}")
     end
 
     def public_attachment_log_id
@@ -84,7 +89,11 @@ class PublicBrewMediaController < ApplicationController
     end
 
     def public_filename
-      params[:variant] == THUMBNAIL_VARIANT ? "public-brew-thumbnail" : "public-brew-media"
+      case params[:variant]
+      when THUMBNAIL_VARIANT then "public-brew-thumbnail"
+      when HERO_VARIANT then "public-brew-hero"
+      else "public-brew-media"
+      end
     end
 
     def unlock_session_key

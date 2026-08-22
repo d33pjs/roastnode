@@ -1,0 +1,18 @@
+<div data-testid="brew-hero-backdrop" class="pointer-events-none absolute inset-0 grid grid-cols-2 overflow-hidden bg-black" aria-hidden="true">
+  <div data-testid="brew-hero-bean-half" class="relative overflow-hidden bg-black">
+    <% if bean_image_url.present? %>
+      <%= image_tag bean_image_url, alt: "", data: { testid: "brew-hero-bean-image" }, class: "h-full w-full object-contain" %>
+    <% end %>
+  </div>
+  <div data-testid="brew-hero-brew-half" class="relative overflow-hidden bg-black">
+    <% if brew_image_url.present? %>
+      <%= image_tag brew_image_url, alt: "", data: { testid: "brew-hero-brew-image" }, class: "h-full w-full object-cover" %>
+    <% end %>
+  </div>
+  <% if bean_image_url.present? && brew_image_url.present? %>
+    <div data-testid="brew-hero-center-blend" class="absolute inset-y-0 left-1/2 w-20 -translate-x-1/2 bg-gradient-to-r from-transparent via-black/30 to-transparent"></div>
+  <% end %>
+  <div class="absolute inset-0 bg-black/35"></div>
+  <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_28%,rgba(0,0,0,0.62)_100%)]"></div>
+  <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/10 to-black/75"></div>
+</div>

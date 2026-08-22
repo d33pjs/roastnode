@@ -10,6 +10,8 @@ module HasPrimaryPhoto
     stored_primary = primary_photo_record
     return stored_primary if stored_primary&.record == self && stored_primary.name == "photos"
 
+    return photos_attachments.min_by(&:id) if association(:photos_attachments).loaded?
+
     photos.attachments.order(:id).first
   end
 

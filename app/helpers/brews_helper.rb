@@ -132,10 +132,6 @@ module BrewsHelper
     end
   end
 
-  def brew_card_photo_attachment(brew)
-    brew.bean.primary_photo_attachment || brew.primary_photo_attachment
-  end
-
   def brew_card_recipe_targets(brew)
     snapshot = brew.recipe_snapshot
     return {} unless snapshot.is_a?(Hash)

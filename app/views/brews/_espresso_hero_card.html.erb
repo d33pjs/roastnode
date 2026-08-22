@@ -1,7 +1,10 @@
 <% card_class = local_assigns.fetch(:card_class, "") %>
 <% compact = local_assigns.fetch(:compact, false) %>
 <% chart_id = local_assigns.fetch(:chart_id, "brew-shot-fill-#{brew.id}") %>
-<% brew_photo = brew_card_photo_attachment(brew) %>
+<% bean_hero_photo = brew.bean.primary_photo_attachment %>
+<% brew_hero_photo = brew.primary_photo_attachment %>
+<% bean_hero_url = media_attachment_path(bean_hero_photo, variant: :hero) if bean_hero_photo %>
+<% brew_hero_url = media_attachment_path(brew_hero_photo, variant: :hero) if brew_hero_photo %>
 <% grinder_photo = brew.grinder&.primary_photo_attachment %>
 <% machine_photo = brew.machine&.primary_photo_attachment %>
 <% presenter = brew_recipient_presenter(brew) %>
@@ -20,88 +23,85 @@
 ].compact_blank.join(" / ") %>
 
 <article data-testid="brew-hero-card" class="relative overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm <%= card_class %>">
-  <div class="bg-stone-950 p-5">
-    <div data-testid="brew-card-header" class="flex flex-nowrap items-center gap-1 overflow-hidden sm:gap-2">
-      <span data-testid="brew-timestamp" class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= brew_card_timestamp(brew) %></span>
-      <span data-testid="brew-workspace" class="inline-flex min-w-0 max-w-[7.5rem] items-center gap-1 truncate whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs">
-        <% if workspace_logo.present? %>
-          <%= image_tag media_attachment_path(workspace_logo, variant: :thumbnail), alt: "", data: { testid: "brew-workspace-logo" }, class: "h-3 w-3 shrink-0 rounded-full object-contain ring-1 ring-white/20 sm:h-4 sm:w-4" %>
-        <% end %>
-        <span class="min-w-0 truncate"><%= current_workspace.name %></span>
-      </span>
-      <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= t("brews.show.card_method") %></span>
-      <%= render "shared/brand_mark",
-        testid: "brew-card-brand-mark",
-        container_class: "ml-auto h-7 w-7 shrink-0 sm:h-12 sm:w-12",
-        image_class: "h-full w-full object-contain drop-shadow-sm" %>
-    </div>
-
-    <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.9fr_1.1fr] lg:items-end" unless compact %>">
-      <div data-testid="brew-recipient-title-row" class="flex min-w-0 max-w-full items-start justify-between gap-3">
-        <div data-testid="brew-title-block" class="min-w-0 max-w-full flex-1 overflow-hidden">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
-          <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
-          <% if brew_card_bean_descriptor(brew.bean).present? %>
-            <p class="mt-2 text-sm text-stone-300"><%= brew_card_bean_descriptor(brew.bean) %></p>
+  <div data-testid="brew-hero-upper" class="relative isolate overflow-hidden bg-black p-5">
+    <%= render "shared/brew_hero_backdrop", bean_image_url: bean_hero_url, brew_image_url: brew_hero_url %>
+    <div data-testid="brew-hero-overlay" class="relative z-10">
+      <div data-testid="brew-card-header" class="flex flex-nowrap items-center gap-1 overflow-hidden sm:gap-2">
+        <span data-testid="brew-timestamp" class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= brew_card_timestamp(brew) %></span>
+        <span data-testid="brew-workspace" class="inline-flex min-w-0 max-w-[7.5rem] items-center gap-1 truncate whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:max-w-none sm:gap-1.5 sm:px-3 sm:py-1 sm:text-xs">
+          <% if workspace_logo.present? %>
+            <%= image_tag media_attachment_path(workspace_logo, variant: :thumbnail), alt: "", data: { testid: "brew-workspace-logo" }, class: "h-3 w-3 shrink-0 rounded-full object-contain ring-1 ring-white/20 sm:h-4 sm:w-4" %>
           <% end %>
-          <div data-testid="brew-byline" class="mt-2">
-            <%= render "brews/recipient_byline", presenter:, surface: :dark %>
-          </div>
+          <span class="min-w-0 truncate"><%= current_workspace.name %></span>
+        </span>
+        <span class="shrink-0 whitespace-nowrap rounded-full border border-white/20 px-1.5 py-0.5 text-[0.58rem] font-bold text-stone-200 sm:px-3 sm:py-1 sm:text-xs"><%= t("brews.show.card_method") %></span>
+        <%= render "shared/brand_mark",
+          testid: "brew-card-brand-mark",
+          container_class: "ml-auto h-7 w-7 shrink-0 sm:h-12 sm:w-12",
+          image_class: "h-full w-full object-contain drop-shadow-sm" %>
+      </div>
+
+      <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.9fr_1.1fr] lg:items-end" unless compact %>">
+        <div data-testid="brew-recipient-title-row" class="flex min-w-0 max-w-full items-start justify-between gap-3">
+          <div data-testid="brew-title-block" class="min-w-0 max-w-full flex-1 overflow-hidden">
+            <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
+            <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
+            <% if brew_card_bean_descriptor(brew.bean).present? %>
+              <p class="mt-2 text-sm text-stone-300"><%= brew_card_bean_descriptor(brew.bean) %></p>
+            <% end %>
+            <div data-testid="brew-byline" class="mt-2">
+              <%= render "brews/recipient_byline", presenter:, surface: :dark %>
+            </div>
           <div class="mt-3 flex min-w-0 max-w-full flex-wrap items-center gap-2 overflow-hidden">
             <%= render "brews/recipient_badge", presenter: %>
           </div>
         </div>
-
-        <% if brew_photo.present? %>
-          <div data-testid="brew-bean-photo-frame" class="h-14 w-12 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white/10 sm:h-16 sm:w-14">
-            <%= image_tag media_attachment_path(brew_photo, variant: :thumbnail), alt: brew.bean.name, data: { testid: "brew-bean-photo" }, class: "h-full w-full object-contain" %>
-          </div>
-        <% end %>
       </div>
 
-      <div data-testid="brew-metrics" class="grid grid-cols-3 gap-1 sm:grid-cols-6 sm:gap-2">
-        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.dose") %></p>
-          <p data-testid="brew-dose" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_grams(brew.dose_grams) %></p>
-          <% if recipe_dose_grams.present? %>
-            <p data-testid="brew-recipe-target-dose" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: brew_card_grams(recipe_dose_grams)) %></p>
-          <% end %>
-        </div>
-        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.ratio") %></p>
-          <div data-testid="brew-ratio" class="mt-1 overflow-hidden">
-            <p data-testid="brew-ratio-main" class="brew-metric-value overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_ratio_value(brew) %></p>
-            <% if brew_card_ratio_time(brew).present? %>
-              <p data-testid="brew-ratio-time" class="brew-metric-subvalue mt-0.5 overflow-hidden text-ellipsis font-semibold text-stone-300"><%= brew_card_ratio_time(brew) %></p>
-            <% end %>
-            <% if recipe_yield_time.present? %>
-              <p data-testid="brew-recipe-target-yield-time" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: recipe_yield_time) %></p>
+        <div data-testid="brew-metrics" class="grid grid-cols-3 gap-1 sm:grid-cols-6 sm:gap-2">
+          <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+            <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.dose") %></p>
+            <p data-testid="brew-dose" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_grams(brew.dose_grams) %></p>
+            <% if recipe_dose_grams.present? %>
+              <p data-testid="brew-recipe-target-dose" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: brew_card_grams(recipe_dose_grams)) %></p>
             <% end %>
           </div>
-        </div>
-        <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.grind_setting") %></p>
-          <p data-testid="brew-grind" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
-          <% if recipe_grind_setting.present? %>
-            <p data-testid="brew-recipe-target-grind" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: recipe_grind_setting) %></p>
-          <% end %>
-        </div>
-        <div data-testid="brew-retention-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p data-testid="brew-retention-label" class="text-[0.62rem] font-bold uppercase leading-tight text-stone-300 sm:text-xs"><span class="sm:hidden"><%= t("brews.show.retention") %></span><span class="hidden sm:inline">Ret.</span></p>
-          <p data-testid="brew-retention" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_retention_grams(brew) %></p>
-        </div>
-        <div data-testid="brew-rating-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.rating") %></p>
-          <div data-testid="brew-rating" aria-label="<%= brew_card_rating_label(brew.rating) %>" class="mt-1 flex gap-0.5 sm:gap-1">
-            <% 5.times do |index| %>
-              <% filled = brew.rating.present? && index < brew.rating %>
-              <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-stone-400" %>"></span>
+          <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+            <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.ratio") %></p>
+            <div data-testid="brew-ratio" class="mt-1 overflow-hidden">
+              <p data-testid="brew-ratio-main" class="brew-metric-value overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_ratio_value(brew) %></p>
+              <% if brew_card_ratio_time(brew).present? %>
+                <p data-testid="brew-ratio-time" class="brew-metric-subvalue mt-0.5 overflow-hidden text-ellipsis font-semibold text-stone-300"><%= brew_card_ratio_time(brew) %></p>
+              <% end %>
+              <% if recipe_yield_time.present? %>
+                <p data-testid="brew-recipe-target-yield-time" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: recipe_yield_time) %></p>
+              <% end %>
+            </div>
+          </div>
+          <div class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+            <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.grind_setting") %></p>
+            <p data-testid="brew-grind" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew.grind_setting.presence || t("brews.show.unknown") %></p>
+            <% if recipe_grind_setting.present? %>
+              <p data-testid="brew-recipe-target-grind" class="brew-metric-target mt-0.5 overflow-hidden text-ellipsis whitespace-nowrap font-medium text-green-300/80"><%= t("brews.show.recipe_target_value", value: recipe_grind_setting) %></p>
             <% end %>
           </div>
-        </div>
-        <div data-testid="brew-balance-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
-          <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.balance_label") %></p>
-          <p data-testid="brew-balance" class="mt-1 overflow-hidden text-ellipsis text-[0.75rem] font-bold leading-tight text-green-300 sm:text-sm"><%= brew.taste_balance.humanize %></p>
+          <div data-testid="brew-retention-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+            <p data-testid="brew-retention-label" class="text-[0.62rem] font-bold uppercase leading-tight text-stone-300 sm:text-xs"><span class="sm:hidden"><%= t("brews.show.retention") %></span><span class="hidden sm:inline">Ret.</span></p>
+            <p data-testid="brew-retention" class="brew-metric-value mt-1 overflow-hidden text-ellipsis font-bold text-white"><%= brew_card_retention_grams(brew) %></p>
+          </div>
+          <div data-testid="brew-rating-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+            <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.rating") %></p>
+            <div data-testid="brew-rating" aria-label="<%= brew_card_rating_label(brew.rating) %>" class="mt-1 flex gap-0.5 sm:gap-1">
+              <% 5.times do |index| %>
+                <% filled = brew.rating.present? && index < brew.rating %>
+                <span class="brew-rating-bean <%= filled ? "rating-bean--filled bg-amber-500 shadow-sm" : "rating-bean--empty border border-stone-400" %>"></span>
+              <% end %>
+            </div>
+          </div>
+          <div data-testid="brew-balance-card" class="min-w-0 rounded-md bg-white/10 p-2 sm:p-3">
+            <p class="text-xs font-bold uppercase text-stone-300"><%= t("brews.show.balance_label") %></p>
+            <p data-testid="brew-balance" class="mt-1 overflow-hidden text-ellipsis text-[0.75rem] font-bold leading-tight text-green-300 sm:text-sm"><%= brew.taste_balance.humanize %></p>
+          </div>
         </div>
       </div>
     </div>

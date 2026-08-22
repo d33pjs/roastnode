@@ -197,7 +197,10 @@ class BrewsController < ApplicationController
 
     def set_brew
       @brew = current_workspace.brews.includes(
-        :bean, :grinder, :machine, :brewer, :public_brew_share,
+        :grinder, :machine, :brewer, :public_brew_share,
+        primary_photo_record: :blob,
+        photos_attachments: :blob,
+        bean: [ { primary_photo_record: :blob }, { photos_attachments: :blob } ],
         user: { avatar_attachment: :blob },
         recipient_user: { avatar_attachment: :blob },
         brew_preparation_tools: :preparation_tool
@@ -268,7 +271,10 @@ class BrewsController < ApplicationController
       current_workspace
         .brews
         .includes(
-          :bean, :grinder, :machine, :brewer, :public_brew_share,
+          :grinder, :machine, :brewer, :public_brew_share,
+          primary_photo_record: :blob,
+          photos_attachments: :blob,
+          bean: [ { primary_photo_record: :blob }, { photos_attachments: :blob } ],
           user: { avatar_attachment: :blob },
           recipient_user: { avatar_attachment: :blob },
           brew_preparation_tools: :preparation_tool

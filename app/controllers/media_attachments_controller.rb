@@ -3,6 +3,12 @@ class MediaAttachmentsController < ApplicationController
 
   THUMBNAIL_VARIANT = "thumbnail"
   THUMBNAIL_TRANSFORMATIONS = { resize_to_limit: [ 480, 480 ] }.freeze
+  HERO_VARIANT = "hero"
+  HERO_TRANSFORMATIONS = { resize_to_limit: [ 1200, 1200 ] }.freeze
+  MEDIA_VARIANTS = {
+    THUMBNAIL_VARIANT => THUMBNAIL_TRANSFORMATIONS,
+    HERO_VARIANT => HERO_TRANSFORMATIONS
+  }.freeze
   MEDIA_ACTIVITY_ACTIONS = {
     "Bean" => "bean.media_updated",
     "Brew" => "brew.media_updated",
@@ -20,10 +26,12 @@ class MediaAttachmentsController < ApplicationController
   before_action :ensure_safe_image_attachment!, only: %i[show download primary]
 
   def show
-    return send_thumbnail if params[:variant] == THUMBNAIL_VARIANT
-    return head :not_found if params[:variant].present?
+    return send_blob(disposition: "inline") if params[:variant].blank?
 
-    send_blob(disposition: "inline")
+    transformations = MEDIA_VARIANTS[params[:variant]]
+    return head :not_found unless transformations
+
+    send_variant(params[:variant], transformations)
   end
 
   def download
@@ -78,29 +86,29 @@ class MediaAttachmentsController < ApplicationController
         filename:
     end
 
-    def send_thumbnail
+    def send_variant(name, transformations)
       return head :not_found unless safe_image_attachment? && @attachment.blob.image?
 
-      response.set_header("X-Roastnode-Media-Variant", THUMBNAIL_VARIANT)
+      response.set_header("X-Roastnode-Media-Variant", name)
       send_blob(
         disposition: "inline",
-        filename: "thumbnail-#{@attachment.blob.filename}",
-        data: thumbnail_data
+        filename: "#{name}-#{@attachment.blob.filename}",
+        data: variant_data(transformations, name)
       )
     end
 
-    def thumbnail_data
-      @attachment.blob.variant(THUMBNAIL_TRANSFORMATIONS).processed.download
+    def variant_data(transformations, name)
+      @attachment.blob.variant(transformations).processed.download
     rescue LoadError => error
-      log_thumbnail_fallback(error)
+      log_variant_fallback(name, error)
       @attachment.blob.download
     rescue => error
-      log_thumbnail_fallback(error)
+      log_variant_fallback(name, error)
       @attachment.blob.download
     end
 
-    def log_thumbnail_fallback(error)
-      Rails.logger.info("Falling back to original media for thumbnail #{attachment_log_id}: #{error.class}: #{error.message}")
+    def log_variant_fallback(name, error)
+      Rails.logger.info("Falling back to original media for #{name} #{attachment_log_id}: #{error.class}: #{error.message}")
     end
 
     def attachment_log_id

@@ -7,7 +7,7 @@ The brew detail page and dashboard use compact Hero Brew Cards for screenshot-wo
 - European timestamp with seconds: `dd.mm.yyyy HH:MM:ss`.
 - Active workspace/household name on the card.
 - Household logo inside the workspace pill when one is attached.
-- Bean roaster, bean name, compact origin/roast-level descriptor, and the bean primary photo when available. Keep processing off the private Hero Brew Card. Keep the photo to the right of the name block so the text stays the first read.
+- Bean roaster, bean name, compact origin/roast-level descriptor, and a decorative two-photo Hero backdrop when Bean/Brew primary photos are available. The Bean occupies the contained left half and the finished Brew occupies the covered right half; either missing half stays black. Keep processing off the private Hero Brew Card.
 - Safe logged-by label from the user's profile username, falling back to `unknown username`.
 - User avatar next to the logged-by label when one is attached.
 - Dose from the espresso form on espresso cards.
@@ -50,7 +50,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - Render hero cards through `brews/_hero_card`; do not fork the dashboard and detail versions.
 - Public brew share pages use `public_brew_pages/_hero_card` because they render snapshot data and public media routes without `current_workspace`. Standalone public Quick Drip brew share pages are deferred, so public brew shares only resolve espresso brews. Public bean shares may still render Quick Drip brews as compact public-safe summaries.
 - Keep cross-links in the full brew details below the hero card, not inside the hero card partial.
-- Use `brew_card_photo_attachment`, which prefers the bean's primary package photo and falls back through the normal primary-photo helper.
+- Render the private Hero backdrop through the shared `brew_hero_backdrop` partial with independent Bean and Brew primary-photo URLs using the named `hero` private-media variant. Never substitute one photo for a missing half.
 - Keep grinder, machine, and brewer primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.
 - Keep user avatars and household logos small; they should act like identity marks, not extra content blocks.
 - Keep the card dense; avoid adding explanatory headings inside the chart.

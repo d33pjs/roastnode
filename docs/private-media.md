@@ -16,7 +16,7 @@ Private Media adds basic photo capture to the current household coffee records.
 - Shared rounded photo upload controls on create/edit forms for image-enabled records where a form exists. These controls mirror the original External Coffee log input treatment and avoid hidden empty file params so saving an edit without choosing a new file does not remove existing photos.
 - Photo galleries on detail pages.
 - Contained photo thumbnails that open the private original image in an in-page lightbox, with raw view links still available.
-- Generated private thumbnail variants for in-page previews without CSS zoom/crop.
+- Generated private `thumbnail` variants for in-page previews and bounded `hero` variants for Hero-card backdrops, both without crop transforms.
 - Per-photo private download links.
 - Primary-photo selection for photo-enabled records.
 - Browser-side photo cropping with save-as-new and overwrite modes.
@@ -35,7 +35,7 @@ Photo delivery only streams safe browser-raster image types: JPEG, PNG, GIF, and
 
 Viewing and downloading photos use `MediaAttachmentsController#show` and `MediaAttachmentsController#download`. Both actions are read-scoped to the active workspace. Removing a photo uses the same scoped media route and additionally requires `current_workspace_policy.write?`. The controller detaches the attachment from the parent record instead of purging the blob immediately, because duplicated bean bags can intentionally reuse the same photo blob.
 
-In-page previews can request `media_attachment_path(attachment, variant: :thumbnail)`. The controller only supports the `thumbnail` variant, applies the same workspace visibility checks as original media, and returns `404 Not Found` for unknown variants. Thumbnails use Active Storage variants with `resize_to_limit: [480, 480]`. Views render those thumbnails with contained object fitting so the full uploaded or cropped image remains visible instead of being visually re-cropped. If the local native image-processing runtime is missing or cannot process a file, the controller logs the error and falls back to the original bytes for that thumbnail response.
+In-page previews can request `media_attachment_path(attachment, variant: :thumbnail)`. Private Hero Brew Cards can request `media_attachment_path(attachment, variant: :hero)` for their decorative Bean/Brew backdrop. The controller supports only the `thumbnail` and `hero` named variants, applies the same workspace visibility checks as original media, and returns `404 Not Found` for unknown variants. Thumbnails use Active Storage `resize_to_limit: [480, 480]`; Hero variants use `resize_to_limit: [1200, 1200]`. Neither transform crops. If the local native image-processing runtime is missing or cannot process a file, the controller logs the error and falls back to the original bytes for that variant response.
 
 User avatar/banner replacement is limited to the signed-in user. Workspace logo/banner replacement is limited to owners and admins through the workspace settings page.
 
@@ -82,8 +82,8 @@ Cropping uses `MediaAttachmentsController#crop` and requires workspace write acc
 - Keep photo viewing and download links routed through `MediaAttachmentsController` so workspace scoping stays centralized.
 - Keep primary photo changes routed through `MediaAttachmentsController#primary` so workspace scoping and write authorization stay centralized.
 - Keep photo cropping routed through `MediaAttachmentsController#crop`; it accepts a browser-generated image upload rather than processing the source blob on the server.
-- Keep preview thumbnails behind `MediaAttachmentsController` with `variant: :thumbnail`; do not expose raw variant/blob URLs.
-- Keep public-share thumbnails behind `PublicBrewMediaController` with `variant: :thumbnail`; apply the share password gate and attachment whitelist before streaming bytes.
+- Keep preview thumbnails and private Hero variants behind `MediaAttachmentsController` with their literal named variants; do not expose raw variant/blob URLs.
+- Keep public-share thumbnails and supported named variants behind `PublicBrewMediaController`; apply the share password gate and attachment whitelist before streaming bytes.
 - Keep public recipe thumbnails behind `PublicRecipeMediaController` with `variant: :thumbnail`; apply the share password gate and selected recipe-photo allowlist before streaming bytes.
 - Keep public bean thumbnails behind `PublicBeanMediaController` with `variant: :thumbnail`; apply the share password gate and selected bean-photo allowlist before streaming bytes.
 - Keep workspace media archives owner-only through `WorkspaceExportsController#media`. Include workspace-owned media, External Coffee photos, and workspace identity images, but do not include user avatars/public banners without a separate account-data export decision.

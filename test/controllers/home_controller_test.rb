@@ -559,6 +559,10 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       taste_balance: "neutral",
       rating: 4
     )
+    bean_photo = attach_large_hero_photo(brew.bean)
+    brew_photo = attach_large_hero_photo(brew)
+    brew.bean.set_primary_photo!(bean_photo)
+    brew.set_primary_photo!(brew_photo)
     sign_in_as(user)
 
     get dashboard_path
@@ -568,6 +572,9 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-hero-card][data-method=quick_drip]"
     assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=quick-drip-machine-cups]", "6"
     assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-chart-grid]", count: 0
+    assert_select "[data-testid=dashboard-latest-coffee-card] [data-testid=brew-hero-backdrop]", 1
+    assert_select "[data-testid=dashboard-latest-coffee-card] img[data-testid=brew-hero-bean-image][src=?]", media_attachment_path(bean_photo, variant: :hero)
+    assert_select "[data-testid=dashboard-latest-coffee-card] img[data-testid=brew-hero-brew-image][src=?]", media_attachment_path(brew_photo, variant: :hero)
   end
 
   test "dashboard hero uses the private recipient byline and eager-loaded avatars" do
@@ -625,5 +632,12 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       assert first_index, "Expected #{first.inspect} to appear in #{testid.inspect}"
       assert second_index, "Expected #{second.inspect} to appear in #{testid.inspect}"
       assert_operator first_index, :<, second_index
+    end
+
+    def attach_large_hero_photo(record)
+      File.open(Rails.root.join("app/assets/images/brand/logo_mark_transparent.png")) do |file|
+        record.photos.attach(io: file, filename: "hero-photo.png", content_type: "image/png")
+      end
+      record.photos.attachments.last
     end
 end

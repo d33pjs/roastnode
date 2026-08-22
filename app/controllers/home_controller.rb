@@ -42,7 +42,10 @@ class HomeController < ApplicationController
 
     def dashboard_brews
       current_workspace.brews.includes(
-        :bean, :grinder, :machine, :brew_preparation_tools,
+        :grinder, :machine, :brew_preparation_tools,
+        primary_photo_record: :blob,
+        photos_attachments: :blob,
+        bean: [ { primary_photo_record: :blob }, { photos_attachments: :blob } ],
         user: { avatar_attachment: :blob },
         recipient_user: { avatar_attachment: :blob }
       )
