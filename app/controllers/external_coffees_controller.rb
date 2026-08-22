@@ -26,7 +26,15 @@ class ExternalCoffeesController < ApplicationController
     @external_coffee = current_workspace.external_coffees.new(external_coffee_params)
     @external_coffee.user = Current.user
 
-    if @external_coffee.save
+    created = with_workspace_activity(
+      action: "external_coffee.created",
+      subject: -> { @external_coffee },
+      occurred_at: -> { @external_coffee.occurred_at }
+    ) do
+      @external_coffee.save
+    end
+
+    if created
       redirect_to @external_coffee, notice: t(".created")
     else
       prepare_form_options
@@ -41,7 +49,11 @@ class ExternalCoffeesController < ApplicationController
   end
 
   def update
-    if @external_coffee.update(external_coffee_params)
+    updated = with_workspace_activity(action: "external_coffee.updated", subject: @external_coffee) do
+      @external_coffee.update(external_coffee_params)
+    end
+
+    if updated
       redirect_to @external_coffee, notice: t(".updated")
     else
       prepare_form_options
@@ -51,7 +63,10 @@ class ExternalCoffeesController < ApplicationController
   end
 
   def destroy
-    @external_coffee.destroy!
+    _subject_label = Activity::Metadata.subject_label(@external_coffee)
+    with_workspace_activity(action: "external_coffee.deleted", subject: @external_coffee) do
+      @external_coffee.destroy!
+    end
     redirect_to external_coffees_path, notice: t(".destroyed")
   end
 

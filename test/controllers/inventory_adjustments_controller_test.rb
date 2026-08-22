@@ -21,15 +21,19 @@ class InventoryAdjustmentsControllerTest < ActionDispatch::IntegrationTest
   test "writer can create manual inventory adjustment with comma decimal amount" do
     sign_in_as(users(:one))
     bean = beans(:open_household)
+    occurred_at = Time.find_zone!("Europe/Berlin").local(2026, 5, 27, 10, 15)
 
     assert_difference -> { InventoryAdjustment.manual.count }, 1 do
-      post bean_inventory_adjustments_path(bean), params: {
-        inventory_adjustment: {
-          delta_grams: "25,5g",
-          occurred_at: "2026-05-27T10:15",
-          note: "Found beans after cleaning."
+      event = assert_activity_event(action: "inventory_adjustment.created", workspace: bean.workspace, actor: users(:one)) do
+        post bean_inventory_adjustments_path(bean), params: {
+          inventory_adjustment: {
+            delta_grams: "25,5g",
+            occurred_at: "2026-05-27T10:15",
+            note: "Found beans after cleaning."
+          }
         }
-      }
+      end
+      assert_equal occurred_at, event.occurred_at
     end
 
     adjustment = InventoryAdjustment.manual.order(:created_at).last
@@ -44,16 +48,52 @@ class InventoryAdjustmentsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     bean = beans(:open_household)
 
-    post bean_inventory_adjustments_path(bean), params: {
-      inventory_adjustment: {
-        delta_grams: "-500",
-        note: "Bag is empty."
+    assert_activity_event(
+      action: "inventory_adjustment.created", workspace: bean.workspace, actor: users(:one),
+      additional_actions: [ "bean.used_up" ]
+    ) do
+      post bean_inventory_adjustments_path(bean), params: {
+        inventory_adjustment: {
+          delta_grams: "-500",
+          note: "Bag is empty."
+        }
       }
-    }
+    end
 
     assert_redirected_to bean_path(bean)
     assert_equal 0.to_d, bean.reload.remaining_grams
     assert_equal "used_up", bean.bag_status
+  end
+
+  test "invalid manual adjustment emits nothing" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    assert_no_difference -> { ActivityEvent.count } do
+      post bean_inventory_adjustments_path(bean), params: {
+        inventory_adjustment: { delta_grams: "0" }
+      }
+    end
+
+    assert_response :unprocessable_entity
+  end
+
+  test "emitter failure rolls back manual adjustment and inventory" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    original_remaining = bean.remaining_grams
+
+    with_stubbed_singleton_method(Activity::Emitter, :record!, ->(**) { raise "activity write failed" }) do
+      assert_no_difference -> { InventoryAdjustment.count } do
+        assert_raises(RuntimeError) do
+          post bean_inventory_adjustments_path(bean), params: {
+            inventory_adjustment: { delta_grams: "-20" }
+          }
+        end
+      end
+    end
+
+    assert_equal original_remaining, bean.reload.remaining_grams
   end
 
   test "viewer cannot create manual inventory adjustment" do
@@ -81,4 +121,13 @@ class InventoryAdjustmentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :not_found
   end
+
+  private
+    def with_stubbed_singleton_method(target, method_name, replacement)
+      original = target.method(method_name)
+      target.define_singleton_method(method_name, replacement)
+      yield
+    ensure
+      target.define_singleton_method(method_name, original)
+    end
 end

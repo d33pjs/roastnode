@@ -955,29 +955,31 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_difference -> { workspaces(:household).brews.count }, 1 do
       assert_difference -> { InventoryAdjustment.count }, 1 do
         assert_difference -> { BrewPreparationTool.count }, 2 do
-          post brews_path, params: {
-            brew: {
-              bean_id: bean.id,
-              grinder_id: equipment(:household_grinder).id,
-              machine_id: equipment(:household_machine).id,
-              bean_weight_grams: "18.5",
-              ground_weight_grams: "18.3",
-              dose_grams: "18.2",
-              beverage_grams: "42",
-              grind_setting: "14",
-              total_time_seconds: "31",
-              low_flow_start_seconds: "7",
-              taste_balance: "neutral",
-              rating: "4",
-              flow_control_used: "1",
-              photos: [ photo_upload ],
-              preparation_tool_ids: [
-                preparation_tools(:wdt).id,
-                preparation_tools(:other_workspace_tool).id,
-                preparation_tools(:puck_screen).id
-              ]
+          assert_activity_event(action: "brew.created", workspace: bean.workspace, actor: user) do
+            post brews_path, params: {
+              brew: {
+                bean_id: bean.id,
+                grinder_id: equipment(:household_grinder).id,
+                machine_id: equipment(:household_machine).id,
+                bean_weight_grams: "18.5",
+                ground_weight_grams: "18.3",
+                dose_grams: "18.2",
+                beverage_grams: "42",
+                grind_setting: "14",
+                total_time_seconds: "31",
+                low_flow_start_seconds: "7",
+                taste_balance: "neutral",
+                rating: "4",
+                flow_control_used: "1",
+                photos: [ photo_upload ],
+                preparation_tool_ids: [
+                  preparation_tools(:wdt).id,
+                  preparation_tools(:other_workspace_tool).id,
+                  preparation_tools(:puck_screen).id
+                ]
+              }
             }
-          }
+          end
         end
       end
     end
@@ -989,6 +991,98 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 7, brew.low_flow_start_seconds
     assert_predicate brew, :flow_control_used?
     assert_equal 1, brew.photos.count
+  end
+
+  test "create records domain occurrence and taste serving update and delete use explicit actions" do
+    sign_in_as(users(:one))
+    occurred_at = Time.zone.local(2026, 8, 20, 7, 15)
+
+    event = assert_activity_event(action: "brew.created", workspace: workspaces(:household), actor: users(:one)) do
+      post brews_path, params: { brew: {
+        method: "espresso", bean_id: beans(:open_household).id,
+        grinder_id: equipment(:household_grinder).id, machine_id: equipment(:household_machine).id,
+        occurred_at:, bean_weight_grams: "1", ground_weight_grams: "1",
+        dose_grams: "1", beverage_grams: "2", taste_balance: "neutral"
+      } }
+    end
+    assert_equal occurred_at, event.occurred_at
+
+    brew = event.subject
+    assert_activity_event(action: "brew.taste_changed", workspace: workspaces(:household), actor: users(:one), subject: brew) do
+      patch taste_brew_path(brew), params: { brew: { rating: 5, taste_balance: "bitter" } }
+    end
+    assert_activity_event(action: "brew.serving_changed", workspace: workspaces(:household), actor: users(:one), subject: brew) do
+      patch serving_brew_path(brew), params: { brew: { served_for_guest: "1", guest_name: "Guest" } }
+    end
+    assert_activity_event(action: "brew.deleted", workspace: workspaces(:household), actor: users(:one)) do
+      delete brew_path(brew)
+    end
+    assert_equal event.metadata.fetch("subject_label"), ActivityEvent.where(action: "brew.deleted").order(:id).last.metadata.fetch("subject_label")
+  end
+
+  test "invalid create emits nothing" do
+    sign_in_as(users(:one))
+    assert_no_difference -> { ActivityEvent.count } do
+      post brews_path, params: { brew: { method: "espresso", bean_weight_grams: "" } }
+    end
+    assert_response :unprocessable_entity
+  end
+
+  test "bean depletion emits only brew created plus the documented used up transition" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update!(remaining_grams: 1)
+
+    event = assert_activity_event(
+      action: "brew.created", workspace: bean.workspace, actor: users(:one),
+      additional_actions: [ "bean.used_up" ]
+    ) do
+      post brews_path, params: { brew: {
+        method: "espresso", bean_id: bean.id, grinder_id: equipment(:household_grinder).id,
+        machine_id: equipment(:household_machine).id, bean_weight_grams: "1", dose_grams: "1",
+        beverage_grams: "2", taste_balance: "neutral"
+      } }
+    end
+
+    assert_predicate bean.reload, :used_up?
+    assert_equal "brew.created", event.action
+  end
+
+  test "create rolls back brew inventory activity and refreshed snapshots when a refresher fails" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    share = create_public_bean_share_for(bean)
+    original_snapshot = share.snapshot.deep_dup
+    original_remaining = bean.remaining_grams
+    failing_refresh = lambda do |_record|
+      share.update!(snapshot: share.snapshot.merge("rollback_marker" => true))
+      raise "public snapshot refresh failed"
+    end
+
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_difference -> { Brew.count } do
+        with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_comparisons_for, failing_refresh) do
+          assert_raises(RuntimeError) do
+            post brews_path, params: { brew: {
+              method: "espresso", bean_id: bean.id, grinder_id: equipment(:household_grinder).id,
+              machine_id: equipment(:household_machine).id, bean_weight_grams: "18", dose_grams: "18",
+              beverage_grams: "40", taste_balance: "neutral"
+            } }
+          end
+        end
+      end
+    end
+    assert_equal original_remaining, bean.reload.remaining_grams
+    assert_equal original_snapshot, share.reload.snapshot
+  end
+
+  test "coffee and inventory activity contract exposes the exact approved actions" do
+    assert_equal %w[
+      brew.created brew.updated brew.taste_changed brew.serving_changed brew.deleted brew.media_updated
+      external_coffee.created external_coffee.updated external_coffee.deleted external_coffee.media_updated
+      bean.created bean.updated bean.duplicated bean.opened bean.finished bean.used_up bean.archived bean.reopened bean.deleted bean.media_updated
+      inventory_adjustment.created
+    ].sort, Activity::EventContract.actions.grep(/\A(?:brew|external_coffee|bean|inventory_adjustment)\./).sort
   end
 
   test "member can create espresso brew with serving metadata from guest name" do
@@ -1858,16 +1952,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     original_weight = brew.bean_weight_grams
     original_adjustment = brew.inventory_adjustment.delta_grams
 
-    patch serving_brew_path(brew), params: {
-      brew: {
-        served_for_guest: "1",
-        guest_name: "  Anna  ",
-        cup_style: "  Americano  ",
-        bean_weight_grams: "30",
-        notes: "Ignored from serving correction",
-        public_note: "Ignored public note"
+    assert_activity_event(action: "brew.serving_changed", workspace: brew.workspace, actor: users(:one), subject: brew) do
+      patch serving_brew_path(brew), params: {
+        brew: {
+          served_for_guest: "1",
+          guest_name: "  Anna  ",
+          cup_style: "  Americano  ",
+          bean_weight_grams: "30",
+          notes: "Ignored from serving correction",
+          public_note: "Ignored public note"
+        }
       }
-    }
+    end
 
     assert_redirected_to brew_path(brew)
     brew.reload
@@ -1958,14 +2054,16 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     original_weight = brew.bean_weight_grams
     original_adjustment = brew.inventory_adjustment.delta_grams
 
-    patch taste_brew_path(brew), params: {
-      brew: {
-        taste_balance: "bitter",
-        rating: "5",
-        bean_weight_grams: "30",
-        notes: "Ignored from taste correction"
+    assert_activity_event(action: "brew.taste_changed", workspace: brew.workspace, actor: users(:one), subject: brew) do
+      patch taste_brew_path(brew), params: {
+        brew: {
+          taste_balance: "bitter",
+          rating: "5",
+          bean_weight_grams: "30",
+          notes: "Ignored from taste correction"
+        }
       }
-    }
+    end
 
     assert_redirected_to brew_path(brew)
     brew.reload
@@ -2040,19 +2138,21 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
 
-    patch brew_path(brew), params: {
-      brew: {
-        bean_id: beans(:open_household).id,
-        grinder_id: equipment(:household_grinder).id,
-        machine_id: equipment(:household_machine).id,
-        bean_weight_grams: "20.0",
-        ground_weight_grams: "19.8",
-        dose_grams: "19.5",
-        beverage_grams: "44",
-        taste_balance: "neutral",
-        preparation_tool_ids: [ preparation_tools(:puck_screen).id ]
+    assert_activity_event(action: "brew.updated", workspace: brew.workspace, actor: users(:one), subject: brew) do
+      patch brew_path(brew), params: {
+        brew: {
+          bean_id: beans(:open_household).id,
+          grinder_id: equipment(:household_grinder).id,
+          machine_id: equipment(:household_machine).id,
+          bean_weight_grams: "20.0",
+          ground_weight_grams: "19.8",
+          dose_grams: "19.5",
+          beverage_grams: "44",
+          taste_balance: "neutral",
+          preparation_tool_ids: [ preparation_tools(:puck_screen).id ]
+        }
       }
-    }
+    end
 
     assert_redirected_to brew_path(brew)
     assert_equal 148.to_d, beans(:open_household).reload.remaining_grams
@@ -2067,7 +2167,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     share = create_public_bean_share_for(brew.bean)
 
     assert_difference -> { Brew.count }, -1 do
-      delete brew_path(brew)
+      assert_activity_event(action: "brew.deleted", workspace: brew.workspace, actor: users(:one)) do
+        delete brew_path(brew)
+      end
     end
 
     assert_redirected_to root_path
@@ -2280,6 +2382,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def with_stubbed_singleton_method(target, method_name, replacement)
+      original = target.method(method_name)
+      target.define_singleton_method(method_name, replacement)
+      yield
+    ensure
+      target.define_singleton_method(method_name, original)
+    end
+
     def assert_appears_before(first, second)
       first_index = response.body.index(first)
       second_index = response.body.index(second)

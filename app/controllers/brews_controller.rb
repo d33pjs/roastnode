@@ -78,8 +78,19 @@ class BrewsController < ApplicationController
     @draft_storage_key = brew_draft_storage_key
     apply_recipe_snapshot
 
-    if save_brew_with_preparation_tools
-      refresh_public_shares_for(@brew, comparisons: true)
+    previous_status = @brew.bean&.bag_status
+    created = with_workspace_activity(
+      action: "brew.created", subject: -> { @brew }, occurred_at: -> { @brew.occurred_at }
+    ) do
+      saved = save_brew_with_preparation_tools
+      if saved
+        refresh_public_shares_for(@brew, comparisons: true)
+        record_used_up_transition!(@brew.bean, previous_status:)
+      end
+      saved
+    end
+
+    if created
       redirect_to @brew, notice: t(".created")
     else
       prepare_record_links(@brew)
@@ -96,8 +107,17 @@ class BrewsController < ApplicationController
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
 
-    @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
-    refresh_public_shares_for(@brew, comparisons: comparison_inputs_changed?(@brew))
+    ActiveRecord::Base.transaction do
+      target_bean_id = attributes[:bean_id].presence || @brew.bean_id
+      target_bean = current_workspace.beans.find(target_bean_id)
+      previous_status = target_bean.bag_status
+      @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
+      refresh_public_shares_for(@brew, comparisons: comparison_inputs_changed?(@brew))
+      Activity::Emitter.record!(
+        action: "brew.updated", workspace: current_workspace, actor: Current.user, subject: @brew
+      )
+      record_used_up_transition!(target_bean, previous_status:)
+    end
     redirect_to @brew, notice: t(".updated")
   rescue ActiveRecord::RecordInvalid
     load_form_options(
@@ -112,8 +132,13 @@ class BrewsController < ApplicationController
   end
 
   def taste
-    if @brew.update(taste_brew_params)
-      refresh_public_shares_for(@brew, comparisons: comparison_inputs_changed?(@brew))
+    updated = with_workspace_activity(action: "brew.taste_changed", subject: @brew) do
+      saved = @brew.update(taste_brew_params)
+      refresh_public_shares_for(@brew, comparisons: comparison_inputs_changed?(@brew)) if saved
+      saved
+    end
+
+    if updated
       redirect_to @brew, notice: t(".updated")
     else
       render :show, status: :unprocessable_entity
@@ -121,7 +146,11 @@ class BrewsController < ApplicationController
   end
 
   def serving
-    if @brew.update(serving_brew_params)
+    updated = with_workspace_activity(action: "brew.serving_changed", subject: @brew) do
+      @brew.update(serving_brew_params)
+    end
+
+    if updated
       redirect_to @brew, notice: t(".updated")
     else
       render :show, status: :unprocessable_entity
@@ -129,8 +158,14 @@ class BrewsController < ApplicationController
   end
 
   def destroy
-    @brew.destroy_with_inventory_reversal!
-    PublicBeanShareRefresher.refresh_comparisons_for(@brew)
+    _subject_label = Activity::Metadata.subject_label(@brew)
+    ActiveRecord::Base.transaction do
+      @brew.destroy_with_inventory_reversal!
+      PublicBeanShareRefresher.refresh_comparisons_for(@brew)
+      Activity::Emitter.record!(
+        action: "brew.deleted", workspace: current_workspace, actor: Current.user, subject: @brew, details: {}
+      )
+    end
     redirect_to root_path, notice: t(".destroyed")
   end
 
@@ -591,6 +626,17 @@ class BrewsController < ApplicationController
         brew.saved_change_to_method? ||
         brew.saved_change_to_rating? ||
         (brew.espresso? && brew.saved_change_to_channeling?)
+    end
+
+    def record_used_up_transition!(bean, previous_status:)
+      return unless bean
+
+      bean.reload
+      return unless previous_status != "used_up" && bean.used_up?
+
+      Activity::Emitter.record!(
+        action: "bean.used_up", workspace: current_workspace, actor: Current.user, subject: bean
+      )
     end
 
     def set_brew_form_preferences

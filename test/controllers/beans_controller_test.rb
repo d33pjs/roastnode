@@ -227,16 +227,18 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(user)
 
     assert_difference -> { workspaces(:household).beans.count }, 1 do
-      post beans_path, params: {
-        bean: {
-          name: "Sweet Valley",
-          roaster_name: "Calendar Coffee",
-          bag_size_grams: "250",
-          remaining_grams: "",
-          opened_on: "2026-05-26",
-          photos: [ photo_upload ]
+      assert_activity_event(action: "bean.created", workspace: workspaces(:household), actor: user) do
+        post beans_path, params: {
+          bean: {
+            name: "Sweet Valley",
+            roaster_name: "Calendar Coffee",
+            bag_size_grams: "250",
+            remaining_grams: "",
+            opened_on: "2026-05-26",
+            photos: [ photo_upload ]
+          }
         }
-      }
+      end
     end
 
     bean = workspaces(:household).beans.order(:created_at).last
@@ -549,15 +551,17 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     bean = beans(:open_household)
 
-    patch bean_path(bean), params: {
-      bean: {
-        name: "Comma Blend",
-        bag_size_grams: "1.000,0 g",
-        remaining_grams: "111,5g",
-        roast_degree: "3,5",
-        purchase_price: "14,90 €"
+    assert_activity_event(action: "bean.updated", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch bean_path(bean), params: {
+        bean: {
+          name: "Comma Blend",
+          bag_size_grams: "1.000,0 g",
+          remaining_grams: "111,5g",
+          roast_degree: "3,5",
+          purchase_price: "14,90 €"
+        }
       }
-    }
+    end
 
     assert_redirected_to bean_path(bean)
     bean.reload
@@ -608,29 +612,33 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     bean = beans(:open_household)
 
-    patch bean_path(bean), params: {
-      bean: {
-        bag_status: "used_up",
-        name: bean.name,
-        bag_size_grams: bean.bag_size_grams.to_s,
-        remaining_grams: bean.remaining_grams.to_s,
-        opened_on: bean.opened_on.iso8601
+    assert_activity_event(action: "bean.used_up", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch bean_path(bean), params: {
+        bean: {
+          bag_status: "used_up",
+          name: bean.name,
+          bag_size_grams: bean.bag_size_grams.to_s,
+          remaining_grams: bean.remaining_grams.to_s,
+          opened_on: bean.opened_on.iso8601
+        }
       }
-    }
+    end
 
     assert_redirected_to bean_path(bean)
     assert_equal "used_up", bean.reload.bag_status
     assert_equal 0.to_d, bean.remaining_grams
 
-    patch bean_path(bean), params: {
-      bean: {
-        bag_status: "archived",
-        name: bean.name,
-        bag_size_grams: bean.bag_size_grams.to_s,
-        remaining_grams: bean.remaining_grams.to_s,
-        opened_on: bean.opened_on.iso8601
+    assert_activity_event(action: "bean.archived", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch bean_path(bean), params: {
+        bean: {
+          bag_status: "archived",
+          name: bean.name,
+          bag_size_grams: bean.bag_size_grams.to_s,
+          remaining_grams: bean.remaining_grams.to_s,
+          opened_on: bean.opened_on.iso8601
+        }
       }
-    }
+    end
 
     assert_redirected_to bean_path(bean)
     assert_equal "archived", bean.reload.bag_status
@@ -687,7 +695,9 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     attach_photo(source)
 
     assert_difference -> { workspaces(:household).beans.count }, 1 do
-      post duplicate_bean_path(source)
+      assert_activity_event(action: "bean.duplicated", workspace: source.workspace, actor: users(:one)) do
+        post duplicate_bean_path(source)
+      end
     end
 
     duplicate = workspaces(:household).beans.order(:created_at).last
@@ -1320,17 +1330,58 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       reason: "manual",
       note: "Manual correction."
     )
+    subject_label = Activity::Metadata.subject_label(bean)
+    event = nil
 
     assert_difference -> { Bean.count }, -1 do
       assert_difference -> { Brew.count }, -1 do
         assert_difference -> { InventoryAdjustment.count }, -2 do
-          delete bean_path(bean)
+          event = assert_activity_event(action: "bean.deleted", workspace: bean.workspace, actor: users(:one)) do
+            delete bean_path(bean)
+          end
         end
       end
     end
 
     assert_redirected_to beans_path
     assert_equal I18n.t("beans.destroy.destroyed"), flash[:notice]
+    assert_nil event.subject
+    assert_equal subject_label, event.metadata.fetch("subject_label")
+  end
+
+  test "bean lifecycle routes emit the specific action rather than bean updated" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    bean.apply_bag_status("stock")
+    bean.save!
+
+    assert_activity_event(action: "bean.opened", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch open_bag_bean_path(bean)
+    end
+    assert_activity_event(action: "bean.finished", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch finish_bean_path(bean)
+    end
+    assert_activity_event(action: "bean.reopened", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch reopen_bean_path(bean)
+    end
+    assert_activity_event(action: "bean.archived", workspace: bean.workspace, actor: users(:one), subject: bean) do
+      patch close_bean_path(bean)
+    end
+    assert_equal 0, ActivityEvent.where(action: "bean.updated", subject: bean).count
+  end
+
+  test "emitter failure rolls back the domain mutation" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    old_name = bean.name
+
+    with_stubbed_singleton_method(Activity::Emitter, :record!, ->(**) { raise "activity write failed" }) do
+      assert_raises(RuntimeError) do
+        patch bean_path(bean), params: { bean: { name: "Must roll back", bag_size_grams: bean.bag_size_grams } }
+      end
+    end
+
+    assert_equal old_name, bean.reload.name
   end
 
   test "deleting a bean refreshes remaining public bean comparison snapshots" do
@@ -1431,6 +1482,14 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def with_stubbed_singleton_method(target, method_name, replacement)
+      original = target.method(method_name)
+      target.define_singleton_method(method_name, replacement)
+      yield
+    ensure
+      target.define_singleton_method(method_name, original)
+    end
+
     def assert_appears_before(first, second)
       first_index = response.body.index(first)
       second_index = response.body.index(second)

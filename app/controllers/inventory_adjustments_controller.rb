@@ -17,7 +17,23 @@ class InventoryAdjustmentsController < ApplicationController
     @inventory_adjustment.user = Current.user
     @inventory_adjustment.reason = "manual"
 
-    if @inventory_adjustment.save_with_inventory_update
+    previous_status = @bean.bag_status
+    created = false
+    ActiveRecord::Base.transaction do
+      created = @inventory_adjustment.save_with_inventory_update
+      raise ActiveRecord::Rollback unless created
+
+      Activity::Emitter.record!(
+        action: "inventory_adjustment.created",
+        workspace: current_workspace,
+        actor: Current.user,
+        subject: @inventory_adjustment,
+        occurred_at: @inventory_adjustment.occurred_at
+      )
+      record_used_up_transition!(@bean, previous_status:)
+    end
+
+    if created
       redirect_to @bean, notice: t(".created")
     else
       render :new, status: :unprocessable_entity
@@ -37,5 +53,14 @@ class InventoryAdjustmentsController < ApplicationController
         :occurred_at,
         :note
       ]), *DECIMAL_INVENTORY_ADJUSTMENT_FIELDS)
+    end
+
+    def record_used_up_transition!(bean, previous_status:)
+      bean.reload
+      return unless previous_status != "used_up" && bean.used_up?
+
+      Activity::Emitter.record!(
+        action: "bean.used_up", workspace: current_workspace, actor: Current.user, subject: bean
+      )
     end
 end

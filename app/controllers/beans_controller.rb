@@ -48,9 +48,16 @@ class BeansController < ApplicationController
     @bean = current_workspace.beans.new(attributes)
     @bean.apply_bag_status(bag_status)
 
-    if @bean.save
-      @bean.photos.attach(photos) if photos.any?
-      refresh_public_shares_for(@bean)
+    created = with_workspace_activity(action: "bean.created", subject: -> { @bean }) do
+      saved = @bean.save
+      if saved
+        @bean.photos.attach(photos) if photos.any?
+        refresh_public_shares_for(@bean)
+      end
+      saved
+    end
+
+    if created
       redirect_to @bean, notice: t(".created")
     else
       prepare_record_links(@bean)
@@ -62,12 +69,22 @@ class BeansController < ApplicationController
     attributes = bean_params
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
     bag_status = extract_bag_status(attributes)
+    previous_status = @bean.bag_status
     @bean.assign_attributes(attributes)
     @bean.apply_bag_status(bag_status)
 
-    if @bean.save
-      @bean.photos.attach(photos) if photos.any?
-      refresh_public_shares_for(@bean)
+    updated = with_workspace_activity(
+      action: -> { bean_update_activity_action(previous_status) }, subject: @bean
+    ) do
+      saved = @bean.save
+      if saved
+        @bean.photos.attach(photos) if photos.any?
+        refresh_public_shares_for(@bean)
+      end
+      saved
+    end
+
+    if updated
       redirect_to @bean, notice: t(".updated")
     else
       prepare_record_links(@bean)
@@ -76,15 +93,21 @@ class BeansController < ApplicationController
   end
 
   def close
-    @bean.archive!
-    refresh_public_shares_for(@bean)
+    with_workspace_activity(action: "bean.archived", subject: @bean) do
+      @bean.archive!
+      refresh_public_shares_for(@bean)
+      true
+    end
     redirect_to @bean, notice: t(".closed")
   end
 
   def open_bag
     if @bean.stock?
-      @bean.open_bag!
-      refresh_public_shares_for(@bean)
+      with_workspace_activity(action: "bean.opened", subject: @bean) do
+        @bean.open_bag!
+        refresh_public_shares_for(@bean)
+        true
+      end
       redirect_back_or_to @bean, allow_other_host: false, notice: t(".opened")
     else
       redirect_to @bean, alert: t(".not_stock")
@@ -92,25 +115,43 @@ class BeansController < ApplicationController
   end
 
   def finish
-    @bean.finish!
-    refresh_public_shares_for(@bean)
+    with_workspace_activity(action: "bean.finished", subject: @bean) do
+      @bean.finish!
+      refresh_public_shares_for(@bean)
+      true
+    end
     redirect_to @bean, notice: t(".finished")
   end
 
   def reopen
-    @bean.reopen!
-    refresh_public_shares_for(@bean)
+    with_workspace_activity(action: "bean.reopened", subject: @bean) do
+      @bean.reopen!
+      refresh_public_shares_for(@bean)
+      true
+    end
     redirect_to @bean, notice: t(".reopened")
   end
 
   def duplicate
-    duplicate = @bean.duplicate_for_new_bag!
+    duplicate = nil
+    with_workspace_activity(
+      action: "bean.duplicated",
+      subject: -> { duplicate },
+      details: -> { { source_label: @bean.display_name } }
+    ) do
+      duplicate = @bean.duplicate_for_new_bag!
+      true
+    end
     redirect_to edit_bean_path(duplicate), notice: t(".duplicated")
   end
 
   def destroy
-    @bean.destroy_with_history!
-    PublicBeanShareRefresher.refresh_comparisons_for(@bean)
+    _subject_label = Activity::Metadata.subject_label(@bean)
+    with_workspace_activity(action: "bean.deleted", subject: @bean) do
+      @bean.destroy_with_history!
+      PublicBeanShareRefresher.refresh_comparisons_for(@bean)
+      true
+    end
     redirect_to beans_path, notice: t(".destroyed")
   end
 
@@ -204,6 +245,19 @@ class BeansController < ApplicationController
     def refresh_public_shares_for(record)
       PublicBrewShareRefresher.refresh_for(record)
       PublicBeanShareRefresher.refresh_for(record)
+    end
+
+    def bean_update_activity_action(previous_status)
+      current_status = @bean.bag_status
+      return "bean.updated" if current_status == previous_status
+
+      return "bean.opened" if previous_status == "stock" && current_status == "open"
+      return "bean.reopened" if current_status == "open" && previous_status.in?(%w[finished used_up archived])
+      return "bean.finished" if current_status == "finished"
+      return "bean.used_up" if current_status == "used_up"
+      return "bean.archived" if current_status == "archived"
+
+      "bean.updated"
     end
 
     def bean_index_groups(beans)

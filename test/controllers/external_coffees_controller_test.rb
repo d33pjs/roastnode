@@ -73,31 +73,36 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
 
   test "create saves localized price and record links" do
     sign_in_as(users(:one))
+    occurred_at = Time.zone.local(2026, 8, 20, 8, 30)
 
     assert_difference -> { ExternalCoffee.count }, 1 do
-      post external_coffees_path, params: {
-        external_coffee: {
-          drink_type: "Matcha Latte",
-          drink_size: "grande",
-          place_name: "Starbucks",
-          place_location: "Main station",
-          price: "4,50",
-          acidity_balance: "balanced",
-          intensity: "weak",
-          rating: "3",
-          notes: "Private note",
-          public_note: "Public note",
-          record_links_attributes: {
-            "0" => {
-              label: "Menu",
-              url: "https://example.com/menu",
-              kind: "info",
-              visibility: "private",
-              position: "10"
+      event = assert_activity_event(action: "external_coffee.created", workspace: workspaces(:household), actor: users(:one)) do
+        post external_coffees_path, params: {
+          external_coffee: {
+            occurred_at:,
+            drink_type: "Matcha Latte",
+            drink_size: "grande",
+            place_name: "Starbucks",
+            place_location: "Main station",
+            price: "4,50",
+            acidity_balance: "balanced",
+            intensity: "weak",
+            rating: "3",
+            notes: "Private note",
+            public_note: "Public note",
+            record_links_attributes: {
+              "0" => {
+                label: "Menu",
+                url: "https://example.com/menu",
+                kind: "info",
+                visibility: "private",
+                position: "10"
+              }
             }
           }
         }
-      }
+      end
+      assert_equal occurred_at, event.occurred_at
     end
 
     coffee = ExternalCoffee.order(:id).last
@@ -117,14 +122,16 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     )
     photo = attach_photo(coffee)
 
-    patch external_coffee_path(coffee), params: {
-      external_coffee: {
-        drink_type: "Americano",
-        occurred_at: coffee.occurred_at,
-        currency: "EUR",
-        photos: [ "" ]
+    assert_activity_event(action: "external_coffee.updated", workspace: coffee.workspace, actor: users(:one), subject: coffee) do
+      patch external_coffee_path(coffee), params: {
+        external_coffee: {
+          drink_type: "Americano",
+          occurred_at: coffee.occurred_at,
+          currency: "EUR",
+          photos: [ "" ]
+        }
       }
-    }
+    end
 
     assert_redirected_to external_coffee_path(coffee)
     assert_equal [ photo.id ], coffee.reload.photos.attachments.pluck(:id)
@@ -227,6 +234,22 @@ class ExternalCoffeesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=external-coffee-actions] form[action=?]", external_coffee_path(coffee), count: 0
     assert_select "[data-testid=external-coffee-danger-zone] form[action=?]", external_coffee_path(coffee)
     assert_appears_before "data-testid=\"external-coffee-details\"", "data-testid=\"external-coffee-danger-zone\""
+  end
+
+  test "writer can delete external coffee with a tombstone activity event" do
+    coffee = workspaces(:household).external_coffees.create!(
+      user: users(:one),
+      drink_type: "Macchiato"
+    )
+    sign_in_as(users(:one))
+
+    event = assert_activity_event(action: "external_coffee.deleted", workspace: coffee.workspace, actor: users(:one)) do
+      delete external_coffee_path(coffee)
+    end
+
+    assert_redirected_to external_coffees_path
+    assert_nil event.subject
+    assert_equal "Macchiato", event.metadata.fetch("subject_label")
   end
 
   test "show back link returns to the previous in-app page" do
