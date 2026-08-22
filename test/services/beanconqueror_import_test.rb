@@ -131,11 +131,24 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
     assert_no_match(/warning|raw_payload|uuid|note/i, event.metadata.to_json)
   end
 
+  test "imported Bean and Gear rows do not emit per-row activity noise" do
+    noisy_actions = %w[bean.created equipment.created preparation_tool.created]
+
+    assert_no_difference -> { ActivityEvent.where(action: noisy_actions).count } do
+      BeanconquerorImport.new(
+        workspace: workspaces(:household), user: users(:one), json: beanconqueror_json
+      ).call
+    end
+  end
+
   test "failed import logs status without raw parser error" do
+    before_ids = ActivityEvent.pluck(:id)
     data_import = BeanconquerorImport.new(
       workspace: workspaces(:household), user: users(:one), json: "{token=secret"
     ).call
 
+    events = ActivityEvent.where.not(id: before_ids).order(:id).to_a
+    assert_equal [ "data_import.failed" ], events.map(&:action)
     event = ActivityEvent.find_by!(action: "data_import.failed", subject: data_import)
     assert_equal({ "source" => "beanconqueror" }, event.metadata.slice("source"))
     assert_no_match(/token|secret|parser|warning|\{/i, event.metadata.values.join(" "))

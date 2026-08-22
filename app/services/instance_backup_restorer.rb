@@ -525,10 +525,11 @@ class InstanceBackupRestorer
 
       subject_map = ACTIVITY_SUBJECT_MAPS[archived_subject_type]
       subject = subject_map && instance_variable_get(subject_map)[archived_subject_id]
+      actor = row["actor_id"].nil? ? nil : @user_map.fetch(row["actor_id"])
       validate_restored_activity_subject!(subject, workspace:)
       ActivityEvent.create!(
         workspace:,
-        actor: @user_map[row["actor_id"]],
+        actor:,
         category: row.fetch("category"),
         action:,
         occurred_at: time(row.fetch("occurred_at")),

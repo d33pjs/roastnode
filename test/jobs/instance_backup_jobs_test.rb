@@ -107,4 +107,60 @@ class InstanceBackupJobsTest < ActiveJob::TestCase
     assert_equal 1, ActivityEvent.where(action: "instance_backup_run.succeeded", subject: run).count
     assert_equal 0, ActivityEvent.where(action: "instance_backup_run.failed", subject: run).count
   end
+
+  test "success activity persistence failure rolls back succeeded state and event together" do
+    profile = InstanceBackupProfile.create!(
+      name: "Full archive", backup_kind: "full_archive", enabled: true, schedule: "manual",
+      storage_path: @backup_root.relative_path_from(Rails.root).to_s, retention_count: 7
+    )
+    run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
+    original_record = Activity::Emitter.method(:record!)
+    failing_success = lambda do |**attributes|
+      if attributes.fetch(:action) == "instance_backup_run.succeeded"
+        raise ActiveRecord::RecordInvalid.new(ActivityEvent.new)
+      end
+
+      original_record.call(**attributes)
+    end
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { Struct.new(:call).new("zip-bytes") }) do
+        with_stubbed_singleton_method(Activity::Emitter, :record!, failing_success) do
+          InstanceBackupJob.perform_now(run)
+        end
+      end
+    end
+
+    assert_equal "failed", run.reload.status
+    assert_equal 0, ActivityEvent.where(action: "instance_backup_run.succeeded", subject: run).count
+    assert_equal 1, ActivityEvent.where(action: "instance_backup_run.failed", subject: run).count
+  end
+
+  test "failed activity persistence failure rolls back failed state and event together" do
+    profile = InstanceBackupProfile.create!(
+      name: "Full archive", backup_kind: "full_archive", enabled: true, schedule: "manual",
+      storage_path: @backup_root.relative_path_from(Rails.root).to_s, retention_count: 7
+    )
+    run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
+    original_record = Activity::Emitter.method(:record!)
+    failing_failure = lambda do |**attributes|
+      if attributes.fetch(:action) == "instance_backup_run.failed"
+        raise ActiveRecord::RecordInvalid.new(ActivityEvent.new)
+      end
+
+      original_record.call(**attributes)
+    end
+
+    error = assert_raises(ActiveRecord::RecordInvalid) do
+      with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { raise "backup generation failed" }) do
+        with_stubbed_singleton_method(Activity::Emitter, :record!, failing_failure) do
+          InstanceBackupJob.perform_now(run)
+        end
+      end
+    end
+
+    assert_instance_of ActivityEvent, error.record
+    assert_equal "running", run.reload.status
+    assert_equal 0, ActivityEvent.where(action: "instance_backup_run.failed", subject: run).count
+  end
 end

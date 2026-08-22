@@ -193,6 +193,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal original.fetch(:photo_filename), restored_bean.photos.first.filename.to_s
     assert_equal restored_bean, restored_duplicate_bean.duplicated_from_bean
     assert_equal "Jens", restored_event.metadata.fetch("actor_label")
+    assert_equal restored_user, restored_event.actor
     assert_equal restored_event.workspace, restored_event.subject.workspace
     assert ActivityEvent.exists?(workspace_id: nil, action: "instance_backup_run.succeeded")
     assert_equal exported_activity_count, ActivityEvent.count
@@ -267,7 +268,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 0, Workspace.count
   end
 
-  test "restorer rejects leading paths and overlong strings inside metadata arrays" do
+  test "restorer rejects leading paths inside metadata arrays" do
     source_event = Activity::Emitter.record!(
       action: "equipment_event.created", workspace: workspaces(:household), actor: users(:one),
       subject: equipment_events(:grinder_cleaning), occurred_at: equipment_events(:grinder_cleaning).occurred_at
@@ -280,7 +281,33 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
         workspace_payload.dig("workspace", "name") == workspaces(:household).name
       end
       event = household.fetch("activity_events").find { |row| row.fetch("id") == source_event.id }
-      event.fetch("metadata")["event_types"] = [ "../private/event", "x" * 161 ]
+      event.fetch("metadata")["equipment_labels"] = [ "../private/event" ]
+    end
+
+    empty_instance!
+    error = assert_raises(InstanceBackupRestorer::RestoreError) do
+      InstanceBackupRestorer.new(tampered_archive).call
+    end
+
+    assert_equal "Archive contains an invalid activity event.", error.message
+    assert_equal 0, ActivityEvent.count
+    assert_equal 0, Workspace.count
+  end
+
+  test "restorer rejects overlong strings inside metadata arrays" do
+    source_event = Activity::Emitter.record!(
+      action: "equipment_event.created", workspace: workspaces(:household), actor: users(:one),
+      subject: equipment_events(:grinder_cleaning), occurred_at: equipment_events(:grinder_cleaning).occurred_at
+    )
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      household = payload.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "name") == workspaces(:household).name
+      end
+      event = household.fetch("activity_events").find { |row| row.fetch("id") == source_event.id }
+      event.fetch("metadata")["equipment_labels"] = [ "x" * 161 ]
     end
 
     empty_instance!
@@ -343,6 +370,56 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 0, Workspace.count
   end
 
+  test "restorer rejects an unknown activity action" do
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      household = payload.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "name") == workspaces(:household).name
+      end
+      event = household.fetch("activity_events").find { |row| row.fetch("action") == "brew.created" }
+      event["action"] = "brew.hostile"
+    end
+
+    empty_instance!
+    error = assert_raises(InstanceBackupRestorer::RestoreError) do
+      InstanceBackupRestorer.new(tampered_archive).call
+    end
+
+    assert_equal "Archive contains an invalid activity event.", error.message
+    assert_equal 0, ActivityEvent.count
+    assert_equal 0, Workspace.count
+  end
+
+  test "restorer rejects a partial activity subject pair" do
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+    tampered_archives = [
+      [ "subject_type", nil ],
+      [ "subject_id", nil ]
+    ].map do |key, value|
+      mutate_backup_payload(archive_bytes) do |payload|
+        household = payload.fetch("workspaces").find do |workspace_payload|
+          workspace_payload.dig("workspace", "name") == workspaces(:household).name
+        end
+        event = household.fetch("activity_events").find { |row| row.fetch("action") == "brew.created" }
+        event[key] = value
+      end
+    end
+
+    tampered_archives.each do |tampered_archive|
+      empty_instance!
+      error = assert_raises(InstanceBackupRestorer::RestoreError) do
+        InstanceBackupRestorer.new(tampered_archive).call
+      end
+      assert_equal "Archive contains an invalid activity event.", error.message
+      assert_equal 0, ActivityEvent.count
+      assert_equal 0, Workspace.count
+    end
+  end
+
   test "restorer rejects a remapped activity subject from another workspace" do
     household_event_id = activity_events(:morning_brew_created).id
     foreign_brew_id = brews(:other_workspace_brew).id
@@ -394,6 +471,55 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       assert_equal 0, ActivityEvent.count
       assert_equal 0, Workspace.count
     end
+  end
+
+  test "restorer rejects a workspace-owned subject inside instance activity" do
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      event = payload.fetch("instance_activity_events").first
+      source = activity_events(:morning_brew_created)
+      event.merge!(
+        "category" => "coffee",
+        "action" => "brew.created",
+        "visibility" => "workspace",
+        "subject_type" => "Brew",
+        "subject_id" => brews(:morning_espresso).id,
+        "metadata" => source.metadata.deep_dup
+      )
+    end
+
+    empty_instance!
+    error = assert_raises(InstanceBackupRestorer::RestoreError) do
+      InstanceBackupRestorer.new(tampered_archive).call
+    end
+
+    assert_equal "Archive instance activity subject cannot be workspace-scoped.", error.message
+    assert_equal 0, ActivityEvent.count
+    assert_equal 0, Workspace.count
+  end
+
+  test "restorer rejects a non-null activity actor that cannot be remapped" do
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      household = payload.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "name") == workspaces(:household).name
+      end
+      event = household.fetch("activity_events").find { |row| row.fetch("action") == "brew.created" }
+      event["actor_id"] = User.maximum(:id) + 1_000
+    end
+
+    empty_instance!
+    error = assert_raises(InstanceBackupRestorer::RestoreError) do
+      InstanceBackupRestorer.new(tampered_archive).call
+    end
+
+    assert_equal "Archive contains an invalid activity event.", error.message
+    assert_equal 0, ActivityEvent.count
+    assert_equal 0, Workspace.count
   end
 
   test "restorer accepts version one archives without activity events" do
