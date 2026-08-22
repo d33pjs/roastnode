@@ -480,6 +480,10 @@ en:
     methods:
       espresso: "Espresso"
       quick_drip: "Quick Drip"
+    recipients:
+      former_member: "%{name} (former household member)"
+      guest: "Guest"
+      myself: "Myself"
     native_share:
       text: "Shared brew: %{title}"
     shared_marker: "Shared"
@@ -529,6 +533,8 @@ en:
       no_rating: "No rating"
       occurred_at: "Log time"
       photos: "Photos"
+      person_name: "Person name"
+      person_name_help: "Optional for Guest. Typing a name selects Guest."
       preinfusion: "Preinfusion (s)"
       preparation_tools: "Preparation tools"
       public_note: "Public note"
@@ -545,6 +551,7 @@ en:
         setup: "Setup"
         taste: "Taste"
       served_for_guest: "Served for guest"
+      served_to: "Served to"
       taste: "Taste balance"
       temperature: "Temperature (C)"
       total_time: "Total time (s)"
@@ -581,6 +588,7 @@ en:
     update:
       updated: "Brew corrected."
     serving:
+      failed: "Serving could not be saved. Nothing was changed."
       updated: "Serving updated."
     taste:
       quick_drip:

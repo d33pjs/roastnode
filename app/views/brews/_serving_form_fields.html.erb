@@ -1,33 +1,70 @@
-<% label_class = "block text-sm font-bold text-rn-muted" %>
+<% selection = brew.recipient_selection.presence || if brew.recipient_self?
+  "self"
+elsif brew.recipient_guest?
+  "guest"
+elsif Array(@recipient_users).any? { |user| user.id == brew.recipient_user_id }
+  "member:#{brew.recipient_user_id}"
+else
+  "existing_recipient"
+end %>
+<% logger_id = brew.user_id || Current.user.id %>
+<% container_class = local_assigns.fetch(:container_class, nil) %>
 <% input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
 
-<section data-testid="brew-serving-fields" data-section="serving" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
-  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.serving") %></h2>
+<section data-testid="brew-serving-fields" data-section="serving" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5 <%= container_class %>">
+  <fieldset data-testid="brew-recipient-fields" data-controller="brew-recipient" class="grid min-w-0 gap-3">
+    <legend class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.served_to") %></legend>
 
-  <div class="mt-3 grid gap-3 sm:grid-cols-2">
-    <label class="flex min-h-14 items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink">
-      <span><%= t("brews.form.served_for_guest") %></span>
-      <%= form.check_box :served_for_guest, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
-    </label>
+    <div class="rn-choice-grid mt-3">
+      <label class="rn-choice">
+        <%= form.radio_button :recipient_selection, "self", checked: selection == "self", class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged" } %>
+        <span class="rn-choice-label justify-start text-left"><%= t("brews.recipients.myself") %></span>
+      </label>
+
+      <% Array(@recipient_users).reject { |user| user.id == logger_id }.each do |user| %>
+        <label class="rn-choice">
+          <%= form.radio_button :recipient_selection, "member:#{user.id}", checked: selection == "member:#{user.id}", class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged" } %>
+          <span class="rn-choice-label justify-start gap-2 text-left">
+            <% if user.avatar.attached? %>
+              <%= image_tag media_attachment_path(user.avatar.attachment, variant: :thumbnail), alt: "", class: "h-8 w-8 shrink-0 rounded-full object-contain" %>
+            <% end %>
+            <span class="min-w-0 break-words"><%= user.display_label %></span>
+          </span>
+        </label>
+      <% end %>
+
+      <% if selection == "existing_recipient" %>
+        <label class="rn-choice">
+          <%= form.radio_button :recipient_selection, "existing_recipient", checked: true, class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged" } %>
+          <span class="rn-choice-label justify-start text-left"><%= t("brews.recipients.former_member", name: brew.recipient_user.display_label) %></span>
+        </label>
+      <% end %>
+
+      <label class="rn-choice">
+        <%= form.radio_button :recipient_selection, "guest", checked: selection == "guest", class: "rn-choice-input", data: { brew_recipient_target: "guest selection", action: "brew-recipient#selectionChanged" } %>
+        <span class="rn-choice-label justify-start text-left"><%= t("brews.recipients.guest") %></span>
+      </label>
+    </div>
 
     <div>
-      <%= form.label :guest_name, t("brews.form.guest_name"), class: label_class %>
-      <%= form.text_field :guest_name, maxlength: 120, list: "brew_guest_name_suggestions", class: input_class %>
-      <datalist id="brew_guest_name_suggestions">
-        <% Array(@guest_name_suggestions).each do |suggestion| %>
-          <option value="<%= suggestion %>"></option>
+      <%= form.label :recipient_name, t("brews.form.person_name"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_field :recipient_name, maxlength: 120, list: "brew_recipient_name_suggestions", class: input_class, data: { brew_recipient_target: "name", action: "input->brew-recipient#nameChanged" } %>
+      <p class="mt-1 text-sm font-semibold text-rn-muted"><%= t("brews.form.person_name_help") %></p>
+      <datalist id="brew_recipient_name_suggestions">
+        <% Array(@recipient_name_suggestions).each do |name| %>
+          <option value="<%= name %>"></option>
         <% end %>
       </datalist>
     </div>
+  </fieldset>
 
-    <div class="sm:col-span-2">
-      <%= form.label :cup_style, t("brews.form.cup_style"), class: label_class %>
-      <%= form.text_field :cup_style, maxlength: 120, list: "brew_cup_style_suggestions", class: input_class %>
-      <datalist id="brew_cup_style_suggestions">
-        <% Array(@cup_style_suggestions).each do |suggestion| %>
-          <option value="<%= suggestion %>"></option>
-        <% end %>
-      </datalist>
-    </div>
+  <div class="mt-3">
+    <%= form.label :cup_style, t("brews.form.cup_style"), class: "block text-sm font-bold text-rn-muted" %>
+    <%= form.text_field :cup_style, maxlength: 120, list: "brew_cup_style_suggestions", class: input_class %>
+    <datalist id="brew_cup_style_suggestions">
+      <% Array(@cup_style_suggestions).each do |suggestion| %>
+        <option value="<%= suggestion %>"></option>
+      <% end %>
+    </datalist>
   </div>
 </section>

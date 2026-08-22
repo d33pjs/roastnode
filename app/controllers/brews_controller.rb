@@ -68,6 +68,7 @@ class BrewsController < ApplicationController
 
     attributes = brew_params
     scope_brew_reference_ids!(attributes)
+    resolve_recipient_attributes!(attributes)
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     attributes[:method] = @selected_method
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
@@ -104,6 +105,7 @@ class BrewsController < ApplicationController
     @hidden_brew_fields = []
     attributes = brew_params
     scope_brew_reference_ids!(attributes, existing_brew: @brew)
+    resolve_recipient_attributes!(attributes, existing_brew: @brew)
     attributes[:method] = @brew.method
     preparation_tool_ids = Array(attributes.delete(:preparation_tool_ids)).reject(&:blank?)
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
@@ -147,8 +149,15 @@ class BrewsController < ApplicationController
   end
 
   def serving
+    attributes = serving_brew_params
+    resolve_recipient_attributes!(attributes, existing_brew: @brew)
     updated = with_workspace_activity(action: "brew.serving_changed", subject: @brew) do
-      @brew.update(serving_brew_params)
+      if @brew.update(attributes)
+        refresh_public_shares_for(@brew)
+        true
+      else
+        false
+      end
     end
 
     if updated
@@ -156,6 +165,10 @@ class BrewsController < ApplicationController
     else
       render :show, status: :unprocessable_entity
     end
+  rescue ActiveRecord::RecordInvalid
+    @brew.reload
+    flash.now[:alert] = t(".failed")
+    render :show, status: :unprocessable_entity
   end
 
   def destroy
@@ -183,29 +196,18 @@ class BrewsController < ApplicationController
     ].freeze
 
     def set_brew
-      @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :brewer, :user, :public_brew_share, brew_preparation_tools: :preparation_tool).find(params[:id])
+      @brew = current_workspace.brews.includes(:bean, :grinder, :machine, :brewer, :user, :recipient_user, :public_brew_share, brew_preparation_tools: :preparation_tool).find(params[:id])
     end
 
     def set_serving_suggestions
-      history = current_workspace.brews.where.not(cup_style: [ nil, "" ]).distinct.order(:cup_style).pluck(:cup_style)
-      @cup_style_suggestions = (ExternalCoffee::DRINK_TYPE_SUGGESTIONS + history).uniq
-      @guest_name_suggestions = (household_member_suggestions + saved_guest_name_suggestions).uniq
-    end
-
-    def household_member_suggestions
-      current_workspace.users.to_a
-        .map(&:display_label)
-        .compact_blank
-        .sort_by(&:downcase)
-    end
-
-    def saved_guest_name_suggestions
-      current_workspace.brews
-        .where(served_for_guest: true)
-        .where.not(guest_name: [ nil, "" ])
-        .distinct
-        .order(:guest_name)
-        .pluck(:guest_name)
+      @recipient_users = current_workspace.users.with_attached_avatar.order(:display_name, :email_address).to_a
+      @recipient_name_suggestions = current_workspace.brews
+        .where(recipient_kind: "guest").where.not(recipient_name: [ nil, "" ])
+        .distinct.order(:recipient_name).pluck(:recipient_name)
+      @cup_style_suggestions = (
+        ExternalCoffee::DRINK_TYPE_SUGGESTIONS +
+          current_workspace.brews.where.not(cup_style: [ nil, "" ]).distinct.order(:cup_style).pluck(:cup_style)
+      ).uniq
     end
 
     def set_recipe_guide
@@ -260,7 +262,7 @@ class BrewsController < ApplicationController
     def brew_history_scope
       current_workspace
         .brews
-        .includes(:bean, :user, :grinder, :machine, :brewer, :public_brew_share, brew_preparation_tools: :preparation_tool)
+        .includes(:bean, :user, :recipient_user, :grinder, :machine, :brewer, :public_brew_share, brew_preparation_tools: :preparation_tool)
         .order(occurred_at: :desc, created_at: :desc)
     end
 
@@ -581,8 +583,8 @@ class BrewsController < ApplicationController
         :flow_control_used,
         :taste_balance,
         :rating,
-        :served_for_guest,
-        :guest_name,
+        :recipient_selection,
+        :recipient_name,
         :cup_style,
         :notes,
         :public_note,
@@ -606,7 +608,38 @@ class BrewsController < ApplicationController
     end
 
     def serving_brew_params
-      params.expect(brew: [ :served_for_guest, :guest_name, :cup_style ])
+      params.expect(brew: [ :recipient_selection, :recipient_name, :cup_style ])
+    end
+
+    def resolve_recipient_attributes!(attributes, existing_brew: nil)
+      selection = attributes.delete(:recipient_selection).presence || "self"
+      name = attributes[:recipient_name].to_s.strip.presence
+      previous_guest_name = existing_brew&.recipient_guest? ? existing_brew.recipient_name.to_s.strip.presence : nil
+      selection = "guest" if selection == "self" && name.present? && name != previous_guest_name
+      attributes[:recipient_selection] = selection
+
+      case selection
+      when "self"
+        attributes.merge!(recipient_kind: "self", recipient_user: nil, recipient_name: nil)
+      when "guest"
+        attributes.merge!(recipient_kind: "guest", recipient_user: nil, recipient_name: name)
+      when /\Amember:(\d+)\z/
+        attributes.merge!(
+          recipient_kind: "household_member",
+          recipient_user: current_workspace.users.find(Regexp.last_match(1)),
+          recipient_name: nil
+        )
+      when "existing_recipient"
+        raise ActiveRecord::RecordNotFound unless existing_brew&.recipient_household_member?
+
+        attributes.merge!(
+          recipient_kind: "household_member",
+          recipient_user: existing_brew.recipient_user,
+          recipient_name: nil
+        )
+      else
+        raise ActiveRecord::RecordNotFound
+      end
     end
 
     def prepare_record_links(record)

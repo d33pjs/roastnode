@@ -41,7 +41,7 @@ class HomeController < ApplicationController
     end
 
     def dashboard_brews
-      current_workspace.brews.includes(:bean, :user, :grinder, :machine, :brew_preparation_tools)
+      current_workspace.brews.includes(:bean, :user, :recipient_user, :grinder, :machine, :brew_preparation_tools)
     end
 
     def dashboard_external_coffees

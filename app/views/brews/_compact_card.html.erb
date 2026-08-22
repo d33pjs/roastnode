@@ -1,5 +1,10 @@
 <% public_share = brew.public_brew_share if brew.espresso? && brew.public_brew_share&.enabled? %>
 <% public_share_title = public_share.title.presence || PublicBrewShare.default_title_for(brew) if public_share %>
+<% recipient_label = if brew.recipient_household_member?
+  brew.recipient_user.display_label
+elsif brew.recipient_guest?
+  brew.recipient_name.presence || t("brews.recipients.guest")
+end %>
 
 <article data-testid="brew-history-compact-card" class="overflow-hidden rounded-2xl border border-rn-line bg-rn-surface shadow-sm">
   <div data-testid="brew-compact-card" data-method="<%= brew.method %>" class="overflow-hidden">
@@ -18,11 +23,9 @@
         <h2 class="mt-1 truncate text-xl font-black text-rn-ink"><%= brew.bean.name %></h2>
         <p class="mt-1 truncate text-sm font-bold text-rn-ink"><%= brew.bean.roaster_name.presence || t("beans.index.unknown") %></p>
         <p class="mt-2 text-sm font-semibold text-rn-muted"><%= t("brews.show.logged_by") %>: <%= brew.user.display_label %></p>
-        <% if brew.cup_style.present? || brew.served_for_guest? %>
+        <% if brew.cup_style.present? || recipient_label.present? %>
           <p data-testid="brew-serving-chip-<%= brew.id %>" class="mt-2 inline-flex max-w-full items-center rounded-full bg-[var(--rn-surface-muted)] px-2.5 py-1 text-xs font-extrabold text-rn-muted">
-            <span class="truncate">
-              <%= [ brew.cup_style, (brew.served_for_guest? ? (brew.guest_name.presence || t("brews.show.guest")) : nil) ].compact.join(" · ") %>
-            </span>
+            <span class="truncate"><%= [ brew.cup_style, recipient_label ].compact.join(" · ") %></span>
           </p>
         <% end %>
       </div>

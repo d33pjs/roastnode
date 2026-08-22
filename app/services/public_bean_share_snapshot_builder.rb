@@ -3,7 +3,7 @@ class PublicBeanShareSnapshotBuilder
     @bean = bean
     @title = title
     @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i).uniq
-    @brews = bean.brews.includes(:user, :grinder, :machine, :brewer, :public_brew_share).order(occurred_at: :desc, created_at: :desc).to_a
+    @brews = bean.brews.includes(:user, :recipient_user, :grinder, :machine, :brewer, :public_brew_share).order(occurred_at: :desc, created_at: :desc).to_a
   end
 
   def call

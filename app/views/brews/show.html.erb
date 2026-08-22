@@ -62,7 +62,6 @@
 
     <% if current_workspace_policy.write? %>
       <% correction_label_class = "block text-sm font-bold text-rn-muted" %>
-      <% correction_input_class = "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
       <section data-testid="brew-serving-correction" class="mt-6 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
         <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".serving") %></h2>
         <%= form_with model: @brew, url: serving_brew_path(@brew), method: :patch, class: "mt-4 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end" do |form| %>
@@ -72,30 +71,7 @@
             </div>
           <% end %>
 
-          <label class="flex min-h-12 items-center justify-between gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink">
-            <span><%= t(".served_for_guest") %></span>
-            <%= form.check_box :served_for_guest, class: "h-5 w-5 rounded border-rn-line text-[var(--rn-accent-strong)]" %>
-          </label>
-
-          <div>
-            <%= form.label :guest_name, t(".guest_name"), class: correction_label_class %>
-            <%= form.text_field :guest_name, maxlength: 120, list: "brew_guest_name_suggestions", class: correction_input_class %>
-            <datalist id="brew_guest_name_suggestions">
-              <% Array(@guest_name_suggestions).each do |suggestion| %>
-                <option value="<%= suggestion %>"></option>
-              <% end %>
-            </datalist>
-          </div>
-
-          <div class="sm:col-span-2">
-            <%= form.label :cup_style, t(".cup_style"), class: correction_label_class %>
-            <%= form.text_field :cup_style, maxlength: 120, list: "brew_cup_style_suggestions", class: correction_input_class %>
-            <datalist id="brew_cup_style_suggestions">
-              <% Array(@cup_style_suggestions).each do |suggestion| %>
-                <option value="<%= suggestion %>"></option>
-              <% end %>
-            </datalist>
-          </div>
+          <%= render "brews/serving_form_fields", form:, brew: form.object, container_class: "sm:col-span-3" %>
 
           <%= form.submit t(".save_serving"), class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>
         <% end %>
@@ -148,12 +124,14 @@
           <dd data-testid="brew-detail-cup" class="mt-1 text-sm font-semibold text-stone-950"><%= @brew.cup_style.presence || t(".unknown") %></dd>
         </div>
         <div>
-          <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".guest") %></dt>
-          <dd data-testid="brew-detail-guest" class="mt-1 text-sm font-semibold text-stone-950">
-            <% if @brew.served_for_guest? %>
-              <%= @brew.guest_name.presence || t(".yes") %>
+          <dt class="text-xs font-bold uppercase text-stone-500"><%= t("brews.form.served_to") %></dt>
+          <dd data-testid="brew-detail-recipient" class="mt-1 text-sm font-semibold text-stone-950">
+            <% if @brew.recipient_self? %>
+              <%= t("brews.recipients.myself") %>
+            <% elsif @brew.recipient_household_member? %>
+              <%= @brew.recipient_user.display_label %>
             <% else %>
-              <%= t(".no") %>
+              <%= @brew.recipient_name.presence || t("brews.recipients.guest") %>
             <% end %>
           </dd>
         </div>
