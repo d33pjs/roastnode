@@ -1,4 +1,4 @@
-<span data-testid="brew-recipient-badge" class="inline-flex max-w-full items-center gap-1 rounded-full px-2.5 py-1 text-xs font-extrabold ring-1 <%= presenter.badge_classes %>">
+<span data-testid="brew-recipient-badge" class="inline-flex min-w-0 max-w-full items-center gap-1 overflow-hidden rounded-full px-2.5 py-1 text-xs font-extrabold ring-1 <%= presenter.badge_classes %>">
   <%= material_symbol presenter.icon_name, classes: "h-4 w-4 shrink-0" %>
   <span class="min-w-0 truncate"><%= presenter.badge_text %></span>
 </span>

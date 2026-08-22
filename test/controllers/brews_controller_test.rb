@@ -1707,6 +1707,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-testid=brew-hero-card][data-method=quick_drip]"
+    assert_select "[data-testid=brew-recipient-title-row].min-w-0.max-w-full"
+    assert_select "[data-testid=brew-title-block].min-w-0.max-w-full.flex-1.overflow-hidden"
+    assert_select "[data-testid=brew-recipient-byline].min-w-0.max-w-full.overflow-hidden"
+    assert_select "[data-testid=brew-recipient-badge].min-w-0.max-w-full.overflow-hidden"
     assert_select "[data-testid=brew-method]", "Quick Drip"
     assert_select "[data-testid=quick-drip-machine-cups]", "6"
     assert_select "[data-testid=quick-drip-coffee]", "6 spoons"
@@ -1757,6 +1761,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     get brew_path(brew)
     assert_select "[data-testid=brew-card-header] [data-testid=brew-recipient-badge]", count: 0
+    assert_select "[data-testid=brew-recipient-title-row].min-w-0.max-w-full"
+    assert_select "[data-testid=brew-title-block].min-w-0.max-w-full.flex-1.overflow-hidden"
+    assert_select "[data-testid=brew-recipient-byline].min-w-0.max-w-full.overflow-hidden"
+    assert_select "[data-testid=brew-recipient-badge].min-w-0.max-w-full.overflow-hidden"
     assert_select "[data-testid=brew-recipient-badge][class*=?]", "bg-sky-100" do
       assert_select "span", "For me"
     end
@@ -1782,13 +1790,14 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=brew-recipient-badge] svg[data-symbol=groups] path[d=?]", ApplicationHelper::MATERIAL_SYMBOL_PATHS.fetch("groups")
     assert_select "[data-testid=brew-recipient-byline] .min-w-0", minimum: 1
 
-    brew.update!(recipient_kind: "guest", recipient_name: nil)
+    brew.update!(recipient_kind: "guest", recipient_name: nil, cup_style: "Cortado")
     get brews_path
     assert_select "[data-testid=brew-history-compact-card] [data-testid=brew-recipient-byline].text-rn-muted", "Logged by Jens for a guest"
     assert_select "[data-testid=brew-history-compact-card] [data-testid=brew-recipient-badge][class*=?]", "bg-emerald-100" do
       assert_select "span", "For a guest"
     end
-    assert_select "[data-testid=brew-history-compact-card] [data-testid=brew-cup-badge]", count: 0
+    assert_select "[data-testid=brew-history-compact-card] [data-testid=brew-cup-badge]", "Cup: Cortado"
+    assert_select "[data-testid=brew-recipient-badge] [data-testid=brew-cup-badge]", count: 0
   end
 
   test "private recipient cards suppress former recipient and former logger avatars independently" do

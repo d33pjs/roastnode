@@ -22,8 +22,8 @@
     </div>
 
     <div class="mt-4 grid gap-4 <%= "lg:grid-cols-[0.9fr_1.1fr] lg:items-end" unless compact %>">
-      <div class="flex items-start justify-between gap-3">
-        <div data-testid="brew-title-block" class="min-w-0">
+      <div data-testid="brew-recipient-title-row" class="flex min-w-0 max-w-full items-start justify-between gap-3">
+        <div data-testid="brew-title-block" class="min-w-0 max-w-full flex-1 overflow-hidden">
           <p class="text-xs font-bold uppercase text-stone-300"><%= brew.bean.roaster_name.presence || t("brews.show.unknown") %></p>
           <h1 class="mt-1 text-3xl font-bold leading-8 text-white"><%= brew.bean.name %></h1>
           <% if brew_card_bean_descriptor(brew.bean).present? %>
@@ -32,7 +32,7 @@
           <div data-testid="brew-byline" class="mt-2">
             <%= render "brews/recipient_byline", presenter:, surface: :dark %>
           </div>
-          <div class="mt-3 flex min-w-0 flex-wrap items-center gap-2">
+          <div class="mt-3 flex min-w-0 max-w-full flex-wrap items-center gap-2 overflow-hidden">
             <%= render "brews/recipient_badge", presenter: %>
           </div>
         </div>
