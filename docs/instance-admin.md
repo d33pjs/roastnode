@@ -39,6 +39,8 @@ The first account created through first-run setup is automatically marked `insta
 
 Controllers that expose instance-wide data should use `authorize_instance_admin!`. Workspace-scoped controllers should continue to use `current_workspace`, `current_membership`, and `current_workspace_policy`.
 
+Instance-only [Activity audit](activity-audit.md) rows have no workspace and are visible only to instance administrators. Instance-admin status never elevates a person into another household's workspace-administration activity.
+
 ## Health Checks
 
 `InstanceHealthSnapshot` builds the health rows rendered on the page:

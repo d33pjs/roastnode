@@ -33,6 +33,45 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "media removal emits the owning parent event for every supported parent type" do
+    sign_in_as(users(:one))
+    external_coffee = ExternalCoffee.create!(
+      workspace: workspaces(:household), user: users(:one), drink_type: "Flat White"
+    )
+    records = {
+      beans(:open_household) => "bean.media_updated",
+      brews(:morning_espresso) => "brew.media_updated",
+      external_coffee => "external_coffee.media_updated",
+      equipment(:household_grinder) => "equipment.media_updated",
+      preparation_tools(:wdt) => "preparation_tool.media_updated",
+      equipment_events(:grinder_cleaning) => "equipment_event.media_updated",
+      recipes(:household_recipe) => "recipe.media_updated"
+    }
+
+    records.each do |record, action|
+      attachment = attach_photo(record)
+      assert_activity_event(action:, workspace: workspaces(:household), actor: users(:one), subject: record) do
+        delete media_attachment_path(attachment)
+      end
+    end
+
+    workspace = workspaces(:household)
+    logo = attach_named_photo(workspace, :logo)
+    assert_activity_event(
+      action: "workspace.media_updated", workspace:, actor: users(:one), subject: workspace
+    ) do
+      delete media_attachment_path(logo)
+    end
+
+    user = users(:one)
+    avatar = attach_named_photo(user, :avatar)
+    assert_activity_event(
+      action: "profile.media_updated", workspace: workspaces(:household), actor: user, subject: user
+    ) do
+      delete media_attachment_path(avatar)
+    end
+  end
+
   test "media reads do not emit activity" do
     sign_in_as(users(:one))
     attachment = attach_photo(beans(:open_household))

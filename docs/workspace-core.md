@@ -22,6 +22,8 @@ Use `WorkspacePolicy` for role checks. Controllers should prefer the helper meth
 
 Workspace export is owner-only in the current slice. Admins can manage invites and shared coffee data, but they do not see the JSON export link unless that policy is intentionally changed later.
 
+The [Activity audit](activity-audit.md) records successful invite, membership, and workspace-administration changes. Ordinary workspace rows are member-visible, including to viewers; workspace-administration rows are restricted to owners and admins. Deleting a workspace cascades its private activity and creates a single instance-admin tombstone, without exposing that history to other households.
+
 ## Invite Flow
 
 Owners and admins can open the workspace dashboard and use **Invites** to create links for the `admin`, `member`, or `viewer` roles. Invite links can be revoked and expire automatically.

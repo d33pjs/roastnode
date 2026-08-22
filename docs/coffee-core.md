@@ -26,7 +26,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Recipe JSON import/export for portable unlinked recipe snapshots, including finish ingredients and finish notes while excluding media internals.
 - Curated public recipe sharing with optional passwords, target markers, finish ingredients, finish notes, public source notes, public recipe links, and explicitly selected recipe photos through opaque public media handles.
 - Paginated all-time brew history with compact-card and hero-card views.
-- Paginated all-time workspace activity history for brews, manual inventory adjustments, and equipment events.
+- Paginated all-time workspace activity history backed by the durable audit ledger.
 - Private workspace statistics and analytics page.
 - Bean detail analytics for brew history, best brews, taste balance, and retention markers.
 - Search-while-type roaster suggestions on bean entry, sourced from existing active-workspace bean history.
@@ -87,6 +87,8 @@ The log form pre-fills setup fields from the current user's most recent brew for
 Users can hide optional fields from the new espresso form through Profile. Brew edit/correction screens always show the full log.
 
 New espresso and Quick Drip logs expose an editable log time that defaults to the current time. Brew edit/correction screens expose the saved log time; changing it also moves the associated inventory consumption adjustment so activity and inventory history stay aligned.
+
+Successful Brew and External Coffee mutations, Bean lifecycle changes, and manual inventory adjustments are recorded by the durable audit ledger. Brew, External Coffee, and manual-adjustment creation retains the domain occurrence time; the ledger and its safe snapshots are otherwise documented in [Activity audit](activity-audit.md).
 
 Espresso copied fields:
 

@@ -13,7 +13,7 @@ Equipment Events records maintenance and service history for workspace equipment
 - Equipment detail pages with recent events, recent brews, usage analytics, maintenance marker distribution, and service counters.
 - Archived equipment is hidden from new event logging while remaining visible in historical event detail pages.
 - Existing affected archived equipment remains available when editing an old event.
-- Workspace recent activity entries for equipment events.
+- Durable audit-ledger entries for equipment, preparation-tool, and equipment-event lifecycle and media changes.
 - Private photo management on equipment events, including viewing, download, primary selection, cropping, removal, and additive upload while editing.
 - Required event times use minute precision on desktop and mobile. The form is constrained to its card width and shows normal validation errors when a save fails, including when the time is missing.
 
@@ -42,6 +42,8 @@ The dashboard Recent activity section shows:
 It deliberately hides automatic brew inventory adjustments because the brew itself is already the user-facing activity.
 
 The dashboard requests the newest eight records from the merged feed. Each activity family must contribute enough candidates for that global limit before the records are merged and sorted; a busy brew history must not be truncated merely because a maintenance event is also present.
+
+Equipment Event creation keeps its required domain occurrence time in the audit ledger. Corrections, deletion, media changes, and related gear lifecycle actions use commit time; visibility, safe snapshots, and omitted failures are defined in [Activity audit](activity-audit.md).
 
 ## Data Model
 

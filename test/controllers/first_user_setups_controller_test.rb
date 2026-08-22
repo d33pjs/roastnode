@@ -43,6 +43,7 @@ class FirstUserSetupsControllerTest < ActionDispatch::IntegrationTest
     assert cookies[:session_id].present?
     events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
     assert_equal %w[instance.first_user_created session.signed_in], events.map(&:action).sort
+    assert_includes events.map(&:action), "instance.first_user_created"
     assert events.all? { |event| event.workspace.nil? && event.actor == user && event.subject == user }
     assert events.all? { |event| event.visibility == "instance_admin" }
 

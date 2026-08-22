@@ -32,6 +32,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/backup-system.md` describes the instance-admin backup and empty-server restore contract.
 - `docs/demo-data.md` describes the optional demo household loader.
 - `docs/statistics.md` describes the first private workspace analytics page.
+- `docs/activity-audit.md` describes the durable ActivityEvent ledger, visibility, safe metadata, filtering, and export/restore contract.
 - `docs/typography.md` describes the self-hosted Elms Sans font setup and license note.
 - `docs/branding.md` describes logo files, current placements, and browser icon usage.
 - `docs/navigation.md` describes cross-links between beans, brews, equipment, preparation tools, and shared back-link UI.
