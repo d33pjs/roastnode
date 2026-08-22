@@ -9,7 +9,16 @@ class FirstUserSetupsController < ApplicationController
   def create
     @user = User.new(first_user_params.merge(instance_admin: true))
 
-    if @user.save
+    created = User.transaction do
+      next false unless @user.save
+
+      Activity::Emitter.record!(
+        action: "instance.first_user_created", workspace: nil, actor: @user, subject: @user
+      )
+      true
+    end
+
+    if created
       start_new_session_for(@user)
       redirect_to root_path, notice: t(".created")
     else

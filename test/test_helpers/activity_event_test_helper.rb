@@ -9,7 +9,7 @@ module ActivityEventTestHelper
     assert_equal expected_actions, events.map(&:action).sort,
       "expected exact new activity action multiset #{expected_actions.inspect}"
     events.each do |new_event|
-      assert_equal workspace, new_event.workspace
+      workspace ? assert_equal(workspace, new_event.workspace) : assert_nil(new_event.workspace)
       assert_equal actor, new_event.actor
     end
     event = events.find { |new_event| new_event.action == action }

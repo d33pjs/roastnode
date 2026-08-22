@@ -6,9 +6,15 @@ class ProfilesController < ApplicationController
   def update
     @user = Current.user
 
-    if @user.update(profile_params)
+    updated = with_account_activity(action: "profile.updated", user: @user) do
+      next false unless @user.update(profile_params)
+
       PublicBrewShareRefresher.refresh_for(@user)
       PublicBeanShareRefresher.refresh_for(@user)
+      @user
+    end
+
+    if updated
       redirect_to root_path, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity

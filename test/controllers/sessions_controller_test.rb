@@ -3,6 +3,28 @@ require "test_helper"
 class SessionsControllerTest < ActionDispatch::IntegrationTest
   setup { @user = User.take }
 
+  test "successful password sign in and sign out emit safe account events" do
+    user = users(:one)
+    event = assert_activity_event(action: "session.signed_in", workspace: user.active_workspace, actor: user, subject: user) do
+      post session_path, params: { email_address: user.email_address, password: "password" }
+    end
+    assert_equal "password", event.metadata.fetch("authentication_method")
+    assert_no_match(/#{Regexp.escape(user.email_address)}|password|session|ip_address/i, event.metadata.except("authentication_method").to_json)
+
+    assert_activity_event(action: "session.signed_out", workspace: user.active_workspace, actor: user, subject: user) do
+      delete session_path
+    end
+  end
+
+  test "failed sign in and reset request emit nothing" do
+    assert_no_difference -> { ActivityEvent.count } do
+      post session_path, params: { email_address: users(:one).email_address, password: "wrong" }
+    end
+    assert_no_difference -> { ActivityEvent.count } do
+      post passwords_path, params: { email_address: users(:one).email_address }
+    end
+  end
+
   test "new" do
     get new_session_path
 

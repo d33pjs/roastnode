@@ -1,6 +1,20 @@
 require "test_helper"
 
 class WorkspacesControllerTest < ActionDispatch::IntegrationTest
+  test "household and security action registry is complete" do
+    expected = %w[
+      workspace.created workspace.updated workspace.media_updated workspace.deleted
+      workspace_invite.created workspace_invite.accepted workspace_invite.revoked workspace_invite.resent workspace_invite.reinvited
+      membership.role_changed membership.removed membership.ownership_transferred
+      household_invite.created household_invite.accepted household_invite.revoked household_invite.resent household_invite.reinvited
+      profile.updated profile.media_updated password.changed password.reset passkey.created passkey.renamed passkey.deleted
+      passkey.second_factor_enabled passkey.second_factor_disabled session.signed_in session.signed_out instance.first_user_created
+    ]
+    assert_equal expected.sort, Activity::EventContract.actions.grep(
+      /\A(?:workspace\.|workspace_invite\.|membership\.|household_invite\.|profile\.|password\.|passkey\.|session\.|instance\.first_user_created\z)/
+    ).sort
+  end
+
   test "owner can edit active workspace settings" do
     workspaces(:household).update!(buy_me_a_coffee_url: "https://buymeacoffee.com/roastnode")
     sign_in_as(users(:one))
@@ -154,13 +168,17 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
   test "owner can update active workspace name, default currency, and support badge url" do
     sign_in_as(users(:one))
 
-    patch workspace_path, params: {
-      workspace: {
-        name: "Jens Coffee Lab",
-        default_currency: "eur",
-        buy_me_a_coffee_url: "https://buymeacoffee.com/roastnode"
+    assert_activity_event(
+      action: "workspace.updated", workspace: workspaces(:household), actor: users(:one), subject: workspaces(:household)
+    ) do
+      patch workspace_path, params: {
+        workspace: {
+          name: "Jens Coffee Lab",
+          default_currency: "eur",
+          buy_me_a_coffee_url: "https://buymeacoffee.com/roastnode"
+        }
       }
-    }
+    end
 
     assert_redirected_to dashboard_path
     assert_equal "Jens Coffee Lab", workspaces(:household).reload.name
@@ -312,13 +330,19 @@ class WorkspacesControllerTest < ActionDispatch::IntegrationTest
     bean_id = beans(:open_household).id
     sign_in_as(users(:one))
 
-    delete workspace_path, params: { confirmation: workspace.name }
+    event = assert_activity_event(action: "workspace.deleted", workspace: nil, actor: users(:one)) do
+      delete workspace_path, params: { confirmation: workspace.name }
+    end
 
     assert_redirected_to root_path
     assert_not Workspace.exists?(workspace.id)
     assert_not Bean.exists?(bean_id)
     assert_nil users(:one).reload.active_workspace
     assert_nil users(:two).reload.active_workspace
+    assert_nil event.workspace
+    assert_equal workspace.id, event.subject_id
+    assert_nil event.subject
+    assert_equal "instance_admin", event.visibility
   end
 
   test "workspace deletion requires exact confirmation" do

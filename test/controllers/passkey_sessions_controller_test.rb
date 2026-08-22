@@ -26,9 +26,14 @@ class PasskeySessionsControllerTest < ActionDispatch::IntegrationTest
       post options_passkey_session_path, as: :json
     end
 
+    event = nil
     assert_difference -> { credential.user.sessions.count }, 1 do
       stub_webauthn_credential(:from_get, fake_assertion) do
-        post passkey_session_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
+        event = assert_activity_event(
+          action: "session.signed_in", workspace: credential.user.active_workspace, actor: credential.user, subject: credential.user
+        ) do
+          post passkey_session_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
+        end
       end
     end
 
@@ -37,6 +42,8 @@ class PasskeySessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal root_path, response.parsed_body.fetch("redirect_url")
     assert_equal 3, credential.reload.sign_count
     assert credential.last_used_at.present?
+    assert_equal "passkey", event.metadata.fetch("authentication_method")
+    assert_no_match(/#{Regexp.escape(credential.external_id)}|challenge|credential/i, event.metadata.except("authentication_method").to_json)
   end
 
   test "unknown credential fails generically" do

@@ -58,12 +58,15 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
       post options_passkey_credentials_path, params: { current_password: "password" }, as: :json
     end
 
+    event = nil
     assert_difference -> { user.passkey_credentials.count }, 1 do
       stub_webauthn_credential(:from_create, fake_credential) do
-        post passkey_credentials_path, params: {
-          nickname: "Phone",
-          credential: { id: "new-passkey-id" }
-        }, as: :json
+        event = assert_activity_event(action: "passkey.created", workspace: user.active_workspace, actor: user) do
+          post passkey_credentials_path, params: {
+            nickname: "Phone",
+            credential: { id: "new-passkey-id" }
+          }, as: :json
+        end
       end
     end
 
@@ -73,6 +76,8 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "new-public-key", credential.public_key
     assert_equal 4, credential.sign_count
     assert_equal "Phone", credential.nickname
+    assert_equal credential, event.subject
+    assert_no_match(/new-passkey-id|new-public-key|challenge/i, event.metadata.to_json)
   end
 
   test "create without a registration challenge does not create a passkey credential" do
@@ -200,7 +205,9 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     credential = passkey_credentials(:one_touch_id)
 
-    patch passkey_credential_path(credential), params: { passkey_credential: { nickname: "YubiKey" } }
+    assert_activity_event(action: "passkey.renamed", workspace: users(:one).active_workspace, actor: users(:one), subject: credential) do
+      patch passkey_credential_path(credential), params: { passkey_credential: { nickname: "YubiKey" } }
+    end
 
     assert_redirected_to edit_profile_path
     assert_equal "YubiKey", credential.reload.nickname
@@ -232,12 +239,14 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     user = users(:two)
     sign_in_as(user)
 
-    patch second_factor_passkey_credentials_path, params: {
-      user: {
-        passkey_second_factor_enabled: "1",
-        current_password: "password"
+    assert_no_difference -> { ActivityEvent.count } do
+      patch second_factor_passkey_credentials_path, params: {
+        user: {
+          passkey_second_factor_enabled: "1",
+          current_password: "password"
+        }
       }
-    }
+    end
 
     assert_response :unprocessable_entity
     assert_not user.reload.passkey_second_factor_enabled?
@@ -247,22 +256,30 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     user = users(:one)
     sign_in_as(user)
 
-    patch second_factor_passkey_credentials_path, params: {
-      user: {
-        passkey_second_factor_enabled: "1",
-        current_password: "password"
+    assert_activity_event(
+      action: "passkey.second_factor_enabled", workspace: user.active_workspace, actor: user, subject: user
+    ) do
+      patch second_factor_passkey_credentials_path, params: {
+        user: {
+          passkey_second_factor_enabled: "1",
+          current_password: "password"
+        }
       }
-    }
+    end
 
     assert_redirected_to edit_profile_path
     assert user.reload.passkey_second_factor_enabled?
 
-    patch second_factor_passkey_credentials_path, params: {
-      user: {
-        passkey_second_factor_enabled: "0",
-        current_password: "password"
+    assert_activity_event(
+      action: "passkey.second_factor_disabled", workspace: user.active_workspace, actor: user, subject: user
+    ) do
+      patch second_factor_passkey_credentials_path, params: {
+        user: {
+          passkey_second_factor_enabled: "0",
+          current_password: "password"
+        }
       }
-    }
+    end
 
     assert_redirected_to edit_profile_path
     assert_not user.reload.passkey_second_factor_enabled?
@@ -291,7 +308,11 @@ class PasskeyCredentialsControllerTest < ActionDispatch::IntegrationTest
     credential = passkey_credentials(:one_touch_id)
 
     assert_difference -> { user.passkey_credentials.count }, -1 do
-      delete passkey_credential_path(credential), params: { current_password: "password" }
+      event = assert_activity_event(action: "passkey.deleted", workspace: user.active_workspace, actor: user) do
+        delete passkey_credential_path(credential), params: { current_password: "password" }
+      end
+      assert_equal credential.id, event.subject_id
+      assert_nil event.subject
     end
 
     assert_redirected_to edit_profile_path

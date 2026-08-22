@@ -19,7 +19,14 @@ class WorkspaceMembershipManager
     return failure(:last_owner) if target_membership.owner? && role != "owner" && sole_owner?(target_membership)
     return failure(:unauthorized) unless can_update_role?(target_membership, role)
 
-    target_membership.update!(role:)
+    old_role = target_membership.role
+    Membership.transaction do
+      target_membership.update!(role:)
+      Activity::Emitter.record!(
+        action: "membership.role_changed", workspace:, actor: actor_membership.user,
+        subject: target_membership, details: { from_role: old_role, to_role: role }
+      )
+    end
     success
   end
 
@@ -27,9 +34,14 @@ class WorkspaceMembershipManager
     return failure(:last_owner) if target_membership.owner? && sole_owner?(target_membership)
     return failure(:unauthorized) unless can_remove?(target_membership)
 
-    target_user = target_membership.user
-    target_membership.destroy!
-    target_user.update!(active_workspace: nil) if target_user.active_workspace_id == workspace.id
+    Membership.transaction do
+      target_user = target_membership.user
+      target_membership.destroy!
+      target_user.update!(active_workspace: nil) if target_user.active_workspace_id == workspace.id
+      Activity::Emitter.record!(
+        action: "membership.removed", workspace:, actor: actor_membership.user, subject: target_membership
+      )
+    end
     success
   end
 
@@ -37,9 +49,14 @@ class WorkspaceMembershipManager
     return failure(:unauthorized) unless actor_membership&.owner?
     return failure(:transfer_self) if target_membership.id == actor_membership.id
 
+    old_actor_role = actor_membership.role
     Membership.transaction do
       target_membership.update!(role: "owner")
       actor_membership.update!(role: "admin")
+      Activity::Emitter.record!(
+        action: "membership.ownership_transferred", workspace:, actor: actor_membership.user,
+        subject: target_membership, details: { from_role: old_actor_role, to_role: "owner" }
+      )
     end
 
     success

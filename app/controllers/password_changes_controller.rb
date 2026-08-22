@@ -24,9 +24,15 @@ class PasswordChangesController < ApplicationController
       return render :edit, status: :unprocessable_entity
     end
 
-    if @user.update(password_change_params.except(:current_password))
+    changed = with_account_activity(action: "password.changed", user: @user) do
+      next false unless @user.update(password_change_params.except(:current_password))
+
       @user.sessions.destroy_all
       start_new_session_for(@user)
+      @user
+    end
+
+    if changed
       redirect_to edit_profile_path, notice: t(".updated")
     else
       render :edit, status: :unprocessable_entity

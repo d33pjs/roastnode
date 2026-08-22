@@ -6,7 +6,16 @@ module InstanceAdmin
     def create
       invite = HouseholdInvite.new(household_invite_params.merge(created_by: Current.user))
 
-      unless invite.save
+      created = HouseholdInvite.transaction do
+        next false unless invite.save
+
+        Activity::Emitter.record!(
+          action: "household_invite.created", workspace: nil, actor: Current.user, subject: invite
+        )
+        true
+      end
+
+      unless created
         return redirect_to instance_admin_path, alert: invite.errors.full_messages.to_sentence
       end
 
@@ -22,7 +31,12 @@ module InstanceAdmin
         return redirect_to instance_admin_path, alert: t(".unavailable")
       end
 
-      @household_invite.revoke!
+      HouseholdInvite.transaction do
+        @household_invite.revoke!
+        Activity::Emitter.record!(
+          action: "household_invite.revoked", workspace: nil, actor: Current.user, subject: @household_invite
+        )
+      end
 
       redirect_to instance_admin_path, notice: t(".revoked")
     end
@@ -32,7 +46,18 @@ module InstanceAdmin
         return redirect_to instance_admin_path, alert: t(".unavailable")
       end
 
-      unless deliver_invite_later(@household_invite)
+      delivered = HouseholdInvite.transaction do
+        unless deliver_invite_later(@household_invite)
+          raise ActiveRecord::Rollback
+        end
+
+        Activity::Emitter.record!(
+          action: "household_invite.resent", workspace: nil, actor: Current.user, subject: @household_invite
+        )
+        true
+      end
+
+      unless delivered
         return redirect_to instance_admin_path, alert: t(".delivery_failed")
       end
 
@@ -44,12 +69,22 @@ module InstanceAdmin
         return redirect_to instance_admin_path, alert: t(".unavailable")
       end
 
-      fresh_invite = HouseholdInvite.create!(
-        email_address: @household_invite.email_address,
-        created_by: Current.user
-      )
+      delivered = HouseholdInvite.transaction do
+        fresh_invite = HouseholdInvite.create!(
+          email_address: @household_invite.email_address,
+          created_by: Current.user
+        )
+        unless deliver_invite_later(fresh_invite)
+          raise ActiveRecord::Rollback
+        end
 
-      unless deliver_invite_later(fresh_invite)
+        Activity::Emitter.record!(
+          action: "household_invite.reinvited", workspace: nil, actor: Current.user, subject: fresh_invite
+        )
+        true
+      end
+
+      unless delivered
         return redirect_to instance_admin_path, alert: t(".delivery_failed")
       end
 

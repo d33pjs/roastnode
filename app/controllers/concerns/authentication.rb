@@ -38,15 +38,36 @@ module Authentication
       session.delete(:return_to_after_authenticating) || root_url
     end
 
-    def start_new_session_for(user)
-      user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
-        Current.session = session
-        cookies.signed.permanent[:session_id] = { value: session.id, httponly: true, same_site: :lax }
+    def start_new_session_for(user, authentication_method: "password")
+      session_record = nil
+      ActivityEvent.transaction do
+        session_record = user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip)
+        workspace = user.active_workspace
+        Activity::Emitter.record!(
+          action: "session.signed_in", workspace:, actor: user, subject: user,
+          visibility: workspace ? "workspace_admin" : "instance_admin",
+          details: { authentication_method: }
+        )
+      end
+      ActiveRecord.after_all_transactions_commit do
+        Current.session = session_record
+        cookies.signed.permanent[:session_id] = {
+          value: session_record.id, httponly: true, same_site: :lax
+        }
       end
     end
 
     def terminate_session
-      Current.session.destroy
+      session_record = Current.session
+      user = session_record.user
+      ActivityEvent.transaction do
+        session_record.destroy!
+        workspace = user.active_workspace
+        Activity::Emitter.record!(
+          action: "session.signed_out", workspace:, actor: user, subject: user,
+          visibility: workspace ? "workspace_admin" : "instance_admin"
+        )
+      end
       cookies.delete(:session_id)
     end
 end

@@ -31,7 +31,7 @@ class PasskeySecondFactorsController < ApplicationController
     ).verify!
 
     clear_pending_passkey_user
-    start_new_session_for(user)
+    start_new_session_for(user, authentication_method: "passkey_second_factor")
     redirect_url = after_authentication_url
     redirect_url = root_path if redirect_url == root_url
     render json: { redirect_url: }

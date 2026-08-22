@@ -54,6 +54,7 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
 
   test "invite signup creates account and separate owned household" do
     invite = household_invites(:active_household_invite)
+    before_event_ids = ActivityEvent.pluck(:id)
 
     assert_difference -> { User.count }, 1 do
       assert_difference -> { Workspace.count }, 1 do
@@ -82,6 +83,10 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal user, invite.accepted_by
     assert invite.accepted_at.present?
     assert user.sessions.exists?
+    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
+    assert_equal %w[household_invite.accepted session.signed_in workspace.created], events.map(&:action).sort
+    assert events.all? { |event| event.workspace == workspace && event.actor == user }
+    assert_equal "invited_signup", events.find { |event| event.action == "session.signed_in" }.metadata.fetch("authentication_method")
   end
 
   test "successful invite signup clears stored authentication return target" do
@@ -289,6 +294,7 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     user = User.create!(email_address: invite.email_address, password: "password")
     sign_in_as(user)
 
+    before_event_ids = ActivityEvent.pluck(:id)
     assert_difference -> { Workspace.count }, 1 do
       assert_difference -> { Membership.owner.count }, 1 do
         post accept_household_invite_path(invite.token), params: {
@@ -303,6 +309,10 @@ class HouseholdInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal workspace, user.reload.active_workspace
     assert_equal "owner", user.membership_for(workspace).role
     assert_nil invite.created_by.membership_for(workspace)
+    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
+    assert_equal %w[household_invite.accepted workspace.created], events.map(&:action).sort
+    assert events.all? { |event| event.workspace == workspace && event.actor == user }
+    assert_equal invite, events.find { |event| event.action == "household_invite.accepted" }.subject
   end
 
   test "signed-in mismatched user cannot accept invite" do

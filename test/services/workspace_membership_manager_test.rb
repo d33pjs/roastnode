@@ -4,9 +4,13 @@ class WorkspaceMembershipManagerTest < ActiveSupport::TestCase
   test "owner can change non owner role" do
     manager = WorkspaceMembershipManager.new(workspace: workspaces(:household), actor_membership: memberships(:owner))
 
-    result = manager.update_role(memberships(:member), "viewer")
+    event = assert_activity_event(
+      action: "membership.role_changed", workspace: workspaces(:household), actor: users(:one), subject: memberships(:member)
+    ) do
+      manager.update_role(memberships(:member), "viewer")
+    end
 
-    assert result.success?
+    assert_equal({ "from_role" => "member", "to_role" => "viewer" }, event.metadata.slice("from_role", "to_role"))
     assert_equal "viewer", memberships(:member).reload.role
   end
 
@@ -46,9 +50,13 @@ class WorkspaceMembershipManagerTest < ActiveSupport::TestCase
   test "ownership transfer promotes target and demotes actor" do
     manager = WorkspaceMembershipManager.new(workspace: workspaces(:household), actor_membership: memberships(:owner))
 
-    result = manager.transfer_ownership(memberships(:member))
+    event = assert_activity_event(
+      action: "membership.ownership_transferred", workspace: workspaces(:household), actor: users(:one), subject: memberships(:member)
+    ) do
+      manager.transfer_ownership(memberships(:member))
+    end
 
-    assert result.success?
+    assert_equal({ "from_role" => "owner", "to_role" => "owner" }, event.metadata.slice("from_role", "to_role"))
     assert_equal "admin", memberships(:owner).reload.role
     assert_equal "owner", memberships(:member).reload.role
   end
@@ -59,9 +67,14 @@ class WorkspaceMembershipManagerTest < ActiveSupport::TestCase
     user.update!(active_workspace: workspace)
     manager = WorkspaceMembershipManager.new(workspace:, actor_membership: memberships(:owner))
 
-    result = manager.remove(memberships(:member))
+    removed_membership = memberships(:member)
+    event = assert_activity_event(action: "membership.removed", workspace:, actor: users(:one)) do
+      manager.remove(removed_membership)
+    end
 
-    assert result.success?
+    assert_equal removed_membership.id, event.subject_id
+    assert_nil event.subject
+    assert_equal "member", event.metadata.fetch("role")
     assert_nil user.reload.active_workspace
     assert_not Membership.exists?(memberships(:member).id)
   end

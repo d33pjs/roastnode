@@ -21,7 +21,13 @@ class WorkspaceInvitesController < ApplicationController
   end
 
   def create
-    @workspace_invite = current_workspace.workspace_invites.create!(workspace_invite_params.merge(created_by: Current.user))
+    WorkspaceInvite.transaction do
+      @workspace_invite = current_workspace.workspace_invites.create!(workspace_invite_params.merge(created_by: Current.user))
+      Activity::Emitter.record!(
+        action: "workspace_invite.created", workspace: current_workspace,
+        actor: Current.user, subject: @workspace_invite
+      )
+    end
 
     unless deliver_invite_later(@workspace_invite)
       return redirect_to workspace_invites_path, alert: t(".delivery_failed")
@@ -37,8 +43,14 @@ class WorkspaceInvitesController < ApplicationController
       return redirect_to workspace_invite_path(params[:token]), alert: t(".unavailable")
     end
 
-    @workspace_invite.accept!(Current.user)
-    Current.user.update!(active_workspace: @workspace_invite.workspace)
+    WorkspaceInvite.transaction do
+      @workspace_invite.accept!(Current.user)
+      Current.user.update!(active_workspace: @workspace_invite.workspace)
+      Activity::Emitter.record!(
+        action: "workspace_invite.accepted", workspace: @workspace_invite.workspace,
+        actor: Current.user, subject: @workspace_invite
+      )
+    end
 
     redirect_to root_path, notice: t(".accepted", workspace: @workspace_invite.workspace.name)
   end
@@ -61,16 +73,26 @@ class WorkspaceInvitesController < ApplicationController
       @user.save!
       @workspace_invite.accept!(@user)
       @user.update!(active_workspace: @workspace_invite.workspace)
+      Activity::Emitter.record!(
+        action: "workspace_invite.accepted", workspace: @workspace_invite.workspace,
+        actor: @user, subject: @workspace_invite
+      )
     end
 
-    start_new_session_for(@user)
+    start_new_session_for(@user, authentication_method: "invited_signup")
     redirect_to root_path, notice: t(".created", workspace: @workspace_invite.workspace.name)
   rescue ActiveRecord::RecordInvalid
     render :show, status: :unprocessable_entity
   end
 
   def revoke
-    @workspace_invite.revoke!
+    WorkspaceInvite.transaction do
+      @workspace_invite.revoke!
+      Activity::Emitter.record!(
+        action: "workspace_invite.revoked", workspace: current_workspace,
+        actor: Current.user, subject: @workspace_invite
+      )
+    end
 
     redirect_to workspace_invites_path, notice: t(".revoked")
   end
@@ -80,7 +102,19 @@ class WorkspaceInvitesController < ApplicationController
       return redirect_to workspace_invites_path, alert: t(".unavailable")
     end
 
-    unless deliver_invite_later(@workspace_invite)
+    delivered = WorkspaceInvite.transaction do
+      unless deliver_invite_later(@workspace_invite)
+        raise ActiveRecord::Rollback
+      end
+
+      Activity::Emitter.record!(
+        action: "workspace_invite.resent", workspace: current_workspace,
+        actor: Current.user, subject: @workspace_invite
+      )
+      true
+    end
+
+    unless delivered
       return redirect_to workspace_invites_path, alert: t(".delivery_failed")
     end
 
@@ -92,13 +126,24 @@ class WorkspaceInvitesController < ApplicationController
       return redirect_to workspace_invites_path, alert: t(".unavailable")
     end
 
-    fresh_invite = current_workspace.workspace_invites.create!(
-      email_address: @workspace_invite.email_address,
-      role: @workspace_invite.role,
-      created_by: Current.user
-    )
+    delivered = WorkspaceInvite.transaction do
+      fresh_invite = current_workspace.workspace_invites.create!(
+        email_address: @workspace_invite.email_address,
+        role: @workspace_invite.role,
+        created_by: Current.user
+      )
+      unless deliver_invite_later(fresh_invite)
+        raise ActiveRecord::Rollback
+      end
 
-    unless deliver_invite_later(fresh_invite)
+      Activity::Emitter.record!(
+        action: "workspace_invite.reinvited", workspace: current_workspace,
+        actor: Current.user, subject: fresh_invite
+      )
+      true
+    end
+
+    unless delivered
       return redirect_to workspace_invites_path, alert: t(".delivery_failed")
     end
 

@@ -6,11 +6,14 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
     admin.update!(instance_admin: true)
     sign_in_as(admin)
 
+    event = nil
     assert_enqueued_emails 1 do
       assert_difference -> { HouseholdInvite.count }, 1 do
-        post instance_admin_household_invites_path, params: {
-          household_invite: { email_address: "New.Owner@Example.com" }
-        }
+        event = assert_activity_event(action: "household_invite.created", workspace: nil, actor: users(:one)) do
+          post instance_admin_household_invites_path, params: {
+            household_invite: { email_address: "New.Owner@Example.com" }
+          }
+        end
       end
     end
 
@@ -18,6 +21,8 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
     assert_redirected_to instance_admin_path
     assert_equal "new.owner@example.com", invite.email_address
     assert_equal admin, invite.created_by
+    assert_equal "instance_admin", event.visibility
+    assert_no_match(/new.owner@example|token/i, event.metadata.to_json)
   end
 
   test "instance admin cannot create household invite without email" do
@@ -83,7 +88,9 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
     sign_in_as(admin)
     invite = household_invites(:active_household_invite)
 
-    patch revoke_instance_admin_household_invite_path(invite)
+    assert_activity_event(action: "household_invite.revoked", workspace: nil, actor: admin, subject: invite) do
+      patch revoke_instance_admin_household_invite_path(invite)
+    end
 
     assert_redirected_to instance_admin_path
     assert invite.reload.revoked_at.present?
@@ -111,7 +118,9 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
 
     assert_no_difference -> { HouseholdInvite.count } do
       assert_enqueued_email_with HouseholdInvitesMailer, :invite, args: [ invite ] do
-        post resend_instance_admin_household_invite_path(invite)
+        assert_activity_event(action: "household_invite.resent", workspace: nil, actor: admin, subject: invite) do
+          post resend_instance_admin_household_invite_path(invite)
+        end
       end
     end
 
@@ -127,7 +136,9 @@ class InstanceAdminHouseholdInvitesControllerTest < ActionDispatch::IntegrationT
 
     assert_enqueued_emails 1 do
       assert_difference -> { HouseholdInvite.count }, 1 do
-        post reinvite_instance_admin_household_invite_path(invite)
+        assert_activity_event(action: "household_invite.reinvited", workspace: nil, actor: admin) do
+          post reinvite_instance_admin_household_invite_path(invite)
+        end
       end
     end
 

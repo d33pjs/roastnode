@@ -1,6 +1,17 @@
 require "test_helper"
 
 class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
+  test "invite lifecycle is admin-visible and stores neither email nor token" do
+    sign_in_as(users(:one))
+    event = assert_activity_event(action: "workspace_invite.created", workspace: workspaces(:household), actor: users(:one)) do
+      post workspace_invites_path, params: { workspace_invite: { email_address: "invitee@example.test", role: "member" } }
+    end
+
+    assert_equal "workspace_admin", event.visibility
+    assert_equal "member", event.metadata.fetch("role")
+    assert_no_match(/invitee@example|token|http/i, event.metadata.to_json)
+  end
+
   test "workspace owner can view invite management" do
     sign_in_as(users(:one))
 
@@ -83,7 +94,11 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_difference -> { workspaces(:household).workspace_invites.count } do
       assert_enqueued_email_with WorkspaceInvitesMailer, :invite, args: [ invite ] do
-        post resend_workspace_invite_path(invite.token)
+        assert_activity_event(
+          action: "workspace_invite.resent", workspace: invite.workspace, actor: users(:one), subject: invite
+        ) do
+          post resend_workspace_invite_path(invite.token)
+        end
       end
     end
 
@@ -101,7 +116,9 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
 
     assert_enqueued_emails 1 do
       assert_difference -> { workspaces(:household).workspace_invites.count }, 1 do
-        post reinvite_workspace_invite_path(invite.token)
+        assert_activity_event(action: "workspace_invite.reinvited", workspace: invite.workspace, actor: users(:one)) do
+          post reinvite_workspace_invite_path(invite.token)
+        end
       end
     end
 
@@ -154,7 +171,11 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     invite = workspace_invites(:member_invite)
 
-    patch revoke_workspace_invite_path(invite.token)
+    assert_activity_event(
+      action: "workspace_invite.revoked", workspace: invite.workspace, actor: users(:one), subject: invite
+    ) do
+      patch revoke_workspace_invite_path(invite.token)
+    end
 
     assert_redirected_to workspace_invites_path
     assert invite.reload.revoked_at.present?
@@ -214,6 +235,7 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     invite = workspace_invites(:member_invite)
     invite.update!(email_address: "Friend@Example.com")
 
+    before_event_ids = ActivityEvent.pluck(:id)
     assert_difference -> { User.count }, 1 do
       assert_difference -> { Membership.count }, 1 do
         post signup_workspace_invite_path(invite.token), params: {
@@ -235,6 +257,10 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     assert_equal user, invite.reload.accepted_by
     assert invite.accepted_at.present?
     assert user.sessions.exists?
+    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
+    assert_equal %w[session.signed_in workspace_invite.accepted], events.map(&:action).sort
+    assert events.all? { |event| event.workspace == workspaces(:household) && event.actor == user }
+    assert_equal "invited_signup", events.find { |event| event.action == "session.signed_in" }.metadata.fetch("authentication_method")
   end
 
   test "invite signup rejects mismatched email-bound invite" do
@@ -282,7 +308,9 @@ class WorkspaceInvitesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(user)
 
     assert_difference -> { user.memberships.count }, 1 do
-      post accept_workspace_invite_path(invite.token)
+      assert_activity_event(action: "workspace_invite.accepted", workspace: invite.workspace, actor: user, subject: invite) do
+        post accept_workspace_invite_path(invite.token)
+      end
     end
 
     membership = user.membership_for(workspaces(:household))

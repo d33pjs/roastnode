@@ -12,9 +12,15 @@ class WorkspacesController < ApplicationController
   def update
     @workspace = current_workspace
 
-    if @workspace.update(workspace_params)
+    updated = with_workspace_activity(action: "workspace.updated", subject: @workspace) do
+      next false unless @workspace.update(workspace_params)
+
       PublicBrewShareRefresher.refresh_for(@workspace)
       PublicBeanShareRefresher.refresh_for(@workspace)
+      @workspace
+    end
+
+    if updated
       redirect_to dashboard_path, notice: t(".updated")
     else
       load_public_brew_shares
@@ -46,7 +52,12 @@ class WorkspacesController < ApplicationController
       return redirect_to edit_workspace_path, alert: t(".confirmation_mismatch")
     end
 
-    @workspace.destroy_with_history!
+    Workspace.transaction do
+      @workspace.destroy_with_history!
+      Activity::Emitter.record!(
+        action: "workspace.deleted", workspace: nil, actor: Current.user, subject: @workspace
+      )
+    end
 
     redirect_to root_path, notice: t(".destroyed")
   end

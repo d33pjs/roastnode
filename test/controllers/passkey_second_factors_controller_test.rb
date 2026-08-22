@@ -40,15 +40,19 @@ class PasskeySecondFactorsControllerTest < ActionDispatch::IntegrationTest
       post options_passkey_second_factor_path, as: :json
     end
 
+    event = nil
     assert_difference -> { user.sessions.count }, 1 do
       stub_webauthn_credential(:from_get, fake_assertion) do
-        post passkey_second_factor_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
+        event = assert_activity_event(action: "session.signed_in", workspace: user.active_workspace, actor: user, subject: user) do
+          post passkey_second_factor_path, params: { credential: passkey_assertion_params(id: credential.external_id) }, as: :json
+        end
       end
     end
 
     assert_response :success
     assert cookies[:session_id].present?
     assert_equal root_path, response.parsed_body.fetch("redirect_url")
+    assert_equal "passkey_second_factor", event.metadata.fetch("authentication_method")
 
     get passkey_second_factor_path
 

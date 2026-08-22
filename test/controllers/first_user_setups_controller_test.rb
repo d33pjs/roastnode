@@ -25,6 +25,7 @@ class FirstUserSetupsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create makes the first user an instance admin and signs them in" do
+    before_event_ids = ActivityEvent.pluck(:id)
     assert_difference -> { User.count }, 1 do
       post first_user_setup_path, params: {
         user: {
@@ -40,6 +41,10 @@ class FirstUserSetupsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate user, :instance_admin?
     assert user.sessions.exists?
     assert cookies[:session_id].present?
+    events = ActivityEvent.where.not(id: before_event_ids).order(:id).to_a
+    assert_equal %w[instance.first_user_created session.signed_in], events.map(&:action).sort
+    assert events.all? { |event| event.workspace.nil? && event.actor == user && event.subject == user }
+    assert events.all? { |event| event.visibility == "instance_admin" }
 
     follow_redirect!
     assert_select "h1", I18n.t("workspace_onboardings.new.title")

@@ -10,9 +10,19 @@ class WorkspaceOnboardingsController < ApplicationController
     @workspace.kind = :household
     @workspace.default_currency = "EUR"
 
-    if @workspace.save
-      membership = Current.user.memberships.create!(workspace: @workspace, role: :owner)
-      Current.user.update!(active_workspace: membership.workspace)
+    created = false
+    Workspace.transaction do
+      if @workspace.save
+        membership = Current.user.memberships.create!(workspace: @workspace, role: :owner)
+        Current.user.update!(active_workspace: membership.workspace)
+        Activity::Emitter.record!(
+          action: "workspace.created", workspace: @workspace, actor: Current.user, subject: @workspace
+        )
+        created = true
+      end
+    end
+
+    if created
       redirect_to root_path, notice: t(".created")
     else
       render :new, status: :unprocessable_entity

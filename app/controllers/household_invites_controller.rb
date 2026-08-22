@@ -20,7 +20,10 @@ class HouseholdInvitesController < ApplicationController
     end
 
     @workspace = Workspace.new(workspace_params)
-    @household_invite.accept!(Current.user, workspace: @workspace)
+    Workspace.transaction do
+      @household_invite.accept!(Current.user, workspace: @workspace)
+      record_acceptance_activity!(Current.user)
+    end
 
     redirect_to root_path, notice: t(".accepted", workspace: @workspace.name)
   rescue ActiveRecord::RecordInvalid
@@ -50,10 +53,11 @@ class HouseholdInvitesController < ApplicationController
     ActiveRecord::Base.transaction do
       @user.save!
       @household_invite.accept!(@user, workspace: @workspace)
+      record_acceptance_activity!(@user)
     end
 
     session.delete(:return_to_after_authenticating)
-    start_new_session_for(@user)
+    start_new_session_for(@user, authentication_method: "invited_signup")
     redirect_to root_path, notice: t(".created", workspace: @workspace.name)
   rescue ActiveRecord::RecordInvalid
     render :show, status: :unprocessable_entity
@@ -72,5 +76,14 @@ class HouseholdInvitesController < ApplicationController
       @user ||= User.new(email_address: @household_invite.email_address)
       @workspace ||= Workspace.new(kind: :household, default_currency: "EUR")
       session[:return_to_after_authenticating] = household_invite_url(@household_invite.token) unless authenticated?
+    end
+
+    def record_acceptance_activity!(user)
+      Activity::Emitter.record!(
+        action: "workspace.created", workspace: @workspace, actor: user, subject: @workspace
+      )
+      Activity::Emitter.record!(
+        action: "household_invite.accepted", workspace: @workspace, actor: user, subject: @household_invite
+      )
     end
 end

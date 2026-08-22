@@ -58,18 +58,20 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     user = users(:one)
     sign_in_as(user)
 
-    patch profile_path, params: {
-      user: {
-        display_name: "Jens",
-        default_landing_screen: "log_espresso",
-        theme: "dark",
-        number_format: "dot_decimal",
-        time_format: "us_12h_seconds",
-        time_zone: "Europe/Berlin",
-        default_brew_focus_field: "dose_grams",
-        hidden_brew_field_names: %w[rating channeling photos]
+    assert_activity_event(action: "profile.updated", workspace: user.active_workspace, actor: user, subject: user) do
+      patch profile_path, params: {
+        user: {
+          display_name: "Jens",
+          default_landing_screen: "log_espresso",
+          theme: "dark",
+          number_format: "dot_decimal",
+          time_format: "us_12h_seconds",
+          time_zone: "Europe/Berlin",
+          default_brew_focus_field: "dose_grams",
+          hidden_brew_field_names: %w[rating channeling photos]
+        }
       }
-    }
+    end
 
     assert_redirected_to root_path
     assert_equal "Jens", user.reload.display_name
