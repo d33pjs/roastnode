@@ -23,6 +23,7 @@ class RecipesControllerTest < ActionDispatch::IntegrationTest
       delete recipe_path(recipe)
     end
     assert_equal "Audit recipe updated", deleted_event.metadata.fetch("subject_label")
+    assert_nil deleted_event.reload.subject
 
     assert_activity_event(action: "recipe.imported", workspace:, actor: user) do
       post import_recipes_path, params: {

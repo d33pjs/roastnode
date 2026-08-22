@@ -25,6 +25,21 @@ class PublicBrewSharesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_equal %w[actor_kind actor_label enabled record_kind subject_label].sort, event.metadata.keys.sort
     assert_no_match(/secret-share-password|token|digest|attachment|https?:\/\//i, event.metadata.to_json)
+    assert_nil event.reload.subject
+  end
+
+  test "creating an enabled share emits published instead of created" do
+    user = users(:one)
+    brew = brews(:morning_espresso)
+    sign_in_as(user)
+
+    event = assert_activity_event(action: "public_brew_share.published", workspace: brew.workspace, actor: user) do
+      post brew_public_brew_share_path(brew), params: {
+        public_brew_share: { title: "Published immediately", enabled: "1" }
+      }
+    end
+
+    assert_equal brew.reload.public_brew_share, event.subject
   end
 
   test "bean-share refresher failure rolls back public brew share creation activity and snapshot writes" do

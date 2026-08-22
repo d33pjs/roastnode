@@ -26,6 +26,21 @@ class PublicBeanSharesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_equal %w[actor_kind actor_label enabled record_kind subject_label].sort, event.metadata.keys.sort
     assert_no_match(/secret-share-password|token|digest|attachment|https?:\/\//i, event.metadata.to_json)
+    assert_nil event.reload.subject
+  end
+
+  test "creating an enabled share emits published instead of created" do
+    user = users(:one)
+    bean = beans(:open_household)
+    sign_in_as(user)
+
+    event = assert_activity_event(action: "public_bean_share.published", workspace: bean.workspace, actor: user) do
+      post bean_public_bean_share_path(bean), params: {
+        public_bean_share: { title: "Published immediately", enabled: "1" }
+      }
+    end
+
+    assert_equal bean.reload.public_bean_share, event.subject
   end
 
   test "writer can open new share form for own publishable bean" do

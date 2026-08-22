@@ -95,21 +95,11 @@ class PublicBeanSharesController < ApplicationController
           updated_by: Current.user
         )
         Activity::Emitter.record!(
-          action: share_activity_action(prefix: "public_bean_share", was_new:, was_enabled:),
+          action: Activity::ShareAction.resolve(
+            prefix: "public_bean_share", was_new:, was_enabled:, enabled: @share.enabled?
+          ),
           workspace: current_workspace, actor: Current.user, subject: @share
         )
-      end
-    end
-
-    def share_activity_action(prefix:, was_new:, was_enabled:)
-      if was_new
-        @share.enabled? ? "#{prefix}.published" : "#{prefix}.created"
-      elsif !was_enabled && @share.enabled?
-        "#{prefix}.published"
-      elsif was_enabled && !@share.enabled?
-        "#{prefix}.disabled"
-      else
-        "#{prefix}.updated"
       end
     end
 
