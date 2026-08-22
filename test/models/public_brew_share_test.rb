@@ -192,7 +192,7 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     assert_equal [ avatar.id, bean_photo.id, brew_photo.id, logo.id ].sort, share.public_attachment_ids.sort
   end
 
-  test "public attachment ids prefer the curated media manifest when present" do
+  test "public attachment ids intersect the curated media manifest with live authorization" do
     brew = brews(:morning_espresso)
     selected_photo = attach_photo(brew)
     rogue_photo = attach_photo(beans(:other_workspace_open))
@@ -203,7 +203,11 @@ class PublicBrewShareTest < ActiveSupport::TestCase
       updated_by: users(:one),
       selected_photo_attachment_ids: [ selected_photo.id ],
       snapshot: {
-        "public_media" => [ { "attachment_id" => selected_photo.id } ],
+        "public_media" => [
+          { "attachment_id" => selected_photo.id },
+          { "attachment_id" => rogue_photo.id },
+          { "attachment_id" => 999_999 }
+        ],
         "photos" => [
           { "attachment_id" => selected_photo.id },
           { "attachment_id" => rogue_photo.id }
@@ -214,6 +218,83 @@ class PublicBrewShareTest < ActiveSupport::TestCase
     assert_equal [ selected_photo.id ], share.public_attachment_ids
   end
 
+  test "recipient avatar remains public only while a current workspace membership authorizes it" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    avatar = attach_named_photo(users(:two), :avatar, filename: "petra.jpg")
+    snapshot = PublicBrewShareSnapshotBuilder.new(
+      brew:,
+      title: "Shared shot",
+      selected_photo_attachment_ids: []
+    ).call
+    share = PublicBrewShare.create!(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      snapshot:
+    )
+
+    handle = share.public_media_handle_for(avatar.id)
+    assert_match(/\A[0-9a-f]{32}\z/, handle)
+
+    memberships(:member).destroy!
+
+    assert_nil share.reload.public_media_handle_for(avatar.id)
+  end
+
+  test "recipient membership is checked before dereferencing an unauthorized avatar" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    membership = memberships(:member)
+    membership.destroy!
+    share = PublicBrewShare.create!(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      snapshot: {
+        "public_media" => [ { "attachment_id" => 999_999 } ]
+      }
+    )
+    recipient = share.brew.recipient_user
+    recipient.define_singleton_method(:avatar) { raise "avatar must not be read before authorization" }
+
+    assert_equal [], share.public_attachment_ids
+  end
+
+  test "multiple handle calculations reuse one recipient membership query but a fresh share sees revocation" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    avatar = attach_named_photo(users(:two), :avatar, filename: "petra.jpg")
+    snapshot = PublicBrewShareSnapshotBuilder.new(
+      brew:,
+      title: "Shared shot",
+      selected_photo_attachment_ids: []
+    ).call
+    share = PublicBrewShare.create!(
+      workspace: brew.workspace,
+      brew:,
+      created_by: users(:one),
+      updated_by: users(:one),
+      snapshot:
+    )
+    queries = []
+    callback = lambda do |_name, _started, _finished, _unique_id, payload|
+      queries << payload[:sql] if payload[:name] != "SCHEMA"
+    end
+
+    handles = ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      3.times.map { share.public_media_handle_for(avatar.id) }
+    end
+
+    assert handles.all?(&:present?)
+    assert_equal 1, queries.grep(/FROM "memberships"/i).size
+
+    memberships(:member).destroy!
+    assert_nil PublicBrewShare.find(share.id).public_media_handle_for(avatar.id)
+  end
+
   test "public media handles are opaque and resolve only for snapshot attachments" do
     brew = brews(:morning_espresso)
     photo = attach_photo(brew)
@@ -222,6 +303,7 @@ class PublicBrewShareTest < ActiveSupport::TestCase
       brew:,
       created_by: users(:one),
       updated_by: users(:one),
+      selected_photo_attachment_ids: [ photo.id ],
       snapshot: {
         "public_media" => [ { "attachment_id" => photo.id } ],
         "photos" => [ { "attachment_id" => photo.id } ]

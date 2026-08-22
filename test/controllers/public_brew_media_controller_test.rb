@@ -34,9 +34,9 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     selected = attach_photo(brew)
     unselected = attach_photo(brew)
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ selected.id ])
-    forged_share = PublicBrewShare.new(token: share.token, snapshot: { "public_media" => [ { "attachment_id" => unselected.id } ] })
+    forged_handle = share.send(:media_handle_for_attachment_id, unselected.id)
 
-    get public_brew_media_path(share.token, forged_share.public_media_handle_for(unselected.id))
+    get public_brew_media_path(share.token, forged_handle)
 
     assert_response :not_found
   end
@@ -67,6 +67,7 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     brew = brews(:morning_espresso)
     photo = attach_photo(brew)
     share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
+    path = public_media_path_for(share, photo)
     quick_drip = workspaces(:household).brews.create!(
       user: users(:one),
       method: "quick_drip",
@@ -78,7 +79,7 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     )
     share.update_columns(brew_id: quick_drip.id)
 
-    get public_media_path_for(share, photo)
+    get path
 
     assert_response :not_found
   end
@@ -135,6 +136,39 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     share.update!(password: "ristretto")
 
     get public_media_path_for(share, photo)
+    assert_response :not_found
+  end
+
+  test "recipient avatar handle is revoked immediately when workspace membership ends" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    avatar = attach_named_photo(users(:two), :avatar, filename: "petra.jpg")
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [])
+    path = public_media_path_for(share, avatar, variant: "thumbnail")
+
+    get path
+    assert_response :success
+
+    memberships(:member).destroy!
+
+    get path
+    assert_response :not_found
+  end
+
+  test "replacing a recipient avatar invalidates the old handle without exposing the new avatar before refresh" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    old_avatar = attach_named_photo(users(:two), :avatar, filename: "old-petra.jpg")
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [])
+    old_path = public_media_path_for(share, old_avatar, variant: "thumbnail")
+
+    new_avatar = attach_named_photo(users(:two), :avatar, filename: "new-petra.jpg")
+
+    get old_path
+    assert_response :not_found
+
+    forged_new_handle = share.send(:media_handle_for_attachment_id, new_avatar.id)
+    get public_brew_media_path(share.token, forged_new_handle, variant: "thumbnail")
     assert_response :not_found
   end
 

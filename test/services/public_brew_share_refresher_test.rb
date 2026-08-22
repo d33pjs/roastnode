@@ -82,6 +82,53 @@ class PublicBrewShareRefresherTest < ActiveSupport::TestCase
     assert_equal "Shared morning shot", share.snapshot.fetch("title")
   end
 
+  test "refresh replaces the public recipient projection after serving changes" do
+    brew = brews(:morning_espresso)
+    share = create_share_for(brew)
+    assert_equal({ "kind" => "self" }, share.snapshot.dig("brew", "recipient"))
+
+    users(:two).update!(display_name: "Petra")
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    PublicBrewShareRefresher.refresh_for(brew)
+
+    assert_equal(
+      { "kind" => "household_member", "display_label" => "Petra" },
+      share.reload.snapshot.dig("brew", "recipient")
+    )
+
+    brew.update!(recipient_kind: "guest", recipient_name: "Secret Anna")
+    PublicBrewShareRefresher.refresh_for(brew)
+
+    snapshot = share.reload.snapshot
+    assert_equal({ "kind" => "guest" }, snapshot.dig("brew", "recipient"))
+    assert_no_match(/Secret Anna|recipient_name|guest_name|served_for_guest/, snapshot.to_json)
+  end
+
+  test "refresh updates selected hero primaries and omits an unselected new primary" do
+    brew = brews(:morning_espresso)
+    first_bean = attach_photo(brew.bean)
+    second_bean = attach_photo(brew.bean)
+    first_brew = attach_photo(brew)
+    second_brew = attach_photo(brew)
+    brew.bean.set_primary_photo!(first_bean)
+    brew.set_primary_photo!(first_brew)
+    share = create_share_for(
+      brew,
+      selected_photo_attachment_ids: [ first_bean.id, second_bean.id, first_brew.id ]
+    )
+    assert_equal first_bean.id, share.snapshot.dig("hero", "bean_photo_attachment_id")
+    assert_equal first_brew.id, share.snapshot.dig("hero", "brew_photo_attachment_id")
+
+    brew.bean.set_primary_photo!(second_bean)
+    brew.set_primary_photo!(second_brew)
+    PublicBrewShareRefresher.refresh_for(brew)
+
+    hero = share.reload.snapshot.fetch("hero")
+    assert_equal second_bean.id, hero.fetch("bean_photo_attachment_id")
+    assert_not hero.key?("brew_photo_attachment_id")
+    assert_not_includes share.selected_photo_attachment_ids, second_brew.id
+  end
+
   private
     def create_share_for(brew, title: "Shared shot", selected_photo_attachment_ids: [])
       brew.create_public_brew_share!(

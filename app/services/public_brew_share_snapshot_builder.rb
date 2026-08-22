@@ -10,7 +10,11 @@ class PublicBrewShareSnapshotBuilder
       "title" => title.presence || default_title,
       "workspace" => workspace_payload,
       "user" => user_payload,
-      "brew" => brew_payload,
+      "brew" => brew_payload.merge("recipient" => PublicBrewRecipientProjection.new(brew:).call),
+      "hero" => {
+        "bean_photo_attachment_id" => selected_primary_attachment_id(brew.bean),
+        "brew_photo_attachment_id" => selected_primary_attachment_id(brew)
+      }.compact,
       "bean" => bean_payload,
       "equipment" => [ equipment_payload(brew.grinder, "grinder"), equipment_payload(brew.machine, "machine") ].compact,
       "tools" => tool_payloads,

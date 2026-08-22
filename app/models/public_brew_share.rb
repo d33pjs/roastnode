@@ -38,6 +38,7 @@ class PublicBrewShare < ApplicationRecord
   before_validation :set_token, on: :create
   before_validation :set_token_digest
   before_validation :set_workspace_from_brew
+  after_save :clear_public_attachment_authorization_cache
 
   validates :token, presence: true, uniqueness: true
   validates :token_digest, presence: true, uniqueness: true
@@ -74,11 +75,15 @@ class PublicBrewShare < ApplicationRecord
   end
 
   def public_attachment_ids
-    if snapshot.is_a?(Hash) && snapshot.key?("public_media")
-      collect_attachment_ids(snapshot["public_media"]).map(&:to_i).uniq
-    else
-      collect_attachment_ids(snapshot).map(&:to_i).uniq & allowed_public_attachment_ids
-    end
+    snapshot_payload = snapshot.is_a?(Hash) ? snapshot : {}
+    public_media_payload = snapshot_payload.key?("public_media") ? snapshot_payload["public_media"] : snapshot_payload
+
+    collect_attachment_ids(public_media_payload).map(&:to_i).uniq & allowed_public_attachment_ids
+  end
+
+  def reload(...)
+    clear_public_attachment_authorization_cache
+    super
   end
 
   def public_media_handle_for(attachment_id)
@@ -149,8 +154,27 @@ class PublicBrewShare < ApplicationRecord
     def public_identity_attachment_ids
       [
         workspace&.logo&.attachment&.id,
-        brew&.user&.avatar&.attachment&.id
+        brew&.user&.avatar&.attachment&.id,
+        current_recipient_avatar_attachment_id
       ].compact
+    end
+
+    def current_recipient_avatar_attachment_id
+      return @current_recipient_avatar_attachment_id if defined?(@current_recipient_avatar_attachment_id)
+
+      @current_recipient_avatar_attachment_id = if current_recipient_membership?
+        brew.recipient_user&.avatar&.attachment&.id
+      end
+    end
+
+    def current_recipient_membership?
+      brew&.recipient_household_member? &&
+        brew.recipient_user_id.present? &&
+        brew.workspace.memberships.exists?(user_id: brew.recipient_user_id)
+    end
+
+    def clear_public_attachment_authorization_cache
+      remove_instance_variable(:@current_recipient_avatar_attachment_id) if defined?(@current_recipient_avatar_attachment_id)
     end
 
     def selected_share_record_photo_attachment_ids

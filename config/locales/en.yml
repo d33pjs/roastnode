@@ -482,12 +482,14 @@ en:
       quick_drip: "Quick Drip"
     recipients:
       a_guest: "a guest"
+      a_household_member: "a household member"
       badge: "For %{recipient}"
       byline: "Logged by %{logger} for %{recipient}"
       former_member: "%{name} (former household member)"
       guest: "Guest"
       me: "me"
       myself: "Myself"
+      someone: "someone"
       themself: "themself"
     native_share:
       text: "Shared brew: %{title}"

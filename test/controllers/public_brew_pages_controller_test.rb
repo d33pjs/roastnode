@@ -142,7 +142,7 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_no_match "/media_attachments", response.body
   end
 
-  test "public hero mirrors private card metrics without in-card identity clutter" do
+  test "public hero mirrors private metrics with the shared backdrop and recipient byline" do
     share = create_share(enabled: true)
 
     get public_brew_page_path(share.token)
@@ -162,9 +162,16 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-balance]"
     assert_select "[data-testid=public-brew-retention]", count: 0
     assert_select "[data-testid=public-brew-card-workspace]", count: 0
-    assert_select "[data-testid=public-brew-card-byline]", count: 0
     assert_select "[data-testid=public-brew-hero-card]", text: /Espresso/, count: 0
-    assert_select "[data-testid=public-brew-hero-card] img[data-testid=public-brew-card-bean-photo]", count: 0
+    assert_select "[data-testid=public-brew-hero-upper] [data-testid=brew-hero-backdrop][aria-hidden=true]"
+    assert_select "[data-testid=public-brew-hero-overlay] [data-testid=public-brew-recipient-byline]",
+      text: I18n.t(
+        "brews.recipients.byline",
+        logger: share.snapshot.dig("user", "display_label"),
+        recipient: I18n.t("brews.recipients.themself")
+      )
+    assert_select "[data-testid=brew-hero-bean-image]", count: 0
+    assert_select "[data-testid=brew-hero-brew-image]", count: 0
     assert_select "a[data-testid=public-brew-bean-anchor][href='##{public_bean_anchor_for(share)}']", text: /Good Coffee/
     assert_select "a[data-testid=public-brew-bean-anchor][href='##{public_bean_anchor_for(share)}']", text: /House Blend/
     assert_select "[data-testid=public-brew-identity-strip]"
@@ -184,6 +191,99 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-first-drip-label]", text: /8s/
     assert_select "[data-testid=public-brew-total-time-label]", text: /28s/
     assert_select "[data-testid=public-brew-temperature-label]", text: /93/
+    assert_select "[data-testid=public-brew-hero-upper] [data-testid=public-brew-chart-grid]", count: 0
+    assert_select "[data-testid=public-brew-hero-upper] [data-testid=public-brew-gear-footer]", count: 0
+  end
+
+  test "public hero renders all selected primary image states through opaque hero handles" do
+    brew = brews(:morning_espresso)
+    bean_primary = attach_photo(brew.bean)
+    bean_non_primary = attach_photo(brew.bean)
+    brew_primary = attach_photo(brew)
+    brew_non_primary = attach_photo(brew)
+    brew.bean.set_primary_photo!(bean_primary)
+    brew.set_primary_photo!(brew_primary)
+    share = create_share(enabled: true)
+    cases = {
+      both: [ [ bean_primary.id, brew_primary.id ], true, true, true ],
+      bean_only: [ [ bean_primary.id ], true, false, false ],
+      brew_only: [ [ brew_primary.id ], false, true, false ],
+      neither: [ [], false, false, false ],
+      selected_non_primary: [ [ bean_non_primary.id, brew_non_primary.id ], false, false, false ]
+    }
+
+    cases.each do |name, (selected_ids, bean_visible, brew_visible, blend_visible)|
+      snapshot = PublicBrewShareSnapshotBuilder.new(
+        brew:,
+        title: share.title,
+        selected_photo_attachment_ids: selected_ids
+      ).call
+      share.update!(selected_photo_attachment_ids: selected_ids, snapshot:)
+
+      get public_brew_page_path(share.token)
+
+      assert_response :success, name.to_s
+      assert_select "[data-testid=public-brew-hero-upper] [data-testid=brew-hero-backdrop]", 1
+      assert_select "[data-testid=brew-hero-bean-half]", 1
+      assert_select "[data-testid=brew-hero-brew-half]", 1
+      assert_select "img[data-testid=brew-hero-bean-image][alt=''].object-contain", count: bean_visible ? 1 : 0
+      assert_select "img[data-testid=brew-hero-brew-image][alt=''].object-cover", count: brew_visible ? 1 : 0
+      assert_select "[data-testid=brew-hero-center-blend]", count: blend_visible ? 1 : 0
+      if bean_visible || brew_visible
+        assert_select "[data-testid=brew-hero-bean-image], [data-testid=brew-hero-brew-image]" do |images|
+          images.each do |image|
+            assert_match %r{\A/s/#{Regexp.escape(share.token)}/media/[0-9a-f]{32}\?variant=hero\z}, image["src"]
+          end
+        end
+      else
+        assert_select "[data-testid=brew-hero-bean-image], [data-testid=brew-hero-brew-image]", count: 0
+      end
+      [ bean_primary, bean_non_primary, brew_primary, brew_non_primary ].each do |attachment|
+        assert_no_match %r{/media_attachments/#{attachment.id}(?:[/?"']|$)}, response.body
+        assert_no_match(/attachment_id=#{attachment.id}(?:[&"']|$)/, response.body)
+        assert_no_match(/data-attachment-id=["']#{attachment.id}["']/, response.body)
+      end
+      assert_no_match %r{/media_attachments/|/rails/active_storage}, response.body
+      assert_no_match(/photo\.jpg|signed_id|X-Amz-Signature/, response.body)
+    end
+  end
+
+  test "public hero renders a decorative logger and current household recipient avatar pair" do
+    brew = brews(:morning_espresso)
+    users(:one).update!(display_name: "Jens")
+    users(:two).update!(display_name: "Petra")
+    logger_avatar = attach_named_photo(users(:one), :avatar, filename: "jens-private.jpg")
+    recipient_avatar = attach_named_photo(users(:two), :avatar, filename: "petra-private.jpg")
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    share = create_share(enabled: true)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-recipient-byline]", text: "Logged by Jens for Petra"
+    assert_select "img[data-testid=public-brew-logger-avatar][alt='']", 1 do |images|
+      assert_match %r{\A/s/#{Regexp.escape(share.token)}/media/[0-9a-f]{32}\?variant=thumbnail\z}, images.first["src"]
+    end
+    assert_select "img[data-testid=public-brew-recipient-avatar][alt='']", 1 do |images|
+      assert_match %r{\A/s/#{Regexp.escape(share.token)}/media/[0-9a-f]{32}\?variant=thumbnail\z}, images.first["src"]
+    end
+    [ logger_avatar, recipient_avatar ].each do |attachment|
+      assert_no_match %r{/media/#{attachment.id}(?:[?"']|$)}, response.body
+    end
+    assert_no_match(/one@example\.com|two@example\.com|jens-private\.jpg|petra-private\.jpg|recipient_name|guest_name|served_for_guest|cup_style/, response.body)
+  end
+
+  test "public guest byline never renders its private name or email" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Secret Anna", cup_style: "Secret Cup")
+    share = create_share(enabled: true)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-recipient-byline]", text: /for a guest/
+    assert_no_match(/Secret Anna|Secret Cup|recipient_name|guest_name|served_for_guest|cup_style|one@example\.com/, response.body)
+    assert_select "[data-testid=public-brew-recipient-avatar]", count: 0
   end
 
   test "public hero omits optional timing markers when snapshot values are absent" do
@@ -363,6 +463,36 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-page]"
     assert_select "body", text: /Sparse share/
     assert_select "body", text: /#{I18n.t("public_brew_pages.show.unknown")}/
+    assert_select "[data-testid=public-brew-recipient-byline]", text: "Logged by #{I18n.t('public_brew_pages.show.unknown')} for someone"
+    assert_select "[data-testid=public-brew-recipient-byline]", text: /for themself/, count: 0
+  end
+
+  test "malformed recipient payloads fail closed to someone" do
+    share = create_share(enabled: true)
+
+    [ nil, "household_member", [], { "kind" => "unsupported" } ].each do |malformed_recipient|
+      snapshot = share.snapshot.deep_dup
+      snapshot["brew"]["recipient"] = malformed_recipient
+      share.update!(snapshot:)
+
+      get public_brew_page_path(share.token)
+
+      assert_response :success
+      assert_select "[data-testid=public-brew-recipient-byline]", text: /for someone/
+      assert_select "[data-testid=public-brew-recipient-avatar]", count: 0
+    end
+  end
+
+  test "household recipient without a safe label uses the anonymous household fallback" do
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["brew"]["recipient"] = { "kind" => "household_member", "display_label" => "" }
+    share.update!(snapshot:)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-brew-recipient-byline]", text: /for a household member/
   end
 
   test "stale legacy media references render without public page failure" do

@@ -21,8 +21,8 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     brew.update!(
       public_note: "Public brew story.",
       notes: "Private brew note.",
-      served_for_guest: true,
-      guest_name: "Anna",
+      recipient_kind: "guest",
+      recipient_name: "Anna",
       cup_style: "Latte"
     )
     brew.bean.update!(public_note: "Public bean note.", notes: "Private bean note.", purchase_source: "Private cellar source.")
@@ -96,7 +96,64 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_no_internal_ids(snapshot)
   end
 
+  test "projects exact public recipient payloads" do
+    brew = brews(:morning_espresso)
+
+    assert_equal({ "kind" => "self" }, build_snapshot(brew).dig("brew", "recipient"))
+
+    avatar = attach_named_photo(users(:two), :avatar, filename: "petra-private.jpg")
+    users(:two).update!(display_name: "Petra")
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    assert_equal(
+      {
+        "kind" => "household_member",
+        "display_label" => "Petra",
+        "avatar_attachment_id" => avatar.id
+      },
+      build_snapshot(brew).dig("brew", "recipient")
+    )
+
+    brew.update!(recipient_kind: "guest", recipient_name: "Secret Anna")
+    snapshot = build_snapshot(brew)
+    assert_equal({ "kind" => "guest" }, snapshot.dig("brew", "recipient"))
+    assert_no_match(/Secret Anna|recipient_name|guest_name|served_for_guest|two@example\.com|petra-private\.jpg/, snapshot.to_json)
+  end
+
+  test "hero references include only selected current bean and brew primaries" do
+    brew = brews(:morning_espresso)
+    bean_primary = attach_photo(brew.bean)
+    bean_non_primary = attach_photo(brew.bean)
+    brew_primary = attach_photo(brew)
+    brew_non_primary = attach_photo(brew)
+    brew.bean.set_primary_photo!(bean_primary)
+    brew.set_primary_photo!(brew_primary)
+
+    cases = {
+      both: [ [ bean_primary.id, brew_primary.id ], {
+        "bean_photo_attachment_id" => bean_primary.id,
+        "brew_photo_attachment_id" => brew_primary.id
+      } ],
+      bean_only: [ [ bean_primary.id ], { "bean_photo_attachment_id" => bean_primary.id } ],
+      brew_only: [ [ brew_primary.id ], { "brew_photo_attachment_id" => brew_primary.id } ],
+      neither: [ [], {} ],
+      selected_non_primary: [ [ bean_non_primary.id, brew_non_primary.id ], {} ]
+    }
+
+    cases.each do |name, (selected_ids, expected)|
+      snapshot = build_snapshot(brew, selected_photo_attachment_ids: selected_ids)
+      assert_equal expected, snapshot.fetch("hero"), name.to_s
+    end
+  end
+
   private
+    def build_snapshot(brew, selected_photo_attachment_ids: [])
+      PublicBrewShareSnapshotBuilder.new(
+        brew:,
+        title: "Shared shot",
+        selected_photo_attachment_ids:
+      ).call
+    end
+
     def assert_no_internal_ids(value)
       case value
       when Hash

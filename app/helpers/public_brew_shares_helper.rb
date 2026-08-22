@@ -114,6 +114,27 @@ module PublicBrewSharesHelper
     link["label"].presence || t("public_brew_pages.show.#{link["kind"]}", default: t("public_brew_pages.show.info"))
   end
 
+  def public_brew_recipient_byline(logger, recipient)
+    logger = logger.is_a?(Hash) ? logger : {}
+    recipient = recipient.is_a?(Hash) ? recipient : {}
+    target = case recipient["kind"]
+    when "self"
+      t("brews.recipients.themself")
+    when "household_member"
+      recipient["display_label"].presence || t("brews.recipients.a_household_member")
+    when "guest"
+      t("brews.recipients.a_guest")
+    else
+      t("brews.recipients.someone")
+    end
+
+    t(
+      "brews.recipients.byline",
+      logger: logger["display_label"].presence || t("public_brew_pages.show.unknown"),
+      recipient: target
+    )
+  end
+
   private
     def public_snapshot_decimal(value, precision: 1)
       number_with_precision(
