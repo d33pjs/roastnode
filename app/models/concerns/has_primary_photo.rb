@@ -8,7 +8,8 @@ module HasPrimaryPhoto
 
   def primary_photo_attachment
     stored_primary = primary_photo_record
-    return stored_primary if stored_primary&.record == self && stored_primary.name == "photos"
+    return stored_primary if stored_primary&.record_type == self.class.base_class.name &&
+      stored_primary.record_id == id && stored_primary.name == "photos"
 
     return photos_attachments.min_by(&:id) if association(:photos_attachments).loaded?
 
