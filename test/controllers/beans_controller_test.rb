@@ -939,6 +939,225 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-cost-per-shot]", text: /0[,.]90/
   end
 
+  test "writer sees focused bean rating correction" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=bean-rating-correction]"
+    assert_select "form[action=?][method=post]", rating_bean_path(bean)
+    assert_select "input[name=_method][value=patch]"
+    assert_select "[data-testid=bean-rating-correction] fieldset" do
+      assert_select "legend", text: I18n.t("beans.form.rating")
+      assert_select "input[type=radio][name=?]", "bean[rating]", count: 6
+    end
+    assert_select "[data-testid=bean-rating-correction] input[type=radio][value=?][checked]",
+      bean.rating.to_s
+    assert_select "input[type=submit][value=?]", I18n.t("beans.show.save_rating")
+  end
+
+  test "focused rating updates only rating emits activity and refreshes direct public snapshots" do
+    user = users(:one)
+    sign_in_as(user)
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    public_brew_share = create_public_brew_share_for(brew)
+    public_bean_share = bean.create_public_bean_share!(
+      workspace: bean.workspace,
+      created_by: user,
+      updated_by: user,
+      enabled: true,
+      title: "Rating refresh",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBeanShareSnapshotBuilder.new(
+        bean:,
+        title: "Rating refresh",
+        selected_photo_attachment_ids: []
+      ).call
+    )
+    original = {
+      remaining_grams: bean.remaining_grams,
+      opened_on: bean.opened_on,
+      purchase_price_cents: bean.purchase_price_cents,
+      notes: bean.notes,
+      workspace_id: bean.workspace_id
+    }
+    original_comparisons = public_bean_share.snapshot.fetch("comparisons").deep_dup
+    bean_generated_at = public_bean_share.snapshot.fetch("generated_at")
+    brew_generated_at = public_brew_share.snapshot.fetch("generated_at")
+
+    event = nil
+    travel_to(Time.current + 1.minute) do
+      event = assert_activity_event(
+        action: "bean.updated", workspace: bean.workspace, actor: user, subject: bean
+      ) do
+        patch rating_bean_path(bean), params: {
+          bean: {
+            rating: "5",
+            bag_status: "archived",
+            remaining_grams: "1",
+            opened_on: "2020-01-01",
+            purchase_price: "999",
+            notes: "Ignored private note",
+            workspace_id: workspaces(:other_household).id
+          }
+        }
+      end
+    end
+
+    assert_redirected_to bean_path(bean)
+    bean.reload
+    assert_equal 5, bean.rating
+    original.each { |attribute, value| assert_equal value, bean.public_send(attribute) }
+
+    assert_equal bean.workspace, event.workspace
+    assert_equal "beans_inventory", event.category
+    assert_equal "workspace", event.visibility
+    assert_operator public_bean_share.reload.snapshot.fetch("generated_at"), :>, bean_generated_at
+    assert_operator public_brew_share.reload.snapshot.fetch("generated_at"), :>, brew_generated_at
+    assert_equal original_comparisons, public_bean_share.snapshot.fetch("comparisons")
+  end
+
+  test "writer can clear focused bean rating" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+
+    assert_activity_event(
+      action: "bean.updated", workspace: bean.workspace, actor: users(:one), subject: bean
+    ) do
+      patch rating_bean_path(bean), params: { bean: { rating: "" } }
+    end
+
+    assert_redirected_to bean_path(bean)
+    assert_nil bean.reload.rating
+  end
+
+  test "member can update focused bean rating" do
+    member = users(:two)
+    member.update!(active_workspace: workspaces(:household))
+    sign_in_as(member)
+    bean = beans(:open_household)
+
+    assert_activity_event(
+      action: "bean.updated", workspace: bean.workspace, actor: member, subject: bean
+    ) do
+      patch rating_bean_path(bean), params: { bean: { rating: "3" } }
+    end
+
+    assert_redirected_to bean_path(bean)
+    assert_equal 3, bean.reload.rating
+  end
+
+  test "invalid focused rating rolls back without activity" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    original_rating = bean.rating
+
+    assert_no_difference -> { ActivityEvent.count } do
+      patch rating_bean_path(bean), params: { bean: { rating: "6" } }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[data-testid=bean-rating-correction]"
+    assert_select "[data-testid=bean-rating-correction]", text: /must be in 1\.\.5/
+    assert_equal original_rating, bean.reload.rating
+  end
+
+  test "activity failure rolls back the focused rating" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    brew_share = create_public_brew_share_for(brews(:morning_espresso))
+    bean_share = bean.create_public_bean_share!(
+      workspace: bean.workspace,
+      created_by: users(:one),
+      updated_by: users(:one),
+      enabled: true,
+      title: "Emitter rollback",
+      selected_photo_attachment_ids: [],
+      snapshot: PublicBeanShareSnapshotBuilder.new(
+        bean:, title: "Emitter rollback", selected_photo_attachment_ids: []
+      ).call
+    )
+    original_rating = bean.rating
+    original_brew_snapshot = brew_share.snapshot.deep_dup
+    original_bean_snapshot = bean_share.snapshot.deep_dup
+    emitter_failure = lambda do |**|
+      raise ActiveRecord::RecordInvalid.new(ActivityEvent.new)
+    end
+
+    travel_to(Time.current + 1.minute) do
+      assert_no_difference -> { ActivityEvent.count } do
+        with_stubbed_singleton_method(Activity::Emitter, :record!, emitter_failure) do
+          patch rating_bean_path(bean), params: { bean: { rating: "5" } }
+        end
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal original_rating, bean.reload.rating
+    assert_equal original_brew_snapshot, brew_share.reload.snapshot
+    assert_equal original_bean_snapshot, bean_share.reload.snapshot
+    assert_select "[data-testid=bean-rating-correction] input[type=radio][value=?][checked]",
+      original_rating.to_s
+  end
+
+  test "public snapshot refresh failure rolls back rating snapshots and activity" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    share = create_public_brew_share_for(brews(:morning_espresso))
+    original_rating = bean.rating
+    original_snapshot = share.snapshot.deep_dup
+    refresh_failure = lambda do |*|
+      raise ActiveRecord::RecordInvalid.new(PublicBeanShare.new)
+    end
+
+    assert_no_difference -> { ActivityEvent.count } do
+      with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_for, refresh_failure) do
+        patch rating_bean_path(bean), params: { bean: { rating: "5" } }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal original_rating, bean.reload.rating
+    assert_equal original_snapshot, share.reload.snapshot
+    assert_select "[data-testid=bean-rating-correction] input[type=radio][value=?][checked]",
+      original_rating.to_s
+  end
+
+  test "viewer cannot see or submit focused bean rating" do
+    memberships(:member).update!(role: "viewer")
+    viewer = users(:two)
+    viewer.update!(active_workspace: workspaces(:household))
+    sign_in_as(viewer)
+    bean = beans(:open_household)
+
+    get bean_path(bean)
+    assert_response :success
+    assert_select "[data-testid=bean-rating-correction]", count: 0
+
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_changes -> { bean.reload.rating } do
+        patch rating_bean_path(bean), params: { bean: { rating: "5" } }
+      end
+    end
+    assert_redirected_to root_path
+  end
+
+  test "focused rating is scoped to active workspace" do
+    sign_in_as(users(:one))
+    foreign = beans(:other_workspace_open)
+
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_changes -> { foreign.reload.rating } do
+        patch rating_bean_path(foreign), params: { bean: { rating: "5" } }
+      end
+    end
+
+    assert_response :not_found
+  end
+
   test "show falls back to legacy origin after structured origin fields" do
     sign_in_as(users(:one))
     bean = beans(:second_open_household)

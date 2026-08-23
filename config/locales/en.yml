@@ -363,7 +363,10 @@ en:
       title: "Add bean"
     reopen:
       reopened: "Bean bag reopened."
+    rating:
+      updated: "Bean rating updated."
     show:
+      adjust_rating: "Adjust rating"
       back: "Back to beans"
       analytics: "Bean analytics"
       apply_filters: "Apply"
@@ -440,6 +443,7 @@ en:
       purchase_url: "Website"
       purchased_on: "Buy date"
       rating: "Rating"
+      save_rating: "Save rating"
       recent_brews: "Recent brews"
       remaining: "Remaining"
       remaining_bag_context: "from %{total} bag size"

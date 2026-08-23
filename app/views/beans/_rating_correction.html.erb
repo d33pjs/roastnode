@@ -1,0 +1,21 @@
+<section data-testid="bean-rating-correction" class="mt-6 rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("beans.show.adjust_rating") %></h2>
+  <%= form_with model: bean,
+    url: rating_bean_path(bean),
+    method: :patch,
+    class: "mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end" do |form| %>
+    <% if bean.errors.any? %>
+      <div class="rounded-2xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 sm:col-span-2">
+        <%= bean.errors.full_messages.to_sentence %>
+      </div>
+    <% end %>
+
+    <fieldset>
+      <legend class="block text-sm font-extrabold text-rn-muted"><%= t("beans.form.rating") %></legend>
+      <%= render "beans/rating_choices", form: form %>
+    </fieldset>
+
+    <%= form.submit t("beans.show.save_rating"),
+      class: "rounded-2xl bg-[var(--rn-coffee)] px-5 py-3 text-sm font-extrabold text-[#fff8e8] shadow-lg hover:opacity-90" %>
+  <% end %>
+</section>

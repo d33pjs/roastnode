@@ -55,6 +55,7 @@ Rails.application.routes.draw do
     patch :close, on: :member
     patch :open_bag, on: :member
     patch :reopen, on: :member
+    patch :rating, on: :member
     post :duplicate, on: :member
     resources :inventory_adjustments, only: %i[new create]
     resource :public_bean_share, only: %i[new create edit update destroy]

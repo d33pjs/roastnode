@@ -6,8 +6,8 @@ class BeansController < ApplicationController
     { key: "archived", statuses: %w[archived] }
   ].freeze
 
-  before_action :authorize_workspace_write!, only: %i[new create edit update finish close open_bag reopen duplicate destroy roaster_suggestions]
-  before_action :set_bean, only: %i[show edit update finish close open_bag reopen duplicate destroy]
+  before_action :authorize_workspace_write!, only: %i[new create edit update rating finish close open_bag reopen duplicate destroy roaster_suggestions]
+  before_action :set_bean, only: %i[show edit update rating finish close open_bag reopen duplicate destroy]
 
   def index
     @beans = current_workspace.beans
@@ -20,9 +20,7 @@ class BeansController < ApplicationController
   end
 
   def show
-    @bean_statistics = BeanStatistics.new(bean: @bean).call
-    @grinder_tendency_first_brew = @bean.brews.espresso.includes(:grinder).order(:occurred_at, :created_at).first
-    @grinder_setting_suggestions = load_grinder_setting_suggestions
+    prepare_show
   end
 
   def new
@@ -90,6 +88,22 @@ class BeansController < ApplicationController
       prepare_record_links(@bean)
       render :edit, status: :unprocessable_entity
     end
+  end
+
+  def rating
+    normalized_rating = rating_bean_params[:rating].presence
+
+    with_workspace_activity(action: "bean.updated", subject: @bean) do
+      @bean.update!(rating: normalized_rating)
+      refresh_public_shares_for(@bean)
+      true
+    end
+
+    redirect_to @bean, notice: t(".updated")
+  rescue ActiveRecord::RecordInvalid => error
+    @bean.reload unless error.record.equal?(@bean)
+    prepare_show
+    render :show, status: :unprocessable_entity
   end
 
   def close
@@ -165,6 +179,19 @@ class BeansController < ApplicationController
 
     def set_bean
       @bean = current_workspace.beans.find(params[:id])
+    end
+
+    def rating_bean_params
+      params.expect(bean: [ :rating ])
+    end
+
+    def prepare_show
+      @bean_statistics = BeanStatistics.new(bean: @bean).call
+      @grinder_tendency_first_brew = @bean.brews.espresso
+        .includes(:grinder)
+        .order(:occurred_at, :created_at)
+        .first
+      @grinder_setting_suggestions = load_grinder_setting_suggestions
     end
 
     def load_grinder_setting_suggestions
