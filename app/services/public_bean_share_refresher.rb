@@ -33,7 +33,13 @@ class PublicBeanShareRefresher
       when Workspace
         PublicBeanShare.where(workspace_id: record.id)
       when User
-        PublicBeanShare.joins(bean: :brews).where(brews: { user_id: record.id }).distinct
+        PublicBeanShare
+          .joins(bean: :brews)
+          .where(
+            "brews.user_id = :user_id OR brews.recipient_user_id = :user_id",
+            user_id: record.id
+          )
+          .distinct
       when RecordLink
         record.linkable ? shares_for(record.linkable) : PublicBeanShare.none
       else

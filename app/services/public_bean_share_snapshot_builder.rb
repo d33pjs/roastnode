@@ -3,7 +3,15 @@ class PublicBeanShareSnapshotBuilder
     @bean = bean
     @title = title
     @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i).uniq
-    @brews = bean.brews.includes(:user, :recipient_user, :grinder, :machine, :brewer, :public_brew_share).order(occurred_at: :desc, created_at: :desc).to_a
+    @brews = bean.brews.includes(
+      :workspace,
+      :recipient_user,
+      :grinder,
+      :machine,
+      :brewer,
+      :public_brew_share,
+      user: { avatar_attachment: :blob }
+    ).order(occurred_at: :desc, created_at: :desc).to_a
   end
 
   def call
@@ -19,7 +27,7 @@ class PublicBeanShareSnapshotBuilder
       "brews" => brew_payloads,
       "generated_at" => time_string(Time.current)
     }
-    payload["public_media"] = public_media_payloads
+    payload["public_media"] = public_media_payloads(payload)
     payload
   end
 
@@ -103,7 +111,8 @@ class PublicBeanShareSnapshotBuilder
             "occurred_at" => time_string(brew.occurred_at),
             "method" => brew.method,
             "rating" => brew.rating,
-            "user" => user_payload(brew.user)
+            "user" => user_payload(brew.user),
+            "recipient" => recipient_payload(brew)
           }
         end
       }
@@ -133,6 +142,7 @@ class PublicBeanShareSnapshotBuilder
         "taste_balance" => brew.taste_balance,
         "rating" => brew.rating,
         "user" => user_payload(brew.user),
+        "recipient" => recipient_payload(brew),
         "equipment" => equipment_payloads(brew)
       }
       if (public_share = public_brew_share_payload(brew)).present?
@@ -179,6 +189,11 @@ class PublicBeanShareSnapshotBuilder
       }
     end
 
+    def recipient_payload(brew)
+      @recipient_payloads ||= {}
+      @recipient_payloads[brew.id] ||= PublicBrewRecipientProjection.new(brew:).call
+    end
+
     def public_brew_share_payload(brew)
       share = brew.public_brew_share
       return unless brew.espresso? && share&.enabled?
@@ -218,16 +233,21 @@ class PublicBeanShareSnapshotBuilder
       end
     end
 
-    def public_media_payloads
-      public_media_attachment_ids.map { |attachment_id| { "attachment_id" => attachment_id } }
+    def public_media_payloads(payload)
+      collect_attachment_ids(payload).map { |attachment_id| { "attachment_id" => attachment_id } }.uniq
     end
 
-    def public_media_attachment_ids
-      [
-        attachment_id(bean.workspace.logo.attachment),
-        selected_bean_photo_attachment_ids,
-        brews.map { |brew| attachment_id(brew.user.avatar.attachment) }
-      ].flatten.compact.uniq
+    def collect_attachment_ids(value)
+      case value
+      when Hash
+        value.flat_map do |key, nested|
+          key.to_s.end_with?("attachment_id") && nested.present? ? [ nested.to_i ] : collect_attachment_ids(nested)
+        end
+      when Array
+        value.flat_map { |nested| collect_attachment_ids(nested) }
+      else
+        []
+      end
     end
 
     def selected_bean_photo_attachment_ids

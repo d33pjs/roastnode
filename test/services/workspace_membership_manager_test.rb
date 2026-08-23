@@ -1,6 +1,8 @@
 require "test_helper"
 
 class WorkspaceMembershipManagerTest < ActiveSupport::TestCase
+  include PhotoTestHelper
+
   test "owner can change non owner role" do
     manager = WorkspaceMembershipManager.new(workspace: workspaces(:household), actor_membership: memberships(:owner))
 
@@ -78,4 +80,88 @@ class WorkspaceMembershipManagerTest < ActiveSupport::TestCase
     assert_nil user.reload.active_workspace
     assert_not Membership.exists?(memberships(:member).id)
   end
+
+  test "removing a member refreshes public recipient snapshots before recording activity" do
+    workspace = workspaces(:household)
+    recipient = users(:two)
+    recipient.update!(active_workspace: workspace, display_name: "Petra")
+    avatar = attach_named_photo(recipient, :avatar, filename: "private-petra.jpg")
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: recipient)
+    brew_share = create_public_brew_share(brew)
+    bean_share = create_public_bean_share(brew.bean)
+    manager = WorkspaceMembershipManager.new(workspace:, actor_membership: memberships(:owner))
+
+    assert_activity_event(action: "membership.removed", workspace:, actor: users(:one)) do
+      manager.remove(memberships(:member))
+    end
+
+    expected_recipient = { "kind" => "household_member", "display_label" => "Petra" }
+    assert_equal expected_recipient, brew_share.reload.snapshot.dig("brew", "recipient")
+    assert_equal expected_recipient, bean_share.reload.snapshot.fetch("brews").first.fetch("recipient")
+    assert_not_includes brew_share.snapshot.fetch("public_media").pluck("attachment_id"), avatar.id
+    assert_not_includes bean_share.snapshot.fetch("public_media").pluck("attachment_id"), avatar.id
+    assert_nil recipient.reload.active_workspace
+    assert_not Membership.exists?(memberships(:member).id)
+  end
+
+  test "recipient snapshot refresh failure rolls membership active workspace snapshots and activity back" do
+    workspace = workspaces(:household)
+    recipient = users(:two)
+    recipient.update!(active_workspace: workspace, display_name: "Petra")
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: recipient)
+    brew_share = create_public_brew_share(brew)
+    bean_share = create_public_bean_share(brew.bean)
+    original_brew_snapshot = brew_share.snapshot.deep_dup
+    original_bean_snapshot = bean_share.snapshot.deep_dup
+    original_activity_count = ActivityEvent.count
+    manager = WorkspaceMembershipManager.new(workspace:, actor_membership: memberships(:owner))
+
+    error = assert_raises(RuntimeError) do
+      with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_for, ->(_record) { raise "refresh failed" }) do
+        manager.remove(memberships(:member))
+      end
+    end
+
+    assert_equal "refresh failed", error.message
+    assert Membership.exists?(memberships(:member).id)
+    assert_equal workspace, recipient.reload.active_workspace
+    assert_equal original_brew_snapshot, brew_share.reload.snapshot
+    assert_equal original_bean_snapshot, bean_share.reload.snapshot
+    assert_equal original_activity_count, ActivityEvent.count
+  end
+
+  private
+    def create_public_brew_share(brew)
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared shot",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:,
+          title: "Shared shot",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
+
+    def create_public_bean_share(bean)
+      bean.create_public_bean_share!(
+        workspace: bean.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared bean",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title: "Shared bean",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
 end

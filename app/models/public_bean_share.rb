@@ -16,6 +16,7 @@ class PublicBeanShare < ApplicationRecord
   before_validation :set_token, on: :create
   before_validation :set_token_digest
   before_validation :set_workspace_from_bean
+  after_save :clear_public_attachment_authorization_cache
 
   validates :token, presence: true, uniqueness: true
   validates :token_digest, presence: true, uniqueness: true
@@ -73,6 +74,11 @@ class PublicBeanShare < ApplicationRecord
     public_media_payload = snapshot_payload.key?("public_media") ? snapshot_payload["public_media"] : snapshot_payload
 
     collect_attachment_ids(public_media_payload).map(&:to_i).uniq & allowed_public_attachment_ids
+  end
+
+  def reload(...)
+    clear_public_attachment_authorization_cache
+    super
   end
 
   def public_media_handle_for(attachment_id)
@@ -139,20 +145,45 @@ class PublicBeanShare < ApplicationRecord
     end
 
     def allowed_public_attachment_ids
-      public_identity_attachment_ids + valid_selected_photo_attachment_ids
+      return @allowed_public_attachment_ids if defined?(@allowed_public_attachment_ids)
+
+      @allowed_public_attachment_ids = public_identity_attachment_ids + valid_selected_photo_attachment_ids
     end
 
     def public_identity_attachment_ids
       [
         workspace&.logo&.attachment&.id,
-        bean_brew_user_avatar_attachment_ids
+        bean_brew_user_avatar_attachment_ids,
+        current_recipient_avatar_attachment_ids
       ].flatten.compact
     end
 
     def bean_brew_user_avatar_attachment_ids
       return [] unless bean
 
-      bean.brews.includes(:user).filter_map { |brew| brew.user.avatar.attachment&.id }
+      bean.brews.includes(user: { avatar_attachment: :blob }).filter_map { |brew| brew.user.avatar.attachment&.id }
+    end
+
+    def current_recipient_avatar_attachment_ids
+      User.where(id: current_recipient_user_ids)
+        .includes(avatar_attachment: :blob)
+        .filter_map { |user| user.avatar.attachment&.id }
+    end
+
+    def current_recipient_user_ids
+      return @current_recipient_user_ids if defined?(@current_recipient_user_ids)
+
+      candidate_ids = bean&.brews
+        &.where(recipient_kind: "household_member")
+        &.where.not(recipient_user_id: nil)
+        &.distinct
+        &.pluck(:recipient_user_id) || []
+      @current_recipient_user_ids = workspace&.memberships&.where(user_id: candidate_ids)&.pluck(:user_id) || []
+    end
+
+    def clear_public_attachment_authorization_cache
+      remove_instance_variable(:@allowed_public_attachment_ids) if defined?(@allowed_public_attachment_ids)
+      remove_instance_variable(:@current_recipient_user_ids) if defined?(@current_recipient_user_ids)
     end
 
     def collect_attachment_ids(value)

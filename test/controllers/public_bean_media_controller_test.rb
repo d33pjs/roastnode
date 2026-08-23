@@ -72,6 +72,39 @@ class PublicBeanMediaControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "recipient avatar handle is revoked immediately when membership ends" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:, recipient_kind: "household_member", recipient_user: users(:two))
+    avatar = attach_named_photo(users(:two), :avatar, filename: "petra-private.jpg")
+    share = create_share(bean:, selected_photo_attachment_ids: [])
+    handle = share.public_media_handle_for(avatar.id)
+
+    get public_bean_media_path(share.token, handle, variant: "thumbnail")
+    assert_response :success
+
+    memberships(:member).destroy!
+    get public_bean_media_path(share.token, handle, variant: "thumbnail")
+    assert_response :not_found
+  end
+
+  test "avatar replacement rejects old and unmanifested new recipient handles" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:, recipient_kind: "household_member", recipient_user: users(:two))
+    old_avatar = attach_named_photo(users(:two), :avatar, filename: "old-private.jpg")
+    share = create_share(bean:, selected_photo_attachment_ids: [])
+    old_handle = share.public_media_handle_for(old_avatar.id)
+
+    new_avatar = attach_named_photo(users(:two), :avatar, filename: "new-private.jpg")
+    new_handle = public_bean_media_handle_for(share, new_avatar.id)
+
+    get public_bean_media_path(share.token, old_handle, variant: "thumbnail")
+    assert_response :not_found
+    get public_bean_media_path(share.token, new_handle, variant: "thumbnail")
+    assert_response :not_found
+  end
+
   test "rejects media for disabled share" do
     bean = beans(:open_household)
     photo = attach_photo(bean)

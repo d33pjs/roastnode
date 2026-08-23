@@ -160,6 +160,37 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
     assert_includes snapshot.fetch("public_media").map { |row| row["attachment_id"] }, user.reload.avatar.attachment.id
   end
 
+  test "recipient-only profile identity updates refresh public brew and bean snapshots" do
+    recipient = users(:one)
+    logger = users(:two)
+    brew = brews(:morning_espresso)
+    brew.update!(user: logger, recipient_kind: "household_member", recipient_user: recipient)
+    brew_share = create_public_brew_share_for(brew)
+    bean_share = create_public_bean_share_for(brew.bean)
+    sign_in_as(recipient)
+
+    patch profile_path, params: {
+      user: {
+        display_name: "Updated Recipient",
+        avatar: photo_upload(filename: "private-recipient.jpg")
+      }
+    }
+
+    assert_redirected_to root_path
+    recipient.reload
+    expected_recipient = {
+      "kind" => "household_member",
+      "display_label" => "Updated Recipient",
+      "avatar_attachment_id" => recipient.avatar.attachment.id
+    }
+    assert_equal expected_recipient, brew_share.reload.snapshot.dig("brew", "recipient")
+    assert_equal expected_recipient, bean_share.reload.snapshot.fetch("brews").first.fetch("recipient")
+    assert_includes brew_share.snapshot.fetch("public_media").pluck("attachment_id"), recipient.avatar.attachment.id
+    assert_includes bean_share.snapshot.fetch("public_media").pluck("attachment_id"), recipient.avatar.attachment.id
+    assert_no_match(/one@example\.com|private-recipient\.jpg/, brew_share.snapshot.to_json)
+    assert_no_match(/one@example\.com|private-recipient\.jpg/, bean_share.snapshot.to_json)
+  end
+
   test "profile does not accept unrelated user attributes" do
     user = users(:one)
     sign_in_as(user)
@@ -182,6 +213,22 @@ class ProfilesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+    def create_public_brew_share_for(brew)
+      brew.create_public_brew_share!(
+        workspace: brew.workspace,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        title: "Shared shot",
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:,
+          title: "Shared shot",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
+
     def create_public_bean_share_for(bean)
       bean.create_public_bean_share!(
         workspace: bean.workspace,

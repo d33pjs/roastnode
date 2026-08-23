@@ -28,7 +28,13 @@ class PublicBrewShareRefresher
       when Workspace
         PublicBrewShare.where(workspace_id: record.id)
       when User
-        PublicBrewShare.joins(:brew).where(brews: { user_id: record.id })
+        PublicBrewShare
+          .joins(:brew)
+          .where(
+            "brews.user_id = :user_id OR brews.recipient_user_id = :user_id",
+            user_id: record.id
+          )
+          .distinct
       when RecordLink
         record.linkable ? shares_for(record.linkable) : PublicBrewShare.none
       else

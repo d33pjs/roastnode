@@ -432,6 +432,156 @@ class PublicBeanPagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "[FILTERED]", response.filtered_location
   end
 
+  test "compact brew card renders opaque logger and current recipient avatars with a snapshot byline" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    users(:one).update!(display_name: "Jens")
+    users(:two).update!(display_name: "Petra")
+    logger_avatar = attach_named_photo(users(:one), :avatar, filename: "jens-private.jpg")
+    recipient_avatar = attach_named_photo(users(:two), :avatar, filename: "petra-private.jpg")
+    brew.update!(bean:, recipient_kind: "household_member", recipient_user: users(:two))
+    share = create_share(bean:, enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-brew-recipient-byline]", text: "Logged by Jens for Petra"
+    assert_select "img[data-testid=public-bean-brew-logger-avatar][alt='']", 1 do |images|
+      assert_match %r{\A/b/#{Regexp.escape(share.token)}/media/[0-9a-f]{32}\?variant=thumbnail\z}, images.first["src"]
+    end
+    assert_select "img[data-testid=public-bean-brew-recipient-avatar][alt='']", 1 do |images|
+      assert_match %r{\A/b/#{Regexp.escape(share.token)}/media/[0-9a-f]{32}\?variant=thumbnail\z}, images.first["src"]
+    end
+    [ logger_avatar, recipient_avatar ].each do |attachment|
+      assert_no_match %r{/media/#{attachment.id}(?:[?"']|$)}, response.body
+    end
+    assert_no_match(/one@example\.com|two@example\.com|jens-private\.jpg|petra-private\.jpg|recipient_name/, response.body)
+    assert_select "[data-testid=public-bean-journey-brew][title*='Logged by Jens for Petra']", minimum: 1
+  end
+
+  test "guest and malformed recipient snapshots render generic truthful bylines" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Secret Anna")
+    share = create_share(enabled: true)
+
+    get public_bean_page_path(share.token)
+    assert_response :success
+    assert_select "[data-testid=public-bean-brew-recipient-byline]", text: /for a guest/
+    assert_no_match(/Secret Anna|recipient_name|guest_name|served_for_guest|one@example\.com/, response.body)
+
+    [ nil, "household_member", [], { "kind" => "unsupported" } ].each do |malformed|
+      snapshot = share.snapshot.deep_dup
+      snapshot.fetch("brews").each { |row| row["recipient"] = malformed }
+      snapshot.dig("timeline", "brews").each { |row| row["recipient"] = malformed }
+      share.update!(snapshot:)
+
+      get public_bean_page_path(share.token)
+      assert_response :success
+      assert_select "[data-testid=public-bean-brew-recipient-byline]", text: /for someone/
+      assert_select "[data-testid=public-bean-brew-recipient-avatar]", count: 0
+    end
+  end
+
+  test "self unnamed guest and former household member render truthful bylines and distinct cluster titles" do
+    bean = beans(:open_household)
+    logger = users(:one)
+    recipient = users(:two)
+    logger.update!(display_name: "Jens")
+    recipient.update!(display_name: "Petra")
+    attach_named_photo(recipient, :avatar, filename: "former-private.jpg")
+    occurred_at = Time.current.change(usec: 0)
+    self_brew = brews(:morning_espresso)
+    self_brew.update!(bean:, user: logger, occurred_at:, recipient_kind: "self", recipient_user: nil, recipient_name: nil)
+    bean.workspace.brews.create!(
+      user: logger,
+      bean:,
+      method: "quick_drip",
+      brewer: equipment(:household_brewer),
+      occurred_at: occurred_at + 1.minute,
+      machine_cups: 4,
+      coffee_spoons: 4,
+      grams_per_coffee_spoon: 5,
+      bean_weight_grams: 20,
+      beverage_grams: 480,
+      total_time_seconds: 240,
+      recipient_kind: "guest",
+      recipient_name: nil
+    )
+    bean.workspace.brews.create!(
+      user: logger,
+      bean:,
+      method: "quick_drip",
+      brewer: equipment(:household_brewer),
+      occurred_at: occurred_at + 2.minutes,
+      machine_cups: 4,
+      coffee_spoons: 4,
+      grams_per_coffee_spoon: 5,
+      bean_weight_grams: 20,
+      beverage_grams: 480,
+      total_time_seconds: 240,
+      recipient_kind: "household_member",
+      recipient_user: recipient
+    )
+    memberships(:member).destroy!
+    share = create_share(bean:, enabled: true)
+
+    get public_bean_page_path(share.token)
+
+    assert_response :success
+    assert_select "[data-testid=public-bean-brew-recipient-byline]", text: "Logged by Jens for themself", count: 1
+    assert_select "[data-testid=public-bean-brew-recipient-byline]", text: "Logged by Jens for a guest", count: 1
+    assert_select "[data-testid=public-bean-brew-recipient-byline]", text: "Logged by Jens for Petra", count: 1
+    assert_select "[data-testid=public-bean-brew-recipient-avatar]", count: 0
+    cluster_titles = css_select("[data-testid=public-bean-journey-cluster]").map { |node| node["title"] }
+    assert cluster_titles.any? { |title| title.include?("Logged by Jens for themself") }
+    assert cluster_titles.any? { |title| title.include?("Logged by Jens for a guest") }
+    assert cluster_titles.any? { |title| title.include?("Logged by Jens for Petra") }
+    assert_no_match(/former-private\.jpg|two@example\.com/, response.body)
+  end
+
+  test "untrusted recipient kinds cannot borrow an otherwise allowlisted avatar" do
+    bean = beans(:open_household)
+    target_brew = brews(:morning_espresso)
+    users(:one).update!(display_name: "Jens")
+    borrowed_avatar = attach_named_photo(users(:two), :avatar, filename: "borrowed-private.jpg")
+    target_brew.update!(bean:, recipient_kind: "guest", recipient_name: nil)
+    bean.workspace.brews.create!(
+      user: users(:two),
+      bean:,
+      method: "quick_drip",
+      brewer: equipment(:household_brewer),
+      machine_cups: 4,
+      coffee_spoons: 4,
+      grams_per_coffee_spoon: 5,
+      bean_weight_grams: 20,
+      beverage_grams: 480,
+      total_time_seconds: 240,
+      recipient_kind: "self"
+    )
+    share = create_share(bean:, enabled: true)
+    assert_includes share.snapshot.fetch("public_media").pluck("attachment_id"), borrowed_avatar.id
+
+    [
+      { "kind" => "guest", "avatar_attachment_id" => borrowed_avatar.id },
+      { "kind" => "unknown", "avatar_attachment_id" => borrowed_avatar.id },
+      { "kind" => "unsupported", "avatar_attachment_id" => borrowed_avatar.id },
+      { "avatar_attachment_id" => borrowed_avatar.id }
+    ].each do |untrusted_recipient|
+      snapshot = share.reload.snapshot.deep_dup
+      snapshot.fetch("brews").find { |row| row["occurred_at"] == target_brew.occurred_at.utc.iso8601 }["recipient"] = untrusted_recipient
+      snapshot.dig("timeline", "brews").find { |row| row["occurred_at"] == target_brew.occurred_at.utc.iso8601 }["recipient"] = untrusted_recipient
+      share.update!(snapshot:)
+
+      get public_bean_page_path(share.token)
+
+      assert_response :success
+      assert_select "[data-testid=public-bean-brew-recipient-avatar]", count: 0
+      expected_target = untrusted_recipient["kind"] == "guest" ? "a guest" : "someone"
+      assert_select "[data-testid=public-bean-brew-recipient-byline]", text: "Logged by Jens for #{expected_target}", count: 1
+      assert_no_match(/borrowed-private\.jpg|two@example\.com/, response.body)
+    end
+  end
+
   private
     def set_comparisons(share, comparisons)
       snapshot = share.snapshot.deep_dup

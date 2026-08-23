@@ -129,6 +129,14 @@ class PublicBrewShareRefresherTest < ActiveSupport::TestCase
     assert_not_includes share.selected_photo_attachment_ids, second_brew.id
   end
 
+  test "shares_for user finds recipient-only brew shares distinctly" do
+    brew = brews(:morning_espresso)
+    brew.update!(user: users(:one), recipient_kind: "household_member", recipient_user: users(:two))
+    share = create_share_for(brew)
+
+    assert_equal [ share.id ], PublicBrewShareRefresher.shares_for(users(:two)).pluck(:id)
+  end
+
   private
     def create_share_for(brew, title: "Shared shot", selected_photo_attachment_ids: [])
       brew.create_public_brew_share!(

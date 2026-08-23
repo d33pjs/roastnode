@@ -47,8 +47,8 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
       channeling: true,
       taste_balance: "neutral",
       grind_setting: "2.3",
-      served_for_guest: true,
-      guest_name: "Anna",
+      recipient_kind: "guest",
+      recipient_name: "Anna",
       cup_style: "Latte"
     )
     quick_drip = bean.workspace.brews.create!(
@@ -161,6 +161,96 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     ).call
 
     assert_equal "", snapshot.fetch("title")
+  end
+
+  test "projects exact recipient payloads into compact and timeline brews" do
+    brew = brews(:morning_espresso)
+    brew.update!(bean: beans(:open_household))
+
+    assert_recipient_in_both_payloads(brew, { "kind" => "self" })
+
+    users(:two).update!(display_name: "Petra")
+    avatar = attach_named_photo(users(:two), :avatar, filename: "petra-private.jpg")
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    assert_recipient_in_both_payloads(
+      brew,
+      {
+        "kind" => "household_member",
+        "display_label" => "Petra",
+        "avatar_attachment_id" => avatar.id
+      }
+    )
+
+    [ "Secret Anna", nil ].each do |name|
+      brew.update!(recipient_kind: "guest", recipient_name: name)
+      snapshot = assert_recipient_in_both_payloads(brew, { "kind" => "guest" })
+      assert_no_match(/Secret Anna|recipient_name|guest_name|served_for_guest|two@example\.com|petra-private\.jpg/, snapshot.to_json)
+    end
+  end
+
+  test "reuses one recipient projection per brew across compact and timeline payloads" do
+    brew = brews(:morning_espresso)
+    brew.update!(bean: beans(:open_household), recipient_kind: "household_member", recipient_user: users(:two))
+    queries = []
+    callback = lambda do |_name, _started, _finished, _unique_id, payload|
+      queries << payload[:sql] if payload[:name] != "SCHEMA"
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      build_snapshot(brew.bean)
+    end
+
+    assert_equal 1, queries.grep(/FROM "memberships"/i).size
+  end
+
+  test "authorizes household membership before loading recipient avatar records" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    recipient = users(:two)
+    recipient_avatar = attach_named_photo(recipient, :avatar, filename: "recipient-private.jpg")
+    brew.update!(bean:, recipient_kind: "household_member", recipient_user: recipient)
+
+    current_queries = capture_sql_payloads { build_snapshot(bean) }
+    membership_index = current_queries.index { |payload| payload[:sql].match?(/FROM "memberships"/i) }
+    attachment_index = current_queries.index do |payload|
+      payload[:sql].match?(/FROM "active_storage_attachments"/i) &&
+        query_bind_values(payload).include?(recipient.id)
+    end
+    assert membership_index, "expected a live recipient membership authorization query"
+    assert attachment_index, "expected the authorized recipient avatar attachment to be loaded"
+    assert_operator membership_index, :<, attachment_index
+
+    memberships(:member).destroy!
+    former_queries = capture_sql_payloads { build_snapshot(bean) }
+    recipient_attachment_queries = former_queries.select do |payload|
+      payload[:sql].match?(/FROM "active_storage_attachments"/i) &&
+        query_bind_values(payload).include?(recipient.id)
+    end
+    recipient_blob_queries = former_queries.select do |payload|
+      payload[:sql].match?(/FROM "active_storage_blobs"/i) &&
+        query_bind_values(payload).include?(recipient_avatar.blob_id)
+    end
+
+    assert_empty recipient_attachment_queries
+    assert_empty recipient_blob_queries
+  end
+
+  test "former household recipient keeps safe label without avatar" do
+    brew = brews(:morning_espresso)
+    brew.update!(bean: beans(:open_household), recipient_kind: "household_member", recipient_user: users(:two))
+    attach_named_photo(users(:two), :avatar, filename: "former-private.jpg")
+    memberships(:member).destroy!
+
+    snapshot = assert_recipient_in_both_payloads(
+      brew,
+      { "kind" => "household_member", "display_label" => users(:two).display_label }
+    )
+
+    recipients = snapshot.fetch("brews").map { |row| row.fetch("recipient") } +
+      snapshot.dig("timeline", "brews").map { |row| row.fetch("recipient") }
+    assert recipients.none? { |recipient| recipient.key?("avatar_attachment_id") }
+    assert_not_includes snapshot.fetch("public_media").pluck("attachment_id"), users(:two).avatar.attachment.id
+    assert_no_match(/former-private\.jpg|two@example\.com/, snapshot.to_json)
   end
 
   test "includes workspace comparison ranks without peer bean details" do
@@ -311,6 +401,40 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
   end
 
   private
+    def capture_sql_payloads
+      queries = []
+      callback = lambda do |_name, _started, _finished, _unique_id, payload|
+        queries << payload if payload[:name] != "SCHEMA"
+      end
+
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { yield }
+      queries
+    end
+
+    def query_bind_values(payload)
+      Array(payload[:binds]).map do |bind|
+        bind.respond_to?(:value_before_type_cast) ? bind.value_before_type_cast : bind
+      end
+    end
+
+    def build_snapshot(bean)
+      PublicBeanShareSnapshotBuilder.new(
+        bean:,
+        title: "Shared bean",
+        selected_photo_attachment_ids: []
+      ).call
+    end
+
+    def assert_recipient_in_both_payloads(brew, expected)
+      snapshot = build_snapshot(brew.bean)
+      compact = snapshot.fetch("brews").find { |row| row.fetch("occurred_at") == brew.occurred_at.utc.iso8601 }
+      timeline = snapshot.dig("timeline", "brews").find { |row| row.fetch("occurred_at") == brew.occurred_at.utc.iso8601 }
+
+      assert_equal expected, compact.fetch("recipient")
+      assert_equal expected, timeline.fetch("recipient")
+      snapshot
+    end
+
     def attach_photo_with_filename(record, filename)
       File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
         record.photos.attach(io: file, filename:, content_type: "image/jpeg")

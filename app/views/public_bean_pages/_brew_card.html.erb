@@ -1,6 +1,7 @@
 <% brew = local_assigns.fetch(:brew) %>
 <% share = local_assigns.fetch(:share) %>
-<% user = brew["user"] || {} %>
+<% user = brew["user"].is_a?(Hash) ? brew["user"] : {} %>
+<% recipient = brew["recipient"].is_a?(Hash) ? brew["recipient"] : {} %>
 <% equipment = brew["equipment"] || {} %>
 <% public_share = brew["public_share"] || {} %>
 <% method = brew["method"].presence || "unknown" %>
@@ -46,14 +47,15 @@ end %>
           <span data-testid="public-bean-brew-method-chip" class="rounded-full bg-[var(--rn-surface-muted)] px-2 py-0.5 text-[0.65rem] font-extrabold uppercase text-rn-muted"><%= public_bean_method_label(method) %></span>
         </div>
         <h3 class="mt-2 truncate text-xl font-black text-rn-ink"><%= public_bean_method_label(method) %></h3>
-        <% if user["display_label"].present? || user["avatar_attachment_id"].present? %>
-          <div class="mt-2 flex min-w-0 items-center gap-2 text-sm font-semibold text-rn-muted">
-            <% if (avatar_url = public_bean_media_url_for(share, user["avatar_attachment_id"], variant: :thumbnail)).present? %>
-              <%= image_tag avatar_url, alt: "", class: "h-7 w-7 shrink-0 rounded-full object-contain" %>
-            <% end %>
-            <span class="truncate"><%= t("brews.show.logged_by") %>: <%= user["display_label"].presence || unknown %></span>
-          </div>
-        <% end %>
+        <div data-testid="public-bean-brew-recipient-byline" class="mt-2 flex min-w-0 items-start gap-1.5 text-sm font-semibold text-rn-muted">
+          <% if (logger_avatar_url = public_bean_media_url_for(share, user["avatar_attachment_id"], variant: :thumbnail)).present? %>
+            <%= image_tag logger_avatar_url, alt: "", data: { testid: "public-bean-brew-logger-avatar" }, class: "h-7 w-7 shrink-0 rounded-full object-contain ring-1 ring-rn-line" %>
+          <% end %>
+          <% if recipient["kind"] == "household_member" && (recipient_avatar_url = public_bean_media_url_for(share, recipient["avatar_attachment_id"], variant: :thumbnail)).present? %>
+            <%= image_tag recipient_avatar_url, alt: "", data: { testid: "public-bean-brew-recipient-avatar" }, class: "h-7 w-7 shrink-0 rounded-full object-contain ring-1 ring-rn-line" %>
+          <% end %>
+          <span class="min-w-0 break-words leading-5"><%= public_bean_recipient_byline(user, recipient) %></span>
+        </div>
       </div>
 
     </div>

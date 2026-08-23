@@ -12,7 +12,7 @@ Public Bean Sharing lets workspace writers publish one curated bean bag page wit
 - Privacy-safe `TOP N OF C BEANS` workspace comparison badges for average rating and channeling when at least two bean bags qualify for the metric.
 - The timeline uses opened and finished/current endpoint markers, brew/count dots on the line, and lane-stacked date plus rating labels above or below the line so dense brew groups stay readable on mobile.
 - A public hero ordered as roaster, large coffee name, and share title before the metric cards. A blank share title falls back to the available roast and blend types (for example, `Espresso · Blend`), then to `404 — share title not found` when neither type exists.
-- All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards with rating metric cards. Espresso rows that already have an enabled public brew page show the named public brew link as a compact chip near the date and method.
+- All espresso and Quick Drip brews for the bag, rendered as public-safe compact cards with rating metric cards and a paired logger/recipient byline. Espresso rows that already have an enabled public brew page show the named public brew link as a compact chip near the date and method.
 - A full-width details flow ordered as detail cards, taste profile, public Links, and public note. Missing optional sections are omitted without moving Links into a desktop sidebar.
 - Workspace settings management with URL, enabled/protected state, view count, and recent IP history.
 - The workspace support badge footer, when configured for public pages.
@@ -35,17 +35,17 @@ Public bean shares render from `PublicBeanShare` snapshots. Snapshot open durati
 
 Workspace comparisons enter the snapshot only as the shared bean's `rank` and `eligible_count` for each applicable metric. Competing bean names, identifiers, values, lifecycle states, and links remain private. Public bean controllers and views render these comparison results from the curated snapshot and must not query live private comparison beans.
 
-Workspace name/logo and brewer display labels/avatars are intentional public identity surfaces when copied into the snapshot media allowlist. They must still render through public media handles, not raw Active Storage URLs.
+Workspace name/logo and logger display labels/avatars are intentional public identity surfaces when copied into the snapshot media allowlist. Recipient projections use generic copy for Guest brews, retain only a former household member's safe display label, and include a household-recipient avatar only while that user is a current member. Malformed recipient data falls back to `someone`. Identity images must still render through public media handles, not raw Active Storage URLs.
 
 The optional workspace support badge configuration is not copied into public bean snapshots. Public bean page controllers may read it from the share's workspace at request time to render the global footer support badge.
 
-Public bean pages include all espresso and Quick Drip brews for the bag as public-safe summaries. Brew summaries may include public notes, public metrics, method labels, taste, rating, channeling, and equipment labels from the snapshot, but they must not include private brew notes or brew photos.
+Public bean pages include all espresso and Quick Drip brews for the bag as public-safe summaries. Brew summaries may include public notes, public metrics, method labels, taste, rating, channeling, equipment labels, and the curated logger/recipient projection from the snapshot, but they must not include private brew notes, Guest names, or brew photos. The same projection is reused in compact cards and snapshot-only journey marker titles.
 
 Dead grams include espresso retention (`bean_weight_grams - ground_weight_grams` where both values exist). When a bag is publicly finished while still showing remaining beans, the leftover remaining grams are also counted as dead grams and the remaining inventory hero card is omitted.
 
 ## Public Media
 
-Public bean pages use `PublicBeanMediaController` and opaque media handles. The only user-selected photos in v1 are bean package photos. Workspace logos and brewer avatars may appear through the snapshot media allowlist.
+Public bean pages use `PublicBeanMediaController` and opaque media handles. The only user-selected photos in v1 are bean package photos. Workspace logos, logger avatars, and currently authorized household-recipient avatars may appear through the snapshot media allowlist.
 
 Public bean media streams only safe browser-raster image content types: JPEG, PNG, GIF, and WebP. HTML, SVG, and other active or non-image content types return `404 Not Found`.
 
@@ -80,9 +80,10 @@ Refresh triggers include:
 - public links on the shared bean
 - selected bean media changes
 - workspace name/logo changes
-- brewer public-label/avatar changes for users whose brews appear on the public bean page
+- logger or household-recipient public-label/avatar changes for users whose brews appear on the public bean page
+- household membership removal, which refreshes affected Brew and Bean shares transactionally and strips the removed recipient's avatar before the removal activity is recorded
 
-Public pages still render from the refreshed snapshot. Open duration is calculated by the shared lifecycle calculator when the snapshot is built, while public comparison badges remain curated snapshot values rather than live comparison queries. Public pages do not read arbitrary live private fields at request time.
+Public pages still render from the refreshed snapshot. Open duration is calculated by the shared lifecycle calculator when the snapshot is built, while public comparison badges remain curated snapshot values rather than live comparison queries. Public pages do not read arbitrary live private fields at request time. Existing shares are rebuilt once by the recipient/Hero snapshot migration; its rollback intentionally preserves the safer snapshots.
 
 Snapshots created before workspace comparisons were introduced remain valid. If the `comparisons` object or one of its metrics is absent, the public page renders normally without that badge.
 

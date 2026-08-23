@@ -38,6 +38,8 @@ class WorkspaceMembershipManager
       target_user = target_membership.user
       target_membership.destroy!
       target_user.update!(active_workspace: nil) if target_user.active_workspace_id == workspace.id
+      PublicBrewShareRefresher.refresh_for(target_user)
+      PublicBeanShareRefresher.refresh_for(target_user)
       Activity::Emitter.record!(
         action: "membership.removed", workspace:, actor: actor_membership.user, subject: target_membership
       )

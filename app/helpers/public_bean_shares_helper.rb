@@ -134,13 +134,36 @@ module PublicBeanSharesHelper
   def public_bean_timeline_item_title(item)
     brews = Array(item["brews"]).presence || [ item ]
     rating_labels = brews.filter_map { |brew| public_bean_rating(brew["rating"]) if brew["rating"].present? }
+    bylines = brews.map { |brew| public_bean_recipient_byline(brew["user"], brew["recipient"]) }.uniq
     parts = [
       item["type"] == "cluster" ? t("public_bean_pages.show.timeline_brews", count: item["count"]) : public_bean_method_label(item["method"]),
       public_bean_timeline_item_label(item),
-      rating_labels.to_sentence
+      rating_labels.to_sentence,
+      bylines.to_sentence
     ].compact_blank
 
     parts.join(" · ")
+  end
+
+  def public_bean_recipient_byline(logger, recipient)
+    logger = logger.is_a?(Hash) ? logger : {}
+    recipient = recipient.is_a?(Hash) ? recipient : {}
+    target = case recipient["kind"]
+    when "self"
+      t("brews.recipients.themself")
+    when "household_member"
+      recipient["display_label"].presence || t("brews.recipients.a_household_member")
+    when "guest"
+      t("brews.recipients.a_guest")
+    else
+      t("brews.recipients.someone")
+    end
+
+    t(
+      "brews.recipients.byline",
+      logger: logger["display_label"].presence || public_bean_unknown_label,
+      recipient: target
+    )
   end
 
   def public_bean_link_label(link)

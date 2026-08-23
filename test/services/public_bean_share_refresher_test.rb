@@ -96,6 +96,15 @@ class PublicBeanShareRefresherTest < ActiveSupport::TestCase
     assert_includes PublicBeanShareRefresher.shares_for(users(:two)), share
   end
 
+  test "shares_for user finds recipient-only bean shares distinctly" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:, user: users(:one), recipient_kind: "household_member", recipient_user: users(:two))
+    share = create_share(bean)
+
+    assert_equal [ share.id ], PublicBeanShareRefresher.shares_for(users(:two)).pluck(:id)
+  end
+
   test "refresh removes selected photos that no longer belong to bean" do
     bean = beans(:open_household)
     photo = attach_photo(bean)

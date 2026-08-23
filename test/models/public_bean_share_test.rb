@@ -272,6 +272,53 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     assert_nil share.public_media_handle_for(rogue_photo.id)
   end
 
+  test "recipient avatar remains public only while current workspace membership authorizes it" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:, recipient_kind: "household_member", recipient_user: users(:two))
+    avatar = attach_named_photo(users(:two), :avatar, filename: "petra-private.jpg")
+    share = create_snapshot_share(bean)
+
+    handle = share.public_media_handle_for(avatar.id)
+    assert_match(/\A[0-9a-f]{32}\z/, handle)
+
+    memberships(:member).destroy!
+
+    assert_nil share.reload.public_media_handle_for(avatar.id)
+  end
+
+  test "repeated logger and recipient handles reuse the complete live authorization graph" do
+    bean = beans(:open_household)
+    brew = brews(:morning_espresso)
+    brew.update!(bean:, recipient_kind: "household_member", recipient_user: users(:two))
+    logger_avatar = attach_named_photo(users(:one), :avatar, filename: "logger-private.jpg")
+    recipient_avatar = attach_named_photo(users(:two), :avatar, filename: "petra-private.jpg")
+    share = create_snapshot_share(bean)
+    queries = []
+    callback = lambda do |_name, _started, _finished, _unique_id, payload|
+      queries << payload[:sql] if payload[:name] != "SCHEMA"
+    end
+
+    handles = ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      5.times.flat_map do
+        [
+          share.public_media_handle_for(logger_avatar.id),
+          share.public_media_handle_for(recipient_avatar.id)
+        ]
+      end
+    end
+
+    assert handles.all?(&:present?)
+    assert_equal 1, queries.grep(/FROM "memberships"/i).size
+    assert_operator queries.grep(/FROM "brews"/i).size, :<=, 2
+    assert_operator queries.grep(/FROM "users"/i).size, :<=, 2
+    assert_operator queries.grep(/FROM "active_storage_attachments"/i).size, :<=, 3
+    assert_operator queries.grep(/FROM "active_storage_blobs"/i).size, :<=, 2
+
+    memberships(:member).destroy!
+    assert_nil PublicBeanShare.find(share.id).public_media_handle_for(recipient_avatar.id)
+  end
+
   test "public media handles are opaque and resolve only for public attachments" do
     bean = beans(:open_household)
     photo = attach_photo(bean)
@@ -294,4 +341,21 @@ class PublicBeanShareTest < ActiveSupport::TestCase
     assert_nil share.public_media_handle_for(999_999)
     assert_nil share.public_attachment_id_for_media_handle(photo.id.to_s)
   end
+
+  private
+    def create_snapshot_share(bean)
+      PublicBeanShare.create!(
+        workspace: bean.workspace,
+        bean:,
+        created_by: users(:one),
+        updated_by: users(:one),
+        enabled: true,
+        selected_photo_attachment_ids: [],
+        snapshot: PublicBeanShareSnapshotBuilder.new(
+          bean:,
+          title: "Shared bean",
+          selected_photo_attachment_ids: []
+        ).call
+      )
+    end
 end
