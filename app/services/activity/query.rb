@@ -3,6 +3,35 @@ require "base64"
 module Activity
   class Query
     ActorOption = Data.define(:value, :label)
+    ACTOR_KIND_SQL = "(metadata ->> 'actor_kind')".freeze
+    ACTOR_LABEL_SQL = "(metadata ->> 'actor_label')".freeze
+    ACTOR_WHITESPACE_SQL_PATTERN = "[[:space:]\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000]+".freeze
+    ACTOR_NORMALIZED_LABEL_SQL = "BTRIM(REGEXP_REPLACE(#{ACTOR_LABEL_SQL}, ?, ' ', 'g'))".freeze
+    ACTOR_CONTROL_SQL_PATTERN = "[[:cntrl:]\u0080-\u009F]".freeze
+    ACTOR_SENSITIVE_SQL_PATTERN = Metadata::SENSITIVE.source.freeze
+    ACTOR_ABSOLUTE_PATH_SQL_PATTERN = Metadata::ABSOLUTE_PATH.source.sub("\\A", "^").freeze
+    ACTOR_OPTION_KEY_SQL = <<~SQL.squish.freeze
+      CASE
+        WHEN #{ACTOR_KIND_SQL} = 'system' THEN 'system'
+        WHEN #{ACTOR_KIND_SQL} = 'user' AND actor_id IS NOT NULL THEN 'user:' || actor_id::text
+        WHEN #{ACTOR_KIND_SQL} = 'user' THEN 'former:' || #{ACTOR_LABEL_SQL}
+      END
+    SQL
+    ACTOR_OPTION_SELECT_SQL = <<~SQL.squish.freeze
+      DISTINCT ON (#{ACTOR_OPTION_KEY_SQL})
+      actor_id,
+      #{ACTOR_KIND_SQL} AS actor_kind_snapshot,
+      #{ACTOR_LABEL_SQL} AS actor_label_snapshot
+    SQL
+    KNOWN_SUBJECT_TYPES = EventContract.actions.filter_map do |action|
+      EventContract.fetch(action).fetch(:subject_type)
+    end.uniq.freeze
+    NESTED_SUBJECT_PRELOADS = {
+      "InventoryAdjustment" => :bean,
+      "PublicBrewShare" => :brew,
+      "PublicBeanShare" => :bean,
+      "PublicRecipeShare" => :recipe
+    }.freeze
 
     def initialize(workspace:, membership:, user:, category: nil, actor: nil, start_date: nil, end_date: nil)
       @workspace = workspace
@@ -18,14 +47,23 @@ module Activity
       @events ||= apply_filters(authorized_scope).recent
     end
 
+    def paginated_events(page:)
+      HistoryPaginator.new(events, page:).tap do |paginator|
+        preload_subjects(paginator.records)
+      end
+    end
+
+    def recent_events(limit:)
+      preload_subjects(events.limit(limit).to_a)
+    end
+
     def actor_options
       seen = {}
-      authorized_scope.reorder(occurred_at: :desc, id: :desc).pluck(:id, :actor_id, :metadata).each do |_id, actor_id, metadata|
-        next unless metadata.is_a?(Hash)
-
-        kind = metadata["actor_kind"]
-        label = validated_actor_label(metadata["actor_label"])
-        next unless %w[user system].include?(kind) && label
+      actor_option_rows.each do |row|
+        actor_id = row[:actor_id]
+        kind = row[:actor_kind_snapshot]
+        label = validated_actor_label(row[:actor_label_snapshot])
+        next unless label
 
         value = if kind == "system"
           "system"
@@ -55,6 +93,52 @@ module Activity
       def valid_active_workspace_membership?
         membership && workspace && user &&
           membership.workspace_id == workspace.id && membership.user_id == user.id
+      end
+
+      def actor_option_rows
+        authorized_scope
+          .where("jsonb_typeof(metadata) = 'object'")
+          .where("jsonb_typeof(metadata -> 'actor_kind') = 'string'")
+          .where("jsonb_typeof(metadata -> 'actor_label') = 'string'")
+          .where("#{ACTOR_KIND_SQL} IN (?)", %w[user system])
+          .where("#{ACTOR_NORMALIZED_LABEL_SQL} <> ''", ACTOR_WHITESPACE_SQL_PATTERN)
+          .where("CHAR_LENGTH(#{ACTOR_LABEL_SQL}) <= ?", Metadata::MAX_TEXT)
+          .where("NOT (#{ACTOR_LABEL_SQL} ~ ?)", ACTOR_CONTROL_SQL_PATTERN)
+          .where(
+            "NOT (#{ACTOR_NORMALIZED_LABEL_SQL} ~* ?)",
+            ACTOR_WHITESPACE_SQL_PATTERN,
+            ACTOR_SENSITIVE_SQL_PATTERN
+          )
+          .where(
+            "NOT (#{ACTOR_NORMALIZED_LABEL_SQL} ~* ?)",
+            ACTOR_WHITESPACE_SQL_PATTERN,
+            ACTOR_ABSOLUTE_PATH_SQL_PATTERN
+          )
+          .select(Arel.sql(ACTOR_OPTION_SELECT_SQL))
+          .reorder(Arel.sql("#{ACTOR_OPTION_KEY_SQL}, occurred_at DESC, id DESC"))
+      end
+
+      def preload_subjects(records)
+        preload_event_workspaces(records)
+        records.group_by { |event| event[:subject_type] }.each do |subject_type, typed_records|
+          next unless KNOWN_SUBJECT_TYPES.include?(subject_type)
+
+          preloadable_records = typed_records.reject { |event| EventContract::ACCOUNT_ACTIONS.include?(event.action) }
+          next if preloadable_records.empty?
+
+          nested = NESTED_SUBJECT_PRELOADS[subject_type]
+          associations = nested ? { subject: nested } : :subject
+          ActiveRecord::Associations::Preloader.new(records: preloadable_records, associations:).call
+        end
+        records
+      end
+
+      def preload_event_workspaces(records)
+        records.each do |event|
+          association = event.association(:workspace)
+          association.target = event.workspace_id == workspace.id ? workspace : nil
+          association.loaded!
+        end
       end
 
       def apply_filters(scope)

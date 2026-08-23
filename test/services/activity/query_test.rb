@@ -104,6 +104,122 @@ class Activity::QueryTest < ActiveSupport::TestCase
     assert_not_includes options.values.map(&:label), users(:two).email_address
   end
 
+  test "actor options collapse duplicate ledger rows in SQL before materializing safe scalar labels" do
+    now = Time.current
+    3.times do |index|
+      Activity::Emitter.record!(
+        action: "brew.updated", workspace: workspaces(:household), actor: users(:one),
+        subject: brews(:morning_espresso), occurred_at: now - index.seconds
+      )
+    end
+    statements = []
+    callback = lambda do |_name, _started, _finished, _unique_id, payload|
+      statements << payload[:sql] if payload[:name] != "SCHEMA"
+    end
+
+    options = ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { query.actor_options }
+    actor_sql = statements.find { |sql| sql.match?(/FROM "activity_events"/i) }
+
+    assert actor_sql, "expected the actor-option ledger query"
+    assert_match(/SELECT DISTINCT ON/i, actor_sql)
+    assert_equal 1, options.count { |option| option.value == "user:#{users(:one).id}" }
+  end
+
+  test "actor options fall back to the newest safe label when newer legacy labels are unsafe" do
+    now = Time.current
+    nonbreaking_space = "\u00A0"
+    unsafe_labels = [
+      nonbreaking_space,
+      "#{nonbreaking_space}/private/actor",
+      "https://private.example/token=abc",
+      "unsafe\aactor",
+      "/private/actor",
+      "unsafe\u0085actor"
+    ]
+    safe_event = Activity::Emitter.record!(
+      action: "brew.updated", workspace: workspaces(:household), actor: users(:one),
+      subject: brews(:morning_espresso), occurred_at: now - unsafe_labels.length.seconds
+    )
+    ActivityEvent.insert_all!(unsafe_labels.each_with_index.map do |label, index|
+      {
+        workspace_id: workspaces(:household).id,
+        actor_id: users(:one).id,
+        category: "coffee",
+        action: "brew.updated",
+        occurred_at: now - index.seconds,
+        visibility: "workspace",
+        subject_type: "Brew",
+        subject_id: brews(:morning_espresso).id,
+        metadata: {
+          "actor_kind" => "user",
+          "actor_label" => label,
+          "subject_label" => "Espresso with House Espresso",
+          "method" => "espresso"
+        },
+        created_at: now,
+        updated_at: now
+      }
+    end)
+
+    option = query.actor_options.index_by(&:value).fetch("user:#{users(:one).id}")
+
+    assert_equal safe_event.metadata.fetch("actor_label"), option.label
+  end
+
+  test "event presentation preloads workspaces direct subjects and nested path associations" do
+    bean_event = Activity::Emitter.record!(
+      action: "bean.created", workspace: workspaces(:household), actor: users(:one),
+      subject: beans(:open_household)
+    )
+    adjustment_event = Activity::Emitter.record!(
+      action: "inventory_adjustment.created", workspace: workspaces(:household), actor: users(:one),
+      subject: inventory_adjustments(:morning_espresso_consumption)
+    )
+    account_event = Activity::Emitter.record!(
+      action: "profile.updated", workspace: workspaces(:household), actor: users(:two),
+      subject: users(:two)
+    )
+    event_ids = [ activity_events(:morning_brew_created).id, bean_event.id, adjustment_event.id, account_event.id ]
+    events = query.recent_events(limit: 100).select { |event| event_ids.include?(event.id) }
+    helpers = Object.new
+    helpers.define_singleton_method(:brew_path) { |_record| "/brews/1" }
+    helpers.define_singleton_method(:bean_path) { |_record| "/beans/1" }
+    statements = []
+    callback = lambda do |_name, _started, _finished, _unique_id, payload|
+      statements << payload[:sql] if payload[:name] != "SCHEMA"
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      events.each { |event| Activity::Presenter.new(event, helpers:).path }
+    end
+
+    assert_equal 4, events.size
+    assert_empty statements.grep(/\ASELECT/i), "expected card routes to use the bounded presentation preload"
+  end
+
+  test "subject preloading does not constantize an unknown legacy polymorphic type" do
+    now = Time.current
+    ActivityEvent.insert_all!([ {
+      workspace_id: workspaces(:household).id,
+      actor_id: users(:one).id,
+      category: "coffee",
+      action: "brew.created",
+      occurred_at: now,
+      visibility: "workspace",
+      subject_type: "FutureActivitySubject",
+      subject_id: 123,
+      metadata: {
+        "actor_kind" => "user",
+        "actor_label" => "Jens",
+        "subject_label" => "Future subject"
+      },
+      created_at: now,
+      updated_at: now
+    } ])
+
+    assert_nothing_raised { query.recent_events(limit: 100) }
+  end
+
   test "actor options omit a malformed legacy former actor without a label" do
     now = Time.current
     ActivityEvent.insert_all!([ {

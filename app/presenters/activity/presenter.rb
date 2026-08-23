@@ -44,6 +44,7 @@ module Activity
       attr_reader :event, :helpers
 
       def resolve_path
+        return if EventContract::ACCOUNT_ACTIONS.include?(event.action)
         return unless definition && (subject = event.subject)
 
         case subject
@@ -95,6 +96,7 @@ module Activity
         return false unless subject_type.present? == subject_id.present?
         return true if subject_type.blank?
         return false unless subject_type == definition.fetch(:subject_type)
+        return true if EventContract::ACCOUNT_ACTIONS.include?(event.action)
 
         subject = event.subject
         return true unless subject

@@ -37,7 +37,7 @@ class HomeController < ApplicationController
       @latest_best_brew = dashboard_brews.where.not(rating: nil).order(rating: :desc, occurred_at: :desc, created_at: :desc).first
       @recent_activity = Activity::Query.new(
         workspace: current_workspace, membership: current_membership, user: Current.user
-      ).events.limit(8)
+      ).recent_events(limit: 8)
     end
 
     def dashboard_brews
