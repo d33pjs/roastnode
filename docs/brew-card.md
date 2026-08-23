@@ -7,9 +7,11 @@ The brew detail page and dashboard use compact Hero Brew Cards for screenshot-wo
 - European timestamp with seconds: `dd.mm.yyyy HH:MM:ss`.
 - Active workspace/household name on the card.
 - Household logo inside the workspace pill when one is attached.
-- Bean roaster, bean name, compact origin/roast-level descriptor, and a decorative two-photo Hero backdrop when Bean/Brew primary photos are available. The Bean occupies the contained left half and the finished Brew occupies the covered right half; either missing half stays black. Keep processing off the private Hero Brew Card.
-- Safe logged-by label from the user's profile username, falling back to `unknown username`.
-- User avatar next to the logged-by label when one is attached.
+- Bean roaster, bean name, compact origin/roast-level descriptor, and a decorative two-photo Hero backdrop. Its independent black halves use the Bean primary with `object-contain` on the left and the finished Brew primary with `object-cover` on the right; an unavailable half stays black and never borrows the other photo. Keep processing off the private Hero Brew Card.
+- A uniform dark wash plus vignette and vertical gradients that keep all foreground text readable across either or both photos. The backdrop is decorative and hidden from assistive technology.
+- A safe `Logged by %{logger} for %{recipient}` byline using profile display labels, never email.
+- A compact recipient badge whose icon and text distinguish Self, household member, and Guest without relying on color alone.
+- Small paired logger/recipient avatars when authorized. The logger avatar and a household recipient avatar render only while that User is a current member of the active Workspace.
 - Dose from the espresso form on espresso cards.
 - Brew ratio calculated from beverage yield and dose, including total time when present.
 - Grind setting.
@@ -31,11 +33,23 @@ The brew detail page and dashboard use compact Hero Brew Cards for screenshot-wo
 - The dashboard renders the latest brew and the latest highest-rated brew as hero cards after login.
 - Public brew share pages render a snapshot-driven public Hero Brew Card adapted from the private card's visual language. Its bottom gear/tool pills anchor to public product sections instead of private record routes.
 
+## Recipient Identity
+
+The private badge mapping is fixed:
+
+- Self: sky, `person`, **For me**.
+- Household member: orange, `home`, **For %{name}**, where `name` is the safe display label.
+- Guest: emerald, `groups`, **For %{name}**, where `name` is the private Guest name, falling back to **For a guest**.
+
+The byline says **Logged by %{logger} for themself** for Self and uses the same safe household/Guest label for the other kinds. A former household member keeps the safe historical label but receives no recipient avatar; the localized **(former member)** marker appears only on the focused correction choice that retains that historical recipient. If the logger is no longer a current member, the safe logger label remains and the logger avatar is suppressed. Cup is a separate compact badge so long recipient text cannot swallow or clip it on mobile.
+
 ## Quick Drip Cards
 
 Quick Drip uses the same private Hero Brew Card family, but renders method-specific batch metrics instead of the espresso extraction chart. It shows machine cups, coffee amount, consumed coffee, beverage, time, rating, balance, brewer, grinder when present, and Quick Drip preparation tool snapshots.
 
 Estimated consumed grams use a leading `~`. The Quick Drip card does not show espresso-only charting, retention, preinfusion, first drip, temperature, or channeling.
+
+The Quick Drip equipment footer is outside the dark photo-backed upper section. The Espresso extraction chart is likewise outside that upper section, so neither content boundary becomes part of the decorative image overlay.
 
 ## Chart Rule
 
@@ -51,6 +65,7 @@ The chart is an illustrative profile generated from stored brew totals. It is no
 - Public brew share pages use `public_brew_pages/_hero_card` because they render snapshot data and public media routes without `current_workspace`. Standalone public Quick Drip brew share pages are deferred, so public brew shares only resolve espresso brews. Public bean shares may still render Quick Drip brews as compact public-safe summaries.
 - Keep cross-links in the full brew details below the hero card, not inside the hero card partial.
 - Render the private Hero backdrop through the shared `brew_hero_backdrop` partial with independent Bean and Brew primary-photo URLs using the named `hero` private-media variant. Never substitute one photo for a missing half.
+- Keep the two halves black beneath their images, use `object-contain` for the Bean and `object-cover` for the Brew, and keep the shared wash/vignette gradients above the images but below all meaningful Hero content.
 - Keep grinder, machine, and brewer primary photos small inside the bottom equipment pills; they are identity marks, not another full media area.
 - Keep user avatars and household logos small; they should act like identity marks, not extra content blocks.
 - Keep the card dense; avoid adding explanatory headings inside the chart.

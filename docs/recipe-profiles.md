@@ -40,7 +40,8 @@ Recipe profiles are workspace-scoped brew targets created from existing brews. T
 - Recipes may reference a `source_brew`, but only from the same workspace.
 - Private recipe photos belong to the recipe workspace and must render through `MediaAttachmentsController`.
 - Reused source brew photos attach the source blob to the recipe; forged or cross-workspace source photo IDs must not create recipes.
-- Recipe snapshots copy public-safe context from the source brew. They must not copy private brew notes, private record links, private media URLs, signed Active Storage URLs, invite tokens, emails, equipment costs, or raw attachment IDs.
+- Recipe snapshots copy public-safe context from the source brew. They must not copy private brew notes, private record links, private media URLs, signed Active Storage URLs, invite tokens, emails, equipment costs, raw attachment IDs, or any Brew recipient/Cup metadata.
+- In particular, snapshots generated from private Brews and curated public recipe snapshots omit `recipient_kind`, `recipient_user_id`, recipient display/email data, `recipient_name`, `cup_style`, and the legacy `served_for_guest`/`guest_name` fields. Recipes do not need these fields to describe an espresso target, and no nested recipient User object may reintroduce them during snapshot generation.
 - Recipe JSON export/import includes finish ingredients and finish note, but never photo files, attachment IDs, signed URLs, raw media paths, original filenames, or media handles.
 - Recipes are private by default. Public recipe sharing uses `PublicRecipeShare` and a separate curated snapshot, not live private records.
 - Workspace owners/admins can manage any workspace recipe share. Workspace writers can manage only shares for recipes they created. Viewers cannot manage recipe shares.

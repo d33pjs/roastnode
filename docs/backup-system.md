@@ -31,6 +31,7 @@ The full archive currently includes a manifest, a readable instance JSON export,
 - all workspaces/households
 - all memberships and roles
 - all beans, equipment, preparation tools, brews, External Coffees, equipment events, inventory adjustments, statistics source records, and import metadata
+- each Brew's recipient kind, mapped recipient User reference and safe inspection labels, private Guest name, and Cup style
 - all workspace media and account media, including originals
 - a manifest with format version, generated time, file checksums, and relationships between JSON records and media files
 
@@ -53,6 +54,12 @@ Restore verification covers:
 - relationship remapping from exported IDs to new database IDs
 - media integrity checks
 - tests that export a populated instance and restore it into a clean database/storage area
+
+Recipient restore keeps archive format/version `1` compatible across the schema change. New Brew rows use the same ordered six-field contract as workspace export: `recipient_kind`, `recipient_user_id`, `recipient_user_display_name`, `recipient_user_email_address`, `recipient_name`, and `cup_style`. An exact, nonblank `recipient_kind` is authoritative even when contradictory legacy keys also exist; padded nonblank values fail closed, while blank or null uses the legacy fallback. An explicit new `recipient_name: null` is authoritative over a stale legacy Guest name.
+
+For a household recipient, restore resolves only `recipient_user_id` through the archive's old-to-new User ID map. It never selects a User by email or display label, never permits the logger as a distinct household recipient, and does not require restored current membership; this preserves a truthful former-member relationship. Self and Guest clear the recipient User, and only Guest may retain the optional private name. Cup style restores independently for all three kinds.
+
+Older version-1 rows without the new recipient fields use only a literal legacy boolean: `true` becomes Guest and may consume the legacy Guest-name value, while `false`, `null`, or a missing flag becomes Self. Missing legacy Cup remains empty. Unsupported kinds, non-boolean legacy flags, missing/unknown User IDs, logger-as-recipient rows, non-string names/Cup values, and values longer than 120 characters raise the sanitized `InstanceBackupRestorer::RestoreError` and roll back the complete restore transaction.
 
 ## Open Design Decisions
 

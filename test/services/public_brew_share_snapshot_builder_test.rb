@@ -18,6 +18,7 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
 
   test "builds a public-safe snapshot from selected records" do
     brew = brews(:morning_espresso)
+    private_purchase_price_cents = 87_654_321
     brew.update!(
       public_note: "Public brew story.",
       notes: "Private brew note.",
@@ -25,7 +26,12 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
       recipient_name: "Anna",
       cup_style: "Latte"
     )
-    brew.bean.update!(public_note: "Public bean note.", notes: "Private bean note.", purchase_source: "Private cellar source.")
+    brew.bean.update!(
+      public_note: "Public bean note.",
+      notes: "Private bean note.",
+      purchase_source: "Private cellar source.",
+      purchase_price_cents: private_purchase_price_cents
+    )
     brew.grinder.update!(public_note: "Public grinder note.", notes: "Private grinder note.")
     preparation_tools(:wdt).update!(public_note: "Public WDT note.", notes: "Private WDT note.")
     brew.record_links.create!(
@@ -72,7 +78,8 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "Public grinder note.", snapshot.fetch("equipment").first.fetch("public_note")
     assert_equal "2026-05-02", snapshot.fetch("bean").fetch("purchased_on")
     assert_equal "2026-05-10", snapshot.fetch("bean").fetch("opened_on")
-    assert_equal 1290, snapshot.fetch("bean").fetch("purchase_price_cents")
+    assert_not snapshot.fetch("bean").key?("purchase_price_cents")
+    assert_not_includes snapshot.to_json, private_purchase_price_cents.to_s
     assert_includes snapshot.to_json, "Buy beans"
     assert_includes snapshot.to_json, "Brew writeup"
     assert_not_includes snapshot.to_json, "Private brew note"

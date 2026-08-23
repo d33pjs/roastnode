@@ -345,16 +345,21 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[data-testid=public-brew-link] [data-testid=public-link-icon]", text: "🔗"
   end
 
-  test "public bean section shows safe bean facts" do
+  test "public bean section shows safe facts but ignores a legacy purchase price" do
     share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["bean"]["purchase_price_cents"] = 87_654_321
+    snapshot["bean"]["public_note"] = "Visible public bean section."
+    share.update!(snapshot:)
 
     get public_brew_page_path(share.token)
 
     assert_response :success
-    assert_select "[data-testid=public-product-section][data-kind=bean]"
+    assert_select "[data-testid=public-product-section][data-kind=bean]", text: /Visible public bean section/
     assert_select "[data-testid=public-bean-fact]", text: /Bought/
     assert_select "[data-testid=public-bean-fact]", text: /Opened/
-    assert_select "[data-testid=public-bean-fact]", text: /€/
+    assert_select "[data-testid=public-bean-fact]", text: /€876,543\.21/, count: 0
+    assert_no_match "€876,543.21", response.body
     assert_select "body", text: /Local roaster/, count: 0
   end
 

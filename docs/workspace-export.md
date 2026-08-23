@@ -16,7 +16,7 @@ Workspace Export is the first Roastnode data portability feature.
 - External Coffees include drink type, drink size, place text, private coordinates, price/currency, taste axes, rating, notes, public note, and photo metadata.
 - Rich bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
 - Equipment machine-capability flags for pre-infusion, low-flow start, and flow control.
-- Brew method fields, including espresso low-flow-start seconds and flow-control use, Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, and private serving metadata.
+- Brew method fields, including espresso low-flow-start seconds and flow-control use, Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, and the private six-field recipient/Cup contract.
 - Quick Drip profile preferences are account-level data. Active workspace exports do not include enabled-method or grams-per-coffee-spoon preferences; full instance backup/readable export payloads include them so restores can rebuild user logging defaults.
 - Photo metadata for photo-enabled records.
 - Preparation tool lifecycle fields, including active status, position, and photo metadata.
@@ -41,7 +41,7 @@ CSV exports are separate spreadsheet-friendly downloads:
 
 The beans CSV includes flat bag metadata such as names, roaster, derived status (`stock`, `open`, `used_up`, or `archived`), remaining grams, roast data, variety information, purchase details, rating, notes, and timestamps.
 
-The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing (including low-flow start), temperature, flow-control use, taste balance, rating, private guest/cup serving metadata, retention marker, notes, and timestamps.
+The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing (including low-flow start), temperature, flow-control use, taste balance, rating, the exact private recipient/Cup fields below, retention marker, notes, and timestamps.
 
 The External Coffees CSV includes occurred time, user labels, drink type, drink size, place name/location, private coordinates, price, currency, taste axes, rating, notes, public note, and timestamps.
 
@@ -60,6 +60,8 @@ The export intentionally excludes:
 - records from other workspaces
 
 Raw photo bytes are included only in the separate owner-only media ZIP.
+
+Recipient email is intentionally present in owner-only workspace exports and in instance-admin readable/full backup payloads so a household recipient can be identified during inspection and restoration. Product coffee pages and public snapshots never expose it.
 
 ## Payload Contract
 
@@ -87,9 +89,20 @@ The top-level JSON shape is:
 
 Local IDs are included so relationships can be reconstructed inside a single export file. Decimal measurements are emitted as strings to avoid precision loss.
 
+Each JSON Brew object emits these six fields in this exact order, including keys whose value is `null`; the brews CSV uses the same adjacent column order:
+
+1. `recipient_kind`
+2. `recipient_user_id`
+3. `recipient_user_display_name`
+4. `recipient_user_email_address`
+5. `recipient_name`
+6. `cup_style`
+
+`recipient_kind` is `self`, `household_member`, or `guest`. The User fields are populated only from the linked recipient User; a former member remains reconstructable because the exported local User relationship survives membership removal. `recipient_name` is private Guest text, and Cup is independent of recipient kind. New exports do not emit the legacy `served_for_guest` or `guest_name` columns. The embedded `data/workspace-export.json` in a media ZIP uses this same payload contract.
+
 ## Instance Backup Coverage
 
-Instance backups and empty-server restore preserve the same Quick Drip durable fields: brew method, brewer references, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, private serving metadata, bean grind state, preparation tool method, and user enabled-method/spoon preferences. They also preserve machine extraction-capability flags, brew low-flow-start seconds and flow-control use, External Coffee records, and photos. Older backup payloads restore existing machines with pre-infusion enabled for compatibility.
+Instance backups and empty-server restore preserve the same Quick Drip durable fields: brew method, brewer references, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, all six recipient/Cup fields, bean grind state, preparation tool method, and user enabled-method/spoon preferences. They also preserve machine extraction-capability flags, brew low-flow-start seconds and flow-control use, External Coffee records, and photos. Older backup payloads restore existing machines with pre-infusion enabled for compatibility, and older Brew recipient rows use the narrow legacy rules in [Instance Backup System](backup-system.md).
 
 ## Deferred
 

@@ -15,7 +15,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Automatic inventory deduction when a brew is saved.
 - Manual bean inventory adjustments for count corrections.
 - Brew correction flows for edit/delete with inventory adjustment.
-- Private serving metadata during initial brew logging and post-brew correction for whether a cup was served to a guest, an optional guest label, and the finished cup style such as Americano or Latte.
+- Private Served-to metadata during initial brew logging and post-brew correction for Self, another current household member, or a Guest, plus the finished cup style such as Americano or Latte.
 - Inventory adjustment history for brew consumption.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
@@ -36,7 +36,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - User espresso form focus preference for fast daily logging.
 - Browser-local unsaved draft recovery for new brew logs.
 - One-way ground-out to dose prefill while logging espresso.
-- Dashboard compact live time-since-last-coffee header that ignores brews marked as served for guests, row-major four-column metric grid for mixed Brew and External Coffee daily/weekly cards, rough daily/weekly spend, unopened-stock versus open-bean inventory split, open-bean count, closed-bag daily/weekly counts, last-4-week trend line chart components, open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
+- Dashboard compact live time-since-last-coffee header that includes Self and household-member Brews, excludes only Guest Brews, and still includes External Coffees; row-major four-column metric grid for mixed Brew and External Coffee daily/weekly cards; rough daily/weekly spend; unopened-stock versus open-bean inventory split; open-bean count; closed-bag daily/weekly counts; last-4-week trend line chart components; open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
 - Dashboard bean stock shelf with unopened in-stock bags, quick-open actions, and bean cost metrics for stocked/open inventory.
 - Repeat Good Brew flow from private brew details and dashboard cockpit best brews, pre-filling targetable shot/setup values from the source brew while keeping taste, notes, media, and sharing fields fresh.
 - Bean index cards group bags by workflow state: open, stock, finished/used up, and archived. Open bags sort by latest brew use first, then opened date and name for beans without brew history. Historical bags stay below active stock/open bags. Stock cards expose quick-open and Rebuy actions.
@@ -204,17 +204,21 @@ Brew ratings are optional, but when present they must be whole numbers from 1 th
 
 New brews redirect to the brew detail page after saving. That page is the intentional saved-brew screen: it shows the Hero Brew Card, quick post-brew correction panels, and the detailed private log below it.
 
-Workspace writers can set private serving metadata while initially logging Espresso or Quick Drip, and can update it later from the brew detail page without running the full inventory correction flow:
+Workspace writers use the same private **Served to** control while initially logging Espresso or Quick Drip and while making a focused correction from the saved Brew page. It has exactly three recipient kinds:
 
-- whether the brew was served for a guest
-- optional guest label, stored as free text with suggestions from household member display labels and active-workspace guest history
-- optional cup style, stored as free text with suggestions from common drink styles and active-workspace brew history
+- `self`: **Myself**. `recipient_user_id` and `recipient_name` are empty.
+- `household_member`: one other User selected from the active Workspace roster. `recipient_user_id` is present and `recipient_name` is empty.
+- `guest`: **Guest**, with an optional private free-text `recipient_name`. `recipient_user_id` is empty.
 
-Selecting or typing a guest label marks the brew as served for a guest, even if the guest checkbox is not explicitly toggled. Free-text guest labels become future suggestions after they are saved on a brew. Guest-serving brews remain in private history and inventory accounting, but they do not reset the dashboard's live time-since-last-coffee timer.
+`recipient_kind` is required. `cup_style` is optional private text, independent of recipient kind, and both it and `recipient_name` are limited to 120 characters. Selecting the logger as a household recipient normalizes back to Self. Database shape constraints and model normalization keep incompatible User/name combinations from being stored.
+
+Roster values such as `member:<user id>` are submitted selection tokens, not authorization. The server resolves them only through `current_workspace.users`; it never accepts a submitted `recipient_user_id` directly. The roster excludes the logger. A saved former-member recipient can be retained through the server-provided `existing_recipient` correction option, but that value cannot select an arbitrary or cross-workspace User. Typing a Person name while Self is selected changes the submission to Guest, and saved Guest names become active-workspace suggestions.
+
+Guest Brews remain in private history and inventory accounting. The dashboard's live time-since-last-coffee query includes Self and household-member Brews, excludes only `recipient_kind: guest`, stays scoped to the active Workspace, and continues to consider External Coffees.
 
 Serving updates do not change inventory, brew measurements, equipment, preparation-tool snapshots, taste, rating, notes, photos, public notes, or public links.
 
-Serving metadata is private by default. It can appear on private brew details and private brew history cards, and it is included in private workspace exports and instance backups. Public brew, bean, and recipe snapshots do not include guest labels, guest flags, or cup styles.
+Serving metadata is private by default. Private Brew details and history cards may show the recipient and Cup. Owner-only workspace exports and instance backups preserve the six recipient/Cup export fields described in [Workspace Export](workspace-export.md). Public Brew and Bean snapshots receive only the automatic privacy-safe recipient projection: Guest names and Cup never become public. Recipe snapshots and recipe portability omit all recipient and Cup fields.
 
 ## Inventory Rules
 

@@ -33,12 +33,6 @@ module PublicBrewSharesHelper
     nil
   end
 
-  def public_snapshot_money(cents)
-    return if cents.blank?
-
-    number_to_currency(cents.to_i / 100.0, unit: "€", separator: ".", delimiter: ",")
-  end
-
   def public_snapshot_ratio(snapshot)
     dose = public_snapshot_decimal_value(snapshot.dig("brew", "dose_grams"))
     beverage = public_snapshot_decimal_value(snapshot.dig("brew", "beverage_grams"))

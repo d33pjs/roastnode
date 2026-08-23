@@ -39,9 +39,6 @@
             <% if (date = public_snapshot_date(section["roast_date"])).present? %>
               <span data-testid="public-bean-fact" class="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-extrabold text-stone-700"><%= t("public_brew_pages.show.roasted", date:) %></span>
             <% end %>
-            <% if (price = public_snapshot_money(section["purchase_price_cents"])).present? %>
-              <span data-testid="public-bean-fact" class="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-extrabold text-stone-700"><%= t("public_brew_pages.show.price", price:) %></span>
-            <% end %>
             <% [ section["origin"], section["process"], section["roast_type"], section["roast_level"] ].compact_blank.each do |fact| %>
               <span data-testid="public-bean-fact" class="rounded-full border border-stone-300 bg-white px-3 py-1 text-xs font-extrabold text-stone-700"><%= fact.to_s.humanize %></span>
             <% end %>

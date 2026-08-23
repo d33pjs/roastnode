@@ -45,13 +45,21 @@ class DashboardMetricsTest < ActiveSupport::TestCase
     end
   end
 
-  test "last coffee timer ignores guest recipients but retains self and household recipients" do
+  test "last coffee timer includes self and household members but excludes guests and other workspaces" do
     travel_to Time.zone.local(2026, 6, 10, 12, 0, 0) do
       move_existing_coffees_out_of_range
-      own_brew = brews(:morning_espresso)
-      own_brew.update!(
-        occurred_at: Time.zone.local(2026, 6, 10, 8, 0, 0)
+      self_brew = brews(:morning_espresso)
+      self_brew.update!(
+        occurred_at: Time.zone.local(2026, 6, 10, 8, 0, 0),
+        recipient_kind: "self",
+        recipient_user: nil,
+        recipient_name: nil
       )
+
+      self_metrics = DashboardMetrics.new(workspace: @workspace, now: Time.current).call
+
+      assert_equal self_brew.occurred_at.to_i, self_metrics.fetch(:last_coffee_at).to_i
+
       household_brew = @workspace.brews.create!(
         user: @user,
         method: "espresso",
@@ -61,19 +69,34 @@ class DashboardMetricsTest < ActiveSupport::TestCase
         recipient_kind: "household_member",
         recipient_user: users(:two)
       )
-      @workspace.brews.create!(
+
+      household_metrics = DashboardMetrics.new(workspace: @workspace, now: Time.current).call
+
+      assert_equal household_brew.occurred_at.to_i, household_metrics.fetch(:last_coffee_at).to_i
+
+      guest_brew = @workspace.brews.create!(
         user: @user,
         method: "espresso",
         bean: @bean,
         bean_weight_grams: 18,
-        occurred_at: Time.zone.local(2026, 6, 10, 9, 0, 0),
+        occurred_at: Time.zone.local(2026, 6, 10, 10, 0, 0),
         recipient_kind: "guest",
         recipient_name: "Anna"
+      )
+      other_workspace_brew = @other_workspace.brews.create!(
+        user: @other_user,
+        method: "espresso",
+        bean: @other_bean,
+        bean_weight_grams: 18,
+        occurred_at: Time.zone.local(2026, 6, 10, 11, 0, 0),
+        recipient_kind: "self"
       )
 
       metrics = DashboardMetrics.new(workspace: @workspace, now: Time.current).call
 
       assert_equal household_brew.occurred_at.to_i, metrics[:last_coffee_at].to_i
+      assert_operator guest_brew.occurred_at.to_i, :>, metrics[:last_coffee_at].to_i
+      assert_operator other_workspace_brew.occurred_at.to_i, :>, metrics[:last_coffee_at].to_i
     end
   end
 
