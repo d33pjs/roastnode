@@ -9,24 +9,7 @@
 
 <%= form.hidden_field :method, value: "espresso" %>
 
-<section data-testid="brew-form-section" data-section="bean" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
-  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.bean") %></h2>
-  <div class="mt-3 grid gap-3">
-    <% @beans.each do |bean| %>
-      <label for="brew_bean_id_<%= bean.id %>" class="grid cursor-pointer grid-cols-[3.5rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
-        <%= render "shared/record_photo_thumb",
-          record: bean,
-          testid: "brew-bean-option-photo",
-          class_name: "h-14 w-14 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
-        <span class="min-w-0">
-          <span class="block truncate font-extrabold text-rn-ink"><%= bean.display_name_for_collection(@beans) %></span>
-          <span class="mt-1 block text-sm font-semibold text-rn-muted"><%= profile_grams(bean.remaining_grams) %></span>
-        </span>
-        <%= form.radio_button :bean_id, bean.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
-      </label>
-    <% end %>
-  </div>
-</section>
+<%= render "brews/bean_selector", form:, grinder_reminder: @grinder_reminder %>
 
 <section data-testid="brew-form-section" data-section="dose" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
   <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.dose") %></h2>

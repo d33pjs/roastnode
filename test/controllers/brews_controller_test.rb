@@ -41,6 +41,87 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
   end
 
+  test "new shows remaining percentage and marks only the method-specific last bean" do
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "[data-testid=?]", "brew-bean-option-meta-#{beans(:open_household).id}", text: /150(?:\.0)?g left.*60% left/
+    assert_select "[data-testid=?]", "brew-bean-last-used-#{beans(:open_household).id}", text: /Last used/, count: 1
+    assert_select "[data-testid=?]", "brew-bean-last-used-#{beans(:second_open_household).id}", count: 0
+  end
+
+  test "new renders private best-reference data without changing grind defaults" do
+    grinder = equipment(:household_grinder)
+    selected_bean = beans(:second_open_household)
+    workspaces(:household).brews.create!(
+      user: users(:one),
+      bean: selected_bean,
+      grinder:,
+      machine: equipment(:household_machine),
+      method: "espresso",
+      occurred_at: 1.day.ago,
+      bean_weight_grams: 1,
+      grind_setting: "1/1,50",
+      rating: 5
+    )
+    brews(:morning_espresso).update!(occurred_at: 1.minute.ago, grind_setting: "1/1,75")
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    section = Nokogiri::HTML(response.body).at_css("[data-controller='brew-grinder-reminder']")
+    selected_input = section.at_css("input[value='#{selected_bean.id}']")
+    assert_equal [ grinder.id.to_s, "1/1,50" ].to_json, selected_input["data-grinder-reference-key"]
+    assert_includes selected_input["data-grinder-reference-label"], selected_bean.display_name
+    assert_includes selected_input["data-grinder-reference-label"], "1/1,50"
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", "1/1,75"
+  end
+
+  test "repeat brew keeps its bean selection while last-used marker describes actual history" do
+    source = workspaces(:household).brews.create!(
+      user: users(:one),
+      bean: beans(:second_open_household),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      method: "espresso",
+      occurred_at: 2.days.ago,
+      bean_weight_grams: 1,
+      grind_setting: "1/1,50",
+      rating: 5
+    )
+    brews(:morning_espresso).update!(occurred_at: 1.minute.ago)
+    sign_in_as(users(:one))
+
+    get new_brew_path(repeat_brew_id: source.id)
+
+    assert_response :success
+    assert_select "input[name=?][value=?][checked]", "brew[bean_id]", source.bean_id.to_s
+    assert_select "[data-testid=?]", "brew-bean-last-used-#{brews(:morning_espresso).bean_id}", count: 1
+  end
+
+  test "failed create preserves the selected bean and actual last-used marker" do
+    last_brew = brews(:morning_espresso)
+    selected_bean = beans(:second_open_household)
+    sign_in_as(users(:one))
+
+    post brews_path, params: {
+      brew: {
+        method: "espresso",
+        bean_id: selected_bean.id,
+        grinder_id: equipment(:household_grinder).id,
+        machine_id: equipment(:household_machine).id,
+        bean_weight_grams: ""
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "input[name=?][value=?][checked]", "brew[bean_id]", selected_bean.id.to_s
+    assert_select "[data-testid=?]", "brew-bean-last-used-#{last_brew.bean_id}", count: 1
+  end
+
   test "new espresso form exposes controls supported by the selected machine" do
     machine = equipment(:household_machine)
     machine.update!(preinfusion_enabled: true, low_flow_start_enabled: true, flow_control_enabled: true)

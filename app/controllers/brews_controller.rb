@@ -42,6 +42,7 @@ class BrewsController < ApplicationController
       end
     end
     load_form_options
+    load_grinder_reminder
     default_attributes = default_brew_attributes(method: @selected_method)
 
     unless default_attributes[:bean]
@@ -77,6 +78,7 @@ class BrewsController < ApplicationController
     @brew = current_workspace.brews.new(attributes)
     @brew.user = Current.user
     load_form_options(selected_bean: @brew.bean, selected_grinder: @brew.grinder, selected_machine: @brew.machine, selected_brewer: @brew.brewer)
+    load_grinder_reminder
     set_brew_form_preferences
     @draft_storage_key = brew_draft_storage_key
     apply_recipe_snapshot
@@ -317,6 +319,15 @@ class BrewsController < ApplicationController
       @machines = equipment_options(kind: :machine, selected_equipment: selected_machine, allow_archived: allow_archived_equipment)
       @brewers = equipment_options(kind: :brewer, selected_equipment: selected_brewer, allow_archived: allow_archived_equipment)
       @preparation_tools = current_workspace.preparation_tools.active.where(brew_method: @selected_method || "espresso").ordered.includes(:primary_photo_record, photos_attachments: :blob)
+    end
+
+    def load_grinder_reminder
+      @grinder_reminder = BrewGrinderReminder.new(
+        workspace: current_workspace,
+        user: Current.user,
+        method: @selected_method,
+        beans: @beans
+      ).call
     end
 
     def sort_beans_for_method!

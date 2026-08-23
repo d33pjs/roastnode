@@ -166,6 +166,10 @@ module BrewsHelper
     ].compact
   end
 
+  def brew_grinder_reference_label(reference)
+    reference.display_parts.join(" · ")
+  end
+
   private
     def related_photo_group(title, name, record)
       return unless record&.photos&.attached?
