@@ -89,30 +89,36 @@ class MediaAttachmentsController < ApplicationController
     def send_variant(name, transformations)
       return head :not_found unless safe_image_attachment? && @attachment.blob.image?
 
+      data = variant_data(transformations, name)
+      return head :not_found if data.nil?
+
       response.set_header("X-Roastnode-Media-Variant", name)
       send_blob(
         disposition: "inline",
         filename: "#{name}-#{@attachment.blob.filename}",
-        data: variant_data(transformations, name)
+        data:
       )
     end
 
     def variant_data(transformations, name)
       @attachment.blob.variant(transformations).processed.download
     rescue LoadError => error
-      log_variant_fallback(name, error)
-      @attachment.blob.download
+      variant_failure_data(name, error)
     rescue => error
-      log_variant_fallback(name, error)
+      variant_failure_data(name, error)
+    end
+
+    def variant_failure_data(name, error)
+      log_variant_failure(name, error)
+      return if name == HERO_VARIANT
+
       @attachment.blob.download
     end
 
-    def log_variant_fallback(name, error)
-      Rails.logger.info("Falling back to original media for #{name} #{attachment_log_id}: #{error.class}: #{error.message}")
-    end
-
-    def attachment_log_id
-      "#{@attachment.record_type}##{@attachment.record_id}/#{@attachment.name}/#{@attachment.id}"
+    def log_variant_failure(name, error)
+      Rails.logger.info(
+        "Media variant processing failed variant=#{name} error=#{error.class} request_id=#{request.request_id}"
+      )
     end
 
     def ensure_attachment_in_current_workspace!

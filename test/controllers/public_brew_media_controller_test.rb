@@ -20,13 +20,52 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
     assert_match "public-brew-thumbnail", response.headers["Content-Disposition"]
     assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
+  end
+
+  test "streams a bounded public hero from enabled share" do
+    brew = brews(:morning_espresso)
+    photo = attach_processable_photo(brew)
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
 
     get public_media_path_for(share, photo, variant: "hero")
     assert_response :success
     assert_equal "hero", response.headers["X-Roastnode-Media-Variant"]
     assert_match "public-brew-hero", response.headers["Content-Disposition"]
-    assert_no_match "photo.jpg", response.headers["Content-Disposition"]
+    assert_no_match "photo.png", response.headers["Content-Disposition"]
     assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
+    hero = Vips::Image.new_from_buffer(response.body, "")
+    assert_equal 1200, [ hero.width, hero.height ].max
+  end
+
+  test "hero processing failure does not expose the original publicly" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
+    original = photo.blob.download
+
+    with_variant_processing_failure(photo) do
+      get public_media_path_for(share, photo, variant: "hero")
+    end
+
+    assert_response :not_found
+    assert_empty response.body
+    assert_not_equal original, response.body
+    assert_nil response.headers["X-Roastnode-Media-Variant"]
+  end
+
+  test "public thumbnail processing failure still serves the original" do
+    brew = brews(:morning_espresso)
+    photo = attach_photo(brew)
+    share = create_share(brew:, enabled: true, selected_photo_attachment_ids: [ photo.id ])
+    original = photo.blob.download
+
+    with_variant_processing_failure(photo) do
+      get public_media_path_for(share, photo, variant: "thumbnail")
+    end
+
+    assert_response :success
+    assert_equal original, response.body
+    assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
   end
 
   test "rejects unselected photo" do
@@ -203,5 +242,23 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
         content_type:
       )
       record.photos.attachments.last
+    end
+
+    def attach_processable_photo(record)
+      File.open(Rails.root.join("app/assets/images/brand/logo_only_white_bg.png")) do |file|
+        record.photos.attach(io: file, filename: "photo.png", content_type: "image/png")
+      end
+      record.photos.attachments.last
+    end
+
+    def with_variant_processing_failure(attachment)
+      blob = attachment.blob
+      failure = ->(*) { raise "forced variant processing failure" }
+
+      with_stubbed_singleton_method(blob, :variant, failure) do
+        with_stubbed_singleton_method(ActiveStorage::Attachment, :find, ->(*) { attachment }) do
+          yield
+        end
+      end
     end
 end

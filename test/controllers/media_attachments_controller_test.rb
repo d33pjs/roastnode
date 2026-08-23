@@ -171,6 +171,63 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1200, [ hero.width, hero.height ].max
   end
 
+  test "hero variant processing failure does not serve the original" do
+    sign_in_as(users(:one))
+    attachment = attach_large_raster(beans(:open_household))
+    original = attachment.blob.download
+    request_id = "hero-media-correlation"
+    sensitive_marker = "private-processor-secret"
+    sensitive_path = "/private/uploads/#{attachment.blob.filename}"
+    failure_message = "#{sensitive_marker} record=#{attachment.record_id} attachment=#{attachment.id} path=#{sensitive_path}"
+
+    log_messages = capture_info_logs do
+      with_variant_processing_failure(attachment, message: failure_message) do
+        get media_attachment_path(attachment, variant: :hero), headers: { "X-Request-Id" => request_id }
+      end
+    end
+
+    assert_response :not_found
+    assert_empty response.body
+    assert_not_equal original, response.body
+    assert_nil response.headers["X-Roastnode-Media-Variant"]
+    assert_safe_private_variant_failure_log(
+      log_messages,
+      attachment:,
+      variant: "hero",
+      request_id:,
+      sensitive_marker:,
+      sensitive_path:
+    )
+  end
+
+  test "thumbnail processing failure still serves the original" do
+    sign_in_as(users(:one))
+    attachment = attach_photo(beans(:open_household))
+    original = attachment.blob.download
+    request_id = "thumbnail-media-correlation"
+    sensitive_marker = "private-processor-secret"
+    sensitive_path = "/private/uploads/#{attachment.blob.filename}"
+    failure_message = "#{sensitive_marker} record=#{attachment.record_id} attachment=#{attachment.id} path=#{sensitive_path}"
+
+    log_messages = capture_info_logs do
+      with_variant_processing_failure(attachment, message: failure_message) do
+        get media_attachment_path(attachment, variant: :thumbnail), headers: { "X-Request-Id" => request_id }
+      end
+    end
+
+    assert_response :success
+    assert_equal original, response.body
+    assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
+    assert_safe_private_variant_failure_log(
+      log_messages,
+      attachment:,
+      variant: "thumbnail",
+      request_id:,
+      sensitive_marker:,
+      sensitive_path:
+    )
+  end
+
   test "processes a valid large image into a bounded Vips thumbnail" do
     sign_in_as(users(:one))
     attachment = nil
@@ -593,5 +650,38 @@ class MediaAttachmentsControllerTest < ActionDispatch::IntegrationTest
         )
       end
       record.photos.attachments.last
+    end
+
+    def with_variant_processing_failure(attachment, message: "forced variant processing failure")
+      blob = attachment.blob
+      failure = ->(*) { raise message }
+
+      with_stubbed_singleton_method(blob, :variant, failure) do
+        with_stubbed_singleton_method(ActiveStorage::Attachment, :find, ->(*) { attachment }) do
+          yield
+        end
+      end
+    end
+
+    def capture_info_logs
+      messages = []
+      capture = ->(*args, &block) { messages << (args.first || block&.call).to_s }
+
+      with_stubbed_singleton_method(Rails.logger, :info, capture) { yield }
+      messages
+    end
+
+    def assert_safe_private_variant_failure_log(log_messages, attachment:, variant:, request_id:, sensitive_marker:, sensitive_path:)
+      failure_log = log_messages.find { |message| message.include?("RuntimeError") }
+
+      assert_not_nil failure_log
+      assert_not_includes failure_log, sensitive_marker
+      assert_not_includes failure_log, attachment.record_id.to_s
+      assert_not_includes failure_log, attachment.id.to_s
+      assert_not_includes failure_log, attachment.blob.filename.to_s
+      assert_not_includes failure_log, sensitive_path
+      assert_includes failure_log, "variant=#{variant}"
+      assert_includes failure_log, "error=RuntimeError"
+      assert_includes failure_log, "request_id=#{request_id}"
     end
 end

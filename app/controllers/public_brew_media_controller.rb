@@ -61,19 +61,30 @@ class PublicBrewMediaController < ApplicationController
     def send_variant(name, transformations)
       return head :not_found unless safe_image_attachment? && @attachment.blob.image?
 
+      data = variant_data(transformations, name)
+      return head :not_found if data.nil?
+
       response.set_header("X-Roastnode-Media-Variant", name)
       send_blob(
         disposition: "inline",
-        data: variant_data(transformations, name)
+        data:
       )
     end
 
     def variant_data(transformations, name)
       @attachment.blob.variant(transformations).processed.download
     rescue LoadError => error
-      log_variant_fallback(name, error)
-      @attachment.blob.download
+      variant_failure_data(name, error)
     rescue => error
+      variant_failure_data(name, error)
+    end
+
+    def variant_failure_data(name, error)
+      if name == HERO_VARIANT
+        Rails.logger.info("Rejecting failed public hero media processing for #{public_attachment_log_id}: #{error.class}")
+        return
+      end
+
       log_variant_fallback(name, error)
       @attachment.blob.download
     end

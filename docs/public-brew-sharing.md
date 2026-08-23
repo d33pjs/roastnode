@@ -124,7 +124,7 @@ Public photo controls can open any rendered selected photo into one shared light
 
 Older snapshots without `public_media` collect their curated attachment references and apply the same live validation. Removing household membership or replacing an avatar revokes the old recipient-avatar handle immediately; a replacement is not public until a refreshed snapshot references it.
 
-The public media route applies the same password gate as the HTML page. It returns not found for disabled shares, unknown tokens, unselected attachments, attachments outside the share whitelist, and unsupported variants. Thumbnail responses may fall back to original bytes if local image processing fails, but logs must not include public bearer tokens or raw processor error messages.
+The public media route applies the same password gate as the HTML page. It returns not found for disabled shares, unknown tokens, unselected attachments, attachments outside the share whitelist, and unsupported variants. Thumbnail responses may fall back to safe original raster bytes if local image processing fails, but a failed Hero transform returns not found instead of exposing an unbounded original. Logs must not include public bearer tokens or raw processor error messages.
 
 Because `/s/:token` and `/r/:token` are bearer access, Rails request logging redacts public share tokens and public media handles from `filtered_path`. Public share redirects are also configured through Rails redirect filtering. Password reset, workspace invite, and household invite bearer URLs are redacted by the same log-filtering initializer.
 
