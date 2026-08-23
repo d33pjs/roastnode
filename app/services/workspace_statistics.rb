@@ -9,11 +9,19 @@ class WorkspaceStatistics
     Date.current
   end
 
-  def initialize(workspace:, start_date: nil, end_date: nil)
+  def initialize(
+    workspace:,
+    start_date: nil,
+    end_date: nil,
+    logger_id: nil,
+    recipient_filter: nil
+  )
     @workspace = workspace
     @start_date = (start_date || self.class.default_start_date).to_date
     @end_date = (end_date || self.class.default_end_date).to_date
     @start_date, @end_date = @end_date, @start_date if @start_date > @end_date
+    @logger_id = logger_id
+    @recipient_filter = recipient_filter
   end
 
   def call
@@ -28,14 +36,45 @@ class WorkspaceStatistics
   end
 
   private
-    attr_reader :workspace, :start_date, :end_date
+    attr_reader :workspace, :start_date, :end_date, :logger_id, :recipient_filter
 
     def brews
-      @brews ||= workspace
-        .brews
+      @brews ||= filtered_brew_scope
         .includes(:bean, :grinder, :machine, :brewer)
-        .where(occurred_at: start_date.beginning_of_day..end_date.end_of_day)
         .to_a
+    end
+
+    def filtered_brew_scope
+      scope = workspace.brews.where(
+        occurred_at: start_date.beginning_of_day..end_date.end_of_day
+      )
+      scope = scope.where(user_id: logger_id) if logger_id.present?
+      apply_recipient_filter(scope)
+    end
+
+    def apply_recipient_filter(scope)
+      case recipient_filter
+      when nil
+        scope
+      when "self"
+        scope.where(recipient_kind: "self")
+      when "guests"
+        scope.where(recipient_kind: "guest")
+      when /\Auser:(\d+)\z/
+        recipient_user_id = Regexp.last_match(1).to_i
+        scope.where(
+          <<~SQL.squish,
+            (brews.recipient_kind = :self_kind AND brews.user_id = :user_id)
+            OR
+            (brews.recipient_kind = :household_member_kind AND brews.recipient_user_id = :user_id)
+          SQL
+          self_kind: "self",
+          household_member_kind: "household_member",
+          user_id: recipient_user_id
+        )
+      else
+        raise ArgumentError, "unsupported recipient filter"
+      end
     end
 
     def espresso_brews
@@ -88,6 +127,7 @@ class WorkspaceStatistics
 
     def rates
       {
+        channeling_brew_count: espresso_brews.size,
         channeling_percent: percentage(espresso_brews.count(&:channeling?), espresso_brews.size)
       }
     end
