@@ -1,7 +1,8 @@
 class WorkspaceStatisticsPeople
   RECIPIENT_SELF = "self"
   RECIPIENT_GUESTS = "guests"
-  USER_RECIPIENT_PATTERN = /\Auser:(\d+)\z/
+  LOGGER_ID_PATTERN = /\A[1-9]\d*\z/
+  USER_RECIPIENT_PATTERN = /\Auser:([1-9]\d*)\z/
 
   def initialize(workspace:)
     @workspace = workspace
@@ -29,6 +30,7 @@ class WorkspaceStatisticsPeople
     return nil if value.nil?
     raise ActiveRecord::RecordNotFound unless value.is_a?(String)
     return nil if value.blank?
+    raise ActiveRecord::RecordNotFound unless LOGGER_ID_PATTERN.match?(value)
 
     id = Integer(value, 10)
     return id if logger_users.any? { |user| user.id == id }

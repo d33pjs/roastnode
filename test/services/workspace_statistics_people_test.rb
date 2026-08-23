@@ -76,6 +76,7 @@ class WorkspaceStatisticsPeopleTest < ActiveSupport::TestCase
   test "rejects malformed unknown and foreign logger ids" do
     people = WorkspaceStatisticsPeople.new(workspace: @workspace)
     foreign_id = users(:two).id
+    valid_id = users(:one).id.to_s
     brews(:morning_espresso).update!(user: users(:one))
     memberships(:member).destroy!
 
@@ -83,6 +84,11 @@ class WorkspaceStatisticsPeopleTest < ActiveSupport::TestCase
       "abc",
       "999999",
       foreign_id.to_s,
+      "+#{valid_id}",
+      "0#{valid_id}",
+      "0_#{valid_id}",
+      " #{valid_id}",
+      "#{valid_id} ",
       [],
       {},
       [ users(:one).id.to_s ],
@@ -97,6 +103,7 @@ class WorkspaceStatisticsPeopleTest < ActiveSupport::TestCase
   test "rejects malformed unknown and foreign recipient values" do
     people = WorkspaceStatisticsPeople.new(workspace: @workspace)
     foreign_id = users(:two).id
+    valid_id = users(:one).id.to_s
     memberships(:member).destroy!
 
     [
@@ -104,6 +111,7 @@ class WorkspaceStatisticsPeopleTest < ActiveSupport::TestCase
       "user:abc",
       "user:999999",
       "user:#{foreign_id}",
+      "user:0#{valid_id}",
       [],
       {},
       [ "self" ],

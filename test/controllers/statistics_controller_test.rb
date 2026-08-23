@@ -297,6 +297,19 @@ class StatisticsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "statistics rejects noncanonical numeric people identifiers" do
+    sign_in_as(users(:one))
+    valid_id = users(:one).id.to_s
+
+    [ "+#{valid_id}", "0#{valid_id}", "0_#{valid_id}", " #{valid_id}", "#{valid_id} " ].each do |logger_id|
+      get statistics_path, params: { logger_id: logger_id }
+      assert_response :not_found, "expected logger_id #{logger_id.inspect} to be rejected"
+    end
+
+    get statistics_path, params: { recipient: "user:0#{valid_id}" }
+    assert_response :not_found
+  end
+
   test "timeframe links preserve people while reset actions clear deliberate scopes" do
     users(:one).update!(display_name: "Jens")
     sign_in_as(users(:one))
