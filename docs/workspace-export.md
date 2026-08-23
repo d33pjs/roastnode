@@ -14,7 +14,7 @@ Workspace Export is the first Roastnode data portability feature.
 - Import batch metadata.
 - Beans, equipment, preparation tools, brews, External Coffees, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
 - External Coffees include drink type, drink size, place text, private coordinates, price/currency, taste axes, rating, notes, public note, and photo metadata.
-- Rich bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, website, flavor profile, and variety information.
+- Rich private Bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, Purchase Website (`purchase_url`), Coffee Origin Website (`coffee_origin_url`), flavor profile, and variety information. Both direct website fields are included in the owner-only JSON and Beans CSV exports.
 - Equipment machine-capability flags for pre-infusion, low-flow start, and flow control.
 - Brew method fields, including espresso low-flow-start seconds and flow-control use, Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, and the private six-field recipient/Cup contract.
 - Quick Drip profile preferences are account-level data. Active workspace exports do not include enabled-method or grams-per-coffee-spoon preferences; full instance backup/readable export payloads include them so restores can rebuild user logging defaults.
@@ -39,7 +39,7 @@ CSV exports are separate spreadsheet-friendly downloads:
 - `/workspace_export/brews.csv`
 - `/workspace_export/external_coffees.csv`
 
-The beans CSV includes flat bag metadata such as names, roaster, derived status (`stock`, `open`, `used_up`, or `archived`), remaining grams, roast data, variety information, purchase details, rating, notes, and timestamps.
+The beans CSV includes flat bag metadata such as names, roaster, derived status (`stock`, `open`, `finished`, `used_up`, or `archived`), remaining grams, roast data, variety information, purchase details, both private Bean website columns, rating, notes, and timestamps.
 
 The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing (including low-flow start), temperature, flow-control use, taste balance, rating, the exact private recipient/Cup fields below, retention marker, notes, and timestamps.
 

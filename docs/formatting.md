@@ -8,6 +8,19 @@ Decimal measurement fields accept both dot and comma decimal separators. The ser
 
 Decimal measurement inputs should be rendered as `type="text"` with `inputmode="decimal"`. Avoid HTML `number` inputs for decimal measurements because browsers vary in their support for comma decimal entry.
 
+## Bean Text And URL Examples
+
+Bean entry uses compact examples without changing the stored free-text contract:
+
+- Elevation: `1100-1200m`
+- Variety: `Arabica and/or Robusta`
+- Percentage: `50%/60%`
+- Processing: `washed or natural`
+- Purchase Website: `URL to buy this bag again`
+- Coffee Origin Website: `URL to original Coffee`
+
+Purchase Website and Coffee Origin Website trim surrounding whitespace and accept only HTTP or HTTPS URLs with a host. Blank values remain valid.
+
 ## Profile Formatting
 
 Users can choose number and timestamp display preferences from Profile:

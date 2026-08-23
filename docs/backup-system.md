@@ -31,6 +31,7 @@ The full archive currently includes a manifest, a readable instance JSON export,
 - all workspaces/households
 - all memberships and roles
 - all beans, equipment, preparation tools, brews, External Coffees, equipment events, inventory adjustments, statistics source records, and import metadata
+- each Bean's private Purchase Website (`purchase_url`) and Coffee Origin Website (`coffee_origin_url`)
 - each Brew's recipient kind, mapped recipient User reference and safe inspection labels, private Guest name, and Cup style
 - all workspace media and account media, including originals
 - a manifest with format version, generated time, file checksums, and relationships between JSON records and media files
@@ -41,7 +42,7 @@ The full export must not include password digests, sessions, invite tokens, sign
 
 The readable export is for humans and inspection. It produces one JSON file with every household/workspace and its data in a clear nested structure. Media bytes may stay in files beside the JSON, but the JSON includes stable paths, checksums, content types, filenames, and ownership metadata.
 
-The readable export is embedded inside the full archive and is the data source used by restore tests.
+The readable export is embedded inside the full archive and is the data source used by restore tests. Bean Purchase Website and Coffee Origin Website are therefore present in both readable and full backup data.
 
 ## Restore Contract
 
@@ -60,6 +61,8 @@ Recipient restore keeps archive format/version `1` compatible across the schema 
 For a household recipient, restore resolves only `recipient_user_id` through the archive's old-to-new User ID map. It never selects a User by email or display label, never permits the logger as a distinct household recipient, and does not require restored current membership; this preserves a truthful former-member relationship. Self and Guest clear the recipient User, and only Guest may retain the optional private name. Cup style restores independently for all three kinds.
 
 Older version-1 rows without the new recipient fields use only a literal legacy boolean: `true` becomes Guest and may consume the legacy Guest-name value, while `false`, `null`, or a missing flag becomes Self. Missing legacy Cup remains empty. Unsupported kinds, non-boolean legacy flags, missing/unknown User IDs, logger-as-recipient rows, non-string names/Cup values, and values longer than 120 characters raise the sanitized `InstanceBackupRestorer::RestoreError` and roll back the complete restore transaction.
+
+Bean website restore remains compatible with archive format/version `1`. Purchase Website and Coffee Origin Website are restored independently only when the stored value is an HTTP or HTTPS URL with a host; an unsafe value is dropped without discarding a safe value in the other field. Older version-1 archives that do not contain `coffee_origin_url` remain valid and restore it as blank.
 
 ## Open Design Decisions
 

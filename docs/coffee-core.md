@@ -222,14 +222,17 @@ Serving metadata is private by default. Private Brew details and history cards m
 
 ## Inventory Rules
 
-- `Bean#remaining_grams` defaults to `bag_size_grams` when a bean is created.
+- New Beans default to full unopened stock: remaining grams initialize once from bag size, while `opened_on`, `finished_at`, and `archived_at` stay blank.
 - Beans can be edited after creation, including remaining grams and additive package photos.
 - Bean status is derived from lifecycle fields: Stock means owned but unopened (`opened_on` blank), Open means brewable (`opened_on` present, remaining beans, not archived), Used up means zero remaining beans, and Archived means intentionally removed from normal workflows.
-- Beans can be archived, reopened, marked as stock/open/used up from the edit form, or duplicated as a new open bag. Duplicates copy descriptive metadata and photos, set `opened_on` to the current date, clear `archived_at`, and reset remaining grams to the bag size.
+- Beans can be archived, reopened, or marked as stock/open/used up from the edit form.
+- Duplicating a bag copies descriptive metadata, package photos and primary-photo identity, price, Purchase Website, Coffee Origin Website, private/public notes, and its duplicate-family link. The new bag resets to full unopened stock and becomes brewable only after an explicit open action.
 - Stock-aware open-date behavior keeps unopened stock bags without an opened date, stamps quick-opened bags with the current date, and prevents stock bags from silently appearing in brew selection before they are opened.
 - Bag size can initialize or resync remaining grams in one direction for unopened stock bags, but editing remaining grams does not write back to the package size.
 - Beans can be deleted from a danger zone. This deletes the bean, its brews, and all inventory movements for that bean in one transaction.
-- Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, website, notes, richer origin/manufacturer fields, and variety information.
+- Bean rating is optional; a saved value is a whole number from 1 through 5.
+- Bean metadata includes buy date, roast date, roast type, degree of roast, bean rating, blend type, cost, flavor profile, decaf flag, notes, richer origin/manufacturer fields, and variety information.
+- Purchase Website is the private place-to-buy-again URL and continues to power Rebuy. Coffee Origin Website is a separate private source-information URL. Both require HTTP or HTTPS plus a host and appear as synthesized private Links rather than `RecordLink` rows.
 - Public notes and public links are separate from private notes. Public brew shares copy only `public_note` and public links into their snapshots.
 - If multiple open beans have the same roaster/name, the espresso logging selector appends the opened date to those duplicate labels only.
 - The bean overview groups bags by lifecycle before sorting. Open bags prioritize recently used beans by newest brew, then fall back to opened-date/name ordering. Stock bags sort by purchase, roast, and creation freshness. Finished, used-up, and archived bags stay in historical sections so old bags do not jump above active workflow items.
@@ -238,6 +241,7 @@ Serving metadata is private by default. Private Brew details and history cards m
 - Creating a brew also records an `InventoryAdjustment` with reason `brew`.
 - Manual inventory adjustments are logged from a bean detail page with reason `manual`; they add their signed gram delta to the bean and clamp remaining inventory at zero.
 - Brew editing/deletion adjusts or reverses the brew inventory movement in one transaction.
+- Cost per shot is purchase price per gram multiplied by average Bean In across the Bean's Espresso brews, with an 18g fallback before the first Espresso. Bean In is the full bag deduction, so Ground Out and Dose are not added again. Quick Drip and generic manual inventory corrections do not enter this calculation.
 
 ## Agent Notes
 

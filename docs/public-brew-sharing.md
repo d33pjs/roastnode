@@ -55,6 +55,8 @@ The snapshot and public page must not include:
 
 Workspace name/logo and user display label/avatar are intentional public identity surfaces for this feature. They should still be routed through the public-share media whitelist instead of raw Active Storage URLs.
 
+The direct Bean columns `purchase_url` and `coffee_origin_url`, and Bean purchase cost, are excluded from new public Bean, Brew, and Recipe snapshots. A public Brew page also ignores a legacy `purchase_price_cents` key if an older stored snapshot still contains it, so historical snapshots do not need to be refreshed before the private cost stops rendering.
+
 The optional workspace Buy Me a Coffee URL is not copied into public share snapshots. Public share controllers may read it from the share's workspace to render the global footer support badge.
 
 The footer support badge must render as local static HTML and SVG only. It must not load the Buy Me a Coffee CDN script or any other third-party script into the Roastnode origin.
@@ -100,9 +102,9 @@ Refreshing a share rebuilds its snapshot, shortens legacy generated titles that 
 
 ## Public Links
 
-`RecordLink` is the shared link model for `Brew`, `Bean`, `Equipment`, and `PreparationTool`. Links are workspace scoped and only accept HTTP or HTTPS URLs.
+`RecordLink` is the shared link model for `Brew`, `Bean`, `Equipment`, and `PreparationTool`. Links are workspace scoped and only accept HTTP or HTTPS URLs. Bean Purchase Website and Coffee Origin Website are separate private columns whose private detail-page chips are synthesized at render time; they are not `RecordLink` rows and are never copied into public snapshots.
 
-Only links with `visibility: public` are copied into public snapshots. Affiliate and buy links should be visually prominent on the public page, but they must stay attached to the relevant brew, bean, gear, or tool section.
+Intentional `RecordLink` rows with `visibility: public` are still copied into public snapshots. Affiliate and buy links should be visually prominent on the public page, but they must stay attached to the relevant brew, bean, gear, or tool section. Private `RecordLink` rows remain private.
 
 ## Public Media
 
@@ -149,6 +151,6 @@ Media requests and password-gate requests do not count as page views.
 - Use public media handles in public HTML; do not render Active Storage attachment IDs.
 - Keep public pages and public media independent from `current_workspace`.
 - Render only `public_note`, never private `notes`, on public pages.
-- Purchase Website, Coffee Origin Website, and Bean purchase cost are private. New public Brew snapshots omit them, and the public renderer ignores a legacy `purchase_price_cents` key if an older stored snapshot still contains it. Equipment and preparation-tool costs remain private too.
+- Purchase Website, Coffee Origin Website, and Bean purchase cost are private. New public Bean, Brew, and Recipe snapshots omit them, and the public Brew renderer ignores a legacy `purchase_price_cents` key if an older stored snapshot still contains it. Intentional public `RecordLink` rows remain eligible for their relevant public section. Equipment and preparation-tool costs remain private too.
 - Page-view IP history is intentionally full IP storage for owner/admin share management, but retained per-share rows are capped.
 - Add negative tests whenever changing public sharing, especially for password gates, disabled shares, selected media, private notes, private links, and raw media URL leakage.

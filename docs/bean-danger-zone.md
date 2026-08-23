@@ -22,6 +22,8 @@ The transaction:
 
 It does not restore inventory before deleting brews because the bean itself is being removed.
 
+Deleting the Bean also removes its direct private `purchase_url` and `coffee_origin_url` values and its ordinary dependent `RecordLink` rows. The private Purchase URL and Origin Coffee URL chips are synthesized at render time from the Bean columns; they do not create separate system-link rows, so deletion cannot leave system-link records orphaned or require them to be synchronized.
+
 ## Agent Notes
 
 - Controllers must call `Bean#destroy_with_history!` for this flow. Do not call `destroy!` directly from the controller.

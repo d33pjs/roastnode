@@ -27,7 +27,7 @@ Important mappings:
 - `BEANS.buyDate` -> buy date
 - `BEANS.weight` -> bag size
 - `BEANS.cost` -> cost
-- `BEANS.url` -> website
+- `BEANS.url` -> Purchase Website (`purchase_url`). Beanconqueror does not populate Coffee Origin Website.
 - `BEANS.aromatics` -> flavor profile
 - `BEANS.roast_type` / `roastType` -> roast type
 - `BEANS.roast_degree` / `roastDegree` / `degreeOfRoast` -> degree of roast
