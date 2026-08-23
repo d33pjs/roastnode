@@ -21,7 +21,7 @@ The instance backup system is v1 operational scope. It is separate from active-w
 - `bin/rails roastnode:backup:validate[path/to/archive.zip]` validates an archive.
 - `bin/rails roastnode:backup:restore[path/to/archive.zip]` restores an archive into an empty server.
 
-The [Activity audit](activity-audit.md) records queued, successful, and failed backup operations only after their respective state changes. Retention cleanup is deliberately not an event. Authorized workspace and instance exports preserve ledger rows; restore validates each row against the action contract, remaps actors and supported subjects, and keeps absent subjects safely unlinked. The archive cannot contain the later success event for that same archive.
+The [Activity audit](activity-audit.md) records queued, successful, and failed backup operations only after their respective state changes. A generated archive is kept only when the successful state and its Activity event commit together; a failed success audit removes that run's candidate file without touching unrelated storage files. If the failure Activity transaction itself cannot persist, the run still reaches the failed terminal state, the original backup exception remains the job error, and only generic persistence-failure classes are written to the server log. Retention cleanup is deliberately not an event. Authorized workspace and instance exports preserve ledger rows; restore validates each row against the action contract, remaps actors and supported subjects, and keeps absent subjects safely unlinked. The archive cannot contain the later success event for that same archive.
 
 ## Full Reconstructable Export
 

@@ -116,9 +116,17 @@ class InstanceBackupJobsTest < ActiveJob::TestCase
       storage_path: @backup_root.relative_path_from(Rails.root).to_s, retention_count: 7
     )
     run = profile.instance_backup_runs.create!(backup_kind: "full_archive")
+    FileUtils.mkdir_p(@backup_root)
+    unrelated_path = @backup_root.join("keep-me.txt")
+    File.binwrite(unrelated_path, "unrelated")
+    backup_root = @backup_root
+    test_case = self
+    generated_path = nil
     original_record = Activity::Emitter.method(:record!)
     failing_success = lambda do |**attributes|
       if attributes.fetch(:action) == "instance_backup_run.succeeded"
+        generated_path = Dir[backup_root.join("roastnode-*")].sole
+        test_case.assert_path_exists generated_path
         raise ActiveRecord::RecordInvalid.new(ActivityEvent.new)
       end
 
@@ -134,11 +142,17 @@ class InstanceBackupJobsTest < ActiveJob::TestCase
     end
 
     assert_equal "failed", run.reload.status
+    assert_nil run.file_path
+    assert_nil run.file_size_bytes
+    assert_nil run.checksum_sha256
+    assert_not_nil generated_path
+    assert_not File.exist?(generated_path), "expected the untracked failed archive to be removed"
+    assert_path_exists unrelated_path
     assert_equal 0, ActivityEvent.where(action: "instance_backup_run.succeeded", subject: run).count
     assert_equal 1, ActivityEvent.where(action: "instance_backup_run.failed", subject: run).count
   end
 
-  test "failed activity persistence failure rolls back failed state and event together" do
+  test "failed activity persistence does not mask the backup error or leave the run running" do
     profile = InstanceBackupProfile.create!(
       name: "Full archive", backup_kind: "full_archive", enabled: true, schedule: "manual",
       storage_path: @backup_root.relative_path_from(Rails.root).to_s, retention_count: 7
@@ -153,7 +167,7 @@ class InstanceBackupJobsTest < ActiveJob::TestCase
       original_record.call(**attributes)
     end
 
-    error = assert_raises(ActiveRecord::RecordInvalid) do
+    error = assert_raises(RuntimeError) do
       with_stubbed_singleton_method(InstanceBackupArchiveBuilder, :new, ->(*) { raise "backup generation failed" }) do
         with_stubbed_singleton_method(Activity::Emitter, :record!, failing_failure) do
           InstanceBackupJob.perform_now(run)
@@ -161,8 +175,11 @@ class InstanceBackupJobsTest < ActiveJob::TestCase
       end
     end
 
-    assert_instance_of ActivityEvent, error.record
-    assert_equal "running", run.reload.status
+    assert_equal "backup generation failed", error.message
+    assert_equal "failed", run.reload.status
+    assert_nil run.file_path
+    assert_nil run.file_size_bytes
+    assert_nil run.checksum_sha256
     assert_equal 0, ActivityEvent.where(action: "instance_backup_run.failed", subject: run).count
   end
 end

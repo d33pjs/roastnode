@@ -10,6 +10,7 @@ class InstanceBackupRun < ApplicationRecord
 
   def perform!
     now = Time.current
+    path = nil
     update!(status: "running", started_at: now, error_message: nil)
 
     bytes, extension = backup_bytes_and_extension
@@ -37,16 +38,9 @@ class InstanceBackupRun < ApplicationRecord
       Rails.logger.warn("Backup retention cleanup failed: #{cleanup_error.class}")
     end
   rescue StandardError => error
-    if persisted?
-      transaction do
-        update!(status: "failed", finished_at: Time.current, error_message: "#{error.class}: #{error.message}")
-        Activity::Emitter.record!(
-          action: "instance_backup_run.failed", workspace: nil, subject: self,
-          details: { backup_kind:, status: "failed" }
-        )
-      end
-    end
-    raise
+    remove_failed_backup_file(path)
+    persist_failed_state(error) if persisted?
+    raise error
   end
 
   def delete_file!
@@ -73,5 +67,45 @@ class InstanceBackupRun < ApplicationRecord
       return false unless file_path.start_with?(instance_backup_profile.storage_root.to_s)
 
       File.file?(file_path)
+    end
+
+    def remove_failed_backup_file(path)
+      return if path.blank?
+
+      candidate = Pathname(path).expand_path
+      storage_root = instance_backup_profile.storage_root.expand_path
+      return unless candidate.dirname == storage_root
+
+      FileUtils.rm_f(candidate)
+    rescue StandardError => cleanup_error
+      Rails.logger.warn("Failed backup file cleanup failed: #{cleanup_error.class}")
+    end
+
+    def persist_failed_state(error)
+      attributes = {
+        status: "failed",
+        finished_at: Time.current,
+        error_message: "#{error.class}: #{error.message}",
+        file_path: nil,
+        file_size_bytes: nil,
+        checksum_sha256: nil
+      }
+      transaction do
+        update!(attributes)
+        Activity::Emitter.record!(
+          action: "instance_backup_run.failed", workspace: nil, subject: self,
+          details: { backup_kind:, status: "failed" }
+        )
+      end
+    rescue StandardError => audit_error
+      Rails.logger.error("Backup failure audit transaction failed: #{audit_error.class}")
+      persist_failed_state_without_activity(attributes)
+    end
+
+    def persist_failed_state_without_activity(attributes)
+      reload
+      update!(attributes)
+    rescue StandardError => state_error
+      Rails.logger.error("Backup failure state persistence failed: #{state_error.class}")
     end
 end
