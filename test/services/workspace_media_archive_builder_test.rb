@@ -10,6 +10,8 @@ class WorkspaceMediaArchiveBuilderTest < ActiveSupport::TestCase
     external_photo = attach_photo(external_coffee, filename: "cafe cup.jpg")
     other_workspace_photo = attach_photo(beans(:other_workspace_open), filename: "other.jpg")
     workspace_logo = attach_one(workspace.logo, filename: "logo.png")
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Archive Anna", cup_style: "Latte")
 
     archive = WorkspaceMediaArchiveBuilder.new(workspace, generated_at:).call
     entries = read_zip_entries(archive)
@@ -22,6 +24,17 @@ class WorkspaceMediaArchiveBuilderTest < ActiveSupport::TestCase
     assert_equal 1, manifest.fetch("version")
     assert_equal generated_at.iso8601, manifest.fetch("generated_at")
     assert_equal workspace.id, manifest.fetch("workspace").fetch("id")
+    embedded = JSON.parse(entries.fetch("data/workspace-export.json"))
+    assert_equal "roastnode.workspace_export", embedded.fetch("format")
+    assert_equal 1, embedded.fetch("version")
+    exported_brew = embedded.fetch("brews").find { |row| row.fetch("id") == brew.id }
+    assert_equal(
+      [ "guest", nil, nil, nil, "Archive Anna", "Latte" ],
+      %w[recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style]
+        .map { |key| exported_brew[key] }
+    )
+    assert_not exported_brew.key?("served_for_guest")
+    assert_not exported_brew.key?("guest_name")
 
     bean_file = manifest.fetch("files").find { |file| file.fetch("attachment_id") == bean_photo.id }
     assert_equal "Bean", bean_file.fetch("record_type")

@@ -308,9 +308,10 @@ class InstanceBackupRestorer
       workspace_payloads.each do |workspace_payload|
         workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
         workspace_payload.fetch("brews").each do |row|
+          logger = @user_map.fetch(row.fetch("user_id"))
           brew = Brew.create!(
             workspace:,
-            user: @user_map.fetch(row.fetch("user_id")),
+            user: logger,
             bean: @bean_map.fetch(row.fetch("bean_id")),
             grinder: optional_lookup(@equipment_map, row["grinder_id"]),
             machine: optional_lookup(@equipment_map, row["machine_id"]),
@@ -336,6 +337,8 @@ class InstanceBackupRestorer
             flow_control_used: row["flow_control_used"],
             taste_balance: row["taste_balance"],
             rating: row["rating"],
+            recipient_kind: "self",
+            cup_style: restored_cup_style(row),
             notes: row["notes"],
             retention_marker: row["retention_marker"],
             import_source: row["import_source"],
@@ -346,6 +349,7 @@ class InstanceBackupRestorer
           )
           brew.inventory_adjustment&.destroy!
           brew.update_columns(coffee_amount_source: row["coffee_amount_source"]) if row["coffee_amount_source"].present?
+          restore_brew_recipient!(brew, row, logger:)
           @brew_map[old_id(row)] = brew
         end
       end
@@ -610,6 +614,83 @@ class InstanceBackupRestorer
       return if old_id.blank?
 
       map.fetch(old_id)
+    end
+
+    def restore_brew_recipient!(brew, row, logger:)
+      attributes = restored_brew_recipient_attributes(row, logger:)
+      brew.update_columns(**attributes, updated_at: time(row.fetch("updated_at")))
+    rescue ActiveRecord::StatementInvalid, ActiveRecord::ActiveRecordError
+      invalid_brew_recipient_data!
+    end
+
+    def restored_brew_recipient_attributes(row, logger:)
+      kind = restored_recipient_kind(row)
+
+      case kind
+      when "self"
+        { recipient_kind: "self", recipient_user_id: nil, recipient_name: nil }
+      when "household_member"
+        recipient = restored_recipient_user(row)
+        invalid_brew_recipient_data! if recipient.id == logger.id
+
+        { recipient_kind: "household_member", recipient_user_id: recipient.id, recipient_name: nil }
+      when "guest"
+        { recipient_kind: "guest", recipient_user_id: nil, recipient_name: restored_guest_name(row) }
+      else
+        invalid_brew_recipient_data!
+      end
+    end
+
+    def restored_recipient_kind(row)
+      value = row["recipient_kind"]
+      if value.nil? || (value.is_a?(String) && value.strip.blank?)
+        restored_legacy_recipient_kind(row)
+      elsif value.is_a?(String) && value == value.strip
+        value
+      else
+        invalid_brew_recipient_data!
+      end
+    end
+
+    def restored_legacy_recipient_kind(row)
+      return "self" unless row.key?("served_for_guest")
+
+      case row["served_for_guest"]
+      when true then "guest"
+      when false, nil then "self"
+      else invalid_brew_recipient_data!
+      end
+    end
+
+    def restored_recipient_user(row)
+      old_user_id = row["recipient_user_id"]
+      invalid_brew_recipient_data! if old_user_id.blank?
+
+      @user_map.fetch(old_user_id)
+    rescue KeyError
+      invalid_brew_recipient_data!
+    end
+
+    def restored_guest_name(row)
+      value = row.key?("recipient_name") ? row["recipient_name"] : row["guest_name"]
+      restored_optional_brew_string(value)
+    end
+
+    def restored_cup_style(row)
+      restored_optional_brew_string(row["cup_style"])
+    end
+
+    def restored_optional_brew_string(value)
+      return if value.nil?
+
+      invalid_brew_recipient_data! unless value.is_a?(String)
+      value = value.strip.presence
+      invalid_brew_recipient_data! if value&.length.to_i > 120
+      value
+    end
+
+    def invalid_brew_recipient_data!
+      raise RestoreError, "Invalid brew recipient data"
     end
 
     def old_id(row)

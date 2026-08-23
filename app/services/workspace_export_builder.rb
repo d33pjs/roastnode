@@ -170,7 +170,7 @@ class WorkspaceExportBuilder
     end
 
     def brews_payload
-      workspace.brews.includes(:user).order(:id).map do |brew|
+      workspace.brews.includes(:user, :recipient_user).order(:id).map do |brew|
         {
           id: brew.id,
           user_id: brew.user_id,
@@ -199,8 +199,11 @@ class WorkspaceExportBuilder
           flow_control_used: brew.flow_control_used,
           taste_balance: brew.taste_balance,
           rating: brew.rating,
-          served_for_guest: brew.served_for_guest,
-          guest_name: brew.guest_name,
+          recipient_kind: brew.recipient_kind,
+          recipient_user_id: brew.recipient_user_id,
+          recipient_user_display_name: brew.recipient_user&.display_label,
+          recipient_user_email_address: brew.recipient_user&.email_address,
+          recipient_name: brew.recipient_name,
           cup_style: brew.cup_style,
           notes: brew.notes,
           retention_marker: brew.retention_marker,

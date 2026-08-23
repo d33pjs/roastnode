@@ -14,7 +14,8 @@ class WorkspaceCsvExportBuilder
     ground_weight_grams dose_grams beverage_grams machine_cups coffee_spoons grams_per_coffee_spoon
     coffee_amount_source brew_ratio grind_setting brew_temperature_celsius
     total_time_seconds preinfusion_seconds low_flow_start_seconds first_drip_seconds channeling flow_control_used taste_balance rating
-    served_for_guest guest_name cup_style retention_marker notes created_at updated_at
+    recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style
+    retention_marker notes created_at updated_at
   ].freeze
 
   EXTERNAL_COFFEE_COLUMNS = %w[
@@ -40,7 +41,7 @@ class WorkspaceCsvExportBuilder
     CSV.generate(headers: true) do |csv|
       csv << BREW_COLUMNS
 
-      workspace.brews.includes(:user, :bean, :grinder, :machine, :brewer, :brew_preparation_tools).order(:id).each do |brew|
+      workspace.brews.includes(:user, :recipient_user, :bean, :grinder, :machine, :brewer, :brew_preparation_tools).order(:id).each do |brew|
         csv << BREW_COLUMNS.map { |column| brew_value(brew, column) }
       end
     end
@@ -75,6 +76,8 @@ class WorkspaceCsvExportBuilder
       when "occurred_at", "created_at", "updated_at" then timestamp(brew.public_send(column))
       when "user_display_name" then brew.user.display_label
       when "user_email_address" then brew.user.email_address
+      when "recipient_user_display_name" then brew.recipient_user&.display_label
+      when "recipient_user_email_address" then brew.recipient_user&.email_address
       when "bean_name" then brew.bean.name
       when "bean_roaster_name" then brew.bean.roaster_name
       when "grinder_name" then brew.grinder&.name

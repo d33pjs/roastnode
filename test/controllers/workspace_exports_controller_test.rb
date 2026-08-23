@@ -4,6 +4,9 @@ require "zip"
 
 class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
   test "owner downloads active workspace export as json attachment" do
+    brew = brews(:morning_espresso)
+    users(:two).update!(display_name: "HTTP Recipient")
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two), cup_style: "Cortado")
     sign_in_as(users(:one))
 
     get workspace_export_path
@@ -25,6 +28,23 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
     assert_equal beans(:open_household).decaffeinated, exported_bean.fetch("decaffeinated")
     assert_equal beans(:open_household).country, exported_bean.fetch("country")
     assert_equal beans(:open_household).blend_percentage, exported_bean.fetch("blend_percentage")
+    exported_brew = payload.fetch("brews").find { |row| row.fetch("id") == brew.id }
+    assert_equal(
+      {
+        "recipient_kind" => "household_member",
+        "recipient_user_id" => users(:two).id,
+        "recipient_user_display_name" => "HTTP Recipient",
+        "recipient_user_email_address" => users(:two).email_address,
+        "recipient_name" => nil,
+        "cup_style" => "Cortado"
+      },
+      exported_brew.slice(
+        "recipient_kind", "recipient_user_id", "recipient_user_display_name",
+        "recipient_user_email_address", "recipient_name", "cup_style"
+      )
+    )
+    assert_not exported_brew.key?("served_for_guest")
+    assert_not exported_brew.key?("guest_name")
   end
 
   test "member cannot export workspace" do
@@ -53,6 +73,8 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "owner downloads brews csv export" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "HTTP Anna", cup_style: "Latte")
     sign_in_as(users(:one))
 
     get workspace_export_brews_path
@@ -65,6 +87,16 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
     rows = CSV.parse(response.body, headers: true)
     assert_includes rows.map { |row| row.fetch("id").to_i }, brews(:morning_espresso).id
     assert_not_includes rows.map { |row| row.fetch("id").to_i }, brews(:other_workspace_brew).id
+    assert_equal(
+      %w[recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style],
+      rows.headers.slice(rows.headers.index("recipient_kind"), 6)
+    )
+    assert_not_includes rows.headers, "served_for_guest"
+    assert_not_includes rows.headers, "guest_name"
+    exported = rows.find { |row| row.fetch("id").to_i == brew.id }
+    assert_equal [ "guest", nil, nil, nil, "HTTP Anna", "Latte" ],
+      %w[recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style]
+        .map { |column| exported[column] }
   end
 
   test "member cannot export workspace csv files" do
@@ -82,6 +114,8 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
   test "owner downloads media zip export" do
     sign_in_as(users(:one))
     attachment = attach_photo(beans(:open_household))
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "ZIP Anna", cup_style: "Flat White")
 
     get workspace_export_media_path
 
@@ -96,6 +130,15 @@ class WorkspaceExportsControllerTest < ActionDispatch::IntegrationTest
     file = manifest.fetch("files").find { |row| row.fetch("attachment_id") == attachment.id }
     assert_equal "Bean", file.fetch("record_type")
     assert_includes entries.keys, file.fetch("path")
+    embedded = JSON.parse(entries.fetch("data/workspace-export.json"))
+    exported_brew = embedded.fetch("brews").find { |row| row.fetch("id") == brew.id }
+    assert_equal(
+      [ "guest", nil, nil, nil, "ZIP Anna", "Flat White" ],
+      %w[recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style]
+        .map { |key| exported_brew[key] }
+    )
+    assert_not exported_brew.key?("served_for_guest")
+    assert_not exported_brew.key?("guest_name")
   end
 
   test "member cannot export media zip" do

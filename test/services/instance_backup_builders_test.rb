@@ -22,8 +22,8 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
       brewer: equipment(:household_brewer),
       machine_cups: 6,
       coffee_spoons: 6,
-      served_for_guest: true,
-      guest_name: "Anna",
+      recipient_kind: "guest",
+      recipient_name: "Anna",
       cup_style: "Batch Brew"
     )
     external_coffee = workspaces(:household).external_coffees.create!(
@@ -44,6 +44,7 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     json = JSON.pretty_generate(payload)
 
     assert_equal "roastnode.instance_readable_export", payload.fetch(:format)
+    assert_equal 1, payload.fetch(:version)
     assert_equal [ workspaces(:household).id, workspaces(:other_household).id ].sort,
       payload.fetch(:workspaces).map { |workspace| workspace.fetch(:workspace).fetch(:id) }.sort
     user_payload = payload.fetch(:users).find { |row| row.fetch(:id) == user.id }
@@ -51,6 +52,7 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     assert_equal [ "quick_drip" ], user_payload.fetch(:enabled_brew_methods)
     assert_equal "4.5", user_payload.fetch(:grams_per_coffee_spoon)
     household_payload = payload.fetch(:workspaces).find { |workspace| workspace.fetch(:workspace).fetch(:id) == workspaces(:household).id }
+    assert_equal 1, household_payload.fetch(:version)
     bean_payload = household_payload.fetch(:beans).find { |bean| bean.fetch(:id) == beans(:open_household).id }
     assert_equal "finished", bean_payload.fetch(:status)
     assert_equal finished_at.iso8601, bean_payload.fetch(:finished_at)
@@ -62,9 +64,22 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     assert_equal "6.0", brew_payload.fetch(:coffee_spoons)
     assert_equal "4.5", brew_payload.fetch(:grams_per_coffee_spoon)
     assert_equal "estimated_spoons", brew_payload.fetch(:coffee_amount_source)
-    assert_equal true, brew_payload.fetch(:served_for_guest)
-    assert_equal "Anna", brew_payload.fetch(:guest_name)
-    assert_equal "Batch Brew", brew_payload.fetch(:cup_style)
+    assert_equal(
+      {
+        recipient_kind: "guest",
+        recipient_user_id: nil,
+        recipient_user_display_name: nil,
+        recipient_user_email_address: nil,
+        recipient_name: "Anna",
+        cup_style: "Batch Brew"
+      },
+      brew_payload.slice(
+        :recipient_kind, :recipient_user_id, :recipient_user_display_name,
+        :recipient_user_email_address, :recipient_name, :cup_style
+      )
+    )
+    assert_not brew_payload.key?(:served_for_guest)
+    assert_not brew_payload.key?(:guest_name)
     external_coffee_payload = household_payload.fetch(:external_coffees).find { |coffee| coffee.fetch(:id) == external_coffee.id }
     assert_equal "Flat White", external_coffee_payload.fetch(:drink_type)
     assert_equal "Local Shop", external_coffee_payload.fetch(:place_name)
@@ -81,6 +96,9 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
 
   test "full archive writes manifest readable export and media files" do
     attachment = attach_photo(beans(:open_household))
+    brew = brews(:morning_espresso)
+    users(:two).update!(display_name: "Full Archive Recipient")
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two), cup_style: "Cortado")
 
     archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-27 12:00:00")).call
     entries = {}
@@ -96,7 +114,19 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     media_path = manifest.fetch("files").find { |file| file.fetch("attachment_id") == attachment.id }.fetch("path")
 
     assert_equal "roastnode.instance_backup_archive", manifest.fetch("format")
+    assert_equal 1, manifest.fetch("version")
+    assert_equal 1, manifest.fetch("data").fetch("version")
     assert_equal "roastnode.instance_readable_export", export.fetch("format")
+    assert_equal 1, export.fetch("version")
+    household = export.fetch("workspaces").find do |workspace_payload|
+      workspace_payload.dig("workspace", "id") == workspaces(:household).id
+    end
+    exported_brew = household.fetch("brews").find { |row| row.fetch("id") == brew.id }
+    assert_equal(
+      [ "household_member", users(:two).id, "Full Archive Recipient", users(:two).email_address, nil, "Cortado" ],
+      %w[recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style]
+        .map { |key| exported_brew[key] }
+    )
     assert_equal attachment.blob.download, entries.fetch(media_path)
     assert_equal Digest::SHA256.hexdigest(attachment.blob.download),
       manifest.fetch("files").find { |file| file.fetch("path") == media_path }.fetch("sha256")

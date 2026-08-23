@@ -57,6 +57,14 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       enabled_brew_methods: [ "quick_drip" ],
       grams_per_coffee_spoon: 4.5
     )
+    current_recipient = users(:two)
+    current_recipient.update!(display_name: "Current Restore Recipient")
+    former_recipient = User.create!(
+      email_address: "former-restore-recipient@example.com",
+      password: "password",
+      display_name: "Former Restore Recipient"
+    )
+    former_membership = workspaces(:household).memberships.create!(user: former_recipient, role: "member")
     source_bean = beans(:open_household)
     source_bean_finished_at = Time.zone.parse("2026-05-24 18:30:00")
     source_bean.update!(
@@ -74,7 +82,10 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       bean: quick_drip_bean,
       brewer: equipment(:household_brewer),
       machine_cups: 6,
-      coffee_spoons: 6
+      coffee_spoons: 6,
+      recipient_kind: "self",
+      cup_style: "Batch Carafe",
+      notes: "restore quick drip self"
     )
     source_machine = equipment(:household_machine)
     source_machine.update!(
@@ -83,7 +94,40 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       flow_control_enabled: true
     )
     espresso_brew = brews(:morning_espresso)
-    espresso_brew.update!(low_flow_start_seconds: 9, flow_control_used: true)
+    espresso_brew.update!(
+      low_flow_start_seconds: 9,
+      flow_control_used: true,
+      recipient_kind: "self",
+      cup_style: "Demitasse",
+      notes: "restore espresso self"
+    )
+    household_brew = create_restore_recipient_brew(
+      recipient_kind: "household_member",
+      recipient_user: current_recipient,
+      cup_style: "Household Mug",
+      notes: "restore current household"
+    )
+    named_guest_brew = create_restore_recipient_brew(
+      recipient_kind: "guest",
+      recipient_name: "Private Restore Anna",
+      cup_style: "Guest Latte",
+      notes: "restore named guest"
+    )
+    unnamed_guest_brew = create_restore_recipient_brew(
+      recipient_kind: "guest",
+      recipient_name: nil,
+      cup_style: "Guest Cup",
+      notes: "restore unnamed guest"
+    )
+    former_brew = create_restore_recipient_brew(
+      recipient_kind: "household_member",
+      recipient_user: former_recipient,
+      cup_style: "Former Cortado",
+      notes: "restore former household"
+    )
+    former_membership.destroy!
+    archived_household_updated_at = Time.zone.parse("2026-05-23 14:15:16")
+    household_brew.update_columns(updated_at: archived_household_updated_at)
     external_coffee = workspaces(:household).external_coffees.create!(
       user: users(:one),
       drink_type: "Americano",
@@ -113,8 +157,14 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       equipment: Equipment.count,
       inventory_adjustments: InventoryAdjustment.count,
       attachments: ActiveStorage::Attachment.count,
+      blobs: ActiveStorage::Blob.count,
       user_id: users(:one).id,
       user_email: users(:one).email_address,
+      current_recipient_id: current_recipient.id,
+      current_recipient_email: current_recipient.email_address,
+      former_recipient_id: former_recipient.id,
+      former_recipient_email: former_recipient.email_address,
+      household_updated_at: archived_household_updated_at,
       workspace_id: workspaces(:household).id,
       workspace_name: workspaces(:household).name,
       password_digest: users(:one).password_digest,
@@ -142,6 +192,12 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     restored_quick_drip_brew = restored_workspace.brews.find_by!(method: "quick_drip", bean: restored_quick_drip_bean)
     restored_machine = restored_workspace.equipment.find_by!(name: original.fetch(:machine_name))
     restored_espresso_brew = restored_workspace.brews.find_by!(method: "espresso", machine: restored_machine)
+    restored_household_brew = restored_workspace.brews.find_by!(notes: "restore current household")
+    restored_named_guest_brew = restored_workspace.brews.find_by!(notes: "restore named guest")
+    restored_unnamed_guest_brew = restored_workspace.brews.find_by!(notes: "restore unnamed guest")
+    restored_former_brew = restored_workspace.brews.find_by!(notes: "restore former household")
+    restored_current_recipient = User.find_by!(email_address: original.fetch(:current_recipient_email))
+    restored_former_recipient = User.find_by!(email_address: original.fetch(:former_recipient_email))
     restored_external_coffee = restored_workspace.external_coffees.find_by!(drink_type: original.fetch(:external_coffee_drink_type))
     restored_event = ActivityEvent.find_by!(
       workspace: restored_workspace,
@@ -158,6 +214,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal original.fetch(:equipment), Equipment.count
     assert_equal original.fetch(:inventory_adjustments), InventoryAdjustment.count
     assert_equal original.fetch(:attachments), ActiveStorage::Attachment.count
+    assert_equal original.fetch(:blobs), ActiveStorage::Blob.count
     assert_not_equal original.fetch(:user_id), restored_user.id
     assert_not_equal original.fetch(:workspace_id), restored_workspace.id
     assert_not_equal original.fetch(:password_digest), restored_user.password_digest
@@ -179,6 +236,30 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 6.to_d, restored_quick_drip_brew.coffee_spoons
     assert_equal 4.5.to_d, restored_quick_drip_brew.grams_per_coffee_spoon
     assert_equal "estimated_spoons", restored_quick_drip_brew.coffee_amount_source
+    assert_predicate restored_quick_drip_brew, :recipient_self?
+    assert_equal "Batch Carafe", restored_quick_drip_brew.cup_style
+    assert_predicate restored_espresso_brew, :recipient_self?
+    assert_equal "Demitasse", restored_espresso_brew.cup_style
+    assert_predicate restored_household_brew, :recipient_household_member?
+    assert_equal restored_current_recipient, restored_household_brew.recipient_user
+    assert_not_equal restored_household_brew.user, restored_household_brew.recipient_user
+    assert_not_equal original.fetch(:current_recipient_id), restored_current_recipient.id
+    assert_nil restored_household_brew.recipient_name
+    assert_equal "Household Mug", restored_household_brew.cup_style
+    assert_equal original.fetch(:household_updated_at), restored_household_brew.updated_at
+    assert_predicate restored_named_guest_brew, :recipient_guest?
+    assert_nil restored_named_guest_brew.recipient_user
+    assert_equal "Private Restore Anna", restored_named_guest_brew.recipient_name
+    assert_equal "Guest Latte", restored_named_guest_brew.cup_style
+    assert_predicate restored_unnamed_guest_brew, :recipient_guest?
+    assert_nil restored_unnamed_guest_brew.recipient_user
+    assert_nil restored_unnamed_guest_brew.recipient_name
+    assert_equal "Guest Cup", restored_unnamed_guest_brew.cup_style
+    assert_predicate restored_former_brew, :recipient_household_member?
+    assert_equal restored_former_recipient, restored_former_brew.recipient_user
+    assert_not_equal original.fetch(:former_recipient_id), restored_former_recipient.id
+    assert_nil restored_former_recipient.membership_for(restored_workspace)
+    assert_equal "Former Cortado", restored_former_brew.cup_style
     assert_predicate restored_machine, :preinfusion_enabled?
     assert_predicate restored_machine, :low_flow_start_enabled?
     assert_predicate restored_machine, :flow_control_enabled?
@@ -557,7 +638,251 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal source_event.occurred_at, restored_event.occurred_at
   end
 
+  test "restorer supports legacy serving rows and exact new field precedence" do
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-23 12:00:00")
+    ).call
+    compatible_archive = mutate_backup_payload(archive_bytes) do |payload|
+      household = payload.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "id") == workspaces(:household).id
+      end
+      base = household.fetch("brews").find { |row| row.fetch("id") == brews(:morning_espresso).id }
+      next_id = household.fetch("brews").map { |row| row.fetch("id") }.max + 100
+      rows = [
+        legacy_brew_row(
+          base, id: next_id, notes: "legacy true", served_for_guest: true,
+          guest_name: "  Legacy Anna  ", cup_style: "Legacy Cup"
+        ),
+        legacy_brew_row(
+          base, id: next_id + 1, notes: "legacy false", served_for_guest: false,
+          guest_name: "Discard Me", cup_style: "Legacy Self Cup"
+        ),
+        earliest_brew_row(base, id: next_id + 2, notes: "earliest v1"),
+        new_guest_with_legacy_fallback_row(
+          base, id: next_id + 3, notes: "new guest legacy fallback", guest_name: "Fallback Anna"
+        ),
+        base.deep_dup.merge(
+          "id" => next_id + 4,
+          "notes" => "new guest explicit nil",
+          "recipient_kind" => "guest",
+          "recipient_name" => nil,
+          "served_for_guest" => true,
+          "guest_name" => "Stale Anna",
+          "cup_style" => "Explicit Nil Cup"
+        ),
+        base.deep_dup.merge(
+          "id" => next_id + 5,
+          "notes" => "new self wins",
+          "recipient_kind" => "self",
+          "recipient_name" => "Stale New Name",
+          "served_for_guest" => true,
+          "guest_name" => "Stale Legacy Name",
+          "cup_style" => "New Self Cup"
+        ),
+        legacy_brew_row(
+          base, id: next_id + 6, notes: "legacy nil", served_for_guest: nil,
+          guest_name: "Discard Nil Guest", cup_style: "Legacy Nil Cup"
+        )
+      ]
+      household.fetch("brews").concat(rows)
+    end
+
+    empty_instance!
+    InstanceBackupRestorer.new(compatible_archive).call
+
+    legacy_guest = Brew.find_by!(notes: "legacy true")
+    assert_predicate legacy_guest, :recipient_guest?
+    assert_equal "Legacy Anna", legacy_guest.recipient_name
+    assert_equal "Legacy Cup", legacy_guest.cup_style
+    legacy_self = Brew.find_by!(notes: "legacy false")
+    assert_predicate legacy_self, :recipient_self?
+    assert_nil legacy_self.recipient_name
+    assert_nil legacy_self.recipient_user
+    assert_equal "Legacy Self Cup", legacy_self.cup_style
+    earliest = Brew.find_by!(notes: "earliest v1")
+    assert_predicate earliest, :recipient_self?
+    assert_nil earliest.recipient_name
+    assert_nil earliest.recipient_user
+    assert_nil earliest.cup_style
+    fallback = Brew.find_by!(notes: "new guest legacy fallback")
+    assert_predicate fallback, :recipient_guest?
+    assert_equal "Fallback Anna", fallback.recipient_name
+    explicit_nil = Brew.find_by!(notes: "new guest explicit nil")
+    assert_predicate explicit_nil, :recipient_guest?
+    assert_nil explicit_nil.recipient_name
+    assert_equal "Explicit Nil Cup", explicit_nil.cup_style
+    new_self = Brew.find_by!(notes: "new self wins")
+    assert_predicate new_self, :recipient_self?
+    assert_nil new_self.recipient_user
+    assert_nil new_self.recipient_name
+    assert_equal "New Self Cup", new_self.cup_style
+    legacy_nil = Brew.find_by!(notes: "legacy nil")
+    assert_predicate legacy_nil, :recipient_self?
+    assert_nil legacy_nil.recipient_user
+    assert_nil legacy_nil.recipient_name
+    assert_equal "Legacy Nil Cup", legacy_nil.cup_style
+  end
+
+  test "restorer maps household recipients only by archived user id" do
+    logger = users(:one)
+    recipient = users(:two)
+    recipient.update!(display_name: "Intended Recipient")
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: recipient, notes: "id mapped recipient")
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-23 12:00:00")
+    ).call
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      household = payload.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "id") == workspaces(:household).id
+      end
+      row = household.fetch("brews").find { |item| item.fetch("id") == brew.id }
+      row["recipient_user_display_name"] = logger.display_label
+      row["recipient_user_email_address"] = logger.email_address
+    end
+
+    empty_instance!
+    InstanceBackupRestorer.new(tampered_archive).call
+
+    restored = Brew.find_by!(notes: "id mapped recipient")
+    assert_equal recipient.email_address, restored.recipient_user.email_address
+    assert_not_equal logger.email_address, restored.recipient_user.email_address
+  end
+
+  test "malformed recipient and cup data raises sanitized restore error with full rollback" do
+    attachment = attach_photo(beans(:open_household))
+    source_workspace_id = workspaces(:household).id
+    source_brew_id = brews(:morning_espresso).id
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-23 12:00:00")
+    ).call
+    mutations = {
+      unsupported_kind: ->(row) { row["recipient_kind"] = "hostile-kind" },
+      whitespace_padded_kind: ->(row) { row["recipient_kind"] = " guest " },
+      malformed_legacy_flag: lambda do |row|
+        remove_new_recipient_fields(row)
+        row["served_for_guest"] = "true"
+      end,
+      missing_household_id: lambda do |row|
+        row["recipient_kind"] = "household_member"
+        row["recipient_user_id"] = nil
+      end,
+      unknown_household_id: lambda do |row|
+        row["recipient_kind"] = "household_member"
+        row["recipient_user_id"] = 999_999_999
+      end,
+      logger_as_recipient: lambda do |row|
+        row["recipient_kind"] = "household_member"
+        row["recipient_user_id"] = row.fetch("user_id")
+      end,
+      non_string_recipient_name: lambda do |row|
+        row["recipient_kind"] = "guest"
+        row["recipient_name"] = { "secret" => "Private Guest Object" }
+      end,
+      non_string_legacy_guest_name: lambda do |row|
+        remove_new_recipient_fields(row)
+        row["served_for_guest"] = true
+        row["guest_name"] = [ "Private Legacy Guest" ]
+      end,
+      overlong_recipient_name: lambda do |row|
+        row["recipient_kind"] = "guest"
+        row["recipient_name"] = "Private Guest " + ("x" * 121)
+      end,
+      non_string_cup_style: ->(row) { row["cup_style"] = [ "Private Cup" ] },
+      overlong_cup_style: ->(row) { row["cup_style"] = "Private Cup " + ("x" * 121) }
+    }
+    tampered_archives = mutations.transform_values do |mutation|
+      mutate_backup_payload(archive_bytes) do |payload|
+        household = payload.fetch("workspaces").find do |workspace_payload|
+          workspace_payload.dig("workspace", "id") == source_workspace_id
+        end
+        row = household.fetch("brews").find { |item| item.fetch("id") == source_brew_id }
+        mutation.call(row)
+      end
+    end
+
+    tampered_archives.each do |case_name, tampered_archive|
+      empty_instance!
+      starting_counts = restore_boundary_counts
+
+      error = assert_raises(InstanceBackupRestorer::RestoreError, case_name.to_s) do
+        InstanceBackupRestorer.new(tampered_archive).call
+      end
+
+      assert_equal "Invalid brew recipient data", error.message, case_name.to_s
+      assert_no_match(/Private|999999999|#{attachment.id}|#{attachment.blob_id}/, error.message, case_name.to_s)
+      assert_equal starting_counts, restore_boundary_counts, case_name.to_s
+      assert_equal 0, ActiveStorage::Attachment.count, case_name.to_s
+      assert_equal 0, ActiveStorage::Blob.count, case_name.to_s
+    end
+  end
+
   private
+    def create_restore_recipient_brew(recipient_kind:, recipient_user: nil, recipient_name: nil, cup_style:, notes:)
+      workspaces(:household).brews.create!(
+        user: users(:one),
+        bean: beans(:open_household),
+        method: "espresso",
+        bean_weight_grams: 1,
+        recipient_kind:,
+        recipient_user:,
+        recipient_name:,
+        cup_style:,
+        notes:
+      )
+    end
+
+    def legacy_brew_row(base, id:, notes:, served_for_guest:, guest_name:, cup_style:)
+      base.deep_dup.tap do |row|
+        row["id"] = id
+        row["notes"] = notes
+        remove_new_recipient_fields(row)
+        row["served_for_guest"] = served_for_guest
+        row["guest_name"] = guest_name
+        row["cup_style"] = cup_style
+      end
+    end
+
+    def earliest_brew_row(base, id:, notes:)
+      base.deep_dup.tap do |row|
+        row["id"] = id
+        row["notes"] = notes
+        remove_new_recipient_fields(row)
+        row.delete("served_for_guest")
+        row.delete("guest_name")
+        row.delete("cup_style")
+      end
+    end
+
+    def new_guest_with_legacy_fallback_row(base, id:, notes:, guest_name:)
+      base.deep_dup.tap do |row|
+        row["id"] = id
+        row["notes"] = notes
+        row["recipient_kind"] = "guest"
+        row.delete("recipient_name")
+        row["served_for_guest"] = true
+        row["guest_name"] = guest_name
+      end
+    end
+
+    def remove_new_recipient_fields(row)
+      %w[
+        recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name
+      ].each { |key| row.delete(key) }
+    end
+
+    def restore_boundary_counts
+      {
+        users: User.count,
+        workspaces: Workspace.count,
+        memberships: Membership.count,
+        brews: Brew.count,
+        inventory_adjustments: InventoryAdjustment.count,
+        attachments: ActiveStorage::Attachment.count,
+        blobs: ActiveStorage::Blob.count
+      }
+    end
+
     def mutate_backup_payload(archive_bytes)
       Zip::OutputStream.write_buffer do |output|
         Zip::File.open_buffer(archive_bytes) do |input|

@@ -1,6 +1,10 @@
 require "test_helper"
 
 class WorkspaceExportBuilderTest < ActiveSupport::TestCase
+  RECIPIENT_EXPORT_KEYS = %i[
+    recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style
+  ].freeze
+
   test "builds active workspace payload without other workspace data" do
     generated_at = Time.zone.parse("2026-05-26 10:15:00")
     bean_photo = attach_photo(beans(:open_household))
@@ -52,8 +56,8 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
   test "includes relationships needed to reconstruct workspace data" do
     duplicated = beans(:open_household).duplicate_for_new_bag!
     brews(:morning_espresso).update!(
-      served_for_guest: true,
-      guest_name: "Anna",
+      recipient_kind: "guest",
+      recipient_name: "Anna",
       cup_style: "Latte",
       low_flow_start_seconds: 9,
       flow_control_used: true
@@ -68,9 +72,19 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_equal beans(:open_household).id, brew[:bean_id]
     assert_equal equipment(:household_grinder).id, brew[:grinder_id]
     assert_equal users(:one).id, brew[:user_id]
-    assert_equal true, brew[:served_for_guest]
-    assert_equal "Anna", brew[:guest_name]
-    assert_equal "Latte", brew[:cup_style]
+    assert_equal(
+      {
+        recipient_kind: "guest",
+        recipient_user_id: nil,
+        recipient_user_display_name: nil,
+        recipient_user_email_address: nil,
+        recipient_name: "Anna",
+        cup_style: "Latte"
+      },
+      brew.slice(*RECIPIENT_EXPORT_KEYS)
+    )
+    assert_not brew.key?(:served_for_guest)
+    assert_not brew.key?(:guest_name)
     assert_equal 9, brew[:low_flow_start_seconds]
     assert_equal true, brew[:flow_control_used]
 
@@ -87,6 +101,97 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
 
     duplicate_payload = payload[:beans].find { |row| row[:id] == duplicated.id }
     assert_equal beans(:open_household).id, duplicate_payload[:duplicated_from_bean_id]
+  end
+
+  test "exports exact recipient and cup fields for every serving kind including a former member" do
+    workspace = workspaces(:household)
+    logger = users(:one)
+    current_recipient = users(:two)
+    current_recipient.update!(display_name: nil)
+    former_recipient = User.create!(
+      email_address: "former-recipient@example.com",
+      password: "password",
+      display_name: "Former Recipient"
+    )
+    former_membership = workspace.memberships.create!(user: former_recipient, role: "member")
+    brews(:morning_espresso).update!(recipient_kind: "self", cup_style: "Demitasse")
+    current = create_recipient_brew(
+      workspace:, logger:, recipient_kind: "household_member", recipient_user: current_recipient, cup_style: "Mug"
+    )
+    named_guest = create_recipient_brew(
+      workspace:, logger:, recipient_kind: "guest", recipient_name: "Private Anna", cup_style: "Latte"
+    )
+    unnamed_guest = create_recipient_brew(
+      workspace:, logger:, recipient_kind: "guest", recipient_name: nil, cup_style: nil
+    )
+    former = create_recipient_brew(
+      workspace:, logger:, recipient_kind: "household_member", recipient_user: former_recipient, cup_style: "Cortado"
+    )
+    former_membership.destroy!
+
+    payload = WorkspaceExportBuilder.new(workspace, generated_at: Time.current).call
+    rows = payload.fetch(:brews).index_by { |row| row.fetch(:id) }
+
+    assert_equal(
+      {
+        recipient_kind: "self", recipient_user_id: nil, recipient_user_display_name: nil,
+        recipient_user_email_address: nil, recipient_name: nil, cup_style: "Demitasse"
+      },
+      rows.fetch(brews(:morning_espresso).id).slice(*RECIPIENT_EXPORT_KEYS)
+    )
+    assert_equal(
+      {
+        recipient_kind: "household_member", recipient_user_id: current_recipient.id,
+        recipient_user_display_name: User::UNKNOWN_DISPLAY_LABEL,
+        recipient_user_email_address: current_recipient.email_address, recipient_name: nil, cup_style: "Mug"
+      },
+      rows.fetch(current.id).slice(*RECIPIENT_EXPORT_KEYS)
+    )
+    assert_not_equal current_recipient.email_address, rows.fetch(current.id).fetch(:recipient_user_display_name)
+    assert_equal(
+      {
+        recipient_kind: "guest", recipient_user_id: nil, recipient_user_display_name: nil,
+        recipient_user_email_address: nil, recipient_name: "Private Anna", cup_style: "Latte"
+      },
+      rows.fetch(named_guest.id).slice(*RECIPIENT_EXPORT_KEYS)
+    )
+    assert_equal(
+      {
+        recipient_kind: "guest", recipient_user_id: nil, recipient_user_display_name: nil,
+        recipient_user_email_address: nil, recipient_name: nil, cup_style: nil
+      },
+      rows.fetch(unnamed_guest.id).slice(*RECIPIENT_EXPORT_KEYS)
+    )
+    assert_equal(
+      {
+        recipient_kind: "household_member", recipient_user_id: former_recipient.id,
+        recipient_user_display_name: "Former Recipient",
+        recipient_user_email_address: former_recipient.email_address, recipient_name: nil, cup_style: "Cortado"
+      },
+      rows.fetch(former.id).slice(*RECIPIENT_EXPORT_KEYS)
+    )
+    assert rows.values.all? { |row| RECIPIENT_EXPORT_KEYS.all? { |key| row.key?(key) } }
+    assert rows.values.none? { |row| row.key?(:served_for_guest) || row.key?(:guest_name) }
+    assert_not_includes rows.keys, brews(:other_workspace_brew).id
+  end
+
+  test "recipient user selects stay bounded as brew count grows" do
+    workspace = workspaces(:household)
+    brews(:morning_espresso).update!(recipient_kind: "household_member", recipient_user: users(:two))
+    one_brew_queries = capture_user_selects do
+      WorkspaceExportBuilder.new(Workspace.find(workspace.id), generated_at: Time.current).call
+    end
+
+    5.times do
+      create_recipient_brew(
+        workspace:, logger: users(:one), recipient_kind: "household_member", recipient_user: users(:two)
+      )
+    end
+    many_brew_queries = capture_user_selects do
+      WorkspaceExportBuilder.new(Workspace.find(workspace.id), generated_at: Time.current).call
+    end
+
+    assert_equal one_brew_queries, many_brew_queries
   end
 
   test "exports quick drip fields and bean grind state" do
@@ -149,6 +254,30 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
   end
 
   private
+    def create_recipient_brew(workspace:, logger:, recipient_kind:, recipient_user: nil, recipient_name: nil, cup_style: nil)
+      workspace.brews.create!(
+        user: logger,
+        bean: beans(:open_household),
+        method: "espresso",
+        bean_weight_grams: 1,
+        recipient_kind:,
+        recipient_user:,
+        recipient_name:,
+        cup_style:
+      )
+    end
+
+    def capture_user_selects
+      queries = []
+      callback = lambda do |_name, _started, _finished, _unique_id, payload|
+        queries << payload[:sql] if payload[:name] != "SCHEMA" && payload[:sql].match?(/FROM "users"/i)
+      end
+      ActiveRecord::Base.uncached do
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { yield }
+      end
+      queries.size
+    end
+
     def attach_photo(record)
       File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
         record.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
