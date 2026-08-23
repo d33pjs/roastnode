@@ -80,6 +80,7 @@ class WorkspaceExportBuilder
           decaffeinated: bean.decaffeinated,
           purchase_source: bean.purchase_source,
           purchase_url: bean.purchase_url,
+          coffee_origin_url: bean.coffee_origin_url,
           purchased_on: date(bean.purchased_on),
           purchase_price_cents: bean.purchase_price_cents,
           rating: bean.rating,

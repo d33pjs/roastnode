@@ -42,6 +42,8 @@ class BeanconquerorImportTest < ActiveSupport::TestCase
     assert_equal "100%", bean.blend_percentage
     assert_equal 1290, bean.purchase_price_cents
     assert_equal 231.5.to_d, bean.remaining_grams
+    assert_equal "https://example.test/beans/bc-espresso", bean.purchase_url
+    assert_nil bean.coffee_origin_url
     assert_equal "Imported bean note.", bean.notes
     assert_equal "BC Espresso", bean.raw_import_data.fetch("name")
 

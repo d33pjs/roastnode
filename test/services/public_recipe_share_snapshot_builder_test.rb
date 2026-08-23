@@ -1,6 +1,40 @@
 require "test_helper"
 
 class PublicRecipeShareSnapshotBuilderTest < ActiveSupport::TestCase
+  test "does not copy direct bean websites from recipe profiles" do
+    recipe = recipes(:household_recipe)
+    recipe.update!(
+      profile: recipe.profile.deep_merge(
+        "bean" => {
+          "name" => "Safe bean name",
+          "purchase_url" => "https://private-purchase.example/recipe-secret",
+          "coffee_origin_url" => "https://private-origin.example/recipe-secret",
+          "links" => [
+            {
+              "label" => "Public roaster page",
+              "url" => "https://public-record-link.example/coffee",
+              "kind" => "info",
+              "visibility" => "public"
+            }
+          ]
+        }
+      )
+    )
+
+    snapshot = PublicRecipeShareSnapshotBuilder.new(
+      recipe:,
+      title: "Shared recipe",
+      selected_photo_attachment_ids: []
+    ).call
+
+    assert_equal "Safe bean name", snapshot.dig("bean", "name")
+    assert_equal "https://public-record-link.example/coffee", snapshot.dig("bean", "links", 0, "url")
+    assert_not snapshot.fetch("bean").key?("purchase_url")
+    assert_not snapshot.fetch("bean").key?("coffee_origin_url")
+    assert_not_includes snapshot.to_json, "private-purchase.example"
+    assert_not_includes snapshot.to_json, "private-origin.example"
+  end
+
   test "does not copy serving metadata from recipe profiles into public snapshots" do
     recipe = recipes(:household_recipe)
     recipe.update!(

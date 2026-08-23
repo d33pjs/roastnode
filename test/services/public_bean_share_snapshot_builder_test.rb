@@ -10,6 +10,8 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
       notes: "Private bean note.",
       purchase_source: "Private cellar source.",
       purchase_price_cents: 1290,
+      purchase_url: "https://private-purchase.example/bean-secret",
+      coffee_origin_url: "https://private-origin.example/bean-secret",
       origin: "Colombia",
       continent: "South America",
       country_of_manufacturer: "Germany",
@@ -79,6 +81,7 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     ).call
 
     assert_equal "Shared bean", snapshot.fetch("title")
+    assert_equal bean.name, snapshot.dig("bean", "name")
     assert_equal "Public bean note.", snapshot.dig("bean", "public_note")
     assert_equal "Colombia", snapshot.dig("bean", "origin")
     assert_equal "South America", snapshot.dig("bean", "continent")
@@ -121,6 +124,10 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_includes snapshot.to_json, "Buy beans"
     assert_includes snapshot.to_json, avatar.id.to_s
     assert_includes snapshot.to_json, logo.id.to_s
+    assert_not snapshot.fetch("bean").key?("purchase_url")
+    assert_not snapshot.fetch("bean").key?("coffee_origin_url")
+    assert_not_includes snapshot.to_json, "private-purchase.example"
+    assert_not_includes snapshot.to_json, "private-origin.example"
     assert_not_includes snapshot.to_json, "Private bean note"
     assert_not_includes snapshot.to_json, "Private cellar source"
     assert_not_includes snapshot.to_json, "Private receipt"

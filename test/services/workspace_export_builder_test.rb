@@ -16,7 +16,9 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
       finished_at:,
       continent: "South America",
       country_of_manufacturer: "Germany",
-      manufacturer: "Calendar Coffee"
+      manufacturer: "Calendar Coffee",
+      purchase_url: "https://shop.example/house-blend",
+      coffee_origin_url: "https://origin.example/house-blend"
     )
 
     payload = WorkspaceExportBuilder.new(workspaces(:household), generated_at:).call
@@ -43,6 +45,8 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
     assert_equal "South America", bean_payload.fetch(:continent)
     assert_equal "Germany", bean_payload.fetch(:country_of_manufacturer)
     assert_equal "Calendar Coffee", bean_payload.fetch(:manufacturer)
+    assert_equal "https://shop.example/house-blend", bean_payload.fetch(:purchase_url)
+    assert_equal "https://origin.example/house-blend", bean_payload.fetch(:coffee_origin_url)
     assert_equal finished_at.iso8601, bean_payload[:finished_at]
     assert_equal bean_photo.id, bean_payload[:photos].first[:attachment_id]
     assert_equal "photo.jpg", bean_payload[:photos].first[:filename]

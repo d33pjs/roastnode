@@ -8,7 +8,12 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
 
   test "exports beans as workspace-scoped csv rows" do
     finished_at = Time.zone.parse("2026-05-24 18:30:00")
-    beans(:open_household).update!(remaining_grams: 14, finished_at:)
+    beans(:open_household).update!(
+      remaining_grams: 14,
+      finished_at:,
+      purchase_url: "https://shop.example/house-blend",
+      coffee_origin_url: "https://origin.example/house-blend"
+    )
 
     csv = WorkspaceCsvExportBuilder.new(workspaces(:household)).beans_csv
     rows = CSV.parse(csv, headers: true)
@@ -22,6 +27,8 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     assert_includes rows.headers, "continent"
     assert_includes rows.headers, "country_of_manufacturer"
     assert_includes rows.headers, "manufacturer"
+    purchase_url_index = rows.headers.index("purchase_url")
+    assert_equal %w[purchase_url coffee_origin_url purchased_on purchase_price], rows.headers.slice(purchase_url_index, 4)
 
     bean_ids = rows.map { |row| row.fetch("id").to_i }
     assert_includes bean_ids, beans(:open_household).id
@@ -32,6 +39,8 @@ class WorkspaceCsvExportBuilderTest < ActiveSupport::TestCase
     assert_equal beans(:open_household).remaining_grams.to_s("F"), exported.fetch("remaining_grams")
     assert_equal "finished", exported.fetch("status")
     assert_equal finished_at.iso8601, exported.fetch("finished_at")
+    assert_equal "https://shop.example/house-blend", exported.fetch("purchase_url")
+    assert_equal "https://origin.example/house-blend", exported.fetch("coffee_origin_url")
 
     archived = rows.find { |row| row.fetch("id").to_i == beans(:archived_household).id }
     assert_equal "archived", archived.fetch("status")

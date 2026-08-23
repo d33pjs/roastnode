@@ -215,10 +215,11 @@ class InstanceBackupRestorer
             blend_type: row["blend_type"],
             decaffeinated: row["decaffeinated"],
             purchase_source: row["purchase_source"],
-            purchase_url: Bean.safe_purchase_url(row["purchase_url"]),
+            purchase_url: Bean.safe_http_url(row["purchase_url"]),
+            coffee_origin_url: Bean.safe_http_url(row["coffee_origin_url"]),
             purchased_on: date(row["purchased_on"]),
             purchase_price_cents: row["purchase_price_cents"],
-            rating: row["rating"],
+            rating: [ 0, "0" ].include?(row["rating"]) ? nil : row["rating"],
             continent: row["continent"],
             country: row["country"],
             country_of_manufacturer: row["country_of_manufacturer"],
@@ -241,6 +242,8 @@ class InstanceBackupRestorer
           @bean_remaining_grams[old_id(row)] = row["remaining_grams"]
         end
       end
+    rescue ActiveRecord::RecordInvalid, KeyError, ArgumentError
+      raise RestoreError, "Invalid bean data"
     end
 
     def restore_bean_duplicate_sources

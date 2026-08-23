@@ -30,7 +30,9 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
       public_note: "Public bean note.",
       notes: "Private bean note.",
       purchase_source: "Private cellar source.",
-      purchase_price_cents: private_purchase_price_cents
+      purchase_price_cents: private_purchase_price_cents,
+      purchase_url: "https://private-purchase.example/brew-secret",
+      coffee_origin_url: "https://private-origin.example/brew-secret"
     )
     brew.grinder.update!(public_note: "Public grinder note.", notes: "Private grinder note.")
     preparation_tools(:wdt).update!(public_note: "Public WDT note.", notes: "Private WDT note.")
@@ -74,11 +76,16 @@ class PublicBrewShareSnapshotBuilderTest < ActiveSupport::TestCase
 
     assert_equal "Shared morning shot", snapshot.fetch("title")
     assert_equal "Public brew story.", snapshot.fetch("brew").fetch("public_note")
+    assert_equal brew.bean.name, snapshot.dig("bean", "name")
     assert_equal "Public bean note.", snapshot.fetch("bean").fetch("public_note")
     assert_equal "Public grinder note.", snapshot.fetch("equipment").first.fetch("public_note")
     assert_equal "2026-05-02", snapshot.fetch("bean").fetch("purchased_on")
     assert_equal "2026-05-10", snapshot.fetch("bean").fetch("opened_on")
+    assert_not snapshot.fetch("bean").key?("purchase_url")
+    assert_not snapshot.fetch("bean").key?("coffee_origin_url")
     assert_not snapshot.fetch("bean").key?("purchase_price_cents")
+    assert_not_includes snapshot.to_json, "private-purchase.example"
+    assert_not_includes snapshot.to_json, "private-origin.example"
     assert_not_includes snapshot.to_json, private_purchase_price_cents.to_s
     assert_includes snapshot.to_json, "Buy beans"
     assert_includes snapshot.to_json, "Brew writeup"

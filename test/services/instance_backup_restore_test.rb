@@ -72,7 +72,9 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       finished_at: source_bean_finished_at,
       continent: "South America",
       country_of_manufacturer: "Germany",
-      manufacturer: "Calendar Coffee"
+      manufacturer: "Calendar Coffee",
+      purchase_url: "https://shop.example/house-blend",
+      coffee_origin_url: "https://origin.example/house-blend"
     )
     quick_drip_bean = beans(:second_open_household)
     quick_drip_bean.update!(grind_state: "pre_ground")
@@ -170,6 +172,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       password_digest: users(:one).password_digest,
       bean_name: source_bean.name,
       bean_finished_at: source_bean_finished_at,
+      bean_purchase_url: source_bean.purchase_url,
+      bean_coffee_origin_url: source_bean.coffee_origin_url,
       quick_drip_bean_name: quick_drip_bean.name,
       external_coffee_drink_type: external_coffee.drink_type,
       external_photo_filename: external_photo.blob.filename.to_s,
@@ -228,6 +232,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal "South America", restored_bean.continent
     assert_equal "Germany", restored_bean.country_of_manufacturer
     assert_equal "Calendar Coffee", restored_bean.manufacturer
+    assert_equal original.fetch(:bean_purchase_url), restored_bean.purchase_url
+    assert_equal original.fetch(:bean_coffee_origin_url), restored_bean.coffee_origin_url
     assert_equal "pre_ground", restored_quick_drip_bean.grind_state
     assert_equal "quick_drip", restored_quick_drip_brew.method
     assert_equal restored_quick_drip_bean, restored_quick_drip_brew.bean
@@ -291,13 +297,15 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     )
   end
 
-  test "restorer drops invalid bean purchase urls instead of failing restore" do
+  test "restorer drops an unsafe bean purchase url while preserving a safe origin url" do
     source_bean_name = beans(:open_household).name
     archive_bytes = mutate_backup_payload(
       InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-28 12:00:00")).call
     ) do |payload|
       household = payload.fetch("workspaces").find { |workspace_payload| workspace_payload.dig("workspace", "name") == workspaces(:household).name }
-      household.fetch("beans").find { |bean| bean.fetch("name") == source_bean_name }["purchase_url"] = "javascript:alert('bean')"
+      row = household.fetch("beans").find { |bean| bean.fetch("name") == source_bean_name }
+      row["purchase_url"] = "javascript:alert('purchase')"
+      row["coffee_origin_url"] = "https://origin.example/safe-coffee"
     end
 
     empty_instance!
@@ -305,6 +313,97 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
 
     restored_bean = Bean.find_by!(name: source_bean_name)
     assert_nil restored_bean.purchase_url
+    assert_equal "https://origin.example/safe-coffee", restored_bean.coffee_origin_url
+  end
+
+  test "restorer preserves a safe bean purchase url while dropping an unsafe origin url" do
+    source_bean_name = beans(:open_household).name
+    archive_bytes = mutate_backup_payload(
+      InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-28 12:00:00")).call
+    ) do |payload|
+      household = payload.fetch("workspaces").find { |workspace_payload| workspace_payload.dig("workspace", "name") == workspaces(:household).name }
+      row = household.fetch("beans").find { |bean| bean.fetch("name") == source_bean_name }
+      row["purchase_url"] = "https://shop.example/safe-coffee"
+      row["coffee_origin_url"] = "data:text/html,unsafe-origin"
+    end
+
+    empty_instance!
+    InstanceBackupRestorer.new(archive_bytes).call
+
+    restored_bean = Bean.find_by!(name: source_bean_name)
+    assert_equal "https://shop.example/safe-coffee", restored_bean.purchase_url
+    assert_nil restored_bean.coffee_origin_url
+  end
+
+  test "restorer normalizes a numeric legacy bean rating zero when origin url is absent" do
+    source_bean_name = beans(:open_household).name
+    archive_bytes = mutate_backup_payload(
+      InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-28 12:00:00")).call
+    ) do |payload|
+      household = payload.fetch("workspaces").find { |workspace_payload| workspace_payload.dig("workspace", "name") == workspaces(:household).name }
+      row = household.fetch("beans").find { |bean| bean.fetch("name") == source_bean_name }
+      row["purchase_url"] = "https://shop.example/legacy-coffee"
+      row["rating"] = 0
+      row.delete("coffee_origin_url")
+    end
+
+    empty_instance!
+    InstanceBackupRestorer.new(archive_bytes).call
+
+    restored_bean = Bean.find_by!(name: source_bean_name)
+    assert_nil restored_bean.rating
+    assert_equal "https://shop.example/legacy-coffee", restored_bean.purchase_url
+    assert_nil restored_bean.coffee_origin_url
+  end
+
+  test "restorer normalizes a string legacy bean rating zero when origin url is absent" do
+    source_bean_name = beans(:open_household).name
+    archive_bytes = mutate_backup_payload(
+      InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-28 12:00:00")).call
+    ) do |payload|
+      household = payload.fetch("workspaces").find { |workspace_payload| workspace_payload.dig("workspace", "name") == workspaces(:household).name }
+      row = household.fetch("beans").find { |bean| bean.fetch("name") == source_bean_name }
+      row["rating"] = "0"
+      row.delete("coffee_origin_url")
+    end
+
+    empty_instance!
+    InstanceBackupRestorer.new(archive_bytes).call
+
+    restored_bean = Bean.find_by!(name: source_bean_name)
+    assert_nil restored_bean.rating
+    assert_nil restored_bean.coffee_origin_url
+  end
+
+  test "malformed nonzero bean rating raises sanitized restore error with full rollback" do
+    attachment = attach_photo(beans(:open_household))
+    source_workspace_id = workspaces(:household).id
+    source_bean_id = beans(:open_household).id
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-05-28 12:00:00")
+    ).call
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      household = payload.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "id") == source_workspace_id
+      end
+      row = household.fetch("beans").find { |bean| bean.fetch("id") == source_bean_id }
+      row["rating"] = "6 Private restore rating"
+    end
+
+    empty_instance!
+    starting_counts = restore_boundary_counts
+
+    error = assert_raises(InstanceBackupRestorer::RestoreError) do
+      InstanceBackupRestorer.new(tampered_archive).call
+    end
+
+    assert_equal "Invalid bean data", error.message
+    assert_no_match(/Private|#{attachment.id}|#{attachment.blob_id}/, error.message)
+    assert_equal starting_counts, restore_boundary_counts
+    assert_equal 0, Bean.count
+    assert_equal 0, ActivityEvent.count
+    assert_equal 0, ActiveStorage::Attachment.count
+    assert_equal 0, ActiveStorage::Blob.count
   end
 
   test "restorer rejects a target containing only a backup profile" do
@@ -876,8 +975,10 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
         users: User.count,
         workspaces: Workspace.count,
         memberships: Membership.count,
+        beans: Bean.count,
         brews: Brew.count,
         inventory_adjustments: InventoryAdjustment.count,
+        activity_events: ActivityEvent.count,
         attachments: ActiveStorage::Attachment.count,
         blobs: ActiveStorage::Blob.count
       }

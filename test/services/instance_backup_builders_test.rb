@@ -13,7 +13,12 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
       grams_per_coffee_spoon: 4.5
     )
     finished_at = Time.zone.parse("2026-05-24 18:30:00")
-    beans(:open_household).update!(remaining_grams: 14, finished_at:)
+    beans(:open_household).update!(
+      remaining_grams: 14,
+      finished_at:,
+      purchase_url: "https://shop.example/house-blend",
+      coffee_origin_url: "https://origin.example/house-blend"
+    )
     beans(:second_open_household).update!(grind_state: "pre_ground")
     quick_drip = workspaces(:household).brews.create!(
       user:,
@@ -56,6 +61,8 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
     bean_payload = household_payload.fetch(:beans).find { |bean| bean.fetch(:id) == beans(:open_household).id }
     assert_equal "finished", bean_payload.fetch(:status)
     assert_equal finished_at.iso8601, bean_payload.fetch(:finished_at)
+    assert_equal "https://shop.example/house-blend", bean_payload.fetch(:purchase_url)
+    assert_equal "https://origin.example/house-blend", bean_payload.fetch(:coffee_origin_url)
     pre_ground_payload = household_payload.fetch(:beans).find { |bean| bean.fetch(:id) == beans(:second_open_household).id }
     assert_equal "pre_ground", pre_ground_payload.fetch(:grind_state)
     brew_payload = household_payload.fetch(:brews).find { |brew| brew.fetch(:id) == quick_drip.id }
