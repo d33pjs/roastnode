@@ -221,21 +221,57 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[data-testid=?]", "bean-card-open-bag-#{bean.id}", count: 0
   end
 
-  test "member can create bean" do
+  test "new bean defaults to full unopened stock despite a submitted opened date" do
     user = users(:two)
     user.update!(active_workspace: workspaces(:household))
     sign_in_as(user)
+    event = nil
+
+    assert_no_difference -> { InventoryAdjustment.count } do
+      assert_difference -> { workspaces(:household).beans.count }, 1 do
+        event = assert_activity_event(action: "bean.created", workspace: workspaces(:household), actor: user) do
+          post beans_path, params: {
+            bean: {
+              name: "Sweet Valley",
+              roaster_name: "Calendar Coffee",
+              bag_size_grams: "250",
+              remaining_grams: "",
+              opened_on: "2026-05-26",
+              photos: [ photo_upload ]
+            }
+          }
+        end
+      end
+    end
+
+    bean = workspaces(:household).beans.order(:created_at).last
+    assert_redirected_to bean_path(bean)
+    assert_equal bean, event.subject
+    assert_equal "stock", event.metadata.fetch("status")
+    assert_equal "stock", bean.bag_status
+    assert_equal 250.to_d, bean.remaining_grams
+    assert_nil bean.opened_on
+    assert_nil bean.finished_at
+    assert_nil bean.archived_at
+    assert_equal 1, bean.photos.count
+  end
+
+  test "member can explicitly create an open bean" do
+    user = users(:two)
+    user.update!(active_workspace: workspaces(:household))
+    sign_in_as(user)
+    event = nil
 
     assert_difference -> { workspaces(:household).beans.count }, 1 do
-      assert_activity_event(action: "bean.created", workspace: workspaces(:household), actor: user) do
+      event = assert_activity_event(action: "bean.created", workspace: workspaces(:household), actor: user) do
         post beans_path, params: {
           bean: {
-            name: "Sweet Valley",
+            bag_status: "open",
+            name: "Pantry Valley",
             roaster_name: "Calendar Coffee",
             bag_size_grams: "250",
             remaining_grams: "",
-            opened_on: "2026-05-26",
-            photos: [ photo_upload ]
+            opened_on: "2026-05-26"
           }
         }
       end
@@ -243,32 +279,12 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     bean = workspaces(:household).beans.order(:created_at).last
     assert_redirected_to bean_path(bean)
-    assert_equal 250.to_d, bean.remaining_grams
-    assert_equal 1, bean.photos.count
-  end
-
-  test "member can create stock bean" do
-    user = users(:two)
-    user.update!(active_workspace: workspaces(:household))
-    sign_in_as(user)
-
-    assert_difference -> { workspaces(:household).beans.count }, 1 do
-      post beans_path, params: {
-        bean: {
-          bag_status: "stock",
-          name: "Pantry Valley",
-          roaster_name: "Calendar Coffee",
-          bag_size_grams: "250",
-          remaining_grams: "",
-          opened_on: "2026-05-26"
-        }
-      }
-    end
-
-    bean = workspaces(:household).beans.order(:created_at).last
-    assert_redirected_to bean_path(bean)
-    assert_equal "stock", bean.bag_status
-    assert_nil bean.opened_on
+    assert_equal bean, event.subject
+    assert_equal "open", event.metadata.fetch("status")
+    assert_equal "open", bean.bag_status
+    assert_equal Date.new(2026, 5, 26), bean.opened_on
+    assert_nil bean.finished_at
+    assert_nil bean.archived_at
     assert_equal 250.to_d, bean.remaining_grams
   end
 
@@ -279,6 +295,10 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "input[type=file][name=?][multiple=multiple]", "bean[photos][]"
+    assert_select "select[name=?] option[value=stock][selected]", "bean[bag_status]"
+    assert_select "input[name=?]", "bean[opened_on]" do |inputs|
+      assert inputs.all? { |input| input["value"].blank? }
+    end
     assert_select "input[name=?]", "bean[purchased_on]"
     assert_select "select[name=?]", "bean[bag_status]"
     assert_select "input[type=text][inputmode=decimal][name=?]", "bean[bag_size_grams]"
@@ -758,16 +778,26 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
   test "writer can duplicate bean with photos" do
     sign_in_as(users(:one))
     source = beans(:open_household)
-    attach_photo(source)
+    source_photo = attach_photo(source)
+    source.set_primary_photo!(source_photo)
+    source_remaining = source.remaining_grams
+    source_inventory_adjustment_ids = source.inventory_adjustment_ids
     event = nil
 
-    assert_difference -> { workspaces(:household).beans.count }, 1 do
-      event = assert_activity_event(action: "bean.duplicated", workspace: source.workspace, actor: users(:one)) do
-        post duplicate_bean_path(source)
+    assert_no_difference -> { ActiveStorage::Blob.count } do
+      assert_difference -> { ActiveStorage::Attachment.count }, 1 do
+        assert_no_difference -> { InventoryAdjustment.count } do
+          assert_difference -> { workspaces(:household).beans.count }, 1 do
+            event = assert_activity_event(action: "bean.duplicated", workspace: source.workspace, actor: users(:one)) do
+              post duplicate_bean_path(source)
+            end
+          end
+        end
       end
     end
 
     duplicate = workspaces(:household).beans.order(:created_at).last
+    duplicate_photo = duplicate.photos.attachments.first
     contract = Activity::EventContract.fetch("bean.duplicated")
     expected_metadata_keys = %w[actor_kind actor_label record_kind subject_label] +
       contract.fetch(:automatic_metadata_keys) + contract.fetch(:detail_keys)
@@ -776,10 +806,51 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "source_label" ], contract.fetch(:detail_keys)
     assert_equal expected_metadata_keys.sort, event.metadata.keys.sort
     assert_equal source.display_name, event.metadata.fetch("source_label")
+    assert_equal "stock", event.metadata.fetch("status")
     assert_equal source.name, duplicate.name
-    assert_equal Time.find_zone!("Europe/Berlin").today, duplicate.opened_on
+    assert_equal "stock", duplicate.bag_status
     assert_equal duplicate.bag_size_grams, duplicate.remaining_grams
+    assert_nil duplicate.opened_on
+    assert_nil duplicate.finished_at
+    assert_nil duplicate.archived_at
+    assert_equal source, duplicate.duplicated_from_bean
     assert_equal 1, duplicate.photos.count
+    assert_not_equal source_photo.id, duplicate_photo.id
+    assert_equal source_photo.blob_id, duplicate_photo.blob_id
+    assert_equal duplicate, duplicate_photo.record
+    assert_equal duplicate_photo, duplicate.primary_photo_attachment
+    assert_equal source_remaining, source.reload.remaining_grams
+    assert_equal source_inventory_adjustment_ids, source.inventory_adjustment_ids
+  end
+
+  test "activity failure rolls back a duplicated bean and its photo attachments" do
+    sign_in_as(users(:one))
+    source = beans(:open_household)
+    source_photo = attach_photo(source)
+    source.set_primary_photo!(source_photo)
+    source_remaining = source.remaining_grams
+    before_counts = {
+      beans: Bean.count,
+      adjustments: InventoryAdjustment.count,
+      attachments: ActiveStorage::Attachment.count,
+      blobs: ActiveStorage::Blob.count,
+      activities: ActivityEvent.count
+    }
+
+    with_stubbed_singleton_method(Activity::Emitter, :record!, ->(**) { raise "activity write failed" }) do
+      assert_raises(RuntimeError) do
+        post duplicate_bean_path(source)
+      end
+    end
+
+    assert_equal before_counts.fetch(:beans), Bean.count
+    assert_equal before_counts.fetch(:adjustments), InventoryAdjustment.count
+    assert_equal before_counts.fetch(:attachments), ActiveStorage::Attachment.count
+    assert_equal before_counts.fetch(:blobs), ActiveStorage::Blob.count
+    assert_equal before_counts.fetch(:activities), ActivityEvent.count
+    assert_equal source_remaining, source.reload.remaining_grams
+    assert_equal [ source_photo.id ], source.photos.attachments.ids
+    assert_equal source_photo, source.primary_photo_attachment
   end
 
   test "show renders private photos through scoped media route" do
@@ -1230,6 +1301,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
   test "show suppresses automatic grinder calculation for duplicated beans" do
     sign_in_as(users(:one))
     duplicate = beans(:open_household).duplicate_for_new_bag!
+    duplicate.open_bag!
     grinder = equipment(:household_grinder)
     create_suggestion_history(grinder:)
     create_suggestion_calibration_brew(bean: duplicate, grinder:)
@@ -1248,6 +1320,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
   test "show renders manual grinder suggestions for duplicated beans" do
     sign_in_as(users(:one))
     duplicate = beans(:open_household).duplicate_for_new_bag!
+    duplicate.open_bag!
     grinder = equipment(:household_grinder)
     create_suggestion_history(grinder:)
     create_suggestion_calibration_brew(bean: duplicate, grinder:)

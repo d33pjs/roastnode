@@ -278,29 +278,69 @@ class BeanTest < ActiveSupport::TestCase
     assert bean.nearly_finished?
   end
 
-  test "duplicates a bean as a new open bag with copied photos" do
-    bean = beans(:open_household)
-    bean.update!(grind_state: "pre_ground")
+  test "duplicates a bean as full unopened stock with metadata urls notes and photos" do
+    source = beans(:open_household)
+    source.update!(
+      grind_state: "pre_ground",
+      remaining_grams: 12,
+      purchase_price_cents: 1490,
+      purchase_url: "https://shop.example/house-blend",
+      coffee_origin_url: "https://origin.example/house-blend",
+      notes: "Private resting note.",
+      public_note: "Public tasting note."
+    )
+    source.update_columns(
+      opened_on: Date.new(2026, 5, 10),
+      finished_at: Time.zone.local(2026, 6, 1, 9),
+      archived_at: Time.zone.local(2026, 6, 2, 9)
+    )
     File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
-      bean.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
+      source.photos.attach(io: file, filename: "photo.jpg", content_type: "image/jpeg")
     end
     File.open(Rails.root.join("test/fixtures/files/photo.jpg")) do |file|
-      bean.photos.attach(io: file, filename: "label.jpg", content_type: "image/jpeg")
+      source.photos.attach(io: file, filename: "label.jpg", content_type: "image/jpeg")
     end
-    bean.set_primary_photo!(bean.photos.last)
+    source.set_primary_photo!(source.photos.last)
+    source_attachment_ids = source.photos.attachments.order(:id).ids
+    source_blob_ids = source.photos.attachments.order(:id).pluck(:blob_id)
+    source_primary = source.primary_photo_attachment
+    source_remaining = source.remaining_grams
+    source_inventory_adjustment_ids = source.inventory_adjustment_ids
+    copied_attributes = %w[
+      name roaster_name origin process roast_date roast_level tasting_notes bag_size_grams
+      purchase_source purchase_url coffee_origin_url purchased_on purchase_price_cents rating notes public_note
+      roast_type roast_degree blend_type decaffeinated grind_state country continent region farm farmer elevation
+      variety harvested blend_percentage country_of_manufacturer manufacturer
+    ]
+    duplicate = nil
 
-    duplicate = bean.duplicate_for_new_bag!
+    assert_no_difference -> { InventoryAdjustment.count } do
+      assert_no_difference -> { ActiveStorage::Blob.count } do
+        assert_difference -> { ActiveStorage::Attachment.count }, 2 do
+          duplicate = source.duplicate_for_new_bag!
+        end
+      end
+    end
 
-    assert_not_equal bean.id, duplicate.id
-    assert_equal bean.name, duplicate.name
-    assert_equal Date.current, duplicate.opened_on
+    assert_not_equal source.id, duplicate.id
+    assert_equal source.workspace, duplicate.workspace
+    assert_equal source.attributes.slice(*copied_attributes), duplicate.attributes.slice(*copied_attributes)
+    assert_equal "stock", duplicate.bag_status
     assert_equal duplicate.bag_size_grams, duplicate.remaining_grams
+    assert_nil duplicate.opened_on
+    assert_nil duplicate.finished_at
     assert_nil duplicate.archived_at
-    assert_equal bean.roaster_name, duplicate.roaster_name
-    assert_equal "pre_ground", duplicate.grind_state
-    assert_equal bean, duplicate.duplicated_from_bean
-    assert_equal bean.photos.first.blob, duplicate.photos.first.blob
-    assert_equal bean.primary_photo_attachment.blob, duplicate.primary_photo_attachment.blob
+    assert_equal source, duplicate.duplicated_from_bean
+    assert_equal 2, duplicate.photos.count
+    assert_equal source_blob_ids, duplicate.photos.attachments.order(:id).pluck(:blob_id)
+    assert_empty source_attachment_ids & duplicate.photos.attachments.ids
+    assert_not_equal source_primary.id, duplicate.primary_photo_attachment.id
+    assert_equal source_primary.blob_id, duplicate.primary_photo_attachment.blob_id
+    assert_equal duplicate, duplicate.primary_photo_attachment.record
+    assert_nil duplicate.public_bean_share
+    assert_equal source_remaining, source.reload.remaining_grams
+    assert_equal source_inventory_adjustment_ids, source.inventory_adjustment_ids
+    assert_not_includes source.workspace.beans.open, duplicate
   end
 
   test "duplicates copy new origin and manufacturer metadata" do
@@ -318,9 +358,12 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal "Calendar Coffee", duplicate.manufacturer
   end
 
-  test "duplicates drop legacy invalid purchase url" do
+  test "duplicates drop both legacy invalid private urls" do
     source = beans(:open_household)
-    source.update_column(:purchase_url, "javascript:alert('bean')")
+    source.update_columns(
+      purchase_url: "javascript:alert('bean')",
+      coffee_origin_url: "data:text/html,<p>bean</p>"
+    )
 
     duplicate = nil
     assert_difference -> { source.workspace.beans.count }, 1 do
@@ -328,6 +371,7 @@ class BeanTest < ActiveSupport::TestCase
     end
 
     assert_nil duplicate.purchase_url
+    assert_nil duplicate.coffee_origin_url
   end
 
   test "duplicates keep valid purchase url" do

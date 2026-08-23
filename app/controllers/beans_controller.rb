@@ -26,7 +26,7 @@ class BeansController < ApplicationController
   end
 
   def new
-    @bean = current_workspace.beans.new(opened_on: Date.current)
+    @bean = current_workspace.beans.new
     prepare_record_links(@bean)
   end
 
@@ -44,7 +44,7 @@ class BeansController < ApplicationController
   def create
     attributes = bean_params
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
-    bag_status = extract_bag_status(attributes)
+    bag_status = extract_bag_status(attributes) || "stock"
     @bean = current_workspace.beans.new(attributes)
     @bean.apply_bag_status(bag_status)
 

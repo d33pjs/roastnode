@@ -425,6 +425,86 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=radio][name=?][value=?][checked]", "brew[bean_id]", beans(:second_open_household).id.to_s
   end
 
+  test "duplicated stock bag is unavailable to normal and repeat logging until explicitly opened" do
+    source_brew = brews(:morning_espresso)
+    source_bean = source_brew.bean
+    duplicate = source_bean.duplicate_for_new_bag!
+    source_bean.update!(
+      remaining_grams: 0,
+      finished_at: Time.zone.local(2026, 6, 1, 9)
+    )
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "input[type=radio][name=?][value=?]",
+      "brew[bean_id]",
+      duplicate.id.to_s,
+      count: 0
+
+    get new_brew_path(repeat_brew_id: source_brew.id)
+
+    assert_redirected_to new_brew_path
+    assert_equal I18n.t("brews.new.repeat_source_unavailable"), flash[:alert]
+
+    assert_activity_event(action: "bean.opened", workspace: duplicate.workspace, actor: users(:one), subject: duplicate) do
+      patch open_bag_bean_path(duplicate)
+    end
+    assert_redirected_to bean_path(duplicate)
+    assert_equal "open", duplicate.reload.bag_status
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "input[type=radio][name=?][value=?]",
+      "brew[bean_id]",
+      duplicate.id.to_s
+
+    get new_brew_path(repeat_brew_id: source_brew.id)
+
+    assert_response :success
+    assert_select "input[type=radio][name=?][value=?][checked]",
+      "brew[bean_id]",
+      duplicate.id.to_s
+  end
+
+  test "crafted create cannot brew a stock bean or consume its inventory" do
+    stock = workspaces(:household).beans.create!(
+      name: "Crafted Stock Target",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    original_remaining = stock.remaining_grams
+    sign_in_as(users(:one))
+
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_difference -> { InventoryAdjustment.count } do
+        assert_no_difference -> { Brew.count } do
+          post brews_path, params: {
+            brew: {
+              method: "espresso",
+              bean_id: stock.id,
+              grinder_id: equipment(:household_grinder).id,
+              machine_id: equipment(:household_machine).id,
+              bean_weight_grams: "18",
+              ground_weight_grams: "18",
+              dose_grams: "18",
+              beverage_grams: "40",
+              taste_balance: "neutral"
+            }
+          }
+        end
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal original_remaining, stock.reload.remaining_grams
+    assert_equal "stock", stock.bag_status
+  end
+
   test "new with repeat brew rejects cross workspace source" do
     sign_in_as(users(:one))
 
@@ -2345,6 +2425,67 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 148.to_d, beans(:open_household).reload.remaining_grams
     assert_equal(-20.to_d, brew.inventory_adjustment.reload.delta_grams)
     assert_equal [ "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+  end
+
+  test "writer can update a brew while retaining its unchanged historical bean" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    historical_bean = brew.bean
+    historical_bean.update_columns(
+      remaining_grams: 0,
+      finished_at: Time.zone.local(2026, 6, 1, 9),
+      updated_at: Time.current
+    )
+    original_remaining = historical_bean.remaining_grams
+
+    assert_activity_event(action: "brew.updated", workspace: brew.workspace, actor: users(:one), subject: brew) do
+      patch brew_path(brew), params: {
+        brew: {
+          bean_id: historical_bean.id,
+          notes: "Historical bean remains selected."
+        }
+      }
+    end
+
+    assert_redirected_to brew_path(brew)
+    assert_equal historical_bean, brew.reload.bean
+    assert_equal "Historical bean remains selected.", brew.notes
+    assert_equal original_remaining, historical_bean.reload.remaining_grams
+    assert_equal historical_bean, brew.inventory_adjustment.bean
+  end
+
+  test "writer cannot change an existing brew to a stock bean" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    original_bean = brew.bean
+    stock = workspaces(:household).beans.create!(
+      name: "Edit Stock Target",
+      roaster_name: "Shelf Roaster",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: nil
+    )
+    original_notes = brew.notes
+    original_bean_remaining = original_bean.remaining_grams
+    stock_remaining = stock.remaining_grams
+
+    assert_no_difference -> { ActivityEvent.count } do
+      assert_no_difference -> { InventoryAdjustment.count } do
+        patch brew_path(brew), params: {
+          brew: {
+            bean_id: stock.id,
+            notes: "Must not move to stock."
+          }
+        }
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal original_bean, brew.reload.bean
+    assert_equal original_notes, brew.notes
+    assert_equal original_bean_remaining, original_bean.reload.remaining_grams
+    assert_equal stock_remaining, stock.reload.remaining_grams
+    assert_equal original_bean, brew.inventory_adjustment.reload.bean
   end
 
   test "writer can delete brew and reverse inventory" do

@@ -538,16 +538,17 @@ class BrewsController < ApplicationController
     end
 
     def scope_brew_reference_ids!(attributes, existing_brew: nil)
-      scope_reference_id!(attributes, :bean_id, current_workspace.beans)
+      scope_bean_reference_id!(attributes, existing_brew:)
       scope_equipment_reference_id!(attributes, :grinder_id, :grinder, existing_equipment: existing_brew&.grinder)
       scope_equipment_reference_id!(attributes, :machine_id, :machine, existing_equipment: existing_brew&.machine)
       scope_equipment_reference_id!(attributes, :brewer_id, :brewer, existing_equipment: existing_brew&.brewer)
     end
 
-    def scope_reference_id!(attributes, key, scope)
-      return unless attributes.key?(key) && attributes[key].present?
+    def scope_bean_reference_id!(attributes, existing_brew:)
+      return unless attributes.key?(:bean_id) && attributes[:bean_id].present?
+      return if existing_brew && attributes[:bean_id].to_s == existing_brew.bean_id.to_s
 
-      attributes[key] = nil unless scope.exists?(id: attributes[key])
+      attributes[:bean_id] = nil unless current_workspace.beans.open.exists?(id: attributes[:bean_id])
     end
 
     def scope_equipment_reference_id!(attributes, key, kind, existing_equipment: nil)
@@ -630,8 +631,8 @@ class BrewsController < ApplicationController
     def resolve_recipient_attributes!(attributes, existing_brew: nil)
       selection = attributes.delete(:recipient_selection).presence || "self"
       name = attributes[:recipient_name].to_s.strip.presence
-      previous_guest_name = existing_brew&.recipient_guest? ? existing_brew.recipient_name.to_s.strip.presence : nil
-      selection = "guest" if selection == "self" && name.present? && name != previous_guest_name
+      previous_recipient_name = existing_brew&.recipient_guest? ? existing_brew.recipient_name.to_s.strip.presence : nil
+      selection = "guest" if selection == "self" && name.present? && name != previous_recipient_name
       attributes[:recipient_selection] = selection
 
       case selection
