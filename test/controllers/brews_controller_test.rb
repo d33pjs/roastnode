@@ -47,6 +47,32 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path(method: "espresso")
 
     assert_response :success
+    document = Nokogiri::HTML(response.body)
+    option = document.at_css("[data-testid='brew-bean-option-#{beans(:open_household).id}']")
+    option_classes = option["class"].split
+    assert_includes option_classes, "grid-cols-[2.75rem_minmax(0,1fr)_1.25rem]"
+    assert_includes option_classes, "gap-2"
+    assert_includes option_classes, "p-2.5"
+    assert_includes option_classes, "sm:grid-cols-[3.5rem_minmax(0,1fr)_auto]"
+
+    bean = beans(:open_household)
+    mobile_identity = document.at_css("[data-testid='brew-bean-option-mobile-identity-#{bean.id}']")
+    assert_includes mobile_identity["class"].split, "sm:hidden"
+    mobile_name = document.at_css("[data-testid='brew-bean-option-name-#{bean.id}']")
+    assert_equal bean.name, mobile_name.text.strip
+    assert_includes mobile_name["class"].split, "truncate"
+    mobile_roaster = document.at_css("[data-testid='brew-bean-option-roaster-#{bean.id}']")
+    assert_equal bean.roaster_name, mobile_roaster.text.strip
+    assert_includes mobile_roaster["class"].split, "truncate"
+
+    desktop_identity = document.at_css("[data-testid='brew-bean-option-desktop-identity-#{bean.id}']")
+    assert_equal bean.display_name_for_collection(workspaces(:household).beans.open.to_a), desktop_identity.text.strip
+    assert_includes desktop_identity["class"].split, "hidden"
+    assert_includes desktop_identity["class"].split, "sm:line-clamp-1"
+
+    inventory = document.at_css("[data-testid='brew-bean-option-inventory-#{beans(:open_household).id}']")
+    assert_includes inventory["class"].split, "whitespace-nowrap"
+    assert_equal 2, document.css("[data-testid^='brew-bean-option-status-']").size
     assert_select "[data-testid=?]", "brew-bean-option-meta-#{beans(:open_household).id}", text: /150(?:\.0)?g left.*60% left/
     assert_select "[data-testid=?]", "brew-bean-last-used-#{beans(:open_household).id}", text: /Last used/, count: 1
     assert_select "[data-testid=?]", "brew-bean-last-used-#{beans(:second_open_household).id}", count: 0
@@ -77,6 +103,15 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ grinder.id.to_s, "1/1,50" ].to_json, selected_input["data-grinder-reference-key"]
     assert_includes selected_input["data-grinder-reference-label"], selected_bean.display_name
     assert_includes selected_input["data-grinder-reference-label"], "1/1,50"
+    notice = section.at_css("[data-testid='brew-grinder-reminder']")
+    assert_equal %w[
+      brew-grinder-reminder-title
+      brew-grinder-reminder-previous
+      brew-grinder-reminder-selected
+    ], notice.element_children.map { |child| child["data-testid"] }
+    assert_includes notice.at_css("[data-testid='brew-grinder-reminder-title']").text, "Check grinder settings"
+    assert_includes notice.at_css("[data-testid='brew-grinder-reminder-previous']").text, "Previous brew"
+    assert_includes notice.at_css("[data-testid='brew-grinder-reminder-selected']").text, "Best for selected bean"
     assert_select "input[name=?][value=?]", "brew[grind_setting]", "1/1,75"
   end
 
@@ -228,6 +263,13 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-testid=log-tabs].grid.overflow-hidden[style=?]", "grid-template-columns: repeat(3, minmax(0, 1fr));"
     assert_select "[data-testid=log-tabs] a.rn-method-tab", count: 3
+    Nokogiri::HTML(response.body).css("[data-testid='log-tabs'] a").each do |tab|
+      classes = tab["class"].split
+      assert_includes classes, "flex"
+      assert_includes classes, "min-h-11"
+      assert_includes classes, "whitespace-normal"
+      assert_includes classes, "sm:whitespace-nowrap"
+    end
     assert_select "a[href=?].rn-method-tab-inactive", new_brew_path(method: "espresso"), text: "Espresso"
     assert_select "a[href=?][aria-current=page].rn-method-tab-active", new_brew_path(method: "quick_drip"), text: "Quick Drip"
     assert_select "a[href=?].rn-method-tab-inactive", new_external_coffee_path, text: "External Coffee"

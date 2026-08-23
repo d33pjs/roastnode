@@ -13,7 +13,7 @@
       new_brew_path(method: method),
       aria: (active ? { current: "page" } : {}),
       class: [
-        "rn-method-tab",
+        "rn-method-tab flex min-h-11 items-center justify-center whitespace-normal px-1.5 leading-tight text-clip sm:min-h-0 sm:whitespace-nowrap sm:px-3 sm:leading-normal sm:text-ellipsis",
         active ? "rn-method-tab-active" : "rn-method-tab-inactive"
       ].join(" ") %>
   <% end %>
@@ -23,7 +23,7 @@
     new_external_coffee_path,
     aria: (active ? { current: "page" } : {}),
     class: [
-      "rn-method-tab",
+      "rn-method-tab flex min-h-11 items-center justify-center whitespace-normal px-1.5 leading-tight text-clip sm:min-h-0 sm:whitespace-nowrap sm:px-3 sm:leading-normal sm:text-ellipsis",
       active ? "rn-method-tab-active" : "rn-method-tab-inactive"
     ].join(" ") %>
 </nav>

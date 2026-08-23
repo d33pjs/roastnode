@@ -14,6 +14,8 @@
   <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.bean") %></h2>
   <div class="mt-3 grid gap-3">
     <% @beans.each do |bean| %>
+      <% collection_name = bean.display_name_for_collection(@beans) %>
+      <% collection_suffix = collection_name.delete_prefix(bean.display_name) %>
       <% reference = reminder&.best_for(bean) %>
       <% radio_data = if previous
         {
@@ -25,21 +27,36 @@
       else
         {}
       end %>
-      <label for="brew_bean_id_<%= bean.id %>" class="grid cursor-pointer grid-cols-[3.5rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
+      <label
+        for="brew_bean_id_<%= bean.id %>"
+        data-testid="brew-bean-option-<%= bean.id %>"
+        class="grid cursor-pointer grid-cols-[2.75rem_minmax(0,1fr)_1.25rem] items-center gap-2 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-2.5 hover:bg-[var(--rn-surface-muted)] sm:grid-cols-[3.5rem_minmax(0,1fr)_auto] sm:gap-3 sm:p-3">
         <%= render "shared/record_photo_thumb",
           record: bean,
           testid: "brew-bean-option-photo",
-          class_name: "h-14 w-14 shrink-0 rounded-2xl object-contain ring-1 ring-stone-200" %>
+          class_name: "h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-stone-200 sm:h-14 sm:w-14 sm:rounded-2xl" %>
         <span class="min-w-0">
-          <span class="block truncate font-extrabold text-rn-ink"><%= bean.display_name_for_collection(@beans) %></span>
-          <span data-testid="brew-bean-option-meta-<%= bean.id %>" class="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm font-semibold text-rn-muted">
-            <span><%= t("brews.form.remaining", grams: profile_grams(bean.remaining_grams)) %></span>
-            <span aria-hidden="true">·</span>
-            <span><%= t("brews.form.remaining_percent", percent: bean.remaining_percent) %></span>
-            <% if reminder&.last_bean_id == bean.id %>
+          <span
+            data-testid="brew-bean-option-mobile-identity-<%= bean.id %>"
+            class="block min-h-10 sm:hidden">
+            <span data-testid="brew-bean-option-name-<%= bean.id %>" class="block truncate font-extrabold leading-5 text-rn-ink"><%= bean.name %><%= collection_suffix %></span>
+            <span data-testid="brew-bean-option-roaster-<%= bean.id %>" class="block truncate text-xs font-semibold leading-5 text-rn-muted"><%= bean.roaster_name %></span>
+          </span>
+          <span
+            data-testid="brew-bean-option-desktop-identity-<%= bean.id %>"
+            class="hidden font-extrabold text-rn-ink sm:line-clamp-1"><%= collection_name %></span>
+          <span data-testid="brew-bean-option-meta-<%= bean.id %>" class="mt-1 flex min-h-10 flex-col items-start text-sm font-semibold text-rn-muted sm:min-h-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-1.5">
+            <span data-testid="brew-bean-option-inventory-<%= bean.id %>" class="inline-flex items-center gap-x-1.5 whitespace-nowrap">
+              <span><%= t("brews.form.remaining", grams: profile_grams(bean.remaining_grams)) %></span>
               <span aria-hidden="true">·</span>
-              <span data-testid="brew-bean-last-used-<%= bean.id %>" class="font-extrabold text-green-700">✓ <%= t("brews.form.last_used") %></span>
-            <% end %>
+              <span><%= t("brews.form.remaining_percent", percent: bean.remaining_percent) %></span>
+            </span>
+            <span data-testid="brew-bean-option-status-<%= bean.id %>" class="block min-h-5 sm:inline-flex sm:min-h-0 sm:items-center sm:gap-x-1.5">
+              <% if reminder&.last_bean_id == bean.id %>
+                <span aria-hidden="true" class="hidden sm:inline">·</span>
+                <span data-testid="brew-bean-last-used-<%= bean.id %>" class="font-extrabold text-green-700">✓ <%= t("brews.form.last_used") %></span>
+              <% end %>
+            </span>
           </span>
         </span>
         <%= form.radio_button :bean_id, bean.id,
@@ -56,9 +73,9 @@
       data-testid="brew-grinder-reminder"
       data-brew-grinder-reminder-target="notice"
       class="mt-3 rounded-2xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-900">
-      <p class="font-extrabold"><%= t("brews.form.check_grinder_settings") %></p>
-      <p class="mt-1"><span class="font-bold"><%= t("brews.form.previous_brew") %></span> — <%= brew_grinder_reference_label(previous) %></p>
-      <p><span class="font-bold"><%= t("brews.form.best_for_selected_bean") %></span> — <span data-brew-grinder-reminder-target="selectedReference"></span></p>
+      <p data-testid="brew-grinder-reminder-title" class="font-extrabold"><%= t("brews.form.check_grinder_settings") %></p>
+      <p data-testid="brew-grinder-reminder-previous" class="mt-1"><span class="font-bold"><%= t("brews.form.previous_brew") %></span> — <%= brew_grinder_reference_label(previous) %></p>
+      <p data-testid="brew-grinder-reminder-selected"><span class="font-bold"><%= t("brews.form.best_for_selected_bean") %></span> — <span data-brew-grinder-reminder-target="selectedReference"></span></p>
     </div>
   <% end %>
 </section>
