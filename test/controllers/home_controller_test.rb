@@ -29,11 +29,11 @@ class HomeControllerTest < ActionDispatch::IntegrationTest
       "Roastnode",
       "logo_wordmark_transparent"
     assert_select "[data-testid=app-navigation] img[data-testid=brand-mark]", count: 0
-    assert_select "[data-testid=app-mobile-actions].md\\:hidden" do
+    assert_select "[data-testid=app-mobile-actions].lg\\:hidden" do
       assert_select "a[data-testid=app-nav-log][href=?]", new_brew_path
       assert_select "[data-testid=app-mobile-menu]"
     end
-    assert_select "[data-testid=app-desktop-navigation]"
+    assert_select "[data-testid=app-desktop-navigation].lg\\:flex"
     assert_select "[data-testid=app-mobile-navigation]", count: 0
     assert_select "[data-testid=app-nav-more]", count: 0
     assert_select "a[data-testid=app-nav-log][href=?]", new_brew_path

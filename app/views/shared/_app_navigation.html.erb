@@ -9,7 +9,7 @@
           image_class: "h-full w-full object-contain object-left" %>
       <% end %>
 
-      <div data-testid="app-desktop-navigation" class="hidden items-center gap-1 md:flex">
+      <div data-testid="app-desktop-navigation" class="hidden items-center gap-1 lg:flex">
         <% if current_workspace_policy.write? %>
           <%= link_to t("shared.app_navigation.log"), new_brew_path, data: { testid: "app-nav-log" }, class: "rn-nav-link rn-nav-link-primary" %>
         <% end %>
@@ -56,7 +56,7 @@
         <%= button_to t("shared.app_navigation.sign_out", user: Current.user.display_label), session_path, method: :delete, class: "rn-nav-sign-out max-w-40 truncate" %>
       </div>
 
-      <div data-testid="app-mobile-actions" class="ml-auto flex shrink-0 items-center gap-2 md:hidden">
+      <div data-testid="app-mobile-actions" class="ml-auto flex shrink-0 items-center gap-2 lg:hidden">
         <% if current_workspace_policy.write? %>
           <%= link_to t("shared.app_navigation.log"), new_brew_path, data: { testid: "app-nav-log" }, class: "rn-nav-link rn-nav-link-primary" %>
         <% end %>
