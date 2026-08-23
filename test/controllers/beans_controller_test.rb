@@ -937,6 +937,20 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=bean-cost-per-kg]", text: /50/
     assert_select "[data-testid=bean-cost-per-package]", text: /12[,.]50/
     assert_select "[data-testid=bean-cost-per-shot]", text: /0[,.]90/
+    assert_select "[data-controller=tooltip]"
+    assert_select "button[data-testid=bean-cost-per-shot-info][type=button][data-tooltip-target=trigger][aria-expanded=false][aria-describedby=bean-cost-per-shot-explanation][aria-label=?]",
+      I18n.t("beans.show.cost_per_shot_info_label")
+    assert_select "#bean-cost-per-shot-explanation[role=tooltip][data-tooltip-target=content][hidden]",
+      text: I18n.t("beans.show.cost_per_shot_explanation")
+
+    tooltip_container = css_select("[data-controller=tooltip]").first
+    tooltip = css_select("#bean-cost-per-shot-explanation").first
+    assert_includes tooltip_container["data-action"], "mouseenter->tooltip#show"
+    assert_includes tooltip_container["data-action"], "mouseleave->tooltip#hide"
+    assert_includes tooltip_container["data-action"], "focusin->tooltip#show"
+    assert_includes tooltip_container["data-action"], "focusout->tooltip#hide"
+    assert_includes tooltip_container["data-action"], "keydown.esc->tooltip#dismiss"
+    assert_includes tooltip["class"], "pointer-events-auto"
   end
 
   test "writer sees focused bean rating correction" do

@@ -261,15 +261,18 @@ class Bean < ApplicationRecord
     ((purchase_price.to_d / bag_size_grams.to_d) * 1000).round(2)
   end
 
-  def average_logged_bean_weight_grams
-    weights = brews.where.not(bean_weight_grams: nil).pluck(:bean_weight_grams).map(&:to_d)
+  def average_espresso_bean_weight_grams
+    weights = brews.espresso
+      .where.not(bean_weight_grams: nil)
+      .pluck(:bean_weight_grams)
+      .map(&:to_d)
     return if weights.empty?
 
     (weights.sum / weights.size).round(2)
   end
 
   def shot_weight_for_cost
-    average_logged_bean_weight_grams || DEFAULT_SHOT_COST_GRAMS
+    average_espresso_bean_weight_grams || DEFAULT_SHOT_COST_GRAMS
   end
 
   def cost_per_shot

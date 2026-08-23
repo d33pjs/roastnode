@@ -390,6 +390,8 @@ en:
       cost_per_kg: "Cost per kg"
       cost_per_package: "Cost per package"
       cost_per_shot: "Cost per shot"
+      cost_per_shot_explanation: "Purchase price per gram × average Bean In across this Bean's Espresso brews. Bean In is the full amount removed from the bag, so Ground Out and Dose are not added again. Before the first Espresso brew, Roastnode uses 18g. Quick Drip brews and generic manual inventory corrections are excluded."
+      cost_per_shot_info_label: "How Cost per shot is calculated"
       danger_zone: "Danger zone"
       danger_zone_body:
         one: "Delete this bean, its 1 brew, and all inventory movements for this bean."

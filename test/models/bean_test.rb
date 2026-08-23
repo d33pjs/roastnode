@@ -505,54 +505,116 @@ class BeanTest < ActiveSupport::TestCase
     end
   end
 
-  test "cost metrics use purchase price bag size and average logged dose" do
+  test "cost per shot averages bean in across espresso brews only" do
     bean = workspaces(:household).beans.create!(
-      name: "Cost Bag",
-      roaster_name: "Cost Roaster",
-      bag_size_grams: 250,
-      remaining_grams: 250,
-      opened_on: Date.current,
-      purchase_price_cents: 1250
-    )
-    bean.brews.create!(
-      workspace: bean.workspace,
-      user: users(:one),
-      grinder: equipment(:household_grinder),
-      machine: equipment(:household_machine),
-      bean_weight_grams: 18,
-      ground_weight_grams: 18,
-      dose_grams: 18,
-      beverage_grams: 45
-    )
-    bean.brews.create!(
-      workspace: bean.workspace,
-      user: users(:one),
-      grinder: equipment(:household_grinder),
-      machine: equipment(:household_machine),
-      bean_weight_grams: 20,
-      ground_weight_grams: 20,
-      dose_grams: 20,
-      beverage_grams: 50
-    )
-
-    assert_equal 50.to_d, bean.cost_per_kg
-    assert_equal 12.5.to_d, bean.cost_per_package
-    assert_equal 19.to_d, bean.average_logged_bean_weight_grams
-    assert_equal 0.95.to_d, bean.cost_per_shot
-  end
-
-  test "cost per shot falls back to eighteen grams without brews" do
-    bean = workspaces(:household).beans.create!(
-      name: "Fresh Cost Bag",
-      roaster_name: "Cost Roaster",
+      name: "Espresso Cost Bag",
       bag_size_grams: 250,
       remaining_grams: 250,
       opened_on: Date.current,
       purchase_price_cents: 1000
     )
+    [ 18, 20 ].each do |bean_in|
+      bean.brews.create!(
+        workspace: bean.workspace,
+        user: users(:one),
+        method: "espresso",
+        grinder: equipment(:household_grinder),
+        machine: equipment(:household_machine),
+        bean_weight_grams: bean_in,
+        ground_weight_grams: bean_in - 1,
+        dose_grams: bean_in - 2,
+        beverage_grams: 45
+      )
+    end
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      method: "quick_drip",
+      grinder: equipment(:household_grinder),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 60
+    )
 
+    assert_equal 40.to_d, bean.cost_per_kg
+    assert_equal 10.to_d, bean.cost_per_package
+    assert_equal 19.to_d, bean.average_espresso_bean_weight_grams
+    assert_equal 0.76.to_d, bean.cost_per_shot
+  end
+
+  test "cost per shot charges full bean in without double counting ground out or dose" do
+    bean = workspaces(:household).beans.create!(
+      name: "Waste Cost Bag",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.current,
+      purchase_price_cents: 1000
+    )
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      method: "espresso",
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      bean_weight_grams: 20,
+      ground_weight_grams: 19,
+      dose_grams: 17,
+      beverage_grams: 42
+    )
+
+    assert_equal 20.to_d, bean.shot_weight_for_cost
+    assert_equal 0.8.to_d, bean.cost_per_shot
+  end
+
+  test "cost per shot uses eighteen grams before espresso and ignores manual corrections" do
+    bean = workspaces(:household).beans.create!(
+      name: "Fresh Cost Bag",
+      bag_size_grams: 250,
+      remaining_grams: 250,
+      opened_on: Date.current,
+      purchase_price_cents: 1000
+    )
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      method: "quick_drip",
+      grinder: equipment(:household_grinder),
+      brewer: equipment(:household_brewer),
+      machine_cups: 6,
+      bean_weight_grams: 60
+    )
+
+    assert_nil bean.average_espresso_bean_weight_grams
     assert_equal 18.to_d, bean.shot_weight_for_cost
     assert_equal 0.72.to_d, bean.cost_per_shot
+
+    adjustment = bean.inventory_adjustments.new(
+      workspace: bean.workspace,
+      user: users(:one),
+      reason: "manual",
+      delta_grams: -25,
+      note: "Count correction"
+    )
+    assert adjustment.save_with_inventory_update
+
+    assert_nil bean.reload.average_espresso_bean_weight_grams
+    assert_equal 18.to_d, bean.shot_weight_for_cost
+    assert_equal 0.72.to_d, bean.cost_per_shot
+
+    bean.brews.create!(
+      workspace: bean.workspace,
+      user: users(:one),
+      method: "espresso",
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      bean_weight_grams: 20,
+      ground_weight_grams: 19,
+      dose_grams: 17,
+      beverage_grams: 42
+    )
+
+    assert_equal 20.to_d, bean.reload.shot_weight_for_cost
+    assert_equal 0.8.to_d, bean.cost_per_shot
   end
 
   test "display name for collection adds opened date only for duplicate open bags" do
