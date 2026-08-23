@@ -1,140 +1,246 @@
-<main class="min-h-screen bg-stone-50">
-  <section class="mx-auto max-w-6xl px-6 py-10">
-    <header class="border-b border-stone-200 pb-8">
+<main class="rn-page">
+  <section class="rn-shell max-w-6xl py-6 sm:px-6 lg:py-10">
+    <header class="border-b border-rn-line pb-8">
       <%= render "shared/back_link", label: t(".back"), path: dashboard_path %>
-      <p class="mt-4 text-sm font-semibold uppercase text-stone-600"><%= current_workspace.name %></p>
-      <h1 class="mt-2 text-4xl font-bold text-stone-950"><%= t(".title") %></h1>
-      <div class="mt-4">
+
+      <div class="mt-5 grid min-w-0 gap-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div class="min-w-0">
+          <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= current_workspace.name %></p>
+          <h1 class="mt-2 text-4xl font-black leading-tight text-rn-ink sm:text-5xl"><%= t(".title") %></h1>
+        </div>
         <%= link_to t(".all_brews"),
           brews_path,
           data: { testid: "statistics-all-brews-button" },
-          class: "inline-flex rounded-lg bg-stone-950 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-stone-800" %>
+          class: "inline-flex min-h-11 items-center justify-center rounded-xl bg-[var(--rn-accent-strong)] px-4 py-2 text-sm font-extrabold text-[var(--rn-canvas)] shadow-sm outline-none transition hover:opacity-90 focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
       </div>
-      <%= form_with url: statistics_path, method: :get, class: "mt-6 flex flex-wrap items-end gap-3" do |form| %>
-        <div>
-          <%= form.label :start_date, t(".start_date"), class: "block text-sm font-semibold uppercase text-stone-600" %>
-          <%= form.date_field :start_date, value: @statistics_start_date.iso8601, data: { testid: "statistics-start-date" }, class: "mt-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-base text-stone-950 shadow-sm" %>
+
+      <%= form_with url: statistics_path,
+        method: :get,
+        data: { testid: "statistics-filter-panel" },
+        class: "mt-7 min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5" do |form| %>
+        <div class="grid min-w-0 gap-5 lg:grid-cols-2 lg:gap-8">
+          <fieldset data-testid="statistics-date-filters" class="min-w-0">
+            <legend class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-ink"><%= t(".date_range") %></legend>
+            <div class="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
+              <div class="min-w-0">
+                <%= form.label :start_date, t(".start_date"), class: "block text-sm font-bold text-rn-muted" %>
+                <%= form.date_field :start_date,
+                  value: @statistics_start_date.iso8601,
+                  data: { testid: "statistics-start-date" },
+                  class: "mt-1 h-11 w-full min-w-0 max-w-full rounded-xl border border-rn-line bg-[var(--rn-surface-muted)] px-3 text-base text-rn-ink shadow-sm outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
+              </div>
+              <div class="min-w-0">
+                <%= form.label :end_date, t(".end_date"), class: "block text-sm font-bold text-rn-muted" %>
+                <%= form.date_field :end_date,
+                  value: @statistics_end_date.iso8601,
+                  data: { testid: "statistics-end-date" },
+                  class: "mt-1 h-11 w-full min-w-0 max-w-full rounded-xl border border-rn-line bg-[var(--rn-surface-muted)] px-3 text-base text-rn-ink shadow-sm outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
+              </div>
+            </div>
+
+            <nav data-testid="statistics-timeframes" aria-label="<%= t(".quick_timeframes") %>" class="mt-4 flex min-w-0 flex-wrap items-center gap-2">
+              <span class="mr-1 text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".quick_timeframes") %></span>
+              <% @statistics_timeframe_options.each do |timeframe| %>
+                <% active = @statistics_timeframe == timeframe %>
+                <%= link_to t(".timeframes.#{timeframe}"),
+                  statistics_path({ timeframe: }.merge(statistics_people_params)),
+                  aria: { current: active ? "page" : nil },
+                  data: { testid: "statistics-timeframe-#{timeframe}" },
+                  class: [
+                    "inline-flex min-h-11 items-center rounded-xl border px-3 py-2 text-sm font-bold outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]",
+                    active ? "border-[var(--rn-accent-strong)] bg-[var(--rn-accent-strong)] text-[var(--rn-canvas)] shadow-sm" : "border-rn-line bg-rn-surface text-rn-ink hover:bg-[var(--rn-surface-muted)]"
+                  ] %>
+              <% end %>
+            </nav>
+          </fieldset>
+
+          <fieldset data-testid="statistics-people-filters" class="min-w-0">
+            <legend class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-ink"><%= t(".people") %></legend>
+            <p data-testid="statistics-people-help" class="mt-1 text-sm leading-5 text-rn-muted"><%= t(".people_filter_help") %></p>
+            <div class="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
+              <div class="min-w-0">
+                <%= form.label :logger_id, t(".logged_by"), class: "block text-sm font-bold text-rn-muted" %>
+                <%= form.select :logger_id,
+                  options_for_select(
+                    [[t(".all_loggers"), ""]] +
+                      @statistics_logger_users.map { |user| [user.display_label, user.id] },
+                    @statistics_logger_id
+                  ),
+                  {},
+                  data: { testid: "statistics-logger-filter" },
+                  class: "mt-1 h-11 w-full min-w-0 max-w-full rounded-xl border border-rn-line bg-[var(--rn-surface-muted)] px-3 text-base text-rn-ink shadow-sm outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
+              </div>
+              <div class="min-w-0">
+                <%= form.label :recipient, t(".served_to"), class: "block text-sm font-bold text-rn-muted" %>
+                <% recipient_options = [
+                  [t(".all_recipients"), ""],
+                  [t(".self_served"), "self"],
+                  *@statistics_recipient_users.map { |user| [user.display_label, "user:#{user.id}"] },
+                  [t(".guests"), "guests"]
+                ] %>
+                <%= form.select :recipient,
+                  options_for_select(recipient_options, @statistics_recipient_filter),
+                  {},
+                  data: { testid: "statistics-recipient-filter" },
+                  class: "mt-1 h-11 w-full min-w-0 max-w-full rounded-xl border border-rn-line bg-[var(--rn-surface-muted)] px-3 text-base text-rn-ink shadow-sm outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
+              </div>
+            </div>
+          </fieldset>
         </div>
-        <div>
-          <%= form.label :end_date, t(".end_date"), class: "block text-sm font-semibold uppercase text-stone-600" %>
-          <%= form.date_field :end_date, value: @statistics_end_date.iso8601, data: { testid: "statistics-end-date" }, class: "mt-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-base text-stone-950 shadow-sm" %>
+
+        <div class="mt-5 flex flex-wrap gap-2 border-t border-rn-line pt-4">
+          <%= form.submit t(".apply_filters"),
+            data: { testid: "statistics-apply-filters" },
+            class: "min-h-11 w-full rounded-xl bg-[var(--rn-accent-strong)] px-4 py-2 text-sm font-extrabold text-[var(--rn-canvas)] shadow-sm outline-none transition hover:opacity-90 focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)] sm:w-auto" %>
+          <%= link_to t(".reset_timerange"),
+            statistics_path(statistics_people_params),
+            data: { testid: "statistics-reset-date-range" },
+            class: "inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-ink outline-none hover:bg-[var(--rn-surface-muted)] focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)] sm:w-auto" %>
+          <%= link_to t(".clear_people"),
+            statistics_path(statistics_time_params),
+            data: { testid: "statistics-clear-people" },
+            class: "inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-rn-line bg-rn-surface px-4 py-2 text-sm font-bold text-rn-ink outline-none hover:bg-[var(--rn-surface-muted)] focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)] sm:w-auto" %>
+          <%= link_to t(".reset_all"),
+            statistics_path,
+            data: { testid: "statistics-reset-all" },
+            class: "inline-flex min-h-11 w-full items-center justify-center rounded-xl px-4 py-2 text-sm font-bold text-rn-muted outline-none hover:bg-[var(--rn-surface-muted)] hover:text-rn-ink focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)] sm:w-auto" %>
         </div>
-        <%= form.submit t(".apply_filters"), class: "rounded-lg bg-stone-950 px-4 py-2 font-semibold text-white shadow-sm" %>
-        <%= link_to t(".reset_timerange"), statistics_path, class: "rounded-lg border border-stone-300 bg-white px-4 py-2 font-semibold text-stone-950 shadow-sm" %>
       <% end %>
-      <div data-testid="statistics-timeframes" class="mt-4 flex flex-wrap items-center gap-2">
-        <span class="text-sm font-semibold uppercase text-stone-600"><%= t(".quick_timeframes") %></span>
-        <% @statistics_timeframe_options.each do |timeframe| %>
-          <% active = @statistics_timeframe == timeframe %>
-          <%= link_to t(".timeframes.#{timeframe}"),
-            statistics_path(timeframe:),
-            aria: { current: active ? "page" : nil },
-            data: { testid: "statistics-timeframe-#{timeframe}" },
-            class: [
-              "rounded-lg border px-3 py-1.5 text-sm font-semibold shadow-sm",
-              active ? "border-stone-950 bg-stone-950 text-white" : "border-stone-300 bg-white text-stone-950 hover:bg-stone-100"
-            ] %>
-        <% end %>
-      </div>
     </header>
 
-    <section class="grid gap-4 py-8 sm:grid-cols-2 lg:grid-cols-3">
-      <div data-testid="statistics-total-brews-card" class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+    <% if @statistics[:totals][:total_brews].zero? %>
+      <aside data-testid="statistics-no-brew-data" class="mt-6 rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-4 py-3 text-sm font-semibold leading-6 text-rn-ink">
+        <%= t(".no_filtered_brew_data") %>
+      </aside>
+    <% end %>
+
+    <section class="grid min-w-0 gap-3 py-8 sm:grid-cols-2 lg:grid-cols-3">
+      <article data-testid="statistics-total-brews-card" class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
         <div class="flex items-start justify-between gap-3">
-          <p class="text-sm font-semibold uppercase text-stone-700"><%= t(".total_brews") %></p>
-          <%= link_to t(".view_all"), brews_path, class: "text-sm font-semibold text-stone-950 underline decoration-stone-300 underline-offset-2 hover:decoration-stone-950" %>
+          <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".total_brews") %></p>
+          <%= link_to t(".view_all"), brews_path, class: "inline-flex min-h-11 items-center text-sm font-bold text-rn-ink underline decoration-[var(--rn-accent-strong)] underline-offset-4 outline-none focus:outline-2 focus:outline-offset-2 focus:outline-[var(--rn-accent-strong)]" %>
         </div>
-        <p data-testid="total-brews" class="mt-2 text-3xl font-bold text-stone-950"><%= @statistics[:totals][:total_brews] %></p>
-      </div>
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".total_ground") %></p>
-        <p data-testid="total-ground" class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_grams(@statistics[:totals][:total_bean_weight_grams]) %></p>
-      </div>
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".open_beans") %></p>
+        <p data-testid="total-brews" class="mt-3 text-4xl font-black leading-none text-rn-ink"><%= @statistics[:totals][:total_brews] %></p>
+      </article>
+
+      <article class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+        <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".total_ground") %></p>
+        <p data-testid="total-ground" class="mt-3 text-4xl font-black leading-none text-rn-ink"><%= statistics_grams(@statistics[:totals][:total_bean_weight_grams]) %></p>
+      </article>
+
+      <article class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+        <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".open_beans") %></p>
         <% if @statistics[:totals][:open_beans].positive? %>
-          <p data-testid="open-beans" class="mt-2 text-3xl font-bold text-stone-950"><%= @statistics[:totals][:open_beans] %></p>
+          <p data-testid="open-beans" class="mt-3 text-4xl font-black leading-none text-rn-ink"><%= @statistics[:totals][:open_beans] %></p>
         <% else %>
-          <p data-testid="open-beans" class="mt-2 text-base font-semibold text-stone-700"><%= t(".no_open_beans") %></p>
+          <p data-testid="open-beans" class="mt-3 text-base font-bold text-rn-ink"><%= t(".no_open_beans") %></p>
         <% end %>
-        <p class="mt-1 text-sm text-stone-600"><%= t(".current_inventory_note") %></p>
-      </div>
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".known_spend") %></p>
+        <p data-testid="statistics-current-catalog-note" class="mt-3 text-sm leading-5 text-rn-muted"><%= t(".current_inventory_note") %></p>
+      </article>
+
+      <article class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+        <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".known_spend") %></p>
         <% if @statistics[:totals][:known_spend_bean_count].positive? %>
-          <p data-testid="known-spend" class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_money(@statistics[:totals][:known_spend_cents]) %></p>
+          <p data-testid="known-spend" class="mt-3 text-4xl font-black leading-none text-rn-ink"><%= statistics_money(@statistics[:totals][:known_spend_cents]) %></p>
         <% else %>
-          <p data-testid="known-spend" class="mt-2 text-base font-semibold text-stone-700"><%= t(".no_known_spend") %></p>
+          <p data-testid="known-spend" class="mt-3 text-base font-bold text-rn-ink"><%= t(".no_known_spend") %></p>
         <% end %>
-        <p class="mt-1 text-sm text-stone-600"><%= t(".current_inventory_note") %></p>
-      </div>
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".average_brew_cost") %></p>
+        <p data-testid="statistics-current-catalog-note" class="mt-3 text-sm leading-5 text-rn-muted"><%= t(".current_inventory_note") %></p>
+      </article>
+
+      <article class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+        <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".average_brew_cost") %></p>
         <% if @statistics[:totals][:priced_brew_count].positive? %>
-          <p data-testid="average-brew-cost" class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_money(@statistics[:totals][:average_known_brew_cost_cents]) %></p>
+          <p data-testid="average-brew-cost" class="mt-3 text-4xl font-black leading-none text-rn-ink"><%= statistics_money(@statistics[:totals][:average_known_brew_cost_cents]) %></p>
         <% else %>
-          <p data-testid="average-brew-cost" class="mt-2 text-base font-semibold text-stone-700"><%= t(".no_average_brew_cost") %></p>
+          <p data-testid="average-brew-cost" class="mt-3 text-base font-bold text-rn-ink"><%= t(".no_average_brew_cost") %></p>
         <% end %>
-      </div>
-      <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-        <p class="text-sm font-semibold uppercase text-stone-600"><%= t(".channeling_rate") %></p>
-        <p class="mt-2 text-3xl font-bold text-stone-950"><%= statistics_percent(@statistics[:rates][:channeling_percent]) %></p>
-      </div>
+      </article>
+
+      <article class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+        <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t(".channeling_rate") %></p>
+        <% if @statistics[:rates][:channeling_brew_count].positive? %>
+          <p data-testid="statistics-channeling-rate" class="mt-3 text-4xl font-black leading-none text-rn-ink"><%= statistics_percent(@statistics[:rates][:channeling_percent]) %></p>
+        <% else %>
+          <p data-testid="statistics-channeling-rate" class="mt-3 text-base font-bold text-rn-ink"><%= t(".no_channeling_data") %></p>
+        <% end %>
+      </article>
     </section>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-      <section>
-        <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".equipment") %></h2>
-        <div class="grid gap-4 sm:grid-cols-2">
+    <div class="grid min-w-0 gap-6 lg:grid-cols-2">
+      <section data-testid="statistics-equipment" class="min-w-0">
+        <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".equipment") %></h2>
+        <div class="grid min-w-0 gap-3 sm:grid-cols-2">
           <% { grinder: t(".most_used_grinder"), machine: t(".most_used_machine") }.each do |key, label| %>
             <% leader = @statistics[:leaders][key] %>
-            <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-              <p class="text-sm font-semibold uppercase text-stone-600"><%= label %></p>
-              <p class="mt-2 text-2xl font-bold text-stone-950"><%= leader&.fetch(:name) || t(".unknown") %></p>
-              <p class="mt-1 text-sm text-stone-600"><%= t(".brew_count", count: leader&.fetch(:count) || 0) %></p>
-            </div>
+            <article class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+              <p class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= label %></p>
+              <% if leader.present? %>
+                <p class="mt-3 break-words text-2xl font-black leading-tight text-rn-ink"><%= leader.fetch(:name) %></p>
+                <p class="mt-1 text-sm text-rn-muted"><%= t(".brew_count", count: leader.fetch(:count)) %></p>
+              <% else %>
+                <p class="mt-3 text-base font-bold text-rn-ink"><%= t(".no_equipment_data") %></p>
+              <% end %>
+            </article>
           <% end %>
         </div>
       </section>
 
-      <section>
-        <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".markers") %></h2>
-        <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-          <%= render "statistics/bar_list", values: @statistics[:distributions][:retention_marker], maximum: @statistics[:distributions][:retention_marker].values.max, empty_label: t(".no_data") %>
+      <section data-testid="statistics-retention" class="min-w-0">
+        <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".markers") %></h2>
+        <div class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+          <%= render "statistics/bar_list",
+            values: @statistics[:distributions][:retention_marker],
+            maximum: @statistics[:distributions][:retention_marker].values.max,
+            empty_label: t(".no_retention_data") %>
         </div>
       </section>
     </div>
 
-    <div class="mt-8 grid gap-6 lg:grid-cols-2">
-      <section>
-        <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".brews_by_day") %></h2>
-        <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-          <%= render "statistics/day_bars", points: @statistics[:series][:brews_by_day], value_key: :count, maximum: @statistics[:series][:brews_by_day].map { |point| point[:count] }.max, suffix: "" %>
+    <div class="mt-8 grid min-w-0 gap-6 lg:grid-cols-2">
+      <section class="min-w-0">
+        <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".brews_by_day") %></h2>
+        <div class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+          <%= render "statistics/day_bars",
+            points: @statistics[:series][:brews_by_day],
+            value_key: :count,
+            maximum: @statistics[:series][:brews_by_day].map { |point| point[:count] }.max,
+            suffix: "",
+            empty_label: t(".no_day_series_data") %>
         </div>
       </section>
 
-      <section>
-        <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".consumption_by_day") %></h2>
-        <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-          <%= render "statistics/day_bars", points: @statistics[:series][:consumption_by_day], value_key: :grams, maximum: @statistics[:series][:consumption_by_day].map { |point| point[:grams] }.max, suffix: "g" %>
+      <section class="min-w-0">
+        <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".consumption_by_day") %></h2>
+        <div class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+          <%= render "statistics/day_bars",
+            points: @statistics[:series][:consumption_by_day],
+            value_key: :grams,
+            maximum: @statistics[:series][:consumption_by_day].map { |point| point[:grams] }.max,
+            suffix: "g",
+            empty_label: t(".no_day_series_data") %>
         </div>
       </section>
     </div>
 
-    <div class="mt-8 grid gap-6 lg:grid-cols-2">
-      <section>
-        <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".taste_balance") %></h2>
-        <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
-          <%= render "statistics/bar_list", values: @statistics[:distributions][:taste_balance], maximum: @statistics[:distributions][:taste_balance].values.max, empty_label: t(".no_data") %>
+    <div class="mt-8 grid min-w-0 gap-6 lg:grid-cols-2">
+      <section data-testid="statistics-taste" class="min-w-0">
+        <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".taste_balance") %></h2>
+        <div class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+          <%= render "statistics/bar_list",
+            values: @statistics[:distributions][:taste_balance],
+            maximum: @statistics[:distributions][:taste_balance].values.max,
+            empty_label: t(".no_taste_data") %>
         </div>
       </section>
 
-      <section>
-        <h2 class="mb-4 text-xl font-bold text-stone-950"><%= t(".beans") %></h2>
-        <div class="rounded-lg border border-stone-200 bg-white p-5 shadow-sm">
+      <section class="min-w-0">
+        <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".beans") %></h2>
+        <div class="rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+          <p data-testid="statistics-current-catalog-note" class="mb-5 text-sm leading-5 text-rn-muted"><%= t(".current_inventory_note") %></p>
           <% { roasters: t(".roasters"), origins: t(".origins"), processes: t(".processes") }.each do |key, label| %>
             <div class="mb-5 last:mb-0">
-              <h3 class="text-sm font-semibold uppercase text-stone-600"><%= label %></h3>
+              <h3 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= label %></h3>
               <%= render "statistics/breakdown_list", values: @statistics[:breakdowns][key] %>
             </div>
           <% end %>

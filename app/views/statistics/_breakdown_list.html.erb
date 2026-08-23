@@ -1,11 +1,9 @@
 <% if values.any? %>
   <div class="mt-2 flex flex-wrap gap-2">
     <% values.first(5).each do |value| %>
-      <span class="rounded-full border border-stone-200 px-3 py-1 text-sm font-medium text-stone-800">
-        <%= value[:label] %> · <%= value[:count] %>
-      </span>
+      <span class="min-w-0 max-w-full break-words rounded-xl border border-rn-line bg-[var(--rn-surface-muted)] px-3 py-1.5 text-sm font-bold text-rn-ink [overflow-wrap:anywhere]"><%= value[:label] %> · <%= value[:count] %></span>
     <% end %>
   </div>
 <% else %>
-  <p class="mt-2 text-sm text-stone-600"><%= t("statistics.index.no_data") %></p>
+  <p class="mt-2 text-sm text-rn-muted"><%= t("statistics.index.no_data") %></p>
 <% end %>

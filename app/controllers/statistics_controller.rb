@@ -12,14 +12,43 @@ class StatisticsController < ApplicationController
     @statistics_timeframe = statistics_timeframe
     @statistics_timeframe_options = TIMEFRAMES
     @statistics_start_date, @statistics_end_date = statistics_date_range
+
+    people = WorkspaceStatisticsPeople.new(workspace: current_workspace)
+    @statistics_logger_users = people.logger_users
+    @statistics_recipient_users = people.recipient_users
+    @statistics_logger_id = people.resolve_logger_id(params[:logger_id])
+    @statistics_recipient_filter = people.resolve_recipient_filter(params[:recipient])
+
     @statistics = WorkspaceStatistics.new(
       workspace: current_workspace,
       start_date: @statistics_start_date,
-      end_date: @statistics_end_date
+      end_date: @statistics_end_date,
+      logger_id: @statistics_logger_id,
+      recipient_filter: @statistics_recipient_filter
     ).call
   end
 
+  helper_method :statistics_people_params, :statistics_time_params
+
   private
+    def statistics_people_params
+      {
+        logger_id: @statistics_logger_id,
+        recipient: @statistics_recipient_filter
+      }.compact
+    end
+
+    def statistics_time_params
+      if @statistics_timeframe.present?
+        { timeframe: @statistics_timeframe }
+      else
+        {
+          start_date: @statistics_start_date.iso8601,
+          end_date: @statistics_end_date.iso8601
+        }
+      end
+    end
+
     def statistics_timeframe
       params[:timeframe].presence_in(TIMEFRAMES) || (manual_date_filter? ? nil : DEFAULT_TIMEFRAME)
     end
