@@ -55,7 +55,7 @@ class BrewGrinderReminder
       workspace.brews
         .where(method:, bean_id: beans.map(&:id))
         .where.not(rating: nil)
-        .where("brews.grinder_id IS NOT NULL OR NULLIF(BTRIM(brews.grind_setting), '') IS NOT NULL")
+        .where("brews.grinder_id IS NOT NULL OR brews.grind_setting ~ '[^[:space:]]'")
         .select("DISTINCT ON (brews.bean_id) brews.*")
         .order(Arel.sql(<<~SQL.squish))
           brews.bean_id,

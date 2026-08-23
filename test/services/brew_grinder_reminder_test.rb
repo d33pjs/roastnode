@@ -162,6 +162,26 @@ class BrewGrinderReminderTest < ActiveSupport::TestCase
     assert_nil result.best_for(beans(:second_open_household))
   end
 
+  test "ignores higher-rated POSIX whitespace-only settings in the PostgreSQL reference query" do
+    workspace = workspaces(:household)
+    bean = beans(:second_open_household)
+    usable = create_espresso(
+      workspace:, user: users(:one), bean:, grinder: nil,
+      setting: "\tusable 7\n", rating: 4, occurred_at: 2.days.ago
+    )
+    create_espresso(
+      workspace:, user: users(:one), bean:, grinder: nil,
+      setting: " \t\n\v\f\r", rating: 5, occurred_at: 1.day.ago
+    )
+
+    result = BrewGrinderReminder.new(
+      workspace:, user: users(:one), method: "espresso", beans: [ bean ]
+    ).call
+
+    assert_equal usable, result.best_for(bean).brew
+    assert_equal [ bean.display_name, "usable 7" ], result.best_for(bean).display_parts
+  end
+
   test "returns the actual workspace last bean when it is not selectable" do
     workspace = workspaces(:household)
     closed_bean = beans(:open_household)
