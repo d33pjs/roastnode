@@ -9,6 +9,7 @@ class Bean < ApplicationRecord
   DUPLICATE_DISPLAY_DATE_FORMAT = "%d.%m.%Y"
   LOW_REMAINING_GRAMS = BigDecimal("18")
   DEFAULT_SHOT_COST_GRAMS = BigDecimal("18")
+  PRIVATE_URL_FIELDS = %i[purchase_url coffee_origin_url].freeze
 
   belongs_to :workspace
   belongs_to :data_import, optional: true
@@ -21,36 +22,44 @@ class Bean < ApplicationRecord
   has_many_attached :photos
 
   before_validation :set_default_remaining_grams
-  normalizes :purchase_url, with: ->(url) { url.to_s.strip.presence }
+  normalizes(*PRIVATE_URL_FIELDS, with: ->(url) { url.to_s.strip.presence })
 
   scope :open, -> { where(archived_at: nil, finished_at: nil).where.not(opened_on: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
   scope :recent, -> { order(created_at: :desc) }
 
-  def self.safe_purchase_url(url)
+  def self.safe_http_url(url)
     url = url.to_s.strip
     return if url.blank?
 
-    url if valid_purchase_url?(url)
+    url if valid_http_url?(url)
   end
 
-  def self.valid_purchase_url?(url)
+  def self.valid_http_url?(url)
     uri = URI.parse(url.to_s.strip)
     uri.is_a?(URI::HTTP) && uri.host.present?
   rescue URI::InvalidURIError
     false
   end
 
+  def self.safe_purchase_url(url)
+    safe_http_url(url)
+  end
+
+  def self.valid_purchase_url?(url)
+    valid_http_url?(url)
+  end
+
   validates :name, presence: true
   validates :bag_size_grams, numericality: { greater_than: 0 }
   validates :remaining_grams, numericality: { greater_than_or_equal_to: 0 }
   validates :purchase_price_cents, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
-  validates :rating, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
+  validates :rating, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
   validates :roast_type, inclusion: { in: ROAST_TYPES }
   validates :blend_type, inclusion: { in: BLEND_TYPES }
   validates :grind_state, inclusion: { in: GRIND_STATES }
   validates :roast_degree, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
   validate :roast_degree_half_step
-  validate :purchase_url_is_http_or_https, if: :will_save_change_to_purchase_url?
+  validate :private_urls_are_http_or_https
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 
   def open?
@@ -287,11 +296,15 @@ class Bean < ApplicationRecord
       errors.add(:roast_degree, "must use half-step increments")
     end
 
-    def purchase_url_is_http_or_https
-      return if purchase_url.blank?
-      return if self.class.valid_purchase_url?(purchase_url)
+    def private_urls_are_http_or_https
+      PRIVATE_URL_FIELDS.each do |attribute|
+        next unless will_save_change_to_attribute?(attribute)
 
-      errors.add(:purchase_url, "must be an HTTP or HTTPS URL")
+        value = public_send(attribute)
+        next if value.blank? || self.class.valid_http_url?(value)
+
+        errors.add(attribute, "must be an HTTP or HTTPS URL")
+      end
     end
 
     def duplicate_attributes

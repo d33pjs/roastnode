@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_21_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -71,6 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_120000) do
     t.decimal "bag_size_grams", precision: 10, scale: 2, null: false
     t.string "blend_percentage"
     t.string "blend_type", default: "unknown", null: false
+    t.string "coffee_origin_url"
     t.string "continent"
     t.string "country"
     t.string "country_of_manufacturer"

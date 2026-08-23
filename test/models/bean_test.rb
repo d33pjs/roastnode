@@ -144,7 +144,31 @@ class BeanTest < ActiveSupport::TestCase
     assert_includes bean.errors[:roast_type], "is not included in the list"
     assert_includes bean.errors[:blend_type], "is not included in the list"
     assert_includes bean.errors[:roast_degree], "must be less than or equal to 5"
-    assert_includes bean.errors[:rating], "must be less than or equal to 5"
+    assert_includes bean.errors[:rating], "must be in 1..5"
+  end
+
+  test "rating is blank or an integer from one through five" do
+    bean = workspaces(:household).beans.build(
+      name: "Rated Bag",
+      bag_size_grams: 250
+    )
+
+    [ nil, 1, 2, 3, 4, 5 ].each do |rating|
+      bean.rating = rating
+      assert_predicate bean, :valid?, "expected #{rating.inspect} to be valid"
+    end
+
+    [ 0, 6 ].each do |rating|
+      bean.rating = rating
+      assert_not_predicate bean, :valid?, "expected #{rating.inspect} to be invalid"
+      assert_includes bean.errors[:rating], "must be in 1..5"
+    end
+
+    [ 1.5, "2.5" ].each do |rating|
+      bean.rating = rating
+      assert_not_predicate bean, :valid?, "expected #{rating.inspect} to be invalid"
+      assert_includes bean.errors[:rating], "must be an integer"
+    end
   end
 
   test "grind state defaults to whole bean and supports pre ground" do
@@ -370,29 +394,23 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal "Legacy Origin", bean.origin_display_value
   end
 
-  test "purchase url allows blank and normalizes whitespace to nil" do
+  test "private bean urls normalize valid http and https values" do
     bean = workspaces(:household).beans.build(
-      name: "Blank Purchase Url",
+      name: "Two Website Bag",
       bag_size_grams: 250,
-      purchase_url: " "
+      purchase_url: " https://shop.example/beans ",
+      coffee_origin_url: " http://origin.example/coffee "
     )
 
+    assert_predicate bean, :valid?
+    assert_equal "https://shop.example/beans", bean.purchase_url
+    assert_equal "http://origin.example/coffee", bean.coffee_origin_url
+
+    bean.purchase_url = " "
+    bean.coffee_origin_url = ""
     assert_predicate bean, :valid?
     assert_nil bean.purchase_url
-  end
-
-  test "purchase url strips valid http and https urls" do
-    bean = workspaces(:household).beans.build(
-      name: "Valid Purchase Url",
-      bag_size_grams: 250,
-      purchase_url: " https://example.com/beans "
-    )
-
-    assert_predicate bean, :valid?
-    assert_equal "https://example.com/beans", bean.purchase_url
-
-    bean.purchase_url = "http://example.com/beans"
-    assert_predicate bean, :valid?
+    assert_nil bean.coffee_origin_url
   end
 
   test "safe purchase url strips and drops invalid urls" do
@@ -401,6 +419,18 @@ class BeanTest < ActiveSupport::TestCase
     assert_nil Bean.safe_purchase_url("javascript:alert(1)")
     assert_nil Bean.safe_purchase_url("example.com/path")
     assert_nil Bean.safe_purchase_url("https:///path")
+  end
+
+  test "safe http url strips valid values and drops unsafe values" do
+    assert_equal "https://example.com/beans", Bean.safe_http_url(" https://example.com/beans ")
+    assert_equal "http://example.com/beans", Bean.safe_http_url("http://example.com/beans")
+    assert Bean.valid_http_url?("https://example.com/beans")
+    assert Bean.valid_http_url?("http://example.com/beans")
+
+    [ nil, "", " ", "javascript:alert(1)", "data:text/html,x", "example.com/path", "https:///path" ].each do |url|
+      assert_nil Bean.safe_http_url(url), "expected #{url.inspect} to be dropped"
+      assert_not Bean.valid_http_url?(url), "expected #{url.inspect} to be invalid"
+    end
   end
 
   test "unrelated bean edits tolerate unchanged legacy invalid purchase url" do
@@ -415,31 +445,19 @@ class BeanTest < ActiveSupport::TestCase
     assert_equal "Updated notes without touching purchase URL", bean.notes
   end
 
-  test "purchase url rejects unsafe schemes" do
+  test "private bean urls reject unsafe schemeless and hostless values" do
     bean = workspaces(:household).beans.build(
-      name: "Unsafe Purchase Url",
+      name: "Unsafe Website Bag",
       bag_size_grams: 250
     )
 
-    [ "javascript:alert(1)", "data:text/html,<p>x</p>" ].each do |url|
-      bean.purchase_url = url
+    %i[purchase_url coffee_origin_url].each do |attribute|
+      [ "javascript:alert(1)", "data:text/html,x", "example.com/path", "https:///path" ].each do |url|
+        bean.public_send("#{attribute}=", url)
 
-      assert_not_predicate bean, :valid?, "#{url.inspect} should be invalid"
-      assert_includes bean.errors[:purchase_url], "must be an HTTP or HTTPS URL"
-    end
-  end
-
-  test "purchase url rejects schemeless and hostless urls" do
-    bean = workspaces(:household).beans.build(
-      name: "Hostless Purchase Url",
-      bag_size_grams: 250
-    )
-
-    [ "example.com/path", "https:///path" ].each do |url|
-      bean.purchase_url = url
-
-      assert_not_predicate bean, :valid?, "#{url.inspect} should be invalid"
-      assert_includes bean.errors[:purchase_url], "must be an HTTP or HTTPS URL"
+        assert_not_predicate bean, :valid?, "#{attribute}=#{url.inspect} should be invalid"
+        assert_includes bean.errors[attribute], "must be an HTTP or HTTPS URL"
+      end
     end
   end
 
