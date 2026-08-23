@@ -37,4 +37,63 @@ class BeansHelperTest < ActionView::TestCase
     assert_nil bean_purchase_url_href("example.com/path")
     assert_nil bean_purchase_url_href("https:///path")
   end
+
+  test "private system links expose separate safe purchase and origin entries" do
+    bean = Bean.new(
+      purchase_url: "https://shop.example/bean",
+      coffee_origin_url: "https://origin.example/coffee"
+    )
+
+    assert_equal(
+      [
+        {
+          label: "Purchase URL",
+          url: "https://shop.example/bean",
+          kind: "buy",
+          visibility: "private",
+          testid: "bean-system-purchase-url"
+        },
+        {
+          label: "Origin Coffee URL",
+          url: "https://origin.example/coffee",
+          kind: "info",
+          visibility: "private",
+          testid: "bean-system-origin-url"
+        }
+      ],
+      bean_private_system_links(bean)
+    )
+  end
+
+  test "private system links omit blank and unsafe legacy urls independently" do
+    bean = Bean.new(purchase_url: "javascript:alert(1)", coffee_origin_url: "https://origin.example/coffee")
+
+    assert_equal [
+      {
+        label: "Origin Coffee URL",
+        url: "https://origin.example/coffee",
+        kind: "info",
+        visibility: "private",
+        testid: "bean-system-origin-url"
+      }
+    ], bean_private_system_links(bean)
+
+    bean.purchase_url = "https://shop.example/bean"
+    bean.coffee_origin_url = "data:text/html,<p>x</p>"
+
+    assert_equal [
+      {
+        label: "Purchase URL",
+        url: "https://shop.example/bean",
+        kind: "buy",
+        visibility: "private",
+        testid: "bean-system-purchase-url"
+      }
+    ], bean_private_system_links(bean)
+
+    bean.purchase_url = ""
+    bean.coffee_origin_url = nil
+
+    assert_empty bean_private_system_links(bean)
+  end
 end

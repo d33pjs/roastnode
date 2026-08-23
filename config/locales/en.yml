@@ -460,6 +460,9 @@ en:
       start_date: "Start date"
       status: "Status"
       suggest_grinder: "Suggest grinder setting"
+      system_links:
+        origin: "Origin Coffee URL"
+        purchase: "Purchase URL"
       taste_balance: "Taste balance"
       tasting_notes: "Flavor profile"
       time: "Time"

@@ -1,14 +1,36 @@
+<% system_links = Array(local_assigns[:system_links]) %>
 <% links = record.record_links.ordered.to_a %>
-<% if links.any? %>
+<% if system_links.any? || links.any? %>
   <section data-testid="record-links-list" class="<%= local_assigns.fetch(:section_class, "mt-6 rounded-lg border border-stone-200 bg-white p-5 shadow-sm") %>">
     <h2 class="<%= local_assigns.fetch(:title_class, "text-lg font-semibold text-stone-950") %>"><%= t("shared.record_links.title") %></h2>
     <div class="mt-3 flex flex-wrap gap-2">
+      <% system_links.each do |link| %>
+        <%= link_to link.fetch(:url),
+          target: "_blank",
+          rel: "noopener",
+          data: { testid: link.fetch(:testid) },
+          class: "inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-bold text-stone-950 underline decoration-stone-300 underline-offset-4 hover:bg-stone-50 hover:decoration-stone-950 focus:outline-none focus:ring-2 focus:ring-[var(--rn-accent-strong)] focus:ring-offset-2" do %>
+          <span class="inline-flex min-w-0 items-center gap-2">
+            <span aria-hidden="true" class="shrink-0">-&gt;</span>
+            <span class="min-w-0 break-words"><%= link.fetch(:label) %></span>
+          </span>
+          <span class="ml-auto inline-flex shrink-0 items-center gap-1.5">
+            <span class="rounded-full <%= link.fetch(:kind) == "buy" ? "bg-amber-100 text-amber-900" : "bg-sky-100 text-sky-900" %> px-2 py-0.5 text-[0.65rem] font-black uppercase"><%= t("shared.record_links.kinds.#{link.fetch(:kind)}") %></span>
+            <span data-testid="record-link-visibility" class="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-black uppercase text-stone-600"><%= t("shared.record_links.visibilities.#{link.fetch(:visibility)}") %></span>
+          </span>
+        <% end %>
+      <% end %>
+
       <% links.each do |link| %>
-        <%= link_to link.url, target: "_blank", rel: "noopener", class: "inline-flex items-center gap-2 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-bold text-stone-950 underline decoration-stone-300 underline-offset-4 hover:bg-stone-50 hover:decoration-stone-950" do %>
-          <span aria-hidden="true">-></span>
-          <span><%= link.label %></span>
-          <span class="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-black uppercase text-stone-600"><%= t("shared.record_links.kinds.#{link.kind}") %></span>
-          <span data-testid="record-link-visibility" class="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-black uppercase text-stone-600"><%= t("shared.record_links.visibilities.#{link.visibility}") %></span>
+        <%= link_to link.url, target: "_blank", rel: "noopener", class: "inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-bold text-stone-950 underline decoration-stone-300 underline-offset-4 hover:bg-stone-50 hover:decoration-stone-950 focus:outline-none focus:ring-2 focus:ring-[var(--rn-accent-strong)] focus:ring-offset-2" do %>
+          <span class="inline-flex min-w-0 items-center gap-2">
+            <span aria-hidden="true" class="shrink-0">-></span>
+            <span class="min-w-0 break-words"><%= link.label %></span>
+          </span>
+          <span class="ml-auto inline-flex shrink-0 items-center gap-1.5">
+            <span class="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-black uppercase text-stone-600"><%= t("shared.record_links.kinds.#{link.kind}") %></span>
+            <span data-testid="record-link-visibility" class="rounded-full bg-stone-100 px-2 py-0.5 text-[0.65rem] font-black uppercase text-stone-600"><%= t("shared.record_links.visibilities.#{link.visibility}") %></span>
+          </span>
         <% end %>
       <% end %>
     </div>

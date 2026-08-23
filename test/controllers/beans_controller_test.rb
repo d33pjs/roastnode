@@ -1183,7 +1183,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[data-testid=bean-rebuy-link][href=?][target=_blank][rel=noopener]", bean.purchase_url
-    assert_select "dd[data-testid=bean-detail-purchase-url] a[href=?]", bean.purchase_url, text: /example\.com/
+    assert_select "a[data-testid=bean-system-purchase-url][href=?][target=_blank][rel=noopener]", bean.purchase_url
+    assert_select "[data-testid=bean-detail-purchase-url]", count: 0
     assert_select "body", text: /https:\/\/example.com\/beans\/house-blend\?ref=private/, count: 0
   end
 
@@ -1196,8 +1197,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a[data-testid=bean-rebuy-link]", count: 0
-    assert_select "dd[data-testid=bean-detail-purchase-url] a[href=?]", bean.reload.purchase_url, count: 0
-    assert_select "dd[data-testid=bean-detail-purchase-url]", text: I18n.t("beans.show.unknown")
+    assert_select "a[data-testid=bean-system-purchase-url]", count: 0
+    assert_select "[data-testid=bean-detail-purchase-url]", count: 0
     assert_select "body", text: /javascript:alert\('bean'\)/, count: 0
   end
 
@@ -1209,7 +1210,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       roaster_name: "Shelf Roaster",
       bag_size_grams: 250,
       remaining_grams: 250,
-      opened_on: nil
+      opened_on: nil,
+      coffee_origin_url: "https://origin.example/viewer-coffee"
     )
     sign_in_as(users(:two))
 
@@ -1217,6 +1219,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "form[data-testid=bean-open-bag-form]", count: 0
+    assert_select "a[data-testid=bean-system-origin-url][href=?][target=_blank][rel=noopener]", bean.coffee_origin_url
   end
 
   test "show links writer to create public bean share for publishable bean" do
@@ -1341,6 +1344,83 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='https://example.test/private']", text: /Private cupping/
     assert_select "[data-testid=record-link-visibility]", text: I18n.t("shared.record_links.visibilities.public")
     assert_select "[data-testid=record-link-visibility]", text: I18n.t("shared.record_links.visibilities.private")
+  end
+
+  test "show synthesizes private url chips before normal record links without creating rows" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update!(
+      purchase_url: "https://shop.example/bean?source=private",
+      coffee_origin_url: "https://origin.example/coffee"
+    )
+    record_link = bean.record_links.create!(
+      label: "Private cupping",
+      url: "https://notes.example/cupping",
+      kind: "info",
+      visibility: "private",
+      position: 10
+    )
+
+    assert_no_difference -> { bean.record_links.count } do
+      get bean_path(bean)
+    end
+
+    assert_response :success
+    assert_select "[data-testid=record-links-list]"
+    assert_select "a[data-testid=bean-system-purchase-url][href=?][target=_blank][rel=noopener]", bean.purchase_url do
+      assert_select "span", text: I18n.t("beans.show.system_links.purchase")
+      assert_select "span", text: /#{I18n.t("shared.record_links.kinds.buy")}/i
+      assert_select "span", text: /#{I18n.t("shared.record_links.visibilities.private")}/i
+    end
+    assert_select "a[data-testid=bean-system-origin-url][href=?][target=_blank][rel=noopener]", bean.coffee_origin_url do
+      assert_select "span", text: I18n.t("beans.show.system_links.origin")
+      assert_select "span", text: /#{I18n.t("shared.record_links.kinds.info")}/i
+      assert_select "span", text: /#{I18n.t("shared.record_links.visibilities.private")}/i
+    end
+    assert_select "a[href=?][target=_blank][rel=noopener]", record_link.url, text: /Private cupping/
+    assert_appears_before "bean-system-purchase-url", "bean-system-origin-url"
+    assert_appears_before "bean-system-origin-url", "Private cupping"
+    assert_select "[data-testid=bean-detail-purchase-url]", count: 0
+  end
+
+  test "show renders a links section for private urls without record links" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.record_links.destroy_all
+    bean.update!(purchase_url: "https://shop.example/only-url", coffee_origin_url: nil)
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "[data-testid=record-links-list]"
+    assert_select "a[data-testid=bean-system-purchase-url][href=?]", bean.purchase_url
+    assert_select "a[data-testid=bean-system-origin-url]", count: 0
+  end
+
+  test "show keeps an origin-only url private and never treats it as rebuy" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update!(purchase_url: nil, coffee_origin_url: "https://origin.example/origin-only")
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[data-testid=bean-system-origin-url][href=?]", bean.coffee_origin_url
+    assert_select "a[data-testid=bean-system-purchase-url]", count: 0
+    assert_select "a[data-testid=bean-rebuy-link]", count: 0
+  end
+
+  test "show omits unsafe legacy origin url without exposing raw text" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.update!(purchase_url: nil)
+    bean.update_column(:coffee_origin_url, "javascript:alert('origin')")
+
+    get bean_path(bean)
+
+    assert_response :success
+    assert_select "a[data-testid=bean-system-origin-url]", count: 0
+    assert_select "body", text: /javascript:alert\('origin'\)/, count: 0
   end
 
   test "show renders bean analytics" do
@@ -1691,7 +1771,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       follow_redirect!
       assert_response :success
       assert_select "a[data-testid=bean-rebuy-link]", count: 0
-      assert_select "dd[data-testid=bean-detail-purchase-url] a[href=?]", bean.purchase_url, count: 0
+      assert_select "a[data-testid=bean-system-purchase-url]", count: 0
+      assert_select "[data-testid=bean-detail-purchase-url]", count: 0
       assert_select "body", text: /javascript:alert\('bean'\)/, count: 0
     end
   end
