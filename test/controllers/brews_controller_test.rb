@@ -157,6 +157,48 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?]", "brew-bean-last-used-#{last_brew.bean_id}", count: 1
   end
 
+  test "successful create skips grinder reminder construction and queries" do
+    sign_in_as(users(:one))
+    unexpected_construction = ->(**) { raise "successful create constructed BrewGrinderReminder" }
+
+    with_stubbed_singleton_method(BrewGrinderReminder, :new, unexpected_construction) do
+      post brews_path, params: { brew: {
+        method: "espresso",
+        bean_id: beans(:second_open_household).id,
+        grinder_id: equipment(:household_grinder).id,
+        machine_id: equipment(:household_machine).id,
+        occurred_at: Time.current,
+        bean_weight_grams: "1",
+        grind_setting: "13",
+        taste_balance: "neutral"
+      } }
+    end
+
+    created = workspaces(:household).brews.order(:created_at).last
+    assert_redirected_to brew_path(created)
+  end
+
+  test "new shows one historical last-used status when the actual last bean is closed" do
+    closed_bean = beans(:open_household)
+    selected_bean = beans(:second_open_household)
+    closed_bean.update!(remaining_grams: 0, archived_at: Time.current)
+    brews(:morning_espresso).update!(occurred_at: 1.minute.ago, grind_setting: "truthful 12")
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "input[name=?][value=?]", "brew[bean_id]", closed_bean.id.to_s, count: 0
+    assert_select "input[name=?][value=?][checked]", "brew[bean_id]", selected_bean.id.to_s, count: 1
+    assert_select "[data-testid^=brew-bean-last-used-]", count: 0
+    assert_select "[data-testid=brew-bean-historical-last-used]", count: 1,
+      text: /✓ Last used: #{Regexp.escape(closed_bean.display_name)} · no longer open/
+    assert_select "[data-testid=brew-grinder-reminder-previous]", count: 1,
+      text: /#{Regexp.escape(closed_bean.display_name)}.*truthful 12/
+    assert_select "[data-controller=brew-grinder-reminder][data-brew-grinder-reminder-last-bean-id-value=?]",
+      closed_bean.id.to_s
+  end
+
   test "new espresso form exposes controls supported by the selected machine" do
     machine = equipment(:household_machine)
     machine.update!(preinfusion_enabled: true, low_flow_start_enabled: true, flow_control_enabled: true)

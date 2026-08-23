@@ -12,6 +12,7 @@ Roastnode keeps unsaved form values in the browser while a user is logging a new
 - Drafts restore automatically when the matching new brew form opens again.
 - Restored drafts show a compact notice with a discard button.
 - Drafts clear when the form is submitted.
+- Restore and discard synchronize the machine-dependent fields and bean-switch grinder reminder after programmatic field changes without changing the restored grinder or grind-setting values.
 
 ## Stored Fields
 

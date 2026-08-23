@@ -553,6 +553,7 @@ en:
       ground_coffee: "Ground coffee (g)"
       ground_weight: "Ground out (g)"
       flow_control_used: "Flow control used"
+      historical_last_used: "✓ Last used: %{bean} · no longer open"
       low_flow_start: "Low-flow start (s)"
       last_used: "Last used"
       machine: "Machine"

@@ -13,6 +13,9 @@ class BrewDraftControllerTest < ActiveSupport::TestCase
     assert_includes source, "this.serializeFields(this.restorableFields)"
     assert_includes source, "return this.restorableFields.reduce"
     assert_includes source, "return this.restorableFields.filter((field) => !field.disabled)"
+    assert_includes source, "this.notifyBeanSelectionChanged()"
+    assert_includes source, 'input[type="radio"][name="brew[bean_id]"]:checked'
+    assert_includes source, 'dispatchEvent(new Event("change", { bubbles: true }))'
     assert_not_includes source, "if (!field.name || field.disabled) return false"
   end
 end

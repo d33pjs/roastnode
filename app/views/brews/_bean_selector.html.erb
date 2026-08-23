@@ -1,5 +1,6 @@
 <% reminder = local_assigns.fetch(:grinder_reminder, nil) %>
 <% previous = reminder&.previous %>
+<% historical_last_bean = reminder&.last_bean unless @beans.include?(reminder&.last_bean) %>
 
 <section
   data-testid="brew-form-section"
@@ -11,7 +12,14 @@
     data-brew-grinder-reminder-unavailable-value="<%= t("brews.form.no_rated_grinder_reference") %>"
   <% end %>
   class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
-  <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.bean") %></h2>
+  <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+    <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.bean") %></h2>
+    <% if historical_last_bean %>
+      <p data-testid="brew-bean-historical-last-used" class="text-xs font-extrabold text-green-700 sm:text-sm">
+        <%= t("brews.form.historical_last_used", bean: historical_last_bean.display_name) %>
+      </p>
+    <% end %>
+  </div>
   <div class="mt-3 grid gap-3">
     <% @beans.each do |bean| %>
       <% collection_name = bean.display_name_for_collection(@beans) %>

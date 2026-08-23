@@ -101,11 +101,17 @@ export default class extends Controller {
     }
 
     this.notifyMachineSelectionChanged()
+    this.notifyBeanSelectionChanged()
   }
 
   notifyMachineSelectionChanged() {
     const selectedMachine = this.element.querySelector('input[type="radio"][name="brew[machine_id]"]:checked')
     selectedMachine?.dispatchEvent(new Event("change", { bubbles: true }))
+  }
+
+  notifyBeanSelectionChanged() {
+    const selectedBean = this.element.querySelector('input[type="radio"][name="brew[bean_id]"]:checked')
+    selectedBean?.dispatchEvent(new Event("change", { bubbles: true }))
   }
 
   showNotice() {

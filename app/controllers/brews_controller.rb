@@ -78,7 +78,6 @@ class BrewsController < ApplicationController
     @brew = current_workspace.brews.new(attributes)
     @brew.user = Current.user
     load_form_options(selected_bean: @brew.bean, selected_grinder: @brew.grinder, selected_machine: @brew.machine, selected_brewer: @brew.brewer)
-    load_grinder_reminder
     set_brew_form_preferences
     @draft_storage_key = brew_draft_storage_key
     apply_recipe_snapshot
@@ -99,6 +98,7 @@ class BrewsController < ApplicationController
     if created
       redirect_to @brew, notice: t(".created")
     else
+      load_grinder_reminder
       prepare_record_links(@brew)
       render :new, status: :unprocessable_entity
     end

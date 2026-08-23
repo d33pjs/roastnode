@@ -17,7 +17,7 @@ class BrewGrinderReminder
     end
   end
 
-  Result = Data.define(:last_bean_id, :previous, :best_by_bean_id) do
+  Result = Data.define(:last_bean, :last_bean_id, :previous, :best_by_bean_id) do
     def best_for(bean)
       best_by_bean_id[bean.id]
     end
@@ -36,6 +36,7 @@ class BrewGrinderReminder
     previous = nil unless previous&.usable?
 
     Result.new(
+      last_bean: last_brew&.bean,
       last_bean_id: last_brew&.bean_id,
       previous:,
       best_by_bean_id: best_references
@@ -54,22 +55,17 @@ class BrewGrinderReminder
       workspace.brews
         .where(method:, bean_id: beans.map(&:id))
         .where.not(rating: nil)
-        .includes(:bean, :grinder)
-        .group_by(&:bean_id)
-        .transform_values { |brews| best_reference(brews) }
-        .compact
-    end
-
-    def best_reference(brews)
-      brews
-        .filter_map do |brew|
-          reference = reference_for(brew)
-          [ brew, reference ] if reference.usable?
-        end
-        .max_by do |brew, _reference|
-          [ brew.rating, brew.occurred_at || Time.zone.at(0), brew.created_at || Time.zone.at(0) ]
-        end
-        &.last
+        .where("brews.grinder_id IS NOT NULL OR NULLIF(BTRIM(brews.grind_setting), '') IS NOT NULL")
+        .select("DISTINCT ON (brews.bean_id) brews.*")
+        .order(Arel.sql(<<~SQL.squish))
+          brews.bean_id,
+          brews.rating DESC,
+          brews.occurred_at DESC NULLS LAST,
+          brews.created_at DESC NULLS LAST
+        SQL
+        .preload(:bean, :grinder)
+        .index_by(&:bean_id)
+        .transform_values { |brew| reference_for(brew) }
     end
 
     def ordered(scope)
