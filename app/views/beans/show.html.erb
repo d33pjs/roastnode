@@ -298,7 +298,12 @@
         </div>
 
         <div>
-          <h3 class="text-sm font-semibold uppercase text-stone-600"><%= t(".recent_brews") %></h3>
+          <div data-testid="bean-recent-brews-heading" class="flex items-center justify-between gap-3">
+            <h3 class="text-sm font-semibold uppercase text-stone-600"><%= t(".recent_brews") %></h3>
+            <%= link_to t(".view_all_brews"),
+              coffees_path(filter: "brews", bean_id: @bean.id),
+              class: "text-sm font-bold text-stone-700 hover:underline" %>
+          </div>
           <div data-testid="bean-recent-brews" class="mt-3 grid gap-2">
             <% if @bean_statistics[:recent_brews].any? %>
               <% @bean_statistics[:recent_brews].each do |brew| %>

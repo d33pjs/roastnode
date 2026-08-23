@@ -467,6 +467,7 @@ en:
       unknown_origin: "Unknown origin"
       unknown_roaster: "Unknown roaster"
       variety: "Variety"
+      view_all_brews: "View all"
       yield: "Beverage"
       yes: "Yes"
       days:
@@ -516,6 +517,7 @@ en:
       update: "Save correction"
     index:
       back: "Back to dashboard"
+      bean_filter: "Bean: %{bean}"
       compact_view: "Compact"
       empty: "No coffees yet."
       filter_all: "All"
@@ -524,6 +526,8 @@ en:
       hero_view: "Hero cards"
       next_page: "Next"
       previous_page: "Previous"
+      remove_bean_filter: "×"
+      remove_bean_filter_for: "Remove Bean filter for %{bean}"
       title: "Coffees"
     form:
       bean: "Bean"

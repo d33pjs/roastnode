@@ -8,6 +8,8 @@ class BrewsController < ApplicationController
   def index
     @brew_history_view = params[:view] == "hero" ? "hero" : "compact"
     @coffee_filter = params[:filter].presence_in(%w[all brews external]) || "all"
+    @history_bean = history_bean_from_params
+    @history_bean = nil if @coffee_filter == "external"
     @brew_history = HistoryPaginator.new(coffee_history_scope, page: params[:page])
   end
 
@@ -255,6 +257,8 @@ class BrewsController < ApplicationController
     end
 
     def coffee_history_scope
+      return brew_history_scope if @history_bean
+
       case @coffee_filter
       when "brews"
         brew_history_scope
@@ -267,8 +271,18 @@ class BrewsController < ApplicationController
       end
     end
 
+    def history_bean_from_params
+      return unless params.key?(:bean_id)
+
+      bean_id = params[:bean_id]
+      raise ActiveRecord::RecordNotFound unless bean_id.is_a?(String) || bean_id.is_a?(Integer)
+      return if bean_id.blank?
+
+      current_workspace.beans.find(bean_id)
+    end
+
     def brew_history_scope
-      current_workspace
+      scope = current_workspace
         .brews
         .includes(
           :grinder, :machine, :brewer, :public_brew_share,
@@ -279,7 +293,8 @@ class BrewsController < ApplicationController
           recipient_user: { avatar_attachment: :blob },
           brew_preparation_tools: :preparation_tool
         )
-        .order(occurred_at: :desc, created_at: :desc)
+      scope = scope.where(bean_id: @history_bean.id) if @history_bean
+      scope.order(occurred_at: :desc, created_at: :desc)
     end
 
     def external_coffee_history_scope

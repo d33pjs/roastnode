@@ -2697,6 +2697,145 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=history-previous-page][href=?]", coffees_path(view: "hero", page: 1)
   end
 
+  test "bean filter shows that bean espresso and quick drip but no other coffees" do
+    bean = beans(:open_household)
+    bean.update!(name: "Filter <b>Lot</b>")
+    espresso = brews(:morning_espresso)
+    quick_drip = bean.workspace.brews.create!(
+      user: users(:one),
+      method: "quick_drip",
+      bean:,
+      brewer: equipment(:household_brewer),
+      grinder: equipment(:household_grinder),
+      machine_cups: 6,
+      bean_weight_grams: 30
+    )
+    other_brew = bean.workspace.brews.create!(
+      user: users(:one),
+      method: "espresso",
+      bean: beans(:second_open_household),
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      bean_weight_grams: 18
+    )
+    external = bean.workspace.external_coffees.create!(
+      user: users(:one),
+      drink_type: "Cortado"
+    )
+    sign_in_as(users(:one))
+
+    get coffees_path, params: { filter: "brews", bean_id: bean.id }
+
+    assert_response :success
+    assert_select "[data-testid=coffee-filter-brews][aria-current=page]"
+    assert_select "[data-testid=coffee-bean-filter]", text: /#{Regexp.escape(bean.display_name)}/
+    assert_select "[data-testid=coffee-bean-filter] b", count: 0
+    assert_select "a[href=?]", brew_path(espresso)
+    assert_select "a[href=?]", brew_path(quick_drip)
+    assert_select "a[href=?]", brew_path(other_brew), count: 0
+    assert_select "a[href=?]", external_coffee_path(external), count: 0
+  end
+
+  test "bean filter persists through view compatible filters and pagination" do
+    bean = beans(:open_household)
+    21.times do |index|
+      bean.workspace.brews.create!(
+        user: users(:one),
+        method: index.even? ? "espresso" : "quick_drip",
+        bean:,
+        grinder: equipment(:household_grinder),
+        machine: index.even? ? equipment(:household_machine) : nil,
+        brewer: index.odd? ? equipment(:household_brewer) : nil,
+        machine_cups: index.odd? ? 6 : nil,
+        bean_weight_grams: 18,
+        occurred_at: Time.zone.local(2026, 6, 1, 12) - index.minutes
+      )
+    end
+    sign_in_as(users(:one))
+
+    get coffees_path, params: { filter: "brews", bean_id: bean.id, view: "hero" }
+
+    assert_response :success
+    assert_select "a[href=?]",
+      coffees_path(filter: "brews", bean_id: bean.id),
+      text: I18n.t("brews.index.compact_view")
+    assert_select "a[href=?]",
+      coffees_path(filter: "brews", bean_id: bean.id, view: "hero"),
+      text: I18n.t("brews.index.hero_view")
+    assert_select "[data-testid=coffee-filter-all][href=?]",
+      coffees_path(bean_id: bean.id, view: "hero")
+    assert_select "[data-testid=coffee-filter-brews][href=?]",
+      coffees_path(filter: "brews", bean_id: bean.id, view: "hero")
+    assert_select "[data-testid=history-next-page][href=?]",
+      coffees_path(filter: "brews", bean_id: bean.id, view: "hero", page: 2)
+
+    get coffees_path, params: { filter: "brews", bean_id: bean.id, view: "hero", page: 2 }
+
+    assert_response :success
+    assert_select "[data-testid=coffee-bean-filter]"
+    assert_select "[data-testid=history-previous-page][href=?]",
+      coffees_path(filter: "brews", bean_id: bean.id, view: "hero", page: 1)
+  end
+
+  test "external filter link clears incompatible bean filter" do
+    bean = beans(:open_household)
+    sign_in_as(users(:one))
+
+    get coffees_path, params: { filter: "brews", bean_id: bean.id, view: "hero" }
+
+    external_link = css_select("[data-testid=coffee-filter-external]").first
+    query = Rack::Utils.parse_nested_query(URI.parse(external_link["href"]).query)
+    assert_equal "external", query.fetch("filter")
+    assert_equal "hero", query.fetch("view")
+    assert_not query.key?("bean_id")
+
+    get external_link["href"]
+
+    assert_response :success
+    assert_select "[data-testid=coffee-filter-external][aria-current=page]"
+    assert_select "[data-testid=coffee-bean-filter]", count: 0
+  end
+
+  test "active bean chip can be removed while preserving view and coffee type" do
+    bean = beans(:open_household)
+    sign_in_as(users(:one))
+
+    get coffees_path, params: { filter: "brews", bean_id: bean.id, view: "hero" }
+
+    assert_select "[data-testid=coffee-bean-filter-remove][href=?]",
+      coffees_path(filter: "brews", view: "hero")
+  end
+
+  test "missing and foreign bean filters return not found before filter compatibility is applied" do
+    sign_in_as(users(:one))
+
+    get coffees_path, params: { filter: "brews", bean_id: Bean.maximum(:id) + 100_000 }
+    assert_response :not_found
+
+    foreign_id = beans(:other_workspace_open).id
+    get coffees_path, params: { filter: "brews", bean_id: foreign_id }
+    assert_response :not_found
+
+    get coffees_path, params: { filter: "external", bean_id: foreign_id }
+    assert_response :not_found
+  end
+
+  test "external clears a valid bean filter while non scalar bean filters fail closed" do
+    bean = beans(:open_household)
+    sign_in_as(users(:one))
+
+    get coffees_path, params: { filter: "external", bean_id: bean.id }
+    assert_response :success
+    assert_select "[data-testid=coffee-filter-external][aria-current=page]"
+    assert_select "[data-testid=coffee-bean-filter]", count: 0
+
+    get coffees_path, params: { filter: "brews", bean_id: [ bean.id ] }
+    assert_response :not_found
+
+    get coffees_path, params: { filter: "brews", bean_id: { id: bean.id } }
+    assert_response :not_found
+  end
+
   test "viewer can read brew history" do
     memberships(:member).update!(role: "viewer")
     user = users(:two)

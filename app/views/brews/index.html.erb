@@ -10,7 +10,9 @@
 
       <div class="grid gap-2">
         <div class="inline-flex rounded-xl border border-rn-line bg-rn-surface p-1 shadow-sm">
-          <% view_filter_params = @coffee_filter == "all" ? {} : { filter: @coffee_filter } %>
+          <% view_filter_params = {} %>
+          <% view_filter_params[:filter] = @coffee_filter unless @coffee_filter == "all" %>
+          <% view_filter_params[:bean_id] = @history_bean.id if @history_bean %>
           <%= link_to t(".compact_view"),
             coffees_path(view_filter_params),
             class: "rounded-lg px-3 py-2 text-sm font-extrabold #{@brew_history_view == "compact" ? "bg-[var(--rn-coffee)] text-[#fff8e8]" : "text-rn-muted hover:text-rn-ink"}" %>
@@ -22,7 +24,9 @@
         <div class="inline-flex rounded-xl border border-rn-line bg-rn-surface p-1 shadow-sm">
           <% filter_view_params = @brew_history_view == "hero" ? { view: "hero" } : {} %>
           <% { "all" => t(".filter_all"), "brews" => t(".filter_brews"), "external" => t(".filter_external") }.each do |filter, label| %>
-            <% filter_params = filter == "all" ? filter_view_params : filter_view_params.merge(filter:) %>
+            <% filter_params = filter_view_params.dup %>
+            <% filter_params[:filter] = filter unless filter == "all" %>
+            <% filter_params[:bean_id] = @history_bean.id if @history_bean && filter != "external" %>
             <%= link_to label,
               coffees_path(filter_params),
               data: { testid: "coffee-filter-#{filter}" },
@@ -33,10 +37,25 @@
       </div>
     </div>
 
+    <% if @history_bean %>
+      <% clear_bean_params = {} %>
+      <% clear_bean_params[:filter] = @coffee_filter unless @coffee_filter == "all" %>
+      <% clear_bean_params[:view] = "hero" if @brew_history_view == "hero" %>
+      <div data-testid="coffee-bean-filter" class="mt-5 inline-flex max-w-full items-center gap-2 rounded-full border border-rn-line bg-rn-surface px-3 py-2 text-sm font-extrabold text-rn-ink shadow-sm">
+        <span class="truncate"><%= t(".bean_filter", bean: @history_bean.display_name) %></span>
+        <%= link_to t(".remove_bean_filter"),
+          coffees_path(clear_bean_params),
+          data: { testid: "coffee-bean-filter-remove" },
+          aria: { label: t(".remove_bean_filter_for", bean: @history_bean.display_name) },
+          class: "shrink-0 rounded-full px-1 text-rn-muted hover:text-rn-ink" %>
+      </div>
+    <% end %>
+
     <% if @brew_history.any? %>
       <% history_params = {} %>
       <% history_params[:view] = "hero" if @brew_history_view == "hero" %>
       <% history_params[:filter] = @coffee_filter unless @coffee_filter == "all" %>
+      <% history_params[:bean_id] = @history_bean.id if @history_bean %>
 
       <div class="mt-6 grid gap-4">
         <% @brew_history.records.each do |coffee| %>

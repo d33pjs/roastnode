@@ -1413,6 +1413,9 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
       )
     )
     assert_select "[data-testid=bean-best-brews] a[href=?]", brew_path(brew), text: /45g/
+    assert_select "[data-testid=bean-recent-brews-heading] a[href=?]",
+      coffees_path(filter: "brews", bean_id: bean.id),
+      text: I18n.t("beans.show.view_all_brews")
     assert_select "[data-testid=bean-recent-brews] a[href=?]", brew_path(brew), text: /10/
     assert_select "h3", I18n.t("beans.show.taste_balance")
     assert_select "h3", I18n.t("beans.show.retention_markers")
