@@ -191,7 +191,40 @@ class PublicBeanShareSnapshotBuilder
 
     def recipient_payload(brew)
       @recipient_payloads ||= {}
-      @recipient_payloads[brew.id] ||= PublicBrewRecipientProjection.new(brew:).call
+      @recipient_payloads[brew.id] ||= PublicBrewRecipientProjection.new(
+        brew:,
+        authorized_recipient_user_ids:,
+        recipient_avatar_attachment_ids:
+      ).call
+    end
+
+    def authorized_recipient_user_ids
+      @authorized_recipient_user_ids ||= begin
+        ids = candidate_recipient_user_ids
+        authorized_ids = ids.empty? ? [] : bean.workspace.memberships.where(user_id: ids).distinct.pluck(:user_id)
+        authorized_ids.index_with(true)
+      end
+    end
+
+    def recipient_avatar_attachment_ids
+      @recipient_avatar_attachment_ids ||= begin
+        ids = authorized_recipient_user_ids.keys
+        if ids.empty?
+          {}
+        else
+          ActiveStorage::Attachment
+            .where(record_type: "User", record_id: ids, name: "avatar")
+            .pluck(:record_id, :id)
+            .to_h
+        end
+      end
+    end
+
+    def candidate_recipient_user_ids
+      @candidate_recipient_user_ids ||= brews.filter_map do |brew|
+        kind = brew.read_attribute_before_type_cast(:recipient_kind)
+        brew.recipient_user_id if kind == "household_member" && brew.recipient_user_id
+      end.uniq
     end
 
     def public_brew_share_payload(brew)

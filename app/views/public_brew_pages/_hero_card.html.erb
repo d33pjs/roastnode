@@ -16,7 +16,9 @@
 <% bean_hero_url = public_media_url_for(share, hero["bean_photo_attachment_id"], variant: :hero) %>
 <% brew_hero_url = public_media_url_for(share, hero["brew_photo_attachment_id"], variant: :hero) %>
 <% logger_avatar_url = public_media_url_for(share, logger["avatar_attachment_id"], variant: :thumbnail) %>
-<% recipient_avatar_url = public_media_url_for(share, recipient["avatar_attachment_id"], variant: :thumbnail) %>
+<% recipient_avatar_url = if recipient["kind"] == "household_member"
+  public_media_url_for(share, recipient["avatar_attachment_id"], variant: :thumbnail)
+end %>
 
 <article data-testid="public-brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm">
   <div data-testid="public-brew-hero-upper" class="relative isolate overflow-hidden bg-black p-5">

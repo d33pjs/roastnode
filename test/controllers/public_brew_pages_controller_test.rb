@@ -286,6 +286,24 @@ class PublicBrewPagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=public-brew-recipient-avatar]", count: 0
   end
 
+  test "public guest cannot borrow an otherwise allowlisted identity avatar" do
+    logger_avatar = attach_named_photo(users(:one), :avatar, filename: "logger-private.jpg")
+    share = create_share(enabled: true)
+    snapshot = share.snapshot.deep_dup
+    snapshot["brew"]["recipient"] = {
+      "kind" => "guest",
+      "avatar_attachment_id" => logger_avatar.id
+    }
+    share.update!(snapshot:)
+
+    get public_brew_page_path(share.token)
+
+    assert_response :success
+    assert_select "img[data-testid=public-brew-logger-avatar]", count: 1
+    assert_select "[data-testid=public-brew-recipient-avatar]", count: 0
+    assert_select "[data-testid=public-brew-recipient-byline]", text: /for a guest/
+  end
+
   test "public hero omits optional timing markers when snapshot values are absent" do
     share = create_share(enabled: true)
     snapshot = share.snapshot.deep_dup

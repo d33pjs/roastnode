@@ -210,6 +210,39 @@ class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal 1, queries.grep(/FROM "memberships"/i).size
   end
 
+  test "batch authorizes household recipients and loads their avatar attachment ids once" do
+    bean = beans(:open_household)
+    first_recipient = users(:two)
+    second_recipient = User.create!(
+      email_address: "second-recipient@example.test",
+      password: "password",
+      display_name: "Second recipient"
+    )
+    bean.workspace.memberships.create!(user: second_recipient, role: "member")
+    first_avatar = attach_named_photo(first_recipient, :avatar, filename: "first-recipient.jpg")
+    second_avatar = attach_named_photo(second_recipient, :avatar, filename: "second-recipient.jpg")
+    first_brew = brews(:morning_espresso)
+    first_brew.update!(bean:, recipient_kind: "household_member", recipient_user: first_recipient)
+    second_brew = first_brew.dup
+    second_brew.recipient_user = second_recipient
+    second_brew.occurred_at += 1.minute
+    second_brew.save!
+
+    queries = capture_sql_payloads { @batched_recipient_snapshot = build_snapshot(bean) }
+    membership_queries = queries.select { |payload| payload[:sql].match?(/FROM "memberships"/i) }
+    recipient_ids = [ first_recipient.id, second_recipient.id ]
+    recipient_attachment_queries = queries.select do |payload|
+      payload[:sql].match?(/FROM "active_storage_attachments"/i) &&
+        (query_bind_values(payload) & recipient_ids).any?
+    end
+
+    assert_equal 1, membership_queries.size
+    assert_equal 1, recipient_attachment_queries.size
+    public_media_ids = @batched_recipient_snapshot.fetch("public_media").pluck("attachment_id")
+    assert_includes public_media_ids, first_avatar.id
+    assert_includes public_media_ids, second_avatar.id
+  end
+
   test "authorizes household membership before loading recipient avatar records" do
     bean = beans(:open_household)
     brew = brews(:morning_espresso)
