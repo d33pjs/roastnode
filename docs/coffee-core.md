@@ -65,6 +65,8 @@ Default selection order:
 
 Archived or depleted beans are not valid brew choices in this slice.
 
+The new Brew Log keeps multi-bean operation visible at the top of the form. Every open bean choice shows remaining grams and rounded percentage, and the operator's last method-specific bean is marked with a green `Last used` check. Selecting another bean reveals a compact `Check grinder settings` warning only when its highest-rated method-specific grinder reference differs from the previous brew, or when no rated reference is available. The helper never changes grinder or grind-setting inputs.
+
 ## Quick Drip Logging
 
 Quick Drip is the first non-espresso brew method. It is a private daily logging flow for automatic drip/filter-style coffee, not a broad professional filter-method suite.
