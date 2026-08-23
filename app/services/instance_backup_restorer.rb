@@ -533,6 +533,7 @@ class InstanceBackupRestorer
       subject_map = ACTIVITY_SUBJECT_MAPS[archived_subject_type]
       subject = subject_map && instance_variable_get(subject_map)[archived_subject_id]
       actor = row["actor_id"].nil? ? nil : @user_map.fetch(row["actor_id"])
+      subject = nil if historical_account_subject_out_of_scope?(action:, subject:, workspace:)
       validate_restored_activity_subject!(subject, workspace:)
       ActivityEvent.create!(
         workspace:,
@@ -548,6 +549,11 @@ class InstanceBackupRestorer
       )
     rescue ActiveRecord::RecordInvalid, KeyError, ArgumentError
       raise RestoreError, "Archive contains an invalid activity event."
+    end
+
+    def historical_account_subject_out_of_scope?(action:, subject:, workspace:)
+      Activity::EventContract::ACCOUNT_ACTIONS.include?(action) &&
+        !Activity::SubjectScope.compatible?(subject:, workspace:)
     end
 
     def validate_restored_activity_subject!(subject, workspace:)

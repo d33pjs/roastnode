@@ -33,6 +33,28 @@ class Activity::EventContractTest < ActiveSupport::TestCase
     end
   end
 
+  test "required metadata identifies actor and summary interpolation inputs" do
+    assert_equal %w[actor_kind actor_label],
+      Activity::EventContract.fetch("brew.created").fetch(:required_metadata_keys)
+    assert_equal %w[actor_kind actor_label amount_grams],
+      Activity::EventContract.fetch("inventory_adjustment.created").fetch(:required_metadata_keys)
+    assert_equal %w[actor_kind actor_label from_role to_role],
+      Activity::EventContract.fetch("membership.role_changed").fetch(:required_metadata_keys)
+    assert_equal %w[actor_kind actor_label created_count skipped_count],
+      Activity::EventContract.fetch("data_import.completed").fetch(:required_metadata_keys)
+  end
+
+  test "every summary interpolation input is schema defined and required" do
+    Activity::EventContract.actions.each do |action|
+      definition = Activity::EventContract.fetch(action)
+      summary = I18n.t("activity.events.#{definition.fetch(:summary)}", locale: :en)
+      metadata_placeholders = summary.scan(/%\{([^}]+)\}/).flatten - %w[actor subject]
+
+      assert_empty metadata_placeholders.difference(definition.fetch(:metadata_schema).keys), action
+      assert_empty metadata_placeholders.difference(definition.fetch(:required_metadata_keys)), action
+    end
+  end
+
   test "focused coverage scanner ignores a disconnected action literal" do
     source = <<~RUBY
       note = "brew.created"

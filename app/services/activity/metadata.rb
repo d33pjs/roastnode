@@ -2,6 +2,7 @@ module Activity
   module Metadata
     MAX_TEXT = 160
     MAX_ARRAY = 10
+    CONTROL_CHARACTERS = /\p{Cc}/.freeze
     SENSITIVE = %r{[a-z][a-z0-9+.-]*://|rails/active_storage|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}|(?:password|digest|token|secret|session|signed_id|attachment|filename|ip_address|file_path|error)\s*[:=]}i
     ABSOLUTE_PATH = %r{\A(?:/|\.\.[\\/]|[a-z]:[\\/]|\\\\)}i
 
@@ -123,7 +124,10 @@ module Activity
     end
 
     def unsafe_text?(value)
-      text = value.to_s.strip.squish
+      raw_text = value.to_s
+      return true if raw_text.match?(CONTROL_CHARACTERS)
+
+      text = raw_text.strip.squish
       text.match?(SENSITIVE) || text.match?(ABSOLUTE_PATH)
     end
   end

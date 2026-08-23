@@ -127,6 +127,13 @@ module Activity
       "instance_backup_run.failed" => %w[backup_kind status]
     }.freeze
 
+    BASE_REQUIRED_METADATA_KEYS = %w[actor_kind actor_label].freeze
+    REQUIRED_METADATA_KEYS = {
+      "inventory_adjustment.created" => %w[amount_grams],
+      "membership.role_changed" => %w[from_role to_role],
+      "data_import.completed" => %w[created_count skipped_count]
+    }.freeze
+
     AUTOMATIC_METADATA_ACTIONS = {
       "method" => %w[brew.created brew.updated brew.taste_changed brew.serving_changed brew.deleted brew.media_updated],
       "status" => %w[
@@ -210,6 +217,7 @@ module Activity
         key if actions.include?(action)
       end
       metadata_keys = (automatic_metadata_keys + DETAIL_KEYS.fetch(action, [])).uniq
+      required_metadata_keys = BASE_REQUIRED_METADATA_KEYS + REQUIRED_METADATA_KEYS.fetch(action, [])
       {
         category:,
         visibility: visibility_for(action),
@@ -220,6 +228,7 @@ module Activity
         detail_keys: DETAIL_KEYS.fetch(action, []),
         automatic_metadata_keys:,
         metadata_keys:,
+        required_metadata_keys:,
         metadata_schema: BASE_METADATA_SCHEMA.merge(
           metadata_keys.index_with { |key| metadata_schema_for(action, key) }
         ),

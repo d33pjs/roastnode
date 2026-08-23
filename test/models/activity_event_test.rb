@@ -41,6 +41,55 @@ class ActivityEventTest < ActiveSupport::TestCase
     assert_includes event.errors[:workspace], "must be blank for instance activity"
   end
 
+  test "rejects metadata missing actor and action summary requirements" do
+    base = {
+      workspace: workspaces(:household),
+      occurred_at: Time.current,
+      metadata: { "actor_kind" => "user", "actor_label" => "Jens" }
+    }
+    events = [
+      ActivityEvent.new(base.merge(
+        category: "coffee", action: "brew.created", visibility: "workspace",
+        metadata: { "actor_kind" => "user" }
+      )),
+      ActivityEvent.new(base.merge(
+        category: "household_administration", action: "membership.role_changed", visibility: "workspace_admin",
+        metadata: base.fetch(:metadata).merge("from_role" => "member")
+      )),
+      ActivityEvent.new(base.merge(
+        category: "system_security", action: "data_import.completed", visibility: "workspace_admin",
+        metadata: base.fetch(:metadata).merge("created_count" => 1)
+      )),
+      ActivityEvent.new(base.merge(
+        category: "coffee", action: "brew.created", visibility: "workspace",
+        metadata: { "actor_kind" => "user", "actor_label" => "" }
+      )),
+      ActivityEvent.new(base.merge(
+        category: "coffee", action: "brew.created", visibility: "workspace",
+        metadata: { "actor_kind" => "user", "actor_label" => "   " }
+      ))
+    ]
+
+    events.each do |event|
+      assert_not event.valid?
+      assert_includes event.errors[:metadata], "is missing required keys"
+      assert_raises(ActiveRecord::RecordInvalid) { event.save! }
+    end
+  end
+
+  test "rejects control characters in metadata text" do
+    [ "Jens\0", "Jens\a", "Jens\u007f" ].each do |actor_label|
+      event = ActivityEvent.new(
+        workspace: workspaces(:household), category: "coffee", action: "brew.created",
+        occurred_at: Time.current, visibility: "workspace",
+        metadata: { "actor_kind" => "user", "actor_label" => actor_label }
+      )
+
+      assert_not event.valid?
+      assert_includes event.errors[:metadata], "contains unsafe text"
+    end
+  end
+
   test "persisted events cannot be updated touched or destroyed" do
     event = activity_events(:morning_brew_created)
 

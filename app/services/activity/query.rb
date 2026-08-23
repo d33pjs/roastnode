@@ -21,15 +21,20 @@ module Activity
     def actor_options
       seen = {}
       authorized_scope.reorder(occurred_at: :desc, id: :desc).pluck(:id, :actor_id, :metadata).each do |_id, actor_id, metadata|
-        kind = metadata.fetch("actor_kind", actor_id ? "user" : "system")
+        next unless metadata.is_a?(Hash)
+
+        kind = metadata["actor_kind"]
+        label = validated_actor_label(metadata["actor_label"])
+        next unless %w[user system].include?(kind) && label
+
         value = if kind == "system"
           "system"
         elsif actor_id
           "user:#{actor_id}"
         else
-          "former:#{Base64.urlsafe_encode64(metadata.fetch("actor_label"), padding: false)}"
+          "former:#{Base64.urlsafe_encode64(label, padding: false)}"
         end
-        seen[value] ||= metadata.fetch("actor_label", kind == "system" ? "System" : "Former member")
+        seen[value] ||= label
       end
       seen.map { |value, label| ActorOption.new(value:, label:) }.sort_by { |option| option.label.downcase }
     end
@@ -71,7 +76,9 @@ module Activity
         integer_id = Integer(id, exception: false)
         return scope.where(actor_id: integer_id) if kind == "user" && integer_id
         if kind == "former"
-          label = Base64.urlsafe_decode64(id.to_s)
+          label = validated_actor_label(Base64.urlsafe_decode64(id.to_s).force_encoding(Encoding::UTF_8))
+          return scope.none unless label
+
           return scope.where(actor_id: nil)
             .where("metadata ->> 'actor_kind' = ?", "user")
             .where("metadata ->> 'actor_label' = ?", label)
@@ -80,6 +87,17 @@ module Activity
         scope.none
       rescue ArgumentError
         scope.none
+      end
+
+      def validated_actor_label(value)
+        return unless value.is_a?(String)
+
+        label = value.dup.force_encoding(Encoding::UTF_8)
+        return unless label.valid_encoding? && label.present?
+        return if label.length > Metadata::MAX_TEXT
+        return if Metadata.unsafe_text?(label)
+
+        label
       end
 
       def parse_date(value)

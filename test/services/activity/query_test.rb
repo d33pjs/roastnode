@@ -104,10 +104,104 @@ class Activity::QueryTest < ActiveSupport::TestCase
     assert_not_includes options.values.map(&:label), users(:two).email_address
   end
 
+  test "actor options omit a malformed legacy former actor without a label" do
+    now = Time.current
+    ActivityEvent.insert_all!([ {
+      workspace_id: workspaces(:household).id,
+      category: "coffee",
+      action: "brew.updated",
+      occurred_at: now,
+      visibility: "workspace",
+      metadata: { "actor_kind" => "user" },
+      created_at: now,
+      updated_at: now
+    } ])
+
+    options = query.actor_options
+
+    assert_not options.any? { |option| option.value.start_with?("former:") && option.label.blank? }
+  end
+
+  test "actor options skip legacy non-object metadata" do
+    now = Time.current
+    rows = ActivityEvent.insert_all!([ {}, "scalar", [ "not-a-pair" ] ].map do |metadata|
+      {
+        workspace_id: workspaces(:household).id,
+        category: "coffee",
+        action: "brew.updated",
+        occurred_at: now,
+        visibility: "workspace",
+        metadata:,
+        created_at: now,
+        updated_at: now
+      }
+    end, returning: %w[id])
+    ActivityEvent.where(id: rows.rows.first.first).update_all(metadata: Arel.sql("'null'::jsonb"))
+
+    options = query.actor_options
+
+    assert options.any?
+    assert options.all? { |option| option.label.present? }
+  end
+
+  test "actor options require an explicit actor kind" do
+    now = Time.current
+    ActivityEvent.insert_all!([
+      {
+        workspace_id: workspaces(:household).id,
+        category: "coffee", action: "brew.updated", occurred_at: now,
+        visibility: "workspace", metadata: { "actor_label" => "Poisoned system label" },
+        created_at: now, updated_at: now
+      },
+      {
+        workspace_id: workspaces(:household).id,
+        category: "coffee", action: "brew.updated", occurred_at: now - 1.second,
+        visibility: "workspace", metadata: { "actor_kind" => "system", "actor_label" => "System" },
+        created_at: now, updated_at: now
+      }
+    ])
+
+    options = query.actor_options.index_by(&:value)
+
+    assert_equal "System", options.fetch("system").label
+    assert_not_includes options.values.map(&:label), "Poisoned system label"
+  end
+
   test "invalid filter values fail closed or are ignored without raising" do
     assert_empty query(category: "not-a-category").events
     assert_empty query(actor: "user:not-an-id").events
     assert query(start_date: "31/31/2026", end_date: "bad").events.exists?
+  end
+
+  test "former actor filter rejects invalid UTF-8 and NUL labels" do
+    [ "\xFF".b, "\0" ].each do |label|
+      selector = "former:#{Base64.urlsafe_encode64(label, padding: false)}"
+
+      assert_empty query(actor: selector).events
+    end
+  end
+
+  test "former actor filter rejects overlong and unsafe labels before querying" do
+    labels = [ "x" * (Activity::Metadata::MAX_TEXT + 1), "https://private.example/token=abc" ]
+    now = Time.current
+    ActivityEvent.insert_all!(labels.map do |label|
+      {
+        workspace_id: workspaces(:household).id,
+        category: "coffee",
+        action: "brew.updated",
+        occurred_at: now,
+        visibility: "workspace",
+        metadata: { "actor_kind" => "user", "actor_label" => label },
+        created_at: now,
+        updated_at: now
+      }
+    end)
+
+    labels.each do |label|
+      selector = "former:#{Base64.urlsafe_encode64(label, padding: false)}"
+
+      assert_empty query(actor: selector).events
+    end
   end
 
   test "former and system actor selectors stay distinct when labels collide" do

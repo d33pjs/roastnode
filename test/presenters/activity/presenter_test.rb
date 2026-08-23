@@ -52,6 +52,115 @@ class Activity::PresenterTest < ActiveSupport::TestCase
     assert_nil presenter.path
   end
 
+  test "recognized legacy rows missing required summary metadata fail closed" do
+    event = ActivityEvent.new(
+      category: "household_administration",
+      action: "membership.role_changed",
+      visibility: "workspace_admin",
+      metadata: { "actor_kind" => "user", "actor_label" => "Jens", "subject_label" => "Petra" }
+    )
+    presenter = Activity::Presenter.new(event, helpers: self)
+
+    assert_equal I18n.t("activity.events.unknown"), presenter.summary
+    assert_equal I18n.t("activity.categories.unknown"), presenter.category_label
+    assert_equal "more_vert", presenter.icon
+    assert_equal Activity::Presenter::NEUTRAL_ICON_CLASSES, presenter.icon_container_classes
+    assert_nil presenter.path
+  end
+
+  test "legacy rows with non-object metadata fail closed" do
+    [ nil, "scalar", [ "not-a-pair" ] ].each do |metadata|
+      event = ActivityEvent.new(
+        workspace: workspaces(:household), category: "coffee", action: "brew.created",
+        occurred_at: Time.current, visibility: "workspace", subject: brews(:morning_espresso), metadata:
+      )
+      presenter = Activity::Presenter.new(event, helpers: self)
+
+      assert_equal I18n.t("activity.events.unknown"), presenter.summary
+      assert_equal I18n.t("activity.categories.unknown"), presenter.category_label
+      assert_equal "more_vert", presenter.icon
+      assert_equal Activity::Presenter::NEUTRAL_ICON_CLASSES, presenter.icon_container_classes
+      assert_nil presenter.path
+    end
+  end
+
+  test "legacy rows invalid under the full event contract fail closed" do
+    safe_metadata = {
+      "actor_kind" => "user", "actor_label" => "Jens", "subject_label" => "Coffee"
+    }
+    events = [
+      ActivityEvent.new(
+        workspace: workspaces(:household), category: "coffee", action: "brew.created",
+        occurred_at: Time.current, visibility: "workspace", subject: brews(:morning_espresso),
+        metadata: safe_metadata.merge("actor_label" => "https://private.example/token=secret")
+      ),
+      ActivityEvent.new(
+        workspace: workspaces(:household), category: "coffee", action: "brew.created",
+        occurred_at: Time.current, visibility: "workspace", subject: brews(:morning_espresso),
+        metadata: safe_metadata.merge("actor_label" => "x" * (Activity::Metadata::MAX_TEXT + 1))
+      ),
+      ActivityEvent.new(
+        workspace: workspaces(:household), category: "coffee", action: "brew.created",
+        occurred_at: Time.current, visibility: "workspace_admin", subject: brews(:morning_espresso),
+        metadata: safe_metadata
+      ),
+      ActivityEvent.new(
+        workspace: workspaces(:household), category: "beans_inventory", action: "bean.created",
+        occurred_at: Time.current, visibility: "workspace", subject: brews(:morning_espresso),
+        metadata: safe_metadata
+      ),
+      ActivityEvent.new(
+        workspace: workspaces(:household), category: "coffee", action: "brew.created",
+        occurred_at: Time.current, visibility: "workspace", subject: brews(:other_workspace_brew),
+        metadata: safe_metadata
+      )
+    ]
+
+    events.each do |event|
+      presenter = Activity::Presenter.new(event, helpers: self)
+
+      assert_equal I18n.t("activity.events.unknown"), presenter.summary
+      assert_equal I18n.t("activity.categories.unknown"), presenter.category_label
+      assert_equal "more_vert", presenter.icon
+      assert_equal Activity::Presenter::NEUTRAL_ICON_CLASSES, presenter.icon_container_classes
+      assert_nil presenter.path
+    end
+  end
+
+  test "former member account activity keeps its summary but stays unlinked" do
+    user = User.create!(
+      email_address: "former-presenter-member@example.com",
+      password: "password",
+      display_name: "Former Presenter Member"
+    )
+    membership = workspaces(:household).memberships.create!(user:, role: "member")
+    event = Activity::Emitter.record!(
+      action: "profile.updated", workspace: workspaces(:household), actor: user, subject: user,
+      occurred_at: Time.zone.local(2026, 8, 21, 11)
+    )
+    membership.destroy!
+    presenter = Activity::Presenter.new(event.reload, helpers: self)
+
+    assert_includes presenter.summary, "Former Presenter Member"
+    assert_not_equal I18n.t("activity.events.unknown"), presenter.summary
+    assert_nil presenter.path
+  end
+
+  test "unknown polymorphic subject types fail closed before constantization" do
+    event = ActivityEvent.new(
+      workspace: workspaces(:household), category: "coffee", action: "brew.created",
+      occurred_at: Time.current, visibility: "workspace",
+      subject_type: "FutureActivitySubject", subject_id: 123,
+      metadata: { "actor_kind" => "user", "actor_label" => "Jens", "subject_label" => "Unknown" }
+    )
+    presenter = Activity::Presenter.new(event, helpers: self)
+
+    assert_equal I18n.t("activity.events.unknown"), presenter.summary
+    assert_equal I18n.t("activity.categories.unknown"), presenter.category_label
+    assert_equal "more_vert", presenter.icon
+    assert_nil presenter.path
+  end
+
   test "recognized subjects without a safe private route use a tombstone presentation" do
     event = Activity::Emitter.record!(
       action: "workspace.updated", workspace: workspaces(:household), actor: users(:one),

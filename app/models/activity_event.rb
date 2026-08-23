@@ -51,6 +51,10 @@ class ActivityEvent < ApplicationRecord
 
       allowed = definition.fetch(:metadata_schema).keys
       errors.add(:metadata, "contains unsupported keys") if metadata.keys.map(&:to_s).difference(allowed).any?
+      missing_required_keys = definition.fetch(:required_metadata_keys).reject do |key|
+        metadata.key?(key) && metadata[key].present?
+      end
+      errors.add(:metadata, "is missing required keys") if missing_required_keys.any?
       errors.add(:metadata, "is too large") if metadata.to_json.bytesize > 2.kilobytes
       actor_kind_schema = definition.fetch(:metadata_schema).fetch("actor_kind")
       unless Activity::Metadata.value_matches_schema?(metadata["actor_kind"], actor_kind_schema)

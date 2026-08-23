@@ -62,15 +62,47 @@ module Activity
         end
       end
 
-      def metadata = event.metadata.to_h
+      def metadata = event.metadata.is_a?(Hash) ? event.metadata : {}
 
       def definition
         return @definition if defined?(@definition)
 
         candidate = EventContract.fetch(event.action)
-        @definition = candidate.fetch(:category) == event.category ? candidate : nil
+        @definition = if candidate.fetch(:category) == event.category && presentation_contract_valid?(candidate)
+          candidate
+        end
       rescue KeyError
         @definition = nil
+      end
+
+      def presentation_contract_valid?(definition)
+        return false unless event.metadata.is_a?(Hash)
+
+        probe = ActivityEvent.new(
+          workspace_id: event.workspace_id,
+          category: event.category,
+          action: event.action,
+          occurred_at: event.occurred_at,
+          visibility: event.visibility,
+          metadata: event.metadata.deep_dup
+        )
+        probe.valid? && presentation_subject_valid?(definition)
+      end
+
+      def presentation_subject_valid?(definition)
+        subject_type = event[:subject_type]
+        subject_id = event[:subject_id]
+        return false unless subject_type.present? == subject_id.present?
+        return true if subject_type.blank?
+        return false unless subject_type == definition.fetch(:subject_type)
+
+        subject = event.subject
+        return true unless subject
+        return true if SubjectScope.compatible?(subject:, workspace: event.workspace)
+
+        EventContract::ACCOUNT_ACTIONS.include?(event.action)
+      rescue NameError, ActiveRecord::SubclassNotFound
+        false
       end
   end
 end

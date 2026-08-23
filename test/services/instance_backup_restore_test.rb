@@ -448,6 +448,32 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 0, Workspace.count
   end
 
+  test "restorer rejects blank and control-character activity actor labels" do
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+    tampered_archives = [ "", "   ", "Jens\0" ].map do |actor_label|
+      mutate_backup_payload(archive_bytes) do |payload|
+        household = payload.fetch("workspaces").find do |workspace_payload|
+          workspace_payload.dig("workspace", "name") == workspaces(:household).name
+        end
+        event = household.fetch("activity_events").find { |row| row.fetch("action") == "brew.created" }
+        event.fetch("metadata")["actor_label"] = actor_label
+      end
+    end
+
+    tampered_archives.each do |tampered_archive|
+      empty_instance!
+      error = assert_raises(InstanceBackupRestorer::RestoreError) do
+        InstanceBackupRestorer.new(tampered_archive).call
+      end
+
+      assert_equal "Archive contains an invalid activity event.", error.message
+      assert_equal 0, ActivityEvent.count
+      assert_equal 0, Workspace.count
+    end
+  end
+
   test "restorer rejects leading paths inside metadata arrays" do
     source_event = Activity::Emitter.record!(
       action: "equipment_event.created", workspace: workspaces(:household), actor: users(:one),
@@ -734,6 +760,37 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     restored_event = ActivityEvent.find_by!(action: "recipe.created")
     assert_nil restored_event.subject
     assert_equal source_event.metadata, restored_event.metadata
+    assert_equal source_event.occurred_at, restored_event.occurred_at
+  end
+
+  test "restorer tombstones a workspace account event when its user subject is no longer a member" do
+    workspace = workspaces(:household)
+    former_member = User.create!(
+      email_address: "former-account-event-member@example.com",
+      password: "password",
+      display_name: "Former Account Event Member"
+    )
+    membership = workspace.memberships.create!(user: former_member, role: "member")
+    source_event = Activity::Emitter.record!(
+      action: "profile.updated", workspace:, actor: former_member, subject: former_member,
+      occurred_at: Time.zone.parse("2026-08-20 13:14:15")
+    )
+    source_metadata = source_event.metadata.deep_dup
+    membership.destroy!
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+
+    empty_instance!
+    InstanceBackupRestorer.new(archive_bytes).call
+
+    restored_workspace = Workspace.find_by!(name: workspace.name)
+    restored_user = User.find_by!(email_address: former_member.email_address)
+    restored_event = ActivityEvent.find_by!(workspace: restored_workspace, action: "profile.updated")
+    assert_not restored_workspace.memberships.exists?(user: restored_user)
+    assert_equal restored_user, restored_event.actor
+    assert_nil restored_event.subject
+    assert_equal source_metadata, restored_event.metadata
     assert_equal source_event.occurred_at, restored_event.occurred_at
   end
 
