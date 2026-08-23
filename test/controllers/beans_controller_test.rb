@@ -310,11 +310,18 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=text][inputmode=decimal][name=?]", "bean[roast_degree]"
     assert_select "input[name=?]", "bean[purchase_price]"
     assert_select "input[name=?]", "bean[decaffeinated]"
-    assert_select "input[name=?]", "bean[purchase_url]"
+    assert_select "label[for=bean_purchase_url]", "Purchase Website"
+    assert_select "input[type=url][name=?][placeholder=?]", "bean[purchase_url]", "URL to buy this bag again"
     assert_select "textarea[name=?]", "bean[tasting_notes]"
     assert_select "h2", I18n.t("beans.form.sections.origin")
     assert_select "input[name=?]", "bean[country]"
     assert_select "input[name=?]", "bean[blend_percentage]"
+    assert_select "input[name=?][placeholder=?]", "bean[elevation]", "1100-1200m"
+    assert_select "input[name=?][placeholder=?]", "bean[variety]", "Arabica and/or Robusta"
+    assert_select "input[name=?][placeholder=?]", "bean[blend_percentage]", "50%/60%"
+    assert_select "input[name=?][placeholder=?]", "bean[process]", "washed or natural"
+    assert_select "label[for=bean_coffee_origin_url]", "Coffee Origin Website"
+    assert_select "input[type=url][name=?][placeholder=?]", "bean[coffee_origin_url]", "URL to original Coffee"
     assert_select "[data-controller=roaster-suggestions][data-roaster-suggestions-url-value=?]", roaster_suggestions_beans_path(format: :json)
     assert_select "input[name=?][data-roaster-suggestions-target=input][data-action*=?]", "bean[roaster_name]", "input->roaster-suggestions#search"
     assert_select "[data-roaster-suggestions-target=list]"
@@ -331,9 +338,19 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][data-bean-inventory-form-target=?]", "bean[bag_size_grams]", "bagSize"
     assert_select "input[name=?][data-bean-inventory-form-target=?]", "bean[remaining_grams]", "remaining"
     assert_select "input[name=?][data-bean-inventory-form-target=?]", "bean[opened_on]", "openedOn"
-    assert_select "[data-testid=bean-rating-options] .rn-rating-scale"
-    assert_select "input[type=radio][name=?][value='']", "bean[rating]"
-    assert_select "input[type=radio][name=?][value='5']", "bean[rating]"
+    assert_select "[data-section=inventory] > div.grid", count: 1 do |grids|
+      assert_includes grids.first["class"].split, "lg:grid-cols-5"
+    end
+    assert_select "[data-section=roast] > div.grid", count: 1 do |grids|
+      assert_includes grids.first["class"].split, "lg:grid-cols-4"
+    end
+    assert_select "[data-section=roast] > fieldset[data-testid=bean-form-rating-row]" do
+      assert_select "legend", text: I18n.t("beans.form.rating")
+      assert_select "[data-testid=bean-rating-options]"
+    end
+    assert_select "[data-testid=bean-form-rating-row] input[type=radio][name=?]", "bean[rating]", count: 6
+    assert_select "[data-testid=bean-form-rating-row] .rn-rating-scale input[type=radio]", count: 5
+    assert_select "[data-testid=bean-form-rating-row] .rn-rating-empty", text: I18n.t("beans.form.no_rating")
   end
 
   test "new bean form renders origin and process fields in approved order" do
@@ -348,7 +365,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_appears_before "bean[elevation]", "bean[variety]"
     assert_appears_before "bean[variety]", "bean[blend_percentage]"
     assert_appears_before "bean[blend_percentage]", "bean[process]"
-    assert_appears_before "bean[process]", "bean[blend_type]"
+    assert_appears_before "bean[process]", "bean[coffee_origin_url]"
+    assert_appears_before "bean[coffee_origin_url]", "bean[blend_type]"
     assert_appears_before "bean[blend_type]", "bean[country_of_manufacturer]"
     assert_appears_before "bean[country_of_manufacturer]", "bean[manufacturer]"
     assert_appears_before "bean[manufacturer]", "bean[farm]"
@@ -379,6 +397,24 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_equal "South America", bean.continent
     assert_equal "Germany", bean.country_of_manufacturer
     assert_equal "Calendar Coffee", bean.manufacturer
+  end
+
+  test "writer can save purchase and coffee origin websites separately" do
+    sign_in_as(users(:one))
+
+    post beans_path, params: {
+      bean: {
+        name: "Two Link Bag",
+        bag_size_grams: "250",
+        purchase_url: " https://shop.example/two-link ",
+        coffee_origin_url: " https://origin.example/two-link "
+      }
+    }
+
+    bean = workspaces(:household).beans.find_by!(name: "Two Link Bag")
+    assert_redirected_to bean_path(bean)
+    assert_equal "https://shop.example/two-link", bean.purchase_url
+    assert_equal "https://origin.example/two-link", bean.coffee_origin_url
   end
 
   test "roaster suggestions match substring across active workspace bean history" do

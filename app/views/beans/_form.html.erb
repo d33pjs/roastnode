@@ -88,7 +88,7 @@
       <h2 class="<%= section_title_class %>"><%= t("beans.form.sections.roast") %></h2>
     </div>
 
-    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div>
         <%= form.label :roast_date, t("beans.form.roast_date"), class: label_class %>
         <%= form.date_field :roast_date, class: input_class %>
@@ -104,16 +104,16 @@
         <%= form.text_field :roast_degree, inputmode: "decimal", class: input_class %>
       </div>
 
-      <div>
-        <%= form.label :rating, t("beans.form.rating"), class: label_class %>
-        <%= render "beans/rating_choices", form: form %>
-      </div>
-
       <label class="flex items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] px-3 py-3 text-sm font-extrabold text-rn-ink lg:self-end">
         <%= form.check_box :decaffeinated, class: "h-4 w-4 rounded border-rn-line text-rn-ink" %>
         <%= t("beans.form.decaffeinated") %>
       </label>
     </div>
+
+    <fieldset data-testid="bean-form-rating-row">
+      <legend class="<%= label_class %>"><%= t("beans.form.rating") %></legend>
+      <%= render "beans/rating_choices", form: form %>
+    </fieldset>
   </section>
 
   <section data-testid="bean-form-section" data-section="origin" class="<%= section_class %>">
@@ -123,15 +123,25 @@
 
     <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       <% %i[
-        continent country region elevation variety blend_percentage process blend_type
+        continent country region elevation variety blend_percentage process coffee_origin_url blend_type
         country_of_manufacturer manufacturer farm farmer harvested
       ].each do |field| %>
+        <% placeholder = {
+          elevation: t("beans.form.examples.elevation"),
+          variety: t("beans.form.examples.variety"),
+          blend_percentage: t("beans.form.examples.blend_percentage"),
+          process: t("beans.form.examples.process")
+        }[field] %>
         <div>
           <%= form.label field, t("beans.form.#{field}"), class: label_class %>
           <% if field == :blend_type %>
             <%= form.select :blend_type, Bean::BLEND_TYPES.map { |type| [ type.humanize, type ] }, {}, class: input_class %>
+          <% elsif field == :coffee_origin_url %>
+            <%= form.url_field :coffee_origin_url,
+              placeholder: t("beans.form.examples.coffee_origin_url"),
+              class: input_class %>
           <% else %>
-            <%= form.text_field field, class: input_class %>
+            <%= form.text_field field, placeholder:, class: input_class %>
           <% end %>
         </div>
       <% end %>
@@ -161,7 +171,9 @@
 
       <div>
         <%= form.label :purchase_url, t("beans.form.purchase_url"), class: label_class %>
-        <%= form.url_field :purchase_url, class: input_class %>
+        <%= form.url_field :purchase_url,
+          placeholder: t("beans.form.examples.purchase_url"),
+          class: input_class %>
       </div>
     </div>
   </section>

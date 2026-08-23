@@ -201,6 +201,7 @@ class BeansController < ApplicationController
         :decaffeinated,
         :purchase_source,
         :purchase_url,
+        :coffee_origin_url,
         :purchased_on,
         :purchase_price,
         :rating,
