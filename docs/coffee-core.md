@@ -216,6 +216,8 @@ Roster values such as `member:<user id>` are submitted selection tokens, not aut
 
 Guest Brews remain in private history and inventory accounting. The dashboard's live time-since-last-coffee query includes Self and household-member Brews, excludes only `recipient_kind: guest`, stays scoped to the active Workspace, and continues to consider External Coffees.
 
+Workspace Statistics treats **Logged by** and **Served to** as independent scopes. Selecting a specific person as the recipient combines that person's Self Brews with household-member servings addressed to them, while Guests remain one unnamed aggregate; see [Statistics And Analytics](statistics.md#people-filter-rules).
+
 Serving updates do not change inventory, brew measurements, equipment, preparation-tool snapshots, taste, rating, notes, photos, public notes, or public links.
 
 Serving metadata is private by default. Private Brew details and history cards may show the recipient and Cup. Owner-only workspace exports and instance backups preserve the six recipient/Cup export fields described in [Workspace Export](workspace-export.md). Public Brew and Bean snapshots receive only the automatic privacy-safe recipient projection: Guest names and Cup never become public. Recipe snapshots and recipe portability omit all recipient and Cup fields.
