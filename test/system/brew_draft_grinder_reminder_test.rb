@@ -20,6 +20,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     visit new_brew_path(method: "espresso")
     wait_for_stimulus("brew-grinder-reminder")
+    wait_for_stimulus("brew-draft")
 
     grind_input = find('input[name="brew[grind_setting]"]')
     grinder_id = find('input[name="brew[grinder_id]"]:checked').value
@@ -30,6 +31,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     choose("brew_bean_id_#{selected_bean.id}")
 
+    assert_selector "#brew_bean_id_#{selected_bean.id}:checked"
     assert_selector "[data-testid=brew-grind-setting-apply]:not([hidden])", text: "Use 1/1,50"
 
     fill_in "Grind setting", with: " 1/1,50 "
@@ -42,8 +44,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal "1/1,50", grind_input.value
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
     assert_equal grinder_id, find('input[name="brew[grinder_id]"]:checked').value
-    assert_equal "1/1,50",
-      evaluate_script("JSON.parse(localStorage.getItem(arguments[0])).fields['brew[grind_setting]']", storage_key)
+    assert_draft_field storage_key, "brew[grind_setting]", "1/1,50"
   end
 
   test "restore and discard synchronize the bean warning without changing grinder inputs" do
@@ -57,9 +58,10 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     storage_key = find("form[data-brew-draft-storage-key-value]")["data-brew-draft-storage-key-value"]
 
     wait_for_stimulus("brew-draft")
+    assert_no_selector "#brew_bean_id_#{draft_bean.id}:checked"
     find("#brew_bean_id_#{draft_bean.id}").click
-    assert_equal draft_bean.id.to_s,
-      evaluate_script("JSON.parse(localStorage.getItem(arguments[0])).fields['brew[bean_id]']", storage_key)
+    assert_selector "#brew_bean_id_#{draft_bean.id}:checked"
+    assert_draft_field storage_key, "brew[bean_id]", draft_bean.id.to_s
 
     visit new_brew_path(method: "espresso")
 
@@ -111,6 +113,15 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
           window.Stimulus.controllers.some((controller) => controller.identifier === arguments[0])
         JAVASCRIPT
         raise Capybara::ExpectationNotMet, "#{identifier} did not connect" unless connected
+      end
+    end
+
+    def assert_draft_field(storage_key, field_name, expected_value)
+      page.document.synchronize(errors: [ Capybara::ExpectationNotMet ]) do
+        actual_value = evaluate_script(<<~JAVASCRIPT, storage_key, field_name)
+          JSON.parse(localStorage.getItem(arguments[0]) || "{}").fields?.[arguments[1]]
+        JAVASCRIPT
+        raise Capybara::ExpectationNotMet, "expected stored #{field_name} to be #{expected_value.inspect}, got #{actual_value.inspect}" unless actual_value == expected_value
       end
     end
 
