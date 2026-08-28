@@ -59,6 +59,24 @@ class BrewTest < ActiveSupport::TestCase
     assert_nil brew.cup_style
   end
 
+  test "cupping sharing is limited to guest and current household recipient espressos" do
+    brew = brews(:morning_espresso)
+
+    assert_not_predicate brew, :cupping_shareable?
+
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    assert_predicate brew, :cupping_shareable?
+
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    assert_predicate brew, :cupping_shareable?
+
+    memberships(:member).destroy!
+    assert_not_predicate brew.reload, :cupping_shareable?
+
+    brew.update!(method: "quick_drip", brewer: equipment(:household_brewer), machine: nil, machine_cups: 6)
+    assert_not_predicate brew, :cupping_shareable?
+  end
+
   test "limits serving metadata length" do
     brew = brews(:morning_espresso)
     long_value = "a" * 121

@@ -204,7 +204,7 @@ class BrewsController < ApplicationController
 
     def set_brew
       @brew = current_workspace.brews.includes(
-        :grinder, :machine, :brewer, :public_brew_share,
+        :grinder, :machine, :brewer, :public_brew_share, :cupping_request,
         primary_photo_record: :blob,
         photos_attachments: :blob,
         bean: [ { primary_photo_record: :blob }, { photos_attachments: :blob } ],

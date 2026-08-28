@@ -13,6 +13,24 @@
 <% data_attributes[:testid] = action_testid if action_testid.present? %>
 
 <% case action.fetch(:kind, :link).to_sym %>
+<% when :cupping_share %>
+  <%= button_tag type: "button",
+    class: action_class,
+    aria: { label: label },
+    title: title,
+    data: {
+      controller: "cupping-share",
+      action: "click->cupping-share#share",
+      cupping_share_title_value: action.fetch(:title),
+      cupping_share_text_value: action.fetch(:text),
+      cupping_share_url_value: action.fetch(:url),
+      cupping_share_copied_label_value: t("shared.cupping_share.copied"),
+      cupping_share_failed_label_value: t("shared.cupping_share.failed"),
+      testid: action_testid
+    } do %>
+    <%= material_symbol(icon) %>
+    <span data-cupping-share-target="label" class="<%= label_class %>"><%= label %></span>
+  <% end %>
 <% when :native_share %>
   <%= render "shared/native_share_button",
     url: action.fetch(:url),

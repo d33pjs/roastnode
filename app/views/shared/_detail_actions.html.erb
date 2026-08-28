@@ -3,9 +3,11 @@
 
 <% if actions.any? %>
   <% primary_action = actions.find { |action| action[:primary] } || actions.first %>
-  <% primary_index = actions.index(primary_action) %>
-  <% overflow_actions = actions.each_with_index.reject { |_action, index| index == primary_index }.map(&:first) %>
-  <% compact_mobile = actions.size > 2 %>
+  <% mobile_pinned_actions = actions.select { |action| action[:mobile_pinned] } %>
+  <% mobile_action_ids = mobile_pinned_actions.map(&:object_id) %>
+  <% mobile_action_ids << primary_action.object_id unless mobile_action_ids.include?(primary_action.object_id) %>
+  <% overflow_actions = actions.reject { |action| mobile_action_ids.include?(action.object_id) } %>
+  <% compact_mobile = mobile_pinned_actions.any? || actions.size > 2 %>
 
   <div data-testid="<%= testid %>" class="relative flex min-w-0 max-w-full flex-1 items-center justify-end gap-2 sm:flex-none">
     <div class="hidden flex-wrap items-center justify-end gap-2 sm:flex">
@@ -16,10 +18,19 @@
 
     <div class="flex items-center justify-end gap-2 sm:hidden">
       <% if compact_mobile %>
-        <%= render "shared/detail_action",
-          action: primary_action,
-          variant: :icon,
-          testid: primary_action[:testid].present? ? "#{primary_action[:testid]}-mobile" : nil %>
+        <% mobile_pinned_actions.each do |action| %>
+          <%= render "shared/detail_action",
+            action:,
+            variant: :icon,
+            testid: action[:testid].present? ? "#{action[:testid]}-mobile" : nil %>
+        <% end %>
+
+        <% unless mobile_pinned_actions.any? { |action| action.equal?(primary_action) } %>
+          <%= render "shared/detail_action",
+            action: primary_action,
+            variant: :icon,
+            testid: primary_action[:testid].present? ? "#{primary_action[:testid]}-mobile" : nil %>
+        <% end %>
 
         <% if overflow_actions.any? %>
           <details data-testid="<%= testid %>-more" class="relative">

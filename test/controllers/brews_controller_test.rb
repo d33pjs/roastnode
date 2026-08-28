@@ -1312,13 +1312,13 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_activity_event(action: "brew.taste_changed", workspace: workspaces(:household), actor: users(:one), subject: brew) do
       patch taste_brew_path(brew), params: { brew: { rating: 5, taste_balance: "bitter" } }
     end
-    assert_activity_event(action: "brew.serving_changed", workspace: workspaces(:household), actor: users(:one), subject: brew) do
+    serving_event = assert_activity_event(action: "brew.serving_changed", workspace: workspaces(:household), actor: users(:one), subject: brew) do
       patch serving_brew_path(brew), params: { brew: { recipient_selection: "guest", recipient_name: "Guest" } }
     end
     assert_activity_event(action: "brew.deleted", workspace: workspaces(:household), actor: users(:one)) do
       delete brew_path(brew)
     end
-    assert_equal event.metadata.fetch("subject_label"), ActivityEvent.where(action: "brew.deleted").order(:id).last.metadata.fetch("subject_label")
+    assert_equal serving_event.metadata.fetch("subject_label"), ActivityEvent.where(action: "brew.deleted").order(:id).last.metadata.fetch("subject_label")
   end
 
   test "invalid create emits nothing" do
@@ -1380,6 +1380,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "coffee and inventory activity contract exposes the exact approved actions" do
     assert_equal %w[
       brew.created brew.updated brew.taste_changed brew.serving_changed brew.deleted brew.media_updated
+      brew.cupping_accessed brew.cupping_taste_set brew.cupping_taste_changed brew.cupping_taste_cleared
+      brew.cupping_rating_set brew.cupping_rating_changed brew.cupping_rating_cleared
+      brew.cupping_comment_added brew.cupping_comment_updated brew.cupping_closed
       external_coffee.created external_coffee.updated external_coffee.deleted external_coffee.media_updated
       bean.created bean.updated bean.duplicated bean.opened bean.finished bean.used_up bean.archived bean.reopened bean.deleted bean.media_updated
       inventory_adjustment.created
@@ -2318,6 +2321,73 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_appears_before "brew-native-share-button-#{brew.id}", edit_brew_public_brew_share_path(brew)
   end
 
+  test "cupping share action uses the private Brew URL for another household member" do
+    user = users(:one)
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "household_member", recipient_user: users(:two))
+    sign_in_as(user)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=?][data-cupping-share-url-value=?]",
+      "brew-cupping-share-button-#{brew.id}",
+      brew_url(brew)
+    assert_select "[data-testid=?][data-cupping-share-url-value*=?]",
+      "brew-cupping-share-button-#{brew.id}",
+      "/c/", count: 0
+  end
+
+  test "cupping share action uses the guest request URL and pins immediately before Edit on mobile" do
+    user = users(:two)
+    brew = brews(:other_workspace_brew)
+    request = cupping_requests(:guest_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    sign_in_as(user)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=?][data-cupping-share-url-value=?]",
+      "brew-cupping-share-button-#{brew.id}",
+      public_cupping_request_url(request.token)
+    assert_select "[data-testid=?]", "brew-cupping-share-button-#{brew.id}-mobile"
+    assert_select "[data-testid=?]", "brew-edit-link-#{brew.id}-mobile"
+    assert_appears_before "brew-cupping-share-button-#{brew.id}-mobile", "brew-edit-link-#{brew.id}-mobile"
+  end
+
+  test "cupping share action is hidden for self espressos and Quick Drip brews" do
+    user = users(:one)
+    espresso = brews(:morning_espresso)
+    quick_drip = create_spoon_estimated_quick_drip_brew_for(user)
+    sign_in_as(user)
+
+    get brew_path(espresso)
+    assert_response :success
+    assert_select "[data-testid=?]", "brew-cupping-share-button-#{espresso.id}", count: 0
+
+    get brew_path(quick_drip)
+    assert_response :success
+    assert_select "[data-testid=?]", "brew-cupping-share-button-#{quick_drip.id}", count: 0
+  end
+
+  test "private Brew detail displays guest feedback comments" do
+    user = users(:two)
+    brew = brews(:other_workspace_brew)
+    request = cupping_requests(:guest_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    request.update!(feedback_comment: "Bright and clean")
+    sign_in_as(user)
+
+    get brew_path(brew)
+
+    assert_response :success
+    assert_select "[data-testid=brew-cupping-feedback]" do
+      assert_select "h2", I18n.t("brews.show.guest_feedback")
+      assert_select "p", text: "Bright and clean"
+    end
+  end
+
   test "writer sees explicit taste correction form on brew detail" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
@@ -2412,6 +2482,25 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to brew_path(brew)
     assert_equal brew, brew.reload.cupping_request.brew
+  end
+
+  test "serving revokes a cupping request when a guest espresso becomes a household serving" do
+    user = users(:two)
+    brew = brews(:other_workspace_brew)
+    request = cupping_requests(:guest_espresso)
+    recipient = User.create!(email_address: "cupping-recipient@example.test", password: "password")
+    Membership.create!(workspace: brew.workspace, user: recipient, role: "member")
+    sign_in_as(user)
+
+    assert_difference -> { CuppingRequest.count }, -1 do
+      patch serving_brew_path(brew), params: {
+        brew: { recipient_selection: "member:#{recipient.id}", cup_style: "Espresso" }
+      }
+    end
+
+    assert_redirected_to brew_path(brew)
+    assert_not CuppingRequest.exists?(request.id)
+    assert_predicate brew.reload, :recipient_household_member?
   end
 
   test "explicit guest selection retains an invalid typed name for redisplay" do

@@ -133,6 +133,13 @@ class Brew < ApplicationRecord
     super(value.to_s.strip.presence)
   end
 
+  def cupping_shareable?
+    return false unless espresso?
+    return true if recipient_guest?
+
+    recipient_household_member? && recipient_user_id.present? && workspace.memberships.exists?(user_id: recipient_user_id)
+  end
+
   private
     def set_defaults
       self.method ||= "espresso"
