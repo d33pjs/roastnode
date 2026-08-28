@@ -3,6 +3,8 @@ module Activity
     ACTIONS = {
       "coffee" => %w[
         brew.created brew.updated brew.taste_changed brew.serving_changed brew.deleted brew.media_updated
+        brew.cupping_accessed brew.cupping_taste_set brew.cupping_taste_changed brew.cupping_rating_set
+        brew.cupping_rating_changed brew.cupping_comment_added brew.cupping_comment_updated brew.cupping_closed
         external_coffee.created external_coffee.updated external_coffee.deleted external_coffee.media_updated
       ],
       "beans_inventory" => %w[
@@ -85,6 +87,10 @@ module Activity
 
     ICON_OVERRIDES = {
       "brew.created" => "local_cafe", "brew.taste_changed" => "local_cafe", "brew.serving_changed" => "group",
+      "brew.cupping_accessed" => "local_cafe", "brew.cupping_taste_set" => "local_cafe",
+      "brew.cupping_taste_changed" => "local_cafe", "brew.cupping_rating_set" => "local_cafe",
+      "brew.cupping_rating_changed" => "local_cafe", "brew.cupping_comment_added" => "local_cafe",
+      "brew.cupping_comment_updated" => "local_cafe", "brew.cupping_closed" => "local_cafe",
       "external_coffee.created" => "local_cafe", "bean.duplicated" => "content_copy", "bean.opened" => "inventory_2",
       "bean.finished" => "check_circle", "bean.used_up" => "check_circle", "inventory_adjustment.created" => "scale",
       "equipment.created" => "build", "preparation_tool.created" => "build", "equipment_event.created" => "build",
@@ -102,6 +108,10 @@ module Activity
     SUMMARY_OVERRIDES = {
       "brew.created" => "logged", "brew.updated" => "corrected", "brew.taste_changed" => "taste_changed",
       "brew.serving_changed" => "serving_changed", "external_coffee.created" => "logged",
+      "brew.cupping_accessed" => "cupping_accessed", "brew.cupping_taste_set" => "cupping_taste_set",
+      "brew.cupping_taste_changed" => "cupping_taste_changed", "brew.cupping_rating_set" => "cupping_rating_set",
+      "brew.cupping_rating_changed" => "cupping_rating_changed", "brew.cupping_comment_added" => "cupping_comment_added",
+      "brew.cupping_comment_updated" => "cupping_comment_updated", "brew.cupping_closed" => "cupping_closed",
       "external_coffee.updated" => "corrected", "bean.duplicated" => "duplicated", "bean.opened" => "opened",
       "bean.finished" => "finished", "bean.used_up" => "used_up", "inventory_adjustment.created" => "adjusted",
       "equipment_event.created" => "maintenance_logged", "equipment_event.updated" => "maintenance_corrected",
@@ -124,14 +134,30 @@ module Activity
       "data_import.failed" => %w[source], "instance_backup_profile.created" => %w[backup_kind],
       "instance_backup_profile.updated" => %w[backup_kind], "instance_backup_run.queued" => %w[backup_kind status],
       "instance_backup_run.succeeded" => %w[backup_kind status file_size_bytes],
-      "instance_backup_run.failed" => %w[backup_kind status]
+      "instance_backup_run.failed" => %w[backup_kind status],
+      "brew.cupping_accessed" => %w[ip_address],
+      "brew.cupping_taste_set" => %w[ip_address to_taste],
+      "brew.cupping_taste_changed" => %w[ip_address from_taste to_taste],
+      "brew.cupping_rating_set" => %w[ip_address to_rating],
+      "brew.cupping_rating_changed" => %w[ip_address from_rating to_rating],
+      "brew.cupping_comment_added" => %w[ip_address],
+      "brew.cupping_comment_updated" => %w[ip_address],
+      "brew.cupping_closed" => %w[ip_address]
     }.freeze
 
     BASE_REQUIRED_METADATA_KEYS = %w[actor_kind actor_label].freeze
     REQUIRED_METADATA_KEYS = {
       "inventory_adjustment.created" => %w[amount_grams],
       "membership.role_changed" => %w[from_role to_role],
-      "data_import.completed" => %w[created_count skipped_count]
+      "data_import.completed" => %w[created_count skipped_count],
+      "brew.cupping_accessed" => %w[ip_address],
+      "brew.cupping_taste_set" => %w[ip_address to_taste],
+      "brew.cupping_taste_changed" => %w[ip_address from_taste to_taste],
+      "brew.cupping_rating_set" => %w[ip_address to_rating],
+      "brew.cupping_rating_changed" => %w[ip_address from_rating to_rating],
+      "brew.cupping_comment_added" => %w[ip_address],
+      "brew.cupping_comment_updated" => %w[ip_address],
+      "brew.cupping_closed" => %w[ip_address]
     }.freeze
 
     AUTOMATIC_METADATA_ACTIONS = {
@@ -173,7 +199,7 @@ module Activity
     }.freeze
 
     BASE_METADATA_SCHEMA = {
-      "actor_kind" => { type: :string, values: %w[user system] },
+      "actor_kind" => { type: :string, values: %w[user system guest] },
       "actor_label" => { type: :string },
       "record_kind" => { type: :string },
       "subject_label" => { type: :string }
@@ -202,7 +228,12 @@ module Activity
       "export_kind" => { type: :string, values: %w[json beans_csv brews_csv external_coffees_csv media_zip] },
       "authentication_method" => { type: :string, values: %w[password passkey passkey_second_factor invited_signup] },
       "created_count" => { type: :integer, minimum: 0 },
-      "skipped_count" => { type: :integer, minimum: 0 }
+      "skipped_count" => { type: :integer, minimum: 0 },
+      "ip_address" => { type: :string },
+      "from_taste" => { type: :string, values: %w[very_sour sour neutral bitter very_bitter] },
+      "to_taste" => { type: :string, values: %w[very_sour sour neutral bitter very_bitter] },
+      "from_rating" => { type: :integer, minimum: 1, maximum: 5 },
+      "to_rating" => { type: :integer, minimum: 1, maximum: 5 }
     }.freeze
 
     module_function

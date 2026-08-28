@@ -2,7 +2,7 @@ module Activity
   module Emitter
     module_function
 
-    def record!(action:, workspace:, actor: nil, subject: nil, occurred_at: Time.current, visibility: nil, details: {})
+    def record!(action:, workspace:, actor: nil, actor_kind: nil, actor_label: nil, subject: nil, occurred_at: Time.current, visibility: nil, details: {})
       definition = EventContract.fetch(action)
       visibility ||= definition.fetch(:visibility)
       unless definition.fetch(:visibilities).include?(visibility)
@@ -18,7 +18,7 @@ module Activity
         occurred_at:,
         visibility:,
         subject:,
-        metadata: Metadata.build(action:, actor:, subject:, details:)
+        metadata: Metadata.build(action:, actor:, actor_kind:, actor_label:, subject:, details:)
       )
     end
 

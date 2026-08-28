@@ -9,6 +9,7 @@
       <span class="tabular-nums"><%= profile_timestamp(presenter.timestamp) %></span>
       <span aria-hidden="true">·</span>
       <span data-testid="activity-category-label" class="inline-flex rounded-md border border-stone-700 bg-stone-900 px-1.5 py-0.5 text-[0.68rem] font-black uppercase tracking-[0.08em] text-stone-200"><%= presenter.category_label %></span>
+      <% if presenter.ip_address %><span data-testid="activity-ip-address"><%= t("activity.index.ip_address") %>: <%= presenter.ip_address %></span><% end %>
       <% if presenter.restricted? %><span data-testid="activity-restricted" class="inline-flex rounded-md border border-stone-700 px-1.5 py-0.5 text-[0.68rem] font-black uppercase tracking-[0.08em] text-stone-300"><%= t("activity.index.restricted") %></span><% end %>
     </span>
   </span>

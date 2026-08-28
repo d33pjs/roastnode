@@ -17,7 +17,7 @@ class Activity::EmitterTest < ActiveSupport::TestCase
     assert_equal "workspace", event.visibility
     assert_equal "Jens", event.metadata.fetch("actor_label")
     assert_equal "user", event.metadata.fetch("actor_kind")
-    assert_equal "Espresso with #{brew.bean.name}", event.metadata.fetch("subject_label")
+    assert_equal "Espresso with #{brew.bean.name} for me", event.metadata.fetch("subject_label")
     assert_equal "espresso", event.metadata.fetch("method")
     assert_equal "local_cafe", Activity::EventContract.fetch("brew.created").fetch(:icon)
   end
@@ -26,9 +26,68 @@ class Activity::EmitterTest < ActiveSupport::TestCase
     brew = workspaces(:household).brews.new(method: "quick_drip", bean: beans(:open_household))
     metadata = Activity::Metadata.build(action: "brew.created", actor: nil, subject: brew)
 
-    assert_equal "Quick Drip with #{brew.bean.name}", metadata.fetch("subject_label")
+    assert_equal "Quick Drip with #{brew.bean.name} for me", metadata.fetch("subject_label")
     assert_equal "System", metadata.fetch("actor_label")
     assert_equal "system", metadata.fetch("actor_kind")
+  end
+
+  test "records strict guest cupping events without feedback content" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    actor = { actor_kind: "guest", actor_label: "Alex" }
+
+    event = assert_activity_event(
+      action: "brew.cupping_taste_changed", workspace: brew.workspace, actor: nil, subject: brew
+    ) do
+      Activity::Emitter.record!(
+        action: "brew.cupping_taste_changed", workspace: brew.workspace, subject: brew, **actor,
+        details: { ip_address: "203.0.113.4", from_taste: "neutral", to_taste: "sour" }
+      )
+    end
+
+    assert_nil event.actor
+    assert_equal "guest", event.metadata.fetch("actor_kind")
+    assert_equal "Alex", event.metadata.fetch("actor_label")
+    assert_equal "203.0.113.4", event.metadata.fetch("ip_address")
+    assert_equal "Espresso with #{brew.bean.name} for Alex", event.metadata.fetch("subject_label")
+    assert_no_match(/feedback text/, event.metadata.to_json)
+    assert_raises(ArgumentError) do
+      Activity::Emitter.record!(
+        action: "brew.cupping_accessed", workspace: brew.workspace, actor: users(:one), subject: brew,
+        **actor, details: { ip_address: "203.0.113.4" }
+      )
+    end
+    assert_raises(ArgumentError) do
+      Activity::Emitter.record!(
+        action: "brew.cupping_accessed", workspace: brew.workspace, subject: brew,
+        actor_kind: "guest", details: { ip_address: "203.0.113.4" }
+      )
+    end
+  end
+
+  test "records every allowlisted guest cupping action with its required values" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    actor = { actor_kind: "guest", actor_label: "Alex" }
+
+    events = assert_activity_events(
+      actions: [
+        "brew.cupping_accessed", "brew.cupping_taste_set", "brew.cupping_taste_changed",
+        "brew.cupping_rating_set", "brew.cupping_rating_changed", "brew.cupping_comment_added",
+        "brew.cupping_comment_updated", "brew.cupping_closed"
+      ], workspace: brew.workspace, actor: nil
+    ) do
+      Activity::Emitter.record!(action: "brew.cupping_accessed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })
+      Activity::Emitter.record!(action: "brew.cupping_taste_set", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", to_taste: "neutral" })
+      Activity::Emitter.record!(action: "brew.cupping_taste_changed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", from_taste: "neutral", to_taste: "sour" })
+      Activity::Emitter.record!(action: "brew.cupping_rating_set", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", to_rating: 4 })
+      Activity::Emitter.record!(action: "brew.cupping_rating_changed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", from_rating: 4, to_rating: 5 })
+      Activity::Emitter.record!(action: "brew.cupping_comment_added", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })
+      Activity::Emitter.record!(action: "brew.cupping_comment_updated", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })
+      Activity::Emitter.record!(action: "brew.cupping_closed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })
+    end
+
+    assert events.all? { |event| event.metadata.fetch("ip_address") == "203.0.113.4" }
   end
 
   test "rejects unknown actions cross-workspace subjects and unexpected details" do

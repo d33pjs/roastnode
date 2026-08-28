@@ -188,6 +188,21 @@ class Activity::PresenterTest < ActiveSupport::TestCase
     assert_equal external_coffee_path(coffee), presenter.path
   end
 
+  test "presents guest cupping activity with its private IP metadata" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    event = Activity::Emitter.record!(
+      action: "brew.cupping_taste_changed", workspace: brew.workspace, subject: brew,
+      actor_kind: "guest", actor_label: "Alex",
+      details: { ip_address: "203.0.113.4", from_taste: "neutral", to_taste: "sour" }
+    )
+    presenter = Activity::Presenter.new(event, helpers: self)
+
+    assert_equal "Alex changed the cupping taste for Espresso with #{brew.bean.name} for Alex from neutral to sour", presenter.summary
+    assert_equal "203.0.113.4", presenter.ip_address
+    assert_equal brew_path(brew), presenter.path
+  end
+
   test "each category has a fixed distinguishable icon container" do
     coffee = Activity::Presenter.new(activity_events(:morning_brew_created), helpers: self)
     admin = Activity::Presenter.new(activity_events(:workspace_invite_created), helpers: self)

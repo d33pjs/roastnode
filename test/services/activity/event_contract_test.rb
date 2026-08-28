@@ -44,6 +44,43 @@ class Activity::EventContractTest < ActiveSupport::TestCase
       Activity::EventContract.fetch("data_import.completed").fetch(:required_metadata_keys)
   end
 
+  test "cupping actions are guest audit actions with exact metadata schemas" do
+    expected_details = {
+      "brew.cupping_accessed" => [],
+      "brew.cupping_taste_set" => %w[to_taste],
+      "brew.cupping_taste_changed" => %w[from_taste to_taste],
+      "brew.cupping_rating_set" => %w[to_rating],
+      "brew.cupping_rating_changed" => %w[from_rating to_rating],
+      "brew.cupping_comment_added" => [],
+      "brew.cupping_comment_updated" => [],
+      "brew.cupping_closed" => []
+    }
+
+    expected_details.each do |action, details|
+      definition = Activity::EventContract.fetch(action)
+
+      assert_equal "coffee", definition.fetch(:category)
+      assert_equal "workspace", definition.fetch(:visibility)
+      assert_equal "Brew", definition.fetch(:subject_type)
+      assert_equal [ "ip_address", *details ].sort, definition.fetch(:detail_keys).sort
+      assert_equal [ "actor_kind", "actor_label", "ip_address", *details ].sort,
+        definition.fetch(:required_metadata_keys).sort
+      assert_equal %w[user system guest], definition.dig(:metadata_schema, "actor_kind", :values)
+      assert_equal :string, definition.dig(:metadata_schema, "ip_address", :type)
+    end
+
+    %w[from_taste to_taste].each do |key|
+      assert_equal %w[very_sour sour neutral bitter very_bitter],
+        Activity::EventContract.fetch("brew.cupping_taste_changed").dig(:metadata_schema, key, :values)
+    end
+    %w[from_rating to_rating].each do |key|
+      schema = Activity::EventContract.fetch("brew.cupping_rating_changed").dig(:metadata_schema, key)
+      assert_equal :integer, schema.fetch(:type)
+      assert_equal 1, schema.fetch(:minimum)
+      assert_equal 5, schema.fetch(:maximum)
+    end
+  end
+
   test "every summary interpolation input is schema defined and required" do
     Activity::EventContract.actions.each do |action|
       definition = Activity::EventContract.fetch(action)

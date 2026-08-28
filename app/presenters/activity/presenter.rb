@@ -26,6 +26,7 @@ module Activity
     end
 
     def actor_label = metadata.fetch("actor_label", I18n.t("activity.events.system"))
+    def ip_address = definition && metadata["ip_address"]
     def timestamp = event.occurred_at
     def category_label = definition ? I18n.t("activity.categories.#{definition.fetch(:category)}") : I18n.t("activity.categories.unknown")
     def icon = definition && path ? definition.fetch(:icon) : "more_vert"

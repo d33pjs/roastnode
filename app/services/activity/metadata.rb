@@ -8,14 +8,14 @@ module Activity
 
     module_function
 
-    def build(action:, actor:, subject:, details: {})
+    def build(action:, actor:, actor_kind: nil, actor_label: nil, subject:, details: {})
       definition = EventContract.fetch(action)
       details = details.to_h.stringify_keys
       unexpected = details.keys - definition.fetch(:detail_keys)
       raise ArgumentError, "unsupported activity details: #{unexpected.join(', ')}" if unexpected.any?
       automatic_details = auto_details(subject).slice(*definition.fetch(:automatic_metadata_keys))
 
-      payload = actor_payload(actor)
+      payload = actor_payload(actor, actor_kind:, actor_label:)
         .merge(subject_payload(subject))
         .merge(automatic_details.transform_values { |value| safe_value(value) })
         .merge(details.transform_values { |value| safe_value(value) })
@@ -24,10 +24,20 @@ module Activity
       payload
     end
 
-    def actor_payload(actor)
+    def actor_payload(actor, actor_kind:, actor_label:)
+      return guest_actor_payload(actor, actor_label) if actor_kind == "guest"
+      raise ArgumentError, "activity actor overrides are only permitted for guests" if actor_kind.present? || actor_label.present?
+
       return { "actor_kind" => "system", "actor_label" => "System" } unless actor
 
       { "actor_kind" => "user", "actor_label" => safe_text(actor.display_label) }
+    end
+
+    def guest_actor_payload(actor, actor_label)
+      raise ArgumentError, "guest activity cannot have a user actor" if actor
+      raise ArgumentError, "guest activity requires an actor label" if actor_label.blank?
+
+      { "actor_kind" => "guest", "actor_label" => safe_text(actor_label) }
     end
 
     def subject_payload(subject)
@@ -39,7 +49,7 @@ module Activity
     def subject_label(subject)
       case subject
       when Brew
-        "#{subject.method == "quick_drip" ? "Quick Drip" : "Espresso"} with #{subject.bean&.name || "deleted bean"}"
+        "#{subject.method == "quick_drip" ? "Quick Drip" : "Espresso"} with #{subject.bean&.name || "deleted bean"} for #{brew_recipient_label(subject)}"
       when Bean then subject.display_name
       when ExternalCoffee then subject.drink_type
       when Equipment, PreparationTool then subject.name
@@ -58,6 +68,13 @@ module Activity
       when PasskeyCredential then "Passkey"
       else subject.class.model_name.human
       end
+    end
+
+    def brew_recipient_label(brew)
+      return "me" if brew.recipient_self?
+      return brew.recipient_user&.display_label || "a household member" if brew.recipient_household_member?
+
+      brew.recipient_name.presence || "a guest"
     end
 
     def auto_details(subject)
@@ -110,6 +127,7 @@ module Activity
       end
       return false unless type_matches
       return false if schema[:minimum] && value < schema.fetch(:minimum)
+      return false if schema[:maximum] && value > schema.fetch(:maximum)
       return true unless schema[:values]
 
       values = value.is_a?(Array) ? value : [ value ]
