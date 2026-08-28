@@ -86,6 +86,7 @@ module Activity
           action: event.action,
           occurred_at: event.occurred_at,
           visibility: event.visibility,
+          subject: definition.fetch(:subject_required) ? event.subject : nil,
           metadata: event.metadata.deep_dup
         )
         probe.valid? && presentation_subject_valid?(definition)

@@ -90,6 +90,51 @@ class ActivityEventTest < ActiveSupport::TestCase
     end
   end
 
+  test "direct model writes constrain guest cupping identities IP addresses and subjects" do
+    brew = brews(:morning_espresso)
+    base = {
+      workspace: brew.workspace,
+      category: "coffee",
+      occurred_at: Time.current,
+      visibility: "workspace"
+    }
+    non_cupping_guest = ActivityEvent.new(base.merge(
+      actor: nil, action: "brew.created", subject: brew,
+      metadata: { "actor_kind" => "guest", "actor_label" => "Alex" }
+    ))
+    guest_with_actor = ActivityEvent.new(base.merge(
+      actor: users(:one), action: "brew.cupping_accessed", subject: brew,
+      metadata: { "actor_kind" => "guest", "actor_label" => "Alex", "ip_address" => "203.0.113.4" }
+    ))
+    missing_cupping_subject = ActivityEvent.new(base.merge(
+      actor: nil, action: "brew.cupping_accessed",
+      metadata: { "actor_kind" => "guest", "actor_label" => "Alex", "ip_address" => "203.0.113.4" }
+    ))
+    invalid_ip = ActivityEvent.new(base.merge(
+      actor: nil, action: "brew.cupping_accessed", subject: brew,
+      metadata: { "actor_kind" => "guest", "actor_label" => "Alex", "ip_address" => "203.0.113.4, 10.0.0.1" }
+    ))
+
+    [ non_cupping_guest, guest_with_actor, missing_cupping_subject, invalid_ip ].each do |event|
+      assert_not event.valid?
+      assert_raises(ActiveRecord::RecordInvalid) { event.save! }
+    end
+    assert_includes non_cupping_guest.errors[:metadata], "has an invalid actor kind"
+    assert_includes guest_with_actor.errors[:actor], "must be blank for guest activity"
+    assert_includes missing_cupping_subject.errors[:subject], "must be present for action"
+    assert_includes invalid_ip.errors[:metadata], "contains a value that does not match its action schema"
+
+    event = ActivityEvent.create!(base.merge(
+      actor: nil, action: "brew.cupping_accessed", subject: brew,
+      metadata: {
+        "actor_kind" => "guest", "actor_label" => "Alex",
+        "ip_address" => "2001:0db8:0000:0000:0000:0000:0000:0001"
+      }
+    ))
+
+    assert_equal "2001:db8::1", event.metadata.fetch("ip_address")
+  end
+
   test "persisted events cannot be updated touched or destroyed" do
     event = activity_events(:morning_brew_created)
 

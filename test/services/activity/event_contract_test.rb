@@ -66,8 +66,13 @@ class Activity::EventContractTest < ActiveSupport::TestCase
       assert_equal [ "actor_kind", "actor_label", "ip_address", *details ].sort,
         definition.fetch(:required_metadata_keys).sort
       assert_equal %w[user system guest], definition.dig(:metadata_schema, "actor_kind", :values)
-      assert_equal :string, definition.dig(:metadata_schema, "ip_address", :type)
+      assert_equal :ip_address, definition.dig(:metadata_schema, "ip_address", :type)
+      assert_predicate definition.fetch(:subject_required), :itself
     end
+
+    assert_equal %w[user system],
+      Activity::EventContract.fetch("brew.created").dig(:metadata_schema, "actor_kind", :values)
+    assert_not Activity::EventContract.fetch("brew.created").fetch(:subject_required)
 
     %w[from_taste to_taste].each do |key|
       assert_equal %w[very_sour sour neutral bitter very_bitter],

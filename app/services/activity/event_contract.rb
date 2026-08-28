@@ -38,6 +38,8 @@ module Activity
       ]
     }.freeze
 
+    CUPPING_ACTIONS = ACTIONS.fetch("coffee").grep(/\Abrew\.cupping_/).freeze
+
     WORKSPACE_ADMIN_ACTIONS = %w[
       workspace.created workspace.updated workspace.media_updated
       workspace_invite.created workspace_invite.accepted workspace_invite.revoked workspace_invite.resent workspace_invite.reinvited
@@ -199,11 +201,12 @@ module Activity
     }.freeze
 
     BASE_METADATA_SCHEMA = {
-      "actor_kind" => { type: :string, values: %w[user system guest] },
+      "actor_kind" => { type: :string, values: %w[user system] },
       "actor_label" => { type: :string },
       "record_kind" => { type: :string },
       "subject_label" => { type: :string }
     }.freeze
+    GUEST_ACTOR_KIND_SCHEMA = { type: :string, values: %w[user system guest] }.freeze
 
     METADATA_KEY_SCHEMAS = {
       "method" => { type: :string, values: %w[espresso quick_drip] },
@@ -229,7 +232,7 @@ module Activity
       "authentication_method" => { type: :string, values: %w[password passkey passkey_second_factor invited_signup] },
       "created_count" => { type: :integer, minimum: 0 },
       "skipped_count" => { type: :integer, minimum: 0 },
-      "ip_address" => { type: :string },
+      "ip_address" => { type: :ip_address },
       "from_taste" => { type: :string, values: %w[very_sour sour neutral bitter very_bitter] },
       "to_taste" => { type: :string, values: %w[very_sour sour neutral bitter very_bitter] },
       "from_rating" => { type: :integer, minimum: 1, maximum: 5 },
@@ -260,7 +263,8 @@ module Activity
         automatic_metadata_keys:,
         metadata_keys:,
         required_metadata_keys:,
-        metadata_schema: BASE_METADATA_SCHEMA.merge(
+        subject_required: CUPPING_ACTIONS.include?(action),
+        metadata_schema: BASE_METADATA_SCHEMA.merge("actor_kind" => actor_kind_schema_for(action)).merge(
           metadata_keys.index_with { |key| metadata_schema_for(action, key) }
         ),
         detail_values: DETAIL_VALUES.fetch(action, {})
@@ -271,6 +275,10 @@ module Activity
       schema = METADATA_KEY_SCHEMAS.fetch(key)
       allowed_values = DETAIL_VALUES.dig(action, key)
       allowed_values ? schema.merge(values: allowed_values) : schema
+    end
+
+    def actor_kind_schema_for(action)
+      CUPPING_ACTIONS.include?(action) ? GUEST_ACTOR_KIND_SCHEMA : BASE_METADATA_SCHEMA.fetch("actor_kind")
     end
 
     def visibility_for(action)

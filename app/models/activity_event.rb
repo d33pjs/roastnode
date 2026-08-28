@@ -20,6 +20,7 @@ class ActivityEvent < ApplicationRecord
   validate :metadata_is_a_hash
   validate :visibility_matches_workspace_scope
   validate :event_contract_matches
+  before_validation :normalize_ip_address_metadata
 
   scope :recent, -> { order(occurred_at: :desc, id: :desc) }
 
@@ -47,6 +48,7 @@ class ActivityEvent < ApplicationRecord
       errors.add(:category, "does not match action") unless category == definition.fetch(:category)
       errors.add(:visibility, "is not permitted for action") unless definition.fetch(:visibilities).include?(visibility)
       validate_activity_subject_contract(definition) if subject
+      errors.add(:subject, "must be present for action") if subject.nil? && definition.fetch(:subject_required)
       return unless metadata.is_a?(Hash)
 
       allowed = definition.fetch(:metadata_schema).keys
@@ -60,6 +62,7 @@ class ActivityEvent < ApplicationRecord
       unless Activity::Metadata.value_matches_schema?(metadata["actor_kind"], actor_kind_schema)
         errors.add(:metadata, "has an invalid actor kind")
       end
+      errors.add(:actor, "must be blank for guest activity") if metadata["actor_kind"] == "guest" && actor_id.present?
       metadata.each do |key, value|
         valid_value = value.is_a?(String) || value.is_a?(Numeric) || value == true || value == false || value.nil? ||
           (value.is_a?(Array) && value.all? { |item| item.is_a?(String) })
@@ -91,5 +94,16 @@ class ActivityEvent < ApplicationRecord
 
       message = workspace_id.present? ? "belongs to another workspace" : "cannot be workspace-scoped for instance activity"
       errors.add(:subject, message)
+    end
+
+    def normalize_ip_address_metadata
+      return unless metadata.is_a?(Hash)
+
+      definition = Activity::EventContract.fetch(action)
+      return unless definition.dig(:metadata_schema, "ip_address", :type) == :ip_address
+
+      metadata["ip_address"] = Activity::Metadata.normalize_ip_address(metadata["ip_address"])
+    rescue KeyError
+      nil
     end
 end

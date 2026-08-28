@@ -598,6 +598,49 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 0, Workspace.count
   end
 
+  test "restorer rejects invalid guest cupping actor metadata IP addresses and missing Brew subjects" do
+    brew = brews(:morning_espresso)
+    source_event = Activity::Emitter.record!(
+      action: "brew.cupping_accessed", workspace: brew.workspace, subject: brew,
+      actor_kind: "guest", actor_label: "Alex", details: { ip_address: "203.0.113.4" }
+    )
+    archive_bytes = InstanceBackupArchiveBuilder.new(
+      generated_at: Time.zone.parse("2026-08-21 12:00:00")
+    ).call
+
+    tampered_archives = [
+      lambda do |row|
+        row["action"] = "brew.created"
+        row.fetch("metadata").delete("ip_address")
+      end,
+      lambda { |row| row["actor_id"] = users(:one).id },
+      lambda { |row| row.fetch("metadata")["ip_address"] = "203.0.113.4, 10.0.0.1" },
+      lambda do |row|
+        row["subject_type"] = nil
+        row["subject_id"] = nil
+      end
+    ].map do |tamper|
+      mutate_backup_payload(archive_bytes) do |payload|
+        household = payload.fetch("workspaces").find do |workspace_payload|
+          workspace_payload.dig("workspace", "name") == brew.workspace.name
+        end
+        event = household.fetch("activity_events").find { |row| row.fetch("id") == source_event.id }
+        tamper.call(event)
+      end
+    end
+
+    tampered_archives.each do |tampered_archive|
+      empty_instance!
+
+      error = assert_raises(InstanceBackupRestorer::RestoreError) do
+        InstanceBackupRestorer.new(tampered_archive).call
+      end
+
+      assert_equal "Archive contains an invalid activity event.", error.message
+      assert_equal 0, ActivityEvent.count
+    end
+  end
+
   test "restorer rejects a partial activity subject pair" do
     archive_bytes = InstanceBackupArchiveBuilder.new(
       generated_at: Time.zone.parse("2026-08-21 12:00:00")
@@ -1071,6 +1114,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       Session.delete_all
       WorkspaceInvite.delete_all
       HouseholdInvite.delete_all
+      CuppingRequest.delete_all
       InventoryAdjustment.delete_all
       BrewPreparationTool.delete_all
       EquipmentEventItem.delete_all

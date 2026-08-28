@@ -90,6 +90,36 @@ class Activity::EmitterTest < ActiveSupport::TestCase
     assert events.all? { |event| event.metadata.fetch("ip_address") == "203.0.113.4" }
   end
 
+  test "limits guest actors and requires canonical IP-addressed Brew subjects for cupping" do
+    brew = brews(:morning_espresso)
+    guest = { actor_kind: "guest", actor_label: "Alex" }
+
+    assert_raises(ArgumentError) do
+      Activity::Emitter.record!(action: "brew.created", workspace: brew.workspace, subject: brew, **guest)
+    end
+    assert_raises(ArgumentError) do
+      Activity::Emitter.record!(
+        action: "brew.cupping_accessed", workspace: brew.workspace, **guest,
+        details: { ip_address: "203.0.113.4" }
+      )
+    end
+    [ "not-an-ip", "203.0.113.4, 10.0.0.1" ].each do |ip_address|
+      assert_raises(ArgumentError) do
+        Activity::Emitter.record!(
+          action: "brew.cupping_accessed", workspace: brew.workspace, subject: brew, **guest,
+          details: { ip_address: }
+        )
+      end
+    end
+
+    event = Activity::Emitter.record!(
+      action: "brew.cupping_accessed", workspace: brew.workspace, subject: brew, **guest,
+      details: { ip_address: "2001:0db8:0000:0000:0000:0000:0000:0001" }
+    )
+
+    assert_equal "2001:db8::1", event.metadata.fetch("ip_address")
+  end
+
   test "rejects unknown actions cross-workspace subjects and unexpected details" do
     assert_raises(KeyError) do
       Activity::Emitter.record!(action: "future.unknown", workspace: workspaces(:household))

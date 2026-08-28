@@ -1,3 +1,5 @@
+require "ipaddr"
+
 module Activity
   module Metadata
     MAX_TEXT = 160
@@ -15,10 +17,13 @@ module Activity
       raise ArgumentError, "unsupported activity details: #{unexpected.join(', ')}" if unexpected.any?
       automatic_details = auto_details(subject).slice(*definition.fetch(:automatic_metadata_keys))
 
+      normalized_details = details.to_h.stringify_keys.to_h do |key, value|
+        [ key, normalize_value(value, definition.fetch(:metadata_schema).fetch(key)) ]
+      end
       payload = actor_payload(actor, actor_kind:, actor_label:)
         .merge(subject_payload(subject))
         .merge(automatic_details.transform_values { |value| safe_value(value) })
-        .merge(details.transform_values { |value| safe_value(value) })
+        .merge(normalized_details.transform_values { |value| safe_value(value) })
         .compact
       validate_schema!(action:, payload:, schema: definition.fetch(:metadata_schema))
       payload
@@ -123,6 +128,7 @@ module Activity
       when :boolean then value == true || value == false
       when :integer then value.is_a?(Integer)
       when :decimal_string then value.is_a?(String) && value.match?(/\A-?\d+(?:\.\d+)?\z/)
+      when :ip_address then canonical_ip_address?(value)
       else false
       end
       return false unless type_matches
@@ -132,6 +138,24 @@ module Activity
 
       values = value.is_a?(Array) ? value : [ value ]
       values.all? { |item| schema.fetch(:values).include?(item) }
+    end
+
+    def normalize_value(value, schema)
+      schema.fetch(:type) == :ip_address ? normalize_ip_address(value) : value
+    end
+
+    def normalize_ip_address(value)
+      return value unless value.is_a?(String)
+
+      IPAddr.new(value.strip).to_s
+    rescue IPAddr::InvalidAddressError
+      value
+    end
+
+    def canonical_ip_address?(value)
+      value.is_a?(String) && IPAddr.new(value).to_s == value
+    rescue IPAddr::InvalidAddressError
+      false
     end
 
     def safe_text(value)
