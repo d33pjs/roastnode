@@ -36,7 +36,24 @@
     <% unless hide_brew_field.call(:grind_setting) %>
       <div>
         <%= form.label :grind_setting, t("brews.form.grind_setting"), class: "block text-sm font-bold text-rn-muted" %>
-        <%= form.text_field :grind_setting, autofocus: autofocus_field == "grind_setting", class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+        <div class="mt-1 flex items-center gap-2">
+          <%= form.text_field :grind_setting,
+            autofocus: autofocus_field == "grind_setting",
+            data: {
+              brew_grinder_reminder_target: "grindSetting",
+              action: "input->brew-grinder-reminder#grindSettingChanged"
+            },
+            class: "min-w-0 flex-1 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+          <button
+            hidden
+            type="button"
+            data-testid="brew-grind-setting-apply"
+            data-brew-grinder-reminder-target="applySetting"
+            data-action="brew-grinder-reminder#applySetting"
+            class="shrink-0 rounded-full border border-rn-line bg-rn-surface px-3 py-2 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
+            <%= t("brews.form.use_grind_setting", value: "") %>
+          </button>
+        </div>
       </div>
     <% end %>
   </div>

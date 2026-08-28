@@ -1,16 +1,11 @@
 <% reminder = local_assigns.fetch(:grinder_reminder, nil) %>
 <% previous = reminder&.previous %>
+<% controller_enabled = reminder && (form.object.espresso? || previous) %>
 <% historical_last_bean = reminder&.last_bean unless @beans.include?(reminder&.last_bean) %>
 
 <section
   data-testid="brew-form-section"
   data-section="bean"
-  <% if previous %>
-    data-controller="brew-grinder-reminder"
-    data-brew-grinder-reminder-last-bean-id-value="<%= reminder.last_bean_id %>"
-    data-brew-grinder-reminder-previous-reference-key-value="<%= previous&.comparison_key %>"
-    data-brew-grinder-reminder-unavailable-value="<%= t("brews.form.no_rated_grinder_reference") %>"
-  <% end %>
   class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
   <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
     <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.bean") %></h2>
@@ -25,12 +20,13 @@
       <% collection_name = bean.display_name_for_collection(@beans) %>
       <% collection_suffix = collection_name.delete_prefix(bean.display_name) %>
       <% reference = reminder&.best_for(bean) %>
-      <% radio_data = if previous
+      <% radio_data = if controller_enabled
         {
           brew_grinder_reminder_target: "bean",
           action: "change->brew-grinder-reminder#beanChanged",
           grinder_reference_key: reference&.comparison_key,
-          grinder_reference_label: reference ? brew_grinder_reference_label(reference) : nil
+          grinder_reference_label: reference ? brew_grinder_reference_label(reference) : nil,
+          grind_setting: reference&.grind_setting.presence
         }.compact
       else
         {}

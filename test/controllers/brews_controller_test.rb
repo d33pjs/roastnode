@@ -98,12 +98,33 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     get new_brew_path(method: "espresso")
 
     assert_response :success
-    section = Nokogiri::HTML(response.body).at_css("[data-controller='brew-grinder-reminder']")
-    selected_input = section.at_css("input[value='#{selected_bean.id}']")
+    document = Nokogiri::HTML(response.body)
+    form = document.at_css("form[data-controller~='brew-grinder-reminder']")
+    assert form
+    assert_equal selected_bean.id.to_s,
+      form.at_css("input[value='#{selected_bean.id}']")["value"]
+    assert_equal "Use %{value}",
+      form["data-brew-grinder-reminder-use-setting-template-value"]
+
+    selected_input = form.at_css("input[value='#{selected_bean.id}']")
     assert_equal [ grinder.id.to_s, "1/1,50" ].to_json, selected_input["data-grinder-reference-key"]
+    assert_equal "1/1,50", selected_input["data-grind-setting"]
     assert_includes selected_input["data-grinder-reference-label"], selected_bean.display_name
     assert_includes selected_input["data-grinder-reference-label"], "1/1,50"
-    notice = section.at_css("[data-testid='brew-grinder-reminder']")
+
+    grind_input = form.at_css("input[name='brew[grind_setting]']")
+    assert_equal "grindSetting", grind_input["data-brew-grinder-reminder-target"]
+    assert_includes grind_input["data-action"],
+      "input->brew-grinder-reminder#grindSettingChanged"
+
+    apply_button = form.at_css("[data-testid='brew-grind-setting-apply']")
+    assert_equal "button", apply_button["type"]
+    assert apply_button.key?("hidden")
+    assert_equal "applySetting", apply_button["data-brew-grinder-reminder-target"]
+    assert_includes apply_button["data-action"],
+      "brew-grinder-reminder#applySetting"
+
+    notice = form.at_css("[data-testid='brew-grinder-reminder']")
     assert_equal %w[
       brew-grinder-reminder-title
       brew-grinder-reminder-previous
@@ -113,6 +134,53 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes notice.at_css("[data-testid='brew-grinder-reminder-previous']").text, "Previous brew"
     assert_includes notice.at_css("[data-testid='brew-grinder-reminder-selected']").text, "Best for selected bean"
     assert_select "input[name=?][value=?]", "brew[grind_setting]", "1/1,75"
+  end
+
+  test "grind setting apply action is Espresso-only and respects hidden fields" do
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "quick_drip")
+
+    assert_response :success
+    assert_select "[data-testid=brew-grind-setting-apply]", count: 0
+
+    users(:one).update!(hidden_brew_field_names: %w[grind_setting])
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "input[name=?]", "brew[grind_setting]", count: 0
+    assert_select "[data-testid=brew-grind-setting-apply]", count: 0
+  end
+
+  test "new Espresso keeps apply data when the latest brew has no grinder reference" do
+    selected_bean = beans(:second_open_household)
+    workspaces(:household).brews.create!(
+      user: users(:one),
+      bean: selected_bean,
+      grinder: equipment(:household_grinder),
+      machine: equipment(:household_machine),
+      method: "espresso",
+      occurred_at: 1.day.ago,
+      bean_weight_grams: 1,
+      grind_setting: "1/1,50",
+      rating: 5
+    )
+    brews(:morning_espresso).update!(
+      occurred_at: 1.minute.ago,
+      grinder: nil,
+      grind_setting: nil
+    )
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    document = Nokogiri::HTML(response.body)
+    form = document.at_css("form[data-controller~='brew-grinder-reminder']")
+    assert form
+    assert_equal "1/1,50",
+      form.at_css("input[value='#{selected_bean.id}']")["data-grind-setting"]
+    assert_nil form.at_css("[data-testid='brew-grinder-reminder']")
   end
 
   test "repeat brew keeps its bean selection while last-used marker describes actual history" do

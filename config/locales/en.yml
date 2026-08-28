@@ -550,6 +550,7 @@ en:
       first_drip: "First drip (s)"
       grinder: "Grinder"
       grind_setting: "Grind setting"
+      use_grind_setting: "Use %{value}"
       ground_coffee: "Ground coffee (g)"
       ground_weight: "Ground out (g)"
       flow_control_used: "Flow control used"

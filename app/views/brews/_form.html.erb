@@ -14,6 +14,13 @@
 <% if brew.espresso? && brew.new_record? %>
   <% form_data[:controller] = [form_data[:controller], "brew-machine-features"].compact.join(" ") %>
 <% end %>
+<% if @grinder_reminder && (brew.espresso? || @grinder_reminder.previous) %>
+  <% form_data[:controller] = [form_data[:controller], "brew-grinder-reminder"].compact.join(" ") %>
+  <% form_data[:brew_grinder_reminder_last_bean_id_value] = @grinder_reminder.last_bean_id %>
+  <% form_data[:brew_grinder_reminder_previous_reference_key_value] = @grinder_reminder.previous&.comparison_key %>
+  <% form_data[:brew_grinder_reminder_unavailable_value] = t("brews.form.no_rated_grinder_reference") %>
+  <% form_data[:brew_grinder_reminder_use_setting_template_value] = t("brews.form.use_grind_setting", value: "%{value}") %>
+<% end %>
 
 <%= form_with model: brew, class: "mt-8 grid gap-5", data: form_data do |form| %>
   <% if brew.errors.any? %>
