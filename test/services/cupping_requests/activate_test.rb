@@ -50,6 +50,8 @@ class CuppingRequests::ActivateTest < ActiveSupport::TestCase
 
       assert_equal now, @request.reload.opened_at
       assert_equal deadline, @request.feedback_expires_at
+      assert_equal now, @request.expiration_job_enqueued_at
+      assert_nil @request.expiration_job_enqueueing_at
       assert_equal "2001:db8::4", @request.last_guest_ip
       assert_nil event.actor
       assert_equal "guest", event.metadata.fetch("actor_kind")
@@ -77,7 +79,65 @@ class CuppingRequests::ActivateTest < ActiveSupport::TestCase
 
     assert_equal first_access, @request.reload.opened_at
     assert_equal deadline, @request.feedback_expires_at
+    assert_equal first_access, @request.expiration_job_enqueued_at
+    assert_nil @request.expiration_job_enqueueing_at
     assert_equal "203.0.113.9", @request.last_guest_ip
+  end
+
+  test "a failed expiration enqueue leaves activation committed and the dispatch marker absent" do
+    now = Time.zone.parse("2026-08-28 12:00:00")
+    adapter = CuppingRequestExpirationJob.queue_adapter
+    enqueue_failure = ->(*) { raise SolidQueue::Job::EnqueueError, "queue unavailable" }
+
+    travel_to now do
+      assert_no_enqueued_jobs do
+        with_stubbed_singleton_method(adapter, :enqueue_at, enqueue_failure) do
+          assert_raises(SolidQueue::Job::EnqueueError) do
+            CuppingRequests::Activate.call(request: @request, ip_address: "203.0.113.4")
+          end
+        end
+      end
+    end
+
+    assert_equal now, @request.reload.opened_at
+    assert_equal now + 24.hours, @request.feedback_expires_at
+    assert_nil @request.expiration_job_enqueued_at
+    assert_nil @request.expiration_job_enqueueing_at
+    assert_equal "203.0.113.4", @request.last_guest_ip
+    assert_equal 1, ActivityEvent.where(action: "brew.cupping_accessed", subject: @request.brew).count
+  end
+
+  test "later access retries a failed expiration dispatch without duplicating activation" do
+    first_access = Time.zone.parse("2026-08-28 12:00:00")
+    later_access = first_access + 1.minute
+    deadline = first_access + 24.hours
+    adapter = CuppingRequestExpirationJob.queue_adapter
+    enqueue_failure = ->(*) { raise SolidQueue::Job::EnqueueError, "queue unavailable" }
+
+    travel_to first_access do
+      with_stubbed_singleton_method(adapter, :enqueue_at, enqueue_failure) do
+        assert_raises(SolidQueue::Job::EnqueueError) do
+          CuppingRequests::Activate.call(request: @request, ip_address: "203.0.113.4")
+        end
+      end
+    end
+
+    travel_to later_access do
+      assert_enqueued_with(
+        job: CuppingRequestExpirationJob,
+        args: [ @request.id, deadline.iso8601(6) ],
+        at: deadline
+      ) do
+        CuppingRequests::Activate.call(request: @request, ip_address: "203.0.113.9")
+      end
+    end
+
+    assert_equal first_access, @request.reload.opened_at
+    assert_equal deadline, @request.feedback_expires_at
+    assert_equal later_access, @request.expiration_job_enqueued_at
+    assert_nil @request.expiration_job_enqueueing_at
+    assert_equal "203.0.113.9", @request.last_guest_ip
+    assert_equal 1, ActivityEvent.where(action: "brew.cupping_accessed", subject: @request.brew).count
   end
 
   test "a surrounding transaction rollback leaves no activation or orphaned expiration job" do
@@ -198,6 +258,8 @@ class CuppingRequests::ActivateTest < ActiveSupport::TestCase
       @request.update_columns(
         opened_at: nil,
         feedback_expires_at: nil,
+        expiration_job_enqueued_at: nil,
+        expiration_job_enqueueing_at: nil,
         last_guest_ip: nil,
         closed_at: nil,
         feedback_comment: nil

@@ -22,6 +22,8 @@ module CuppingRequests
           request.update!(last_guest_ip: ip_address)
         end
 
+        schedule_expiration_if_needed!
+
         request
       end
     end
@@ -45,9 +47,13 @@ module CuppingRequests
           occurred_at: now,
           details: { ip_address: }
         )
-        CuppingRequestExpirationJob
-          .set(wait_until: deadline)
-          .perform_later(request.id, deadline.iso8601(6))
+      end
+
+      def schedule_expiration_if_needed!
+        return unless request.expiration_dispatch_pending?(at: now)
+
+        dispatch_started_at = request.claim_expiration_dispatch!(at: now)
+        CuppingRequestExpirationJob.schedule(request, dispatch_started_at:)
       end
   end
 end

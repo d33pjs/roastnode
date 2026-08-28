@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -196,6 +196,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_120000) do
     t.bigint "brew_id", null: false
     t.datetime "closed_at"
     t.datetime "created_at", null: false
+    t.datetime "expiration_job_enqueued_at"
+    t.datetime "expiration_job_enqueueing_at"
     t.text "feedback_comment"
     t.datetime "feedback_expires_at"
     t.string "last_guest_ip"
@@ -206,6 +208,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_120000) do
     t.datetime "updated_at", null: false
     t.bigint "workspace_id", null: false
     t.index ["brew_id"], name: "index_cupping_requests_on_brew_id", unique: true
+    t.index ["feedback_expires_at"], name: "index_cupping_requests_on_open_expiration", where: "((opened_at IS NOT NULL) AND (closed_at IS NULL))"
     t.index ["token"], name: "index_cupping_requests_on_token", unique: true
     t.index ["token_digest"], name: "index_cupping_requests_on_token_digest", unique: true
     t.index ["workspace_id"], name: "index_cupping_requests_on_workspace_id"

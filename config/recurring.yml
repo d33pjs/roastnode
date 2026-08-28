@@ -10,6 +10,11 @@
 #     schedule: at 5am every day
 
 production:
+  cupping_request_expiration_recovery:
+    class: CuppingRequestExpirationRecoveryJob
+    queue: background
+    schedule: every minute
+
   instance_backup_scheduler:
     class: InstanceBackupSchedulerJob
     queue: background

@@ -1,6 +1,8 @@
 require "digest"
 
 class CuppingRequest < ApplicationRecord
+  EXPIRATION_DISPATCH_LEASE = 5.minutes
+
   belongs_to :workspace
   belongs_to :brew
 
@@ -36,6 +38,19 @@ class CuppingRequest < ApplicationRecord
 
   def feedback_open?(at: Time.current)
     opened_at.present? && feedback_expires_at.present? && closed_at.blank? && at < feedback_expires_at
+  end
+
+  def expiration_dispatch_pending?(at: Time.current)
+    expiration_job_enqueued_at.blank? &&
+      closed_at.blank? &&
+      feedback_expires_at.present? &&
+      at < feedback_expires_at &&
+      (expiration_job_enqueueing_at.blank? || expiration_job_enqueueing_at <= at - EXPIRATION_DISPATCH_LEASE)
+  end
+
+  def claim_expiration_dispatch!(at: Time.current)
+    update!(expiration_job_enqueueing_at: at)
+    expiration_job_enqueueing_at
   end
 
   def guest_label
