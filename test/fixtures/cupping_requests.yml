@@ -1,0 +1,6 @@
+guest_espresso:
+  workspace: other_household
+  brew: other_workspace_brew
+  token: cupping-request-token
+  token_digest: <%= Digest::SHA256.hexdigest("cupping-request-token") %>
+  snapshot: {}

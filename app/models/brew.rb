@@ -56,6 +56,7 @@ class Brew < ApplicationRecord
 
   has_one :inventory_adjustment, dependent: :restrict_with_exception
   has_one :public_brew_share, dependent: :destroy
+  has_one :cupping_request, dependent: :destroy
   has_many :brew_preparation_tools, dependent: :destroy
   has_many :preparation_tools, through: :brew_preparation_tools
   has_many_attached :photos

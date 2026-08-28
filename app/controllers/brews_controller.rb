@@ -89,6 +89,7 @@ class BrewsController < ApplicationController
     ) do
       saved = save_brew_with_preparation_tools
       if saved
+        CuppingRequests::Synchronize.call(@brew)
         refresh_public_shares_for(@brew, comparisons: true)
         record_used_up_transition!(bean, previous_status:) if bean
       end
@@ -119,6 +120,7 @@ class BrewsController < ApplicationController
       target_bean = current_workspace.beans.find(target_bean_id)
       previous_status = target_bean.bag_status
       @brew.update_with_inventory_correction!(attributes, preparation_tools: @selected_preparation_tools)
+      CuppingRequests::Synchronize.call(@brew)
       refresh_public_shares_for(@brew, comparisons: comparison_inputs_changed?(@brew))
       Activity::Emitter.record!(
         action: "brew.updated", workspace: current_workspace, actor: Current.user, subject: @brew
@@ -157,6 +159,7 @@ class BrewsController < ApplicationController
     resolve_recipient_attributes!(attributes, existing_brew: @brew)
     updated = with_workspace_activity(action: "brew.serving_changed", subject: @brew) do
       if @brew.update(attributes)
+        CuppingRequests::Synchronize.call(@brew)
         refresh_public_shares_for(@brew)
         true
       else

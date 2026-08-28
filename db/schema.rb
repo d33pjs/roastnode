@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_21_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_28_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -190,6 +190,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_130000) do
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
     t.index ["workspace_id"], name: "index_brews_on_workspace_id"
     t.check_constraint "recipient_kind::text = 'self'::text AND recipient_user_id IS NULL AND recipient_name IS NULL OR recipient_kind::text = 'household_member'::text AND recipient_user_id IS NOT NULL AND recipient_name IS NULL OR recipient_kind::text = 'guest'::text AND recipient_user_id IS NULL", name: "brews_recipient_shape"
+  end
+
+  create_table "cupping_requests", force: :cascade do |t|
+    t.bigint "brew_id", null: false
+    t.datetime "closed_at"
+    t.datetime "created_at", null: false
+    t.text "feedback_comment"
+    t.datetime "feedback_expires_at"
+    t.string "last_guest_ip"
+    t.datetime "opened_at"
+    t.jsonb "snapshot", default: {}, null: false
+    t.string "token", null: false
+    t.string "token_digest", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["brew_id"], name: "index_cupping_requests_on_brew_id", unique: true
+    t.index ["token"], name: "index_cupping_requests_on_token", unique: true
+    t.index ["token_digest"], name: "index_cupping_requests_on_token_digest", unique: true
+    t.index ["workspace_id"], name: "index_cupping_requests_on_workspace_id"
+    t.check_constraint "char_length(feedback_comment) <= 2000", name: "cupping_requests_comment_length"
   end
 
   create_table "data_imports", force: :cascade do |t|
@@ -618,6 +638,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_21_130000) do
   add_foreign_key "brews", "users"
   add_foreign_key "brews", "users", column: "recipient_user_id"
   add_foreign_key "brews", "workspaces"
+  add_foreign_key "cupping_requests", "brews"
+  add_foreign_key "cupping_requests", "workspaces"
   add_foreign_key "data_imports", "users"
   add_foreign_key "data_imports", "workspaces"
   add_foreign_key "equipment", "data_imports"

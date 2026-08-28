@@ -28,6 +28,7 @@ class Workspace < ApplicationRecord
   has_many :recipes, dependent: :destroy
   has_many :record_links, dependent: :destroy
   has_many :public_brew_shares, dependent: :destroy
+  has_many :cupping_requests, dependent: :destroy
   has_many :public_recipe_shares, dependent: :destroy
   has_many :public_bean_shares, dependent: :destroy
   has_many :activity_events
