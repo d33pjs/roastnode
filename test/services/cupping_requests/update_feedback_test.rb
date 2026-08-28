@@ -64,6 +64,29 @@ class CuppingRequests::UpdateFeedbackTest < ActiveSupport::TestCase
     assert_no_match(/First comment|Replacement comment/, events.map(&:metadata).to_json)
   end
 
+  test "clearing taste and rating restores their empty states with explicit safe activity" do
+    update_feedback(taste_balance: "bitter", rating: 3, feedback_comment: nil)
+
+    events = assert_activity_events(
+      actions: %w[brew.cupping_taste_cleared brew.cupping_rating_cleared],
+      workspace: @request.workspace,
+      actor: nil
+    ) do
+      update_feedback(taste_balance: "", rating: "", feedback_comment: nil)
+    end
+
+    assert_equal "unknown", @brew.reload.taste_balance
+    assert_nil @brew.rating
+    assert_equal "unknown", @request.reload.snapshot.dig("brew", "taste_balance")
+
+    taste_event = events.find { |event| event.action == "brew.cupping_taste_cleared" }
+    rating_event = events.find { |event| event.action == "brew.cupping_rating_cleared" }
+    assert_equal "bitter", taste_event.metadata.fetch("from_taste")
+    assert_equal 3, rating_event.metadata.fetch("from_rating")
+    assert_not taste_event.metadata.key?("to_taste")
+    assert_not rating_event.metadata.key?("to_rating")
+  end
+
   test "unchanged feedback is silent but refreshes the last observed IP" do
     update_feedback(taste_balance: "neutral", rating: 4, feedback_comment: "Same comment")
 

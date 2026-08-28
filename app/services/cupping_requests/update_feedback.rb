@@ -11,6 +11,8 @@ module CuppingRequests
     def initialize(request:, attributes:, ip_address:, now:)
       @request = request
       @attributes = attributes.to_h.symbolize_keys.slice(*FEEDBACK_KEYS)
+      @attributes[:taste_balance] = @attributes[:taste_balance].presence || "unknown" if @attributes.key?(:taste_balance)
+      @attributes[:rating] = @attributes[:rating].presence if @attributes.key?(:rating)
       @attributes[:feedback_comment] = @attributes[:feedback_comment].presence if @attributes.key?(:feedback_comment)
       @ip_address = IPAddr.new(ip_address.to_s.strip).to_s
       @now = now
@@ -51,7 +53,9 @@ module CuppingRequests
       end
 
       def emit_taste_event(from, to, brew:)
-        if from.blank? || from == "unknown"
+        if to == "unknown"
+          emit_event("brew.cupping_taste_cleared", brew:, details: { from_taste: from })
+        elsif from.blank? || from == "unknown"
           emit_event("brew.cupping_taste_set", brew:, details: { to_taste: to })
         else
           emit_event("brew.cupping_taste_changed", brew:, details: { from_taste: from, to_taste: to })
@@ -59,7 +63,9 @@ module CuppingRequests
       end
 
       def emit_rating_event(from, to, brew:)
-        if from.nil?
+        if to.nil?
+          emit_event("brew.cupping_rating_cleared", brew:, details: { from_rating: from })
+        elsif from.nil?
           emit_event("brew.cupping_rating_set", brew:, details: { to_rating: to })
         else
           emit_event("brew.cupping_rating_changed", brew:, details: { from_rating: from, to_rating: to })

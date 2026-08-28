@@ -1,6 +1,8 @@
 require "time"
 
 class CuppingRequestExpirationJob < ApplicationJob
+  self.enqueue_after_transaction_commit = true
+
   def perform(request_id, expected_deadline_iso8601)
     request = CuppingRequest.find_by(id: request_id)
     return unless request

@@ -73,15 +73,18 @@ class Activity::EmitterTest < ActiveSupport::TestCase
     events = assert_activity_events(
       actions: [
         "brew.cupping_accessed", "brew.cupping_taste_set", "brew.cupping_taste_changed",
-        "brew.cupping_rating_set", "brew.cupping_rating_changed", "brew.cupping_comment_added",
-        "brew.cupping_comment_updated", "brew.cupping_closed"
+        "brew.cupping_taste_cleared", "brew.cupping_rating_set", "brew.cupping_rating_changed",
+        "brew.cupping_rating_cleared", "brew.cupping_comment_added", "brew.cupping_comment_updated",
+        "brew.cupping_closed"
       ], workspace: brew.workspace, actor: nil
     ) do
       Activity::Emitter.record!(action: "brew.cupping_accessed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })
       Activity::Emitter.record!(action: "brew.cupping_taste_set", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", to_taste: "neutral" })
       Activity::Emitter.record!(action: "brew.cupping_taste_changed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", from_taste: "neutral", to_taste: "sour" })
+      Activity::Emitter.record!(action: "brew.cupping_taste_cleared", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", from_taste: "sour" })
       Activity::Emitter.record!(action: "brew.cupping_rating_set", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", to_rating: 4 })
       Activity::Emitter.record!(action: "brew.cupping_rating_changed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", from_rating: 4, to_rating: 5 })
+      Activity::Emitter.record!(action: "brew.cupping_rating_cleared", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4", from_rating: 5 })
       Activity::Emitter.record!(action: "brew.cupping_comment_added", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })
       Activity::Emitter.record!(action: "brew.cupping_comment_updated", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })
       Activity::Emitter.record!(action: "brew.cupping_closed", workspace: brew.workspace, subject: brew, **actor, details: { ip_address: "203.0.113.4" })

@@ -203,6 +203,26 @@ class Activity::PresenterTest < ActiveSupport::TestCase
     assert_equal brew_path(brew), presenter.path
   end
 
+  test "presents cleared cupping values without inventing replacement values" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    taste_event = Activity::Emitter.record!(
+      action: "brew.cupping_taste_cleared", workspace: brew.workspace, subject: brew,
+      actor_kind: "guest", actor_label: "Alex",
+      details: { ip_address: "203.0.113.4", from_taste: "bitter" }
+    )
+    rating_event = Activity::Emitter.record!(
+      action: "brew.cupping_rating_cleared", workspace: brew.workspace, subject: brew,
+      actor_kind: "guest", actor_label: "Alex",
+      details: { ip_address: "203.0.113.4", from_rating: 3 }
+    )
+
+    assert_equal "Alex cleared the cupping taste for Espresso with #{brew.bean.name} for Alex (was bitter)",
+      Activity::Presenter.new(taste_event, helpers: self).summary
+    assert_equal "Alex cleared the cupping rating for Espresso with #{brew.bean.name} for Alex (was 3/5)",
+      Activity::Presenter.new(rating_event, helpers: self).summary
+  end
+
   test "each category has a fixed distinguishable icon container" do
     coffee = Activity::Presenter.new(activity_events(:morning_brew_created), helpers: self)
     admin = Activity::Presenter.new(activity_events(:workspace_invite_created), helpers: self)

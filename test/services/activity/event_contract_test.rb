@@ -49,8 +49,10 @@ class Activity::EventContractTest < ActiveSupport::TestCase
       "brew.cupping_accessed" => [],
       "brew.cupping_taste_set" => %w[to_taste],
       "brew.cupping_taste_changed" => %w[from_taste to_taste],
+      "brew.cupping_taste_cleared" => %w[from_taste],
       "brew.cupping_rating_set" => %w[to_rating],
       "brew.cupping_rating_changed" => %w[from_rating to_rating],
+      "brew.cupping_rating_cleared" => %w[from_rating],
       "brew.cupping_comment_added" => [],
       "brew.cupping_comment_updated" => [],
       "brew.cupping_closed" => []

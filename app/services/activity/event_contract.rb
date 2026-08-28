@@ -3,8 +3,9 @@ module Activity
     ACTIONS = {
       "coffee" => %w[
         brew.created brew.updated brew.taste_changed brew.serving_changed brew.deleted brew.media_updated
-        brew.cupping_accessed brew.cupping_taste_set brew.cupping_taste_changed brew.cupping_rating_set
-        brew.cupping_rating_changed brew.cupping_comment_added brew.cupping_comment_updated brew.cupping_closed
+        brew.cupping_accessed brew.cupping_taste_set brew.cupping_taste_changed brew.cupping_taste_cleared
+        brew.cupping_rating_set brew.cupping_rating_changed brew.cupping_rating_cleared brew.cupping_comment_added
+        brew.cupping_comment_updated brew.cupping_closed
         external_coffee.created external_coffee.updated external_coffee.deleted external_coffee.media_updated
       ],
       "beans_inventory" => %w[
@@ -90,8 +91,9 @@ module Activity
     ICON_OVERRIDES = {
       "brew.created" => "local_cafe", "brew.taste_changed" => "local_cafe", "brew.serving_changed" => "group",
       "brew.cupping_accessed" => "local_cafe", "brew.cupping_taste_set" => "local_cafe",
-      "brew.cupping_taste_changed" => "local_cafe", "brew.cupping_rating_set" => "local_cafe",
-      "brew.cupping_rating_changed" => "local_cafe", "brew.cupping_comment_added" => "local_cafe",
+      "brew.cupping_taste_changed" => "local_cafe", "brew.cupping_taste_cleared" => "local_cafe",
+      "brew.cupping_rating_set" => "local_cafe", "brew.cupping_rating_changed" => "local_cafe",
+      "brew.cupping_rating_cleared" => "local_cafe", "brew.cupping_comment_added" => "local_cafe",
       "brew.cupping_comment_updated" => "local_cafe", "brew.cupping_closed" => "local_cafe",
       "external_coffee.created" => "local_cafe", "bean.duplicated" => "content_copy", "bean.opened" => "inventory_2",
       "bean.finished" => "check_circle", "bean.used_up" => "check_circle", "inventory_adjustment.created" => "scale",
@@ -111,8 +113,9 @@ module Activity
       "brew.created" => "logged", "brew.updated" => "corrected", "brew.taste_changed" => "taste_changed",
       "brew.serving_changed" => "serving_changed", "external_coffee.created" => "logged",
       "brew.cupping_accessed" => "cupping_accessed", "brew.cupping_taste_set" => "cupping_taste_set",
-      "brew.cupping_taste_changed" => "cupping_taste_changed", "brew.cupping_rating_set" => "cupping_rating_set",
-      "brew.cupping_rating_changed" => "cupping_rating_changed", "brew.cupping_comment_added" => "cupping_comment_added",
+      "brew.cupping_taste_changed" => "cupping_taste_changed", "brew.cupping_taste_cleared" => "cupping_taste_cleared",
+      "brew.cupping_rating_set" => "cupping_rating_set", "brew.cupping_rating_changed" => "cupping_rating_changed",
+      "brew.cupping_rating_cleared" => "cupping_rating_cleared", "brew.cupping_comment_added" => "cupping_comment_added",
       "brew.cupping_comment_updated" => "cupping_comment_updated", "brew.cupping_closed" => "cupping_closed",
       "external_coffee.updated" => "corrected", "bean.duplicated" => "duplicated", "bean.opened" => "opened",
       "bean.finished" => "finished", "bean.used_up" => "used_up", "inventory_adjustment.created" => "adjusted",
@@ -140,8 +143,10 @@ module Activity
       "brew.cupping_accessed" => %w[ip_address],
       "brew.cupping_taste_set" => %w[ip_address to_taste],
       "brew.cupping_taste_changed" => %w[ip_address from_taste to_taste],
+      "brew.cupping_taste_cleared" => %w[ip_address from_taste],
       "brew.cupping_rating_set" => %w[ip_address to_rating],
       "brew.cupping_rating_changed" => %w[ip_address from_rating to_rating],
+      "brew.cupping_rating_cleared" => %w[ip_address from_rating],
       "brew.cupping_comment_added" => %w[ip_address],
       "brew.cupping_comment_updated" => %w[ip_address],
       "brew.cupping_closed" => %w[ip_address]
@@ -155,8 +160,10 @@ module Activity
       "brew.cupping_accessed" => %w[ip_address],
       "brew.cupping_taste_set" => %w[ip_address to_taste],
       "brew.cupping_taste_changed" => %w[ip_address from_taste to_taste],
+      "brew.cupping_taste_cleared" => %w[ip_address from_taste],
       "brew.cupping_rating_set" => %w[ip_address to_rating],
       "brew.cupping_rating_changed" => %w[ip_address from_rating to_rating],
+      "brew.cupping_rating_cleared" => %w[ip_address from_rating],
       "brew.cupping_comment_added" => %w[ip_address],
       "brew.cupping_comment_updated" => %w[ip_address],
       "brew.cupping_closed" => %w[ip_address]
