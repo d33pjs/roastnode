@@ -29,7 +29,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal "1/1,75", grind_input.value
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
 
-    choose("brew_bean_id_#{selected_bean.id}")
+    find("[data-testid=brew-bean-option-#{selected_bean.id}]").click
 
     assert_selector "#brew_bean_id_#{selected_bean.id}:checked"
     assert_selector "[data-testid=brew-grind-setting-apply]:not([hidden])", text: "Use 1/1,50"
@@ -59,7 +59,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     wait_for_stimulus("brew-draft")
     assert_no_selector "#brew_bean_id_#{draft_bean.id}:checked"
-    find("#brew_bean_id_#{draft_bean.id}").click
+    find("[data-testid=brew-bean-option-#{draft_bean.id}]").click
     assert_selector "#brew_bean_id_#{draft_bean.id}:checked"
     assert_draft_field storage_key, "brew[bean_id]", draft_bean.id.to_s
 
