@@ -263,7 +263,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       text: /✓ Last used: #{Regexp.escape(closed_bean.display_name)} · no longer open/
     assert_select "[data-testid=brew-grinder-reminder-previous]", count: 1,
       text: /#{Regexp.escape(closed_bean.display_name)}.*truthful 12/
-    assert_select "[data-controller=brew-grinder-reminder][data-brew-grinder-reminder-last-bean-id-value=?]",
+    assert_select "[data-controller~=brew-grinder-reminder][data-brew-grinder-reminder-last-bean-id-value=?]",
       closed_bean.id.to_s
   end
 

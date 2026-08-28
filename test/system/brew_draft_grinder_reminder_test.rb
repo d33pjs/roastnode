@@ -1,6 +1,51 @@
 require "application_system_test_case"
 
 class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
+  test "Espresso can apply a differing selected-bean grind setting explicitly" do
+    selected_bean = beans(:second_open_household)
+    grinder = equipment(:household_grinder)
+    workspaces(:household).brews.create!(
+      user: users(:one),
+      bean: selected_bean,
+      grinder:,
+      machine: equipment(:household_machine),
+      method: "espresso",
+      occurred_at: 1.day.ago,
+      bean_weight_grams: 1,
+      grind_setting: "1/1,50",
+      rating: 5
+    )
+    brews(:morning_espresso).update!(occurred_at: 1.minute.ago, grind_setting: "1/1,75", rating: 5)
+    sign_in_through_browser
+
+    visit new_brew_path(method: "espresso")
+    wait_for_stimulus("brew-grinder-reminder")
+
+    grind_input = find('input[name="brew[grind_setting]"]')
+    grinder_id = find('input[name="brew[grinder_id]"]:checked').value
+    storage_key = find("form[data-brew-draft-storage-key-value]")["data-brew-draft-storage-key-value"]
+
+    assert_equal "1/1,75", grind_input.value
+    assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
+
+    choose("brew_bean_id_#{selected_bean.id}")
+
+    assert_selector "[data-testid=brew-grind-setting-apply]:not([hidden])", text: "Use 1/1,50"
+
+    fill_in "Grind setting", with: " 1/1,50 "
+    assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
+
+    fill_in "Grind setting", with: "manual 9"
+    assert_selector "[data-testid=brew-grind-setting-apply]:not([hidden])", text: "Use 1/1,50"
+    find("[data-testid=brew-grind-setting-apply]").click
+
+    assert_equal "1/1,50", grind_input.value
+    assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
+    assert_equal grinder_id, find('input[name="brew[grinder_id]"]:checked').value
+    assert_equal "1/1,50",
+      evaluate_script("JSON.parse(localStorage.getItem(arguments[0])).fields['brew[grind_setting]']", storage_key)
+  end
+
   test "restore and discard synchronize the bean warning without changing grinder inputs" do
     sign_in_through_browser
     visit new_brew_path(method: "espresso")
