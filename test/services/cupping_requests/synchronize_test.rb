@@ -52,4 +52,22 @@ class CuppingRequests::SynchronizeTest < ActiveSupport::TestCase
     assert_equal request, CuppingRequests::Synchronize.call(request.brew)
     assert_equal request.token, request.reload.token
   end
+
+  test "synchronize creates a fresh request when an in-memory association was revoked and the brew becomes eligible again" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    CuppingRequests::Synchronize.call(brew)
+    cached_request = brew.cupping_request
+
+    brew.update!(recipient_kind: "self", recipient_name: nil)
+    CuppingRequests::Synchronize.call(brew)
+    assert_predicate cached_request, :destroyed?
+
+    brew.update!(recipient_kind: "guest", recipient_name: "Alex")
+    replacement_request = CuppingRequests::Synchronize.call(brew)
+
+    assert_not_predicate replacement_request, :destroyed?
+    assert_equal brew, replacement_request.brew
+    assert_equal replacement_request, brew.reload.cupping_request
+  end
 end

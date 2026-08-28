@@ -34,14 +34,22 @@ class CreateCuppingRequests < ActiveRecord::Migration[8.1]
   private
     def backfill_guest_espressos
       now = Time.current
-      rows = select_all(<<~SQL).map do |brew|
-        SELECT id, workspace_id FROM brews
+      rows = select_all(<<~SQL).map do |row|
+        SELECT id FROM brews
         WHERE method = 'espresso' AND recipient_kind = 'guest'
       SQL
+        brew = Brew.find(row.fetch("id"))
         token = SecureRandom.urlsafe_base64(24)
         {
-          brew_id: brew.fetch("id"), workspace_id: brew.fetch("workspace_id"), token:,
-          token_digest: Digest::SHA256.hexdigest(token), snapshot: {}, created_at: now, updated_at: now
+          brew_id: brew.id,
+          workspace_id: brew.workspace_id,
+          token:,
+          token_digest: Digest::SHA256.hexdigest(token),
+          snapshot: PublicBrewShareSnapshotBuilder.new(
+            brew:, title: PublicBrewShare.default_title_for(brew), selected_photo_attachment_ids: []
+          ).call,
+          created_at: now,
+          updated_at: now
         }
       end
       CuppingRequestRow.insert_all!(rows) if rows.any?

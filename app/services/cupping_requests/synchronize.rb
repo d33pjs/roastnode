@@ -2,7 +2,14 @@ module CuppingRequests
   class Synchronize
     def self.call(brew)
       eligible = brew.persisted? && brew.espresso? && brew.recipient_guest?
-      return brew.cupping_request&.destroy! unless eligible
+      unless eligible
+        request = brew.cupping_request
+        return unless request
+
+        request.destroy!
+        brew.association(:cupping_request).reset
+        return
+      end
 
       brew.cupping_request || brew.create_cupping_request!(
         workspace: brew.workspace,

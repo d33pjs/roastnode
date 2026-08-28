@@ -1412,6 +1412,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate brew, :recipient_guest?
     assert_equal "Anna", brew.recipient_name
     assert_equal "Latte", brew.cup_style
+    assert_equal brew, brew.cupping_request.brew
   end
 
   test "creating brew for shared bean refreshes public bean snapshot" do
@@ -2401,6 +2402,18 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal adjustment, brew.inventory_adjustment.reload.delta_grams
   end
 
+  test "serving creates a cupping request for a guest espresso" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    patch serving_brew_path(brew), params: {
+      brew: { recipient_selection: "guest", recipient_name: "Alex", cup_style: "Espresso" }
+    }
+
+    assert_redirected_to brew_path(brew)
+    assert_equal brew, brew.reload.cupping_request.brew
+  end
+
   test "explicit guest selection retains an invalid typed name for redisplay" do
     sign_in_as(users(:one))
     brew = brews(:morning_espresso)
@@ -2649,6 +2662,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
           dose_grams: "19.5",
           beverage_grams: "44",
           taste_balance: "neutral",
+          recipient_selection: "guest",
+          recipient_name: "Alex",
           preparation_tool_ids: [ preparation_tools(:puck_screen).id ]
         }
       }
@@ -2658,6 +2673,58 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 148.to_d, beans(:open_household).reload.remaining_grams
     assert_equal(-20.to_d, brew.inventory_adjustment.reload.delta_grams)
     assert_equal [ "Puck screen" ], brew.brew_preparation_tools.order(:position).pluck(:tool_name)
+    assert_equal brew, brew.cupping_request.brew
+  end
+
+  test "cupping snapshot failure rolls back a guest espresso create" do
+    sign_in_as(users(:one))
+    bean = beans(:second_open_household)
+    original_remaining = bean.remaining_grams
+
+    assert_no_difference -> { Brew.count } do
+      assert_no_difference -> { CuppingRequest.count } do
+        with_failing_cupping_snapshot do
+          post brews_path, params: { brew: {
+            method: "espresso", bean_id: bean.id, grinder_id: equipment(:household_grinder).id,
+            machine_id: equipment(:household_machine).id, bean_weight_grams: "18", dose_grams: "18",
+            beverage_grams: "40", taste_balance: "neutral", recipient_selection: "guest", recipient_name: "Alex"
+          } }
+        end
+      end
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal original_remaining, bean.reload.remaining_grams
+  end
+
+  test "cupping snapshot failure rolls back a guest espresso update" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+    original_note = brew.notes
+
+    with_failing_cupping_snapshot do
+      patch brew_path(brew), params: { brew: { notes: "Must roll back.", recipient_selection: "guest", recipient_name: "Alex" } }
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal original_note, brew.reload.notes
+    assert_predicate brew, :recipient_self?
+    assert_nil brew.cupping_request
+  end
+
+  test "cupping snapshot failure rolls back a guest espresso serving update" do
+    sign_in_as(users(:one))
+    brew = brews(:morning_espresso)
+
+    with_failing_cupping_snapshot do
+      patch serving_brew_path(brew), params: {
+        brew: { recipient_selection: "guest", recipient_name: "Alex", cup_style: "Espresso" }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_predicate brew.reload, :recipient_self?
+    assert_nil brew.cupping_request
   end
 
   test "writer can update a brew while retaining its unchanged historical bean" do
@@ -3105,6 +3172,15 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
           selected_photo_attachment_ids: []
         ).call
       )
+    end
+
+    def with_failing_cupping_snapshot
+      failing_snapshot = Object.new
+      failing_snapshot.define_singleton_method(:call) { raise ActiveRecord::RecordInvalid.new(CuppingRequest.new) }
+
+      with_stubbed_singleton_method(PublicBrewShareSnapshotBuilder, :new, ->(**) { failing_snapshot }) do
+        yield
+      end
     end
 
     def create_public_bean_share_for(bean)
