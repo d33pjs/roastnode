@@ -6,5 +6,5 @@
 Rails.application.config.filter_parameters += [
   :passw, :email, :secret, :token, :media_id, :_key, :crypt, :salt, :certificate, :otp, :ssn, :cvv, :cvc,
   :webauthn, :credential, :raw_id, :client_data_json, :attestation_object, :authenticator_data, :signature,
-  :user_handle, :public_key
+  :user_handle, :public_key, :feedback_comment, :recipient_name, :metadata
 ]

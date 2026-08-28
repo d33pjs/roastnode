@@ -998,6 +998,9 @@ en:
       feedback_eyebrow: "Your cup"
       feedback_intro: "Choose the taste and rating that fit your cup, then leave an optional private comment."
       feedback_title: "Share your tasting notes"
+      methods:
+        espresso: "Espresso"
+      page_title: "%{method} with %{bean}"
       time_remaining: "Time remaining"
     update:
       invalid: "Feedback could not be saved. Check the values and try again."

@@ -27,7 +27,7 @@ class PublicCuppingRequestsController < ApplicationController
   rescue CuppingRequests::FeedbackClosed
     prepare_page(feedback_values: feedback_params.to_h)
     render :show, status: :unprocessable_entity
-  rescue ActiveRecord::RecordInvalid
+  rescue ActiveRecord::RecordInvalid, CuppingRequests::UpdateFeedback::InvalidFeedback
     @feedback_error = t(".invalid")
     prepare_page(feedback_values: feedback_params.to_h)
     render :show, status: :unprocessable_entity

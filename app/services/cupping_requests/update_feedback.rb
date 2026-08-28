@@ -3,23 +3,28 @@ require "ipaddr"
 module CuppingRequests
   class UpdateFeedback
     FEEDBACK_KEYS = %i[taste_balance rating feedback_comment].freeze
+    TASTE_VALUES = Brew.taste_balances.keys.freeze
+    RATING_VALUES = (1..5).map(&:to_s).freeze
 
-    def self.call(request:, attributes:, ip_address:, now: Time.current)
+    class InvalidFeedback < StandardError; end
+
+    def self.call(request:, attributes:, ip_address:, now: nil)
       new(request:, attributes:, ip_address:, now:).call
     end
 
     def initialize(request:, attributes:, ip_address:, now:)
       @request = request
       @attributes = attributes.to_h.symbolize_keys.slice(*FEEDBACK_KEYS)
-      @attributes[:taste_balance] = @attributes[:taste_balance].presence || "unknown" if @attributes.key?(:taste_balance)
-      @attributes[:rating] = @attributes[:rating].presence if @attributes.key?(:rating)
+      @attributes[:taste_balance] = normalize_taste_balance(@attributes[:taste_balance]) if @attributes.key?(:taste_balance)
+      @attributes[:rating] = normalize_rating(@attributes[:rating]) if @attributes.key?(:rating)
       @attributes[:feedback_comment] = @attributes[:feedback_comment].presence if @attributes.key?(:feedback_comment)
       @ip_address = IPAddr.new(ip_address.to_s.strip).to_s
-      @now = now
+      @injected_now = now
     end
 
     def call
       request.with_lock do
+        @now = injected_now || Time.current
         raise FeedbackClosed unless request.feedback_open?(at: now)
 
         brew = request.brew.reload
@@ -39,7 +44,23 @@ module CuppingRequests
     end
 
     private
-      attr_reader :request, :attributes, :ip_address, :now
+      attr_reader :request, :attributes, :ip_address, :injected_now, :now
+
+      def normalize_taste_balance(value)
+        value = value.to_s.presence || "unknown"
+        raise InvalidFeedback unless TASTE_VALUES.include?(value)
+
+        value
+      end
+
+      def normalize_rating(value)
+        return if value.nil? || value == ""
+
+        value = value.to_s
+        raise InvalidFeedback unless RATING_VALUES.include?(value)
+
+        value.to_i
+      end
 
       def emit_changed_events(old:, brew:)
         emit_taste_event(old.fetch(:taste), brew.taste_balance, brew:) if old.fetch(:taste) != brew.taste_balance

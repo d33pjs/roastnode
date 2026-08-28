@@ -1,4 +1,5 @@
 require "test_helper"
+require "timeout"
 
 class CuppingRequests::UpdateFeedbackTest < ActiveSupport::TestCase
   setup do
@@ -217,4 +218,85 @@ class CuppingRequests::UpdateFeedbackTest < ActiveSupport::TestCase
         ).call
       )
     end
+end
+
+class CuppingRequests::UpdateFeedbackLockTest < ActiveSupport::TestCase
+  self.use_transactional_tests = false
+
+  setup do
+    @request = cupping_requests(:guest_espresso)
+    @brew = @request.brew
+    @original_brew_attributes = @brew.attributes.slice("recipient_kind", "recipient_name", "taste_balance", "rating")
+    @original_request_attributes = @request.attributes.slice(
+      "opened_at", "feedback_expires_at", "closed_at", "last_guest_ip", "feedback_comment", "snapshot"
+    )
+    @brew.update!(recipient_kind: "guest", recipient_name: "Alex", taste_balance: "neutral", rating: 4)
+    ActivityEvent.where(subject: @brew, action: Activity::EventContract::CUPPING_ACTIONS).delete_all
+  end
+
+  teardown do
+    ActivityEvent.where(subject: @brew, action: Activity::EventContract::CUPPING_ACTIONS).delete_all if @brew
+    @request&.update_columns(@original_request_attributes) if @original_request_attributes
+    @brew&.update_columns(@original_brew_attributes) if @original_brew_attributes
+  end
+
+  test "a submission without injected time that waits past the deadline reads time after acquiring the row lock" do
+    deadline = 2.seconds.from_now
+    @request.update_columns(
+      opened_at: Time.current,
+      feedback_expires_at: deadline,
+      closed_at: nil,
+      last_guest_ip: "203.0.113.4",
+      feedback_comment: nil
+    )
+    first_locked = Queue.new
+    release_first = Queue.new
+    second_lock_attempted = Queue.new
+    result = Queue.new
+
+    first = Thread.new do
+      CuppingRequest.connection_pool.with_connection do
+        CuppingRequest.find(@request.id).with_lock do
+          first_locked << true
+          release_first.pop
+        end
+      end
+    end
+
+    second = nil
+    begin
+      Timeout.timeout(5) { first_locked.pop }
+      second = Thread.new do
+        CuppingRequest.connection_pool.with_connection do
+          request = CuppingRequest.find(@request.id)
+          real_with_lock = request.method(:with_lock)
+          request.define_singleton_method(:with_lock) do |*args, **kwargs, &block|
+            second_lock_attempted << Time.current
+            real_with_lock.call(*args, **kwargs, &block)
+          end
+          result << CuppingRequests::UpdateFeedback.call(
+            request:,
+            attributes: { taste_balance: "sour", rating: "5", feedback_comment: "Too late" },
+            ip_address: "203.0.113.9"
+          )
+        end
+      rescue StandardError => error
+        result << error
+      end
+
+      assert_operator Timeout.timeout(5) { second_lock_attempted.pop }, :<, deadline
+      Timeout.timeout(5) do
+        sleep 0.01 while Time.current < deadline + 0.05
+      end
+    ensure
+      release_first << true
+      first.join
+      second&.join
+    end
+
+    assert_instance_of CuppingRequests::FeedbackClosed, Timeout.timeout(5) { result.pop }
+    assert_equal "neutral", @brew.reload.taste_balance
+    assert_equal 4, @brew.rating
+    assert_nil @request.reload.feedback_comment
+  end
 end

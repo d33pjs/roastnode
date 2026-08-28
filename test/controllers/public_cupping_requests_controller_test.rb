@@ -1,4 +1,5 @@
 require "test_helper"
+require "stringio"
 
 class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
@@ -54,6 +55,7 @@ class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "en", response.headers["Content-Language"]
     assert_equal now + 24.hours, @cupping_request.reload.feedback_expires_at
     assert_select "[data-testid=public-cupping-page]"
+    assert_select "header h1", text: "Espresso with #{@cupping_request.snapshot.dig("bean", "name")}", count: 1
     assert_select "[data-controller=cupping-countdown][data-cupping-countdown-deadline-value=?]",
       ((now + 24.hours).to_f * 1000).round.to_s
     assert_select "[data-cupping-countdown-target=value]", text: "24:00:00"
@@ -69,11 +71,15 @@ class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "German browser preference localizes the complete public page and reused Hero copy" do
+    stored_snapshot = @cupping_request.snapshot.deep_dup
+    bean_name = stored_snapshot.dig("bean", "name")
+
     get public_cupping_request_path(@cupping_request.token),
       headers: { "HTTP_ACCEPT_LANGUAGE" => "fr-FR;q=1,de-DE;q=0.9,en;q=0.7" }
 
     assert_response :success
     assert_equal "de", response.headers["Content-Language"]
+    assert_select "header h1", text: "Espresso mit #{bean_name}", count: 1
     assert_select "body", text: /Deine Verkostung/
     assert_select "body", text: /Verbleibende Zeit/
     assert_select "body", text: /Noch unsicher/
@@ -82,6 +88,7 @@ class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_select "body", text: /Mahlgrad/
     assert_select "body", text: /Ausgewogen/
     assert_no_match(/translation missing/i, response.body)
+    assert_equal stored_snapshot, @cupping_request.reload.snapshot
   end
 
   test "English wins when preferred over German and unsupported languages fall back to English" do
@@ -165,6 +172,46 @@ class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select "body", text: /Feedback konnte nicht gespeichert werden/
     assert_select "textarea[name=?]", "feedback[feedback_comment]", text: "x" * 2_001
+    assert_equal "neutral", @brew.reload.taste_balance
+    assert_equal 4, @brew.rating
+    assert_nil @cupping_request.reload.feedback_comment
+    assert_equal original_snapshot, @cupping_request.snapshot
+  end
+
+  test "malformed taste input returns localized safe validation instead of raising" do
+    open_feedback_window!
+    original_snapshot = @cupping_request.snapshot.deep_dup
+    malformed_taste = "private-forged-taste"
+
+    assert_no_difference -> { ActivityEvent.count } do
+      patch public_cupping_feedback_path(@cupping_request.token), params: {
+        feedback: { taste_balance: malformed_taste, rating: "1", feedback_comment: "Must not commit" }
+      }, headers: { "HTTP_ACCEPT_LANGUAGE" => "de" }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /Feedback konnte nicht gespeichert werden/
+    assert_no_match(/#{Regexp.escape(malformed_taste)}/, response.body)
+    assert_equal "neutral", @brew.reload.taste_balance
+    assert_equal 4, @brew.rating
+    assert_nil @cupping_request.reload.feedback_comment
+    assert_equal original_snapshot, @cupping_request.snapshot
+  end
+
+  test "malformed rating input returns localized safe validation without coercing a partial number" do
+    open_feedback_window!
+    original_snapshot = @cupping_request.snapshot.deep_dup
+    malformed_rating = "03"
+
+    assert_no_difference -> { ActivityEvent.count } do
+      patch public_cupping_feedback_path(@cupping_request.token), params: {
+        feedback: { taste_balance: "very_sour", rating: malformed_rating, feedback_comment: "Must not commit" }
+      }, headers: { "HTTP_ACCEPT_LANGUAGE" => "en" }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /Feedback could not be saved/
+    assert_select "input[name=?][value=?]", "feedback[rating]", malformed_rating, count: 0
     assert_equal "neutral", @brew.reload.taste_balance
     assert_equal 4, @brew.rating
     assert_nil @cupping_request.reload.feedback_comment
@@ -280,6 +327,24 @@ class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "[FILTERED]", response.filtered_location
   end
 
+  test "feedback comments and guest labels are filtered from request and SQL debug logs" do
+    feedback_sentinel = "PRIVATE-CUPPING-COMMENT-SENTINEL"
+    guest_sentinel = "PRIVATE-GUEST-NAME-SENTINEL"
+    @brew.update!(recipient_name: guest_sentinel)
+    @cupping_request.refresh_snapshot!
+    open_feedback_window!
+
+    logs = capture_request_and_sql_debug_logs do
+      patch public_cupping_feedback_path(@cupping_request.token), params: {
+        feedback: { taste_balance: "sour", rating: "5", feedback_comment: feedback_sentinel }
+      }
+    end
+
+    assert_redirected_to public_cupping_request_path(@cupping_request.token)
+    assert_includes logs, "[FILTERED]"
+    assert_no_match(/#{Regexp.escape(feedback_sentinel)}|#{Regexp.escape(guest_sentinel)}/, logs)
+  end
+
   private
     def open_feedback_window!
       now = Time.current
@@ -289,5 +354,21 @@ class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
         closed_at: nil,
         last_guest_ip: "203.0.113.1"
       )
+    end
+
+    def capture_request_and_sql_debug_logs
+      output = StringIO.new
+      logger = ActiveSupport::Logger.new(output)
+      logger.level = Logger::DEBUG
+      original_controller_logger = ActionController::Base.logger
+      original_record_logger = ActiveRecord::Base.logger
+      ActionController::Base.logger = logger
+      ActiveRecord::Base.logger = logger
+
+      yield
+      output.string
+    ensure
+      ActionController::Base.logger = original_controller_logger
+      ActiveRecord::Base.logger = original_record_logger
     end
 end

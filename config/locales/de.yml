@@ -67,6 +67,9 @@ de:
       feedback_eyebrow: "Deine Tasse"
       feedback_intro: "Wähle Geschmack und Bewertung für deine Tasse und hinterlasse optional einen privaten Kommentar."
       feedback_title: "Deine Verkostung"
+      methods:
+        espresso: "Espresso"
+      page_title: "%{method} mit %{bean}"
       time_remaining: "Verbleibende Zeit"
     update:
       invalid: "Feedback konnte nicht gespeichert werden. Prüfe die Angaben und versuche es erneut."

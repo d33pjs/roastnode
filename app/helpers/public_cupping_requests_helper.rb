@@ -20,6 +20,17 @@ module PublicCuppingRequestsHelper
     end
   end
 
+  def public_cupping_page_title(snapshot)
+    method = snapshot.dig("brew", "method").to_s
+    method_label = t(
+      "public_cupping_requests.show.methods.#{method}",
+      default: t("public_brew_pages.show.unknown")
+    )
+    bean_label = snapshot.dig("bean", "name").presence || t("public_brew_pages.show.unknown")
+
+    t("public_cupping_requests.show.page_title", method: method_label, bean: bean_label)
+  end
+
   def public_snapshot_taste_label(value)
     t(
       "public_brew_pages.show.tastes.#{value.presence || "unknown"}",

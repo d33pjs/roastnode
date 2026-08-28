@@ -5,7 +5,7 @@
   <section class="mx-auto max-w-5xl px-5 py-6 sm:px-8">
     <header class="py-5 text-center">
       <p class="text-sm font-black uppercase tracking-[0.18em] text-amber-800"><%= t(".eyebrow") %></p>
-      <h1 class="mt-2 text-3xl font-black leading-tight sm:text-5xl"><%= @snapshot["title"] %></h1>
+      <h1 class="mt-2 text-3xl font-black leading-tight sm:text-5xl"><%= public_cupping_page_title(@snapshot) %></h1>
     </header>
 
     <% if notice.present? %>
