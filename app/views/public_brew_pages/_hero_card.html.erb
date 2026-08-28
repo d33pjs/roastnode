@@ -13,12 +13,13 @@
 <% logger = snapshot["user"].is_a?(Hash) ? snapshot["user"] : {} %>
 <% recipient = brew["recipient"].is_a?(Hash) ? brew["recipient"] : {} %>
 <% hero = snapshot["hero"].is_a?(Hash) ? snapshot["hero"] : {} %>
-<% bean_hero_url = public_media_url_for(share, hero["bean_photo_attachment_id"], variant: :hero) %>
-<% brew_hero_url = public_media_url_for(share, hero["brew_photo_attachment_id"], variant: :hero) %>
-<% logger_avatar_url = public_media_url_for(share, logger["avatar_attachment_id"], variant: :thumbnail) %>
+<% bean_hero_url = public_media_url_for(shareable, hero["bean_photo_attachment_id"], variant: :hero) %>
+<% brew_hero_url = public_media_url_for(shareable, hero["brew_photo_attachment_id"], variant: :hero) %>
+<% logger_avatar_url = public_media_url_for(shareable, logger["avatar_attachment_id"], variant: :thumbnail) %>
 <% recipient_avatar_url = if recipient["kind"] == "household_member"
-  public_media_url_for(share, recipient["avatar_attachment_id"], variant: :thumbnail)
+  public_media_url_for(shareable, recipient["avatar_attachment_id"], variant: :thumbnail)
 end %>
+<% share_dom_key = public_share_dom_key(shareable) %>
 
 <article data-testid="public-brew-hero-card" class="overflow-hidden rounded-lg bg-stone-950 text-stone-50 shadow-sm">
   <div data-testid="public-brew-hero-upper" class="relative isolate overflow-hidden bg-black p-5">
@@ -81,7 +82,7 @@ end %>
         </div>
         <div data-testid="public-brew-balance" class="min-w-0 rounded-md bg-white/10 p-2">
           <p class="text-xs font-bold uppercase text-stone-300"><%= t("public_brew_pages.show.balance") %></p>
-          <p class="mt-1 overflow-hidden text-ellipsis text-xs font-bold leading-tight text-green-300 sm:text-sm"><%= brew["taste_balance"].present? ? brew["taste_balance"].to_s.humanize : unknown %></p>
+          <p class="mt-1 overflow-hidden text-ellipsis text-xs font-bold leading-tight text-green-300 sm:text-sm"><%= public_snapshot_taste_label(brew["taste_balance"]) %></p>
         </div>
       </div>
     </div>
@@ -91,7 +92,7 @@ end %>
   <div data-testid="public-brew-chart-grid" class="brew-chart-grid bg-stone-50 px-1 py-1 text-stone-950 sm:px-4 sm:py-3">
     <svg class="block h-auto w-full" width="560" height="168" viewBox="0 0 560 168" role="img" aria-label="<%= t("brews.show.yield") %>">
       <defs>
-        <linearGradient id="public-brew-fill-<%= share.token.parameterize %>" x1="0" x2="0" y1="0" y2="1">
+        <linearGradient id="public-brew-fill-<%= share_dom_key %>" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stop-color="#0f172a" stop-opacity=".16" />
           <stop offset="100%" stop-color="#0f172a" stop-opacity="0" />
         </linearGradient>
@@ -99,7 +100,7 @@ end %>
       <line x1="44" y1="130" x2="500" y2="130" stroke="#1c1917" stroke-width="2.5" />
       <line x1="44" y1="20" x2="44" y2="130" stroke="#1c1917" stroke-width="2.5" />
       <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round" />
-      <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42 L500 130 L44 130 Z" fill="url(#public-brew-fill-<%= share.token.parameterize %>)" />
+      <path d="M44 130 C84 132, 124 132, 156 128 C182 124, 204 106, 230 88 C270 60, 320 46, 376 38 C420 32, 464 34, 500 42 L500 130 L44 130 Z" fill="url(#public-brew-fill-<%= share_dom_key %>)" />
       <path d="M44 9 C134 8, 224 8, 314 8 C390 7, 452 8, 500 11" fill="none" stroke="#a16207" stroke-width="3.5" stroke-linecap="round" />
       <% if preinfusion_x.present? %>
         <line data-testid="public-brew-preinfusion-guide" x1="<%= preinfusion_x %>" y1="25" x2="<%= preinfusion_x %>" y2="140" stroke="#78716c" stroke-width="2.5" stroke-dasharray="6 8" />
@@ -136,7 +137,7 @@ end %>
       <% snapshot.fetch("equipment", []).each do |equipment| %>
         <% role = equipment["role"].presence || "gear" %>
         <% name = equipment["name"].presence || unknown %>
-        <%= link_to "#{role.humanize}: #{name}", "##{public_product_anchor(role, name)}", data: { testid: "public-gear-anchor" }, class: "rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100 hover:bg-white/20" %>
+        <%= link_to "#{public_snapshot_equipment_role_label(role)}: #{name}", "##{public_product_anchor(role, name)}", data: { testid: "public-gear-anchor" }, class: "rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100 hover:bg-white/20" %>
       <% end %>
 
       <% snapshot.fetch("tools", []).each do |tool| %>

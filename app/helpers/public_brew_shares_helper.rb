@@ -1,11 +1,21 @@
+require "digest"
+
 module PublicBrewSharesHelper
-  def public_media_url_for(share, attachment_id, variant: nil)
+  def public_media_url_for(shareable, attachment_id, variant: nil)
     return if attachment_id.blank?
 
-    media_handle = share.public_media_handle_for(attachment_id)
+    media_handle = shareable.public_media_handle_for(attachment_id)
     return if media_handle.blank?
 
-    public_brew_media_path(share.token, media_handle, variant:)
+    if shareable.is_a?(CuppingRequest)
+      public_cupping_media_path(shareable.token, media_handle, variant:)
+    else
+      public_brew_media_path(shareable.token, media_handle, variant:)
+    end
+  end
+
+  def public_share_dom_key(shareable)
+    Digest::SHA256.hexdigest(shareable.token.to_s).first(12)
   end
 
   def public_snapshot_grams(value)
@@ -90,6 +100,10 @@ module PublicBrewSharesHelper
     return public_unknown_label if rating.blank?
 
     t("brews.show.rating_beans", rating:, maximum: 5)
+  end
+
+  def public_snapshot_equipment_role_label(role)
+    t("public_brew_pages.show.roles.#{role}", default: role.to_s.humanize)
   end
 
   def public_snapshot_time(value)

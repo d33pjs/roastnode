@@ -1,0 +1,74 @@
+de:
+  date:
+    formats:
+      long: "%d. %B %Y"
+  time:
+    formats:
+      short: "%d.%m.%Y, %H:%M"
+  shared:
+    site_footer:
+      buy_me_a_coffee: "Spendiere mir einen Kaffee"
+      github: "GitHub"
+      version: "Version %{version}"
+  brews:
+    recipients:
+      a_guest: "einen Gast"
+      a_household_member: "ein Haushaltsmitglied"
+      byline: "Von %{logger} für %{recipient} zubereitet"
+      someone: "jemanden"
+      themself: "sich selbst"
+    show:
+      dose: "Dosis"
+      first_drip_label: "%{seconds} Erster Tropfen"
+      grind_setting: "Mahlgrad"
+      preinfusion: "Präinfusion"
+      rating: "Bewertung"
+      rating_beans: "Bewertung %{rating} von %{maximum} Bohnen"
+      ratio: "Verhältnis"
+      ratio_time: "in %{time}"
+      yield: "Getränk"
+  public_brew_pages:
+    show:
+      balance: "Balance"
+      household: "Haushalt"
+      info: "Info"
+      temp_label: "Temp. %{temperature}"
+      roles:
+        gear: "Gerät"
+        grinder: "Mühle"
+        machine: "Maschine"
+      tastes:
+        unknown: "Unbekannt"
+        very_sour: "Sehr sauer"
+        sour: "Sauer"
+        neutral: "Ausgewogen"
+        bitter: "Bitter"
+        very_bitter: "Sehr bitter"
+      unknown: "Unbekannt"
+      user: "Person"
+  public_cupping_requests:
+    feedback:
+      comment: "Privater Kommentar"
+      comment_help: "Nur der Haushalt kann diesen Kommentar lesen. Maximal 2.000 Zeichen."
+      no_rating: "Keine Bewertung"
+      rating: "Bewertung"
+      save: "Feedback speichern"
+      taste: "Geschmacksbalance"
+      tastes:
+        unknown: "Noch unsicher"
+        very_sour: "Sehr sauer"
+        sour: "Sauer"
+        neutral: "Ausgewogen"
+        bitter: "Bitter"
+        very_bitter: "Sehr bitter"
+    show:
+      eyebrow: "Cupping-Anfrage"
+      expired: "Das Feedback-Fenster ist abgelaufen. Die Brühdaten bleiben weiterhin lesbar."
+      feedback_eyebrow: "Deine Tasse"
+      feedback_intro: "Wähle Geschmack und Bewertung für deine Tasse und hinterlasse optional einen privaten Kommentar."
+      feedback_title: "Deine Verkostung"
+      time_remaining: "Verbleibende Zeit"
+    update:
+      invalid: "Feedback konnte nicht gespeichert werden. Prüfe die Angaben und versuche es erneut."
+      rate_limited: "Zu viele Feedback-Versuche. Versuche es in einigen Minuten erneut."
+      saved: "Feedback gespeichert."

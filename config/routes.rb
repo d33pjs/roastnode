@@ -94,6 +94,9 @@ Rails.application.routes.draw do
   get "r/:token" => "public_recipe_pages#show", as: :public_recipe_page
   post "r/:token/password" => "public_recipe_pages#unlock", as: :unlock_public_recipe_page
   get "r/:token/media/:media_id" => "public_recipe_media#show", as: :public_recipe_media
+  get "c/:token" => "public_cupping_requests#show", as: :public_cupping_request
+  patch "c/:token/feedback" => "public_cupping_requests#update", as: :public_cupping_feedback
+  get "c/:token/media/:media_id" => "public_cupping_media#show", as: :public_cupping_media
   get "statistics" => "statistics#index", as: :statistics
   resources :media_attachments, only: %i[show destroy] do
     match :crop, on: :member, via: %i[get patch]

@@ -961,11 +961,48 @@ en:
       previous_photo: "Previous photo"
       roasted: "Roasted %{date}"
       temp_label: "Temp %{temperature}"
+      roles:
+        gear: "Gear"
+        grinder: "Grinder"
+        machine: "Machine"
+      tastes:
+        unknown: "Unknown"
+        very_sour: "Very sour"
+        sour: "Sour"
+        neutral: "Neutral"
+        bitter: "Bitter"
+        very_bitter: "Very bitter"
       unknown: "Unknown"
       user: "User"
     unlock:
       failed: "Password is not correct."
       rate_limited: "Try again later."
+  public_cupping_requests:
+    feedback:
+      comment: "Private comment"
+      comment_help: "Only the household can read this comment. Maximum 2,000 characters."
+      no_rating: "No rating"
+      rating: "Rating"
+      save: "Save feedback"
+      taste: "Taste balance"
+      tastes:
+        unknown: "Not sure yet"
+        very_sour: "Very sour"
+        sour: "Sour"
+        neutral: "Neutral"
+        bitter: "Bitter"
+        very_bitter: "Very bitter"
+    show:
+      eyebrow: "Cupping request"
+      expired: "This feedback window has expired. The brew details remain available to read."
+      feedback_eyebrow: "Your cup"
+      feedback_intro: "Choose the taste and rating that fit your cup, then leave an optional private comment."
+      feedback_title: "Share your tasting notes"
+      time_remaining: "Time remaining"
+    update:
+      invalid: "Feedback could not be saved. Check the values and try again."
+      rate_limited: "Too many feedback attempts. Try again in a few minutes."
+      saved: "Feedback saved."
   public_recipe_shares:
     create:
       created: "Public recipe share saved."

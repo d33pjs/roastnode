@@ -1,0 +1,77 @@
+<% content_for :hide_app_navigation, true %>
+<%= render "brews/hero_card_styles" %>
+
+<main lang="<%= I18n.locale %>" data-testid="public-cupping-page" class="min-h-screen bg-[#f6f4ef] text-stone-950">
+  <section class="mx-auto max-w-5xl px-5 py-6 sm:px-8">
+    <header class="py-5 text-center">
+      <p class="text-sm font-black uppercase tracking-[0.18em] text-amber-800"><%= t(".eyebrow") %></p>
+      <h1 class="mt-2 text-3xl font-black leading-tight sm:text-5xl"><%= @snapshot["title"] %></h1>
+    </header>
+
+    <% if notice.present? %>
+      <p role="status" class="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-center font-bold text-emerald-900"><%= notice %></p>
+    <% end %>
+
+    <% if @feedback_error.present? %>
+      <p role="alert" class="mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-center font-bold text-red-900"><%= @feedback_error %></p>
+    <% end %>
+
+    <%= render "public_brew_pages/hero_card", shareable: @cupping_request, snapshot: @snapshot %>
+
+    <section data-testid="public-brew-identity-strip" class="mt-5 grid grid-cols-2 gap-3 rounded-lg border border-stone-200 bg-white/80 px-3 py-3 sm:gap-4 sm:px-5 sm:py-4">
+      <div class="min-w-0 text-left">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t("public_brew_pages.show.household") %></p>
+        <div class="mt-2 flex min-w-0 items-center gap-2 text-sm font-black text-stone-900 sm:gap-4 sm:text-lg">
+          <% if (logo_url = public_media_url_for(@cupping_request, @snapshot.dig("workspace", "logo_attachment_id"), variant: :thumbnail)).present? %>
+            <%= image_tag logo_url, alt: "", class: "h-10 w-10 shrink-0 rounded-full object-contain sm:h-16 sm:w-16" %>
+          <% end %>
+          <span class="min-w-0 truncate"><%= @snapshot.dig("workspace", "name") %></span>
+        </div>
+      </div>
+
+      <div class="min-w-0 text-left sm:text-right">
+        <p class="text-xs font-black uppercase text-stone-500"><%= t("public_brew_pages.show.user") %></p>
+        <div class="mt-2 flex min-w-0 items-center gap-2 text-sm font-black text-stone-900 sm:flex-row-reverse sm:gap-4 sm:text-lg">
+          <% if (avatar_url = public_media_url_for(@cupping_request, @snapshot.dig("user", "avatar_attachment_id"), variant: :thumbnail)).present? %>
+            <%= image_tag avatar_url, alt: "", class: "h-10 w-10 shrink-0 rounded-full object-contain sm:h-16 sm:w-16" %>
+          <% end %>
+          <span class="min-w-0 truncate"><%= @snapshot.dig("user", "display_label") %></span>
+        </div>
+      </div>
+    </section>
+
+    <section class="mx-auto mt-8 max-w-3xl rounded-xl border border-stone-200 bg-white p-5 shadow-sm sm:p-8">
+      <div class="text-center">
+        <p class="text-sm font-black uppercase tracking-[0.16em] text-amber-800"><%= t(".feedback_eyebrow") %></p>
+        <h2 class="mt-2 text-2xl font-black"><%= t(".feedback_title") %></h2>
+        <p class="mt-2 text-sm font-semibold leading-6 text-stone-600"><%= t(".feedback_intro") %></p>
+      </div>
+
+      <% if @feedback_open %>
+        <% remaining_seconds = [ @cupping_request.feedback_expires_at - Time.current, 0 ].max.ceil %>
+        <div
+          data-controller="cupping-countdown"
+          data-cupping-countdown-deadline-value="<%= cupping_countdown_deadline_value(@cupping_request) %>"
+          class="mt-6"
+        >
+          <p class="text-center text-sm font-black uppercase tracking-[0.1em] text-stone-500">
+            <%= t(".time_remaining") %>
+            <span data-cupping-countdown-target="value" class="ml-2 tabular-nums text-stone-950"><%= cupping_countdown_text(remaining_seconds) %></span>
+          </p>
+
+          <div data-cupping-countdown-target="form">
+            <%= render "feedback_form" %>
+          </div>
+
+          <div data-cupping-countdown-target="expired" data-testid="cupping-feedback-expired" hidden class="mt-6 rounded-lg bg-stone-100 px-5 py-6 text-center font-bold text-stone-700">
+            <%= t(".expired") %>
+          </div>
+        </div>
+      <% else %>
+        <div data-testid="cupping-feedback-expired" class="mt-6 rounded-lg bg-stone-100 px-5 py-6 text-center font-bold text-stone-700">
+          <%= t(".expired") %>
+        </div>
+      <% end %>
+    </section>
+  </section>
+</main>

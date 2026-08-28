@@ -1,4 +1,5 @@
 require "digest"
+require "openssl"
 
 class CuppingRequest < ApplicationRecord
   EXPIRATION_DISPATCH_LEASE = 5.minutes
@@ -67,6 +68,30 @@ class CuppingRequest < ApplicationRecord
     )
   end
 
+  def public_attachment_ids
+    snapshot_payload = snapshot.is_a?(Hash) ? snapshot : {}
+    public_media_payload = snapshot_payload.fetch("public_media", [])
+
+    collect_attachment_ids(public_media_payload).map(&:to_i).uniq & current_public_identity_attachment_ids
+  end
+
+  def public_media_handle_for(attachment_id)
+    attachment_id = attachment_id.to_i
+    return unless public_attachment_ids.include?(attachment_id)
+
+    media_handle_for_attachment_id(attachment_id)
+  end
+
+  def public_attachment_id_for_media_handle(handle)
+    handle = handle.to_s
+    return if handle.blank?
+
+    public_attachment_ids.find do |attachment_id|
+      expected = media_handle_for_attachment_id(attachment_id)
+      handle.bytesize == expected.bytesize && ActiveSupport::SecurityUtils.secure_compare(handle, expected)
+    end
+  end
+
   private
     def set_token
       self.token ||= SecureRandom.urlsafe_base64(24)
@@ -90,5 +115,33 @@ class CuppingRequest < ApplicationRecord
       return if brew.blank? || (brew.espresso? && brew.recipient_guest?)
 
       errors.add(:brew, "must be a guest espresso brew")
+    end
+
+    def current_public_identity_attachment_ids
+      [
+        workspace&.logo&.attachment&.id,
+        brew&.user&.avatar&.attachment&.id
+      ].compact
+    end
+
+    def collect_attachment_ids(value)
+      case value
+      when Hash
+        value.flat_map do |key, nested|
+          key.to_s.end_with?("attachment_id") && nested.present? ? [ nested.to_i ] : collect_attachment_ids(nested)
+        end
+      when Array
+        value.flat_map { |nested| collect_attachment_ids(nested) }
+      else
+        []
+      end
+    end
+
+    def media_handle_for_attachment_id(attachment_id)
+      OpenSSL::HMAC.hexdigest("SHA256", public_media_handle_secret, "#{token}:#{attachment_id}").first(32)
+    end
+
+    def public_media_handle_secret
+      Rails.application.key_generator.generate_key("public-cupping-request-media-handle")
     end
 end

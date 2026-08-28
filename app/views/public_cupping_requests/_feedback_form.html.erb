@@ -1,0 +1,61 @@
+<%= form_with scope: :feedback,
+  url: public_cupping_feedback_path(@cupping_request.token),
+  method: :patch,
+  data: { testid: "cupping-feedback-form" },
+  class: "mt-6 grid gap-6" do %>
+  <fieldset>
+    <legend class="text-sm font-black text-stone-800"><%= t("public_cupping_requests.feedback.taste") %></legend>
+    <div class="rn-taste-balance mt-2">
+      <% unknown_value, unknown_label = cupping_taste_options.first %>
+      <label class="rn-choice rn-choice-unknown">
+        <%= radio_button_tag "feedback[taste_balance]", unknown_value,
+          @feedback_values["taste_balance"] == unknown_value,
+          class: "rn-choice-input" %>
+        <span class="rn-choice-label rn-choice-label-muted"><%= unknown_label %></span>
+      </label>
+
+      <div class="rn-balance-scale" aria-label="<%= t("public_cupping_requests.feedback.taste") %>">
+        <% cupping_taste_options.drop(1).each do |value, label| %>
+          <label class="rn-choice rn-balance-choice">
+            <%= radio_button_tag "feedback[taste_balance]", value,
+              @feedback_values["taste_balance"] == value,
+              class: "rn-choice-input" %>
+            <span class="rn-choice-label rn-balance-label"><%= label %></span>
+          </label>
+        <% end %>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend class="text-sm font-black text-stone-800"><%= t("public_cupping_requests.feedback.rating") %></legend>
+    <div class="rn-rating-control mt-2">
+      <label class="rn-choice rn-rating-empty">
+        <%= radio_button_tag "feedback[rating]", "", @feedback_values["rating"].blank?, class: "rn-choice-input" %>
+        <span class="rn-choice-label rn-choice-label-muted"><%= t("public_cupping_requests.feedback.no_rating") %></span>
+      </label>
+      <div class="rn-rating-scale" aria-label="<%= t("public_cupping_requests.feedback.rating") %>">
+        <% 1.upto(5) do |rating| %>
+          <label class="rn-choice rn-rating-choice">
+            <%= radio_button_tag "feedback[rating]", rating,
+              @feedback_values["rating"].to_s == rating.to_s,
+              class: "rn-choice-input" %>
+            <span class="rn-choice-label rn-rating-label"><%= rating %></span>
+          </label>
+        <% end %>
+      </div>
+    </div>
+  </fieldset>
+
+  <div>
+    <%= label_tag "feedback_feedback_comment", t("public_cupping_requests.feedback.comment"), class: "block text-sm font-black text-stone-800" %>
+    <p class="mt-1 text-sm font-semibold text-stone-500"><%= t("public_cupping_requests.feedback.comment_help") %></p>
+    <%= text_area_tag "feedback[feedback_comment]", @feedback_values["feedback_comment"],
+      id: "feedback_feedback_comment",
+      maxlength: 2_000,
+      rows: 6,
+      class: "mt-2 w-full rounded-lg border border-stone-300 bg-white px-4 py-3 text-stone-950 shadow-sm focus:border-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-200" %>
+  </div>
+
+  <%= submit_tag t("public_cupping_requests.feedback.save"), class: "inline-flex min-h-12 items-center justify-center rounded-lg bg-stone-950 px-5 py-3 font-black text-white hover:bg-stone-800" %>
+<% end %>
