@@ -103,31 +103,72 @@ test "grind setting apply action is Espresso-only and respects hidden fields" do
 end
 ```
 
+Add an edge-case test proving the apply data does not depend on a usable previous-warning reference:
+
+```ruby
+test "new Espresso keeps apply data when the latest brew has no grinder reference" do
+  selected_bean = beans(:second_open_household)
+  workspaces(:household).brews.create!(
+    user: users(:one),
+    bean: selected_bean,
+    grinder: equipment(:household_grinder),
+    machine: equipment(:household_machine),
+    method: "espresso",
+    occurred_at: 1.day.ago,
+    bean_weight_grams: 1,
+    grind_setting: "1/1,50",
+    rating: 5
+  )
+  brews(:morning_espresso).update!(
+    occurred_at: 1.minute.ago,
+    grinder: nil,
+    grind_setting: nil
+  )
+  sign_in_as(users(:one))
+
+  get new_brew_path(method: "espresso")
+
+  assert_response :success
+  document = Nokogiri::HTML(response.body)
+  form = document.at_css("form[data-controller~='brew-grinder-reminder']")
+  assert form
+  assert_equal "1/1,50",
+    form.at_css("input[value='#{selected_bean.id}']")["data-grind-setting"]
+  assert_nil form.at_css("[data-testid='brew-grinder-reminder']")
+end
+```
+
 - [ ] **Step 2: Run the focused integration tests and verify RED**
 
 Run:
 
 ```bash
-bin/rails test test/controllers/brews_controller_test.rb -n "/new renders private best-reference data|grind setting apply action/"
+bin/rails test test/controllers/brews_controller_test.rb -n "/new renders private best-reference data|grind setting apply action|new Espresso keeps apply data/"
 ```
 
-Expected: FAIL because the Stimulus boundary is still on the bean section, `data-grind-setting` and `useSettingTemplate` are absent, and no apply button is rendered.
+Expected: FAIL because the Stimulus boundary is still on the bean section, `data-grind-setting` and `useSettingTemplate` are absent, no apply button is rendered, and an Espresso form without a usable previous reference has no controller boundary.
 
 - [ ] **Step 3: Move the controller boundary to the form**
 
 In `app/views/brews/_form.html.erb`, append the controller and values after the existing controller setup and before `form_with`:
 
 ```erb
-<% if @grinder_reminder&.previous %>
+<% if @grinder_reminder && (brew.espresso? || @grinder_reminder.previous) %>
   <% form_data[:controller] = [form_data[:controller], "brew-grinder-reminder"].compact.join(" ") %>
   <% form_data[:brew_grinder_reminder_last_bean_id_value] = @grinder_reminder.last_bean_id %>
-  <% form_data[:brew_grinder_reminder_previous_reference_key_value] = @grinder_reminder.previous.comparison_key %>
+  <% form_data[:brew_grinder_reminder_previous_reference_key_value] = @grinder_reminder.previous&.comparison_key %>
   <% form_data[:brew_grinder_reminder_unavailable_value] = t("brews.form.no_rated_grinder_reference") %>
   <% form_data[:brew_grinder_reminder_use_setting_template_value] = t("brews.form.use_grind_setting", value: "%{value}") %>
 <% end %>
 ```
 
-In `app/views/brews/_bean_selector.html.erb`, remove the section's `data-controller` and four controller value attributes. Keep the section start as:
+In `app/views/brews/_bean_selector.html.erb`, define whether the surrounding form owns the controller:
+
+```erb
+<% controller_enabled = reminder && (form.object.espresso? || previous) %>
+```
+
+Remove the section's `data-controller` and four controller value attributes. Keep the section start as:
 
 ```erb
 <section
@@ -136,12 +177,20 @@ In `app/views/brews/_bean_selector.html.erb`, remove the section's `data-control
   class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
 ```
 
-Add the raw saved setting to `radio_data` without changing the existing comparison key or label:
+Build `radio_data` when `controller_enabled` rather than only when `previous`, and add the raw saved setting without changing the existing comparison key or label:
 
 ```erb
-grinder_reference_key: reference&.comparison_key,
-grinder_reference_label: reference ? brew_grinder_reference_label(reference) : nil,
-grind_setting: reference&.grind_setting.presence
+<% radio_data = if controller_enabled
+  {
+    brew_grinder_reminder_target: "bean",
+    action: "change->brew-grinder-reminder#beanChanged",
+    grinder_reference_key: reference&.comparison_key,
+    grinder_reference_label: reference ? brew_grinder_reference_label(reference) : nil,
+    grind_setting: reference&.grind_setting.presence
+  }.compact
+else
+  {}
+end %>
 ```
 
 - [ ] **Step 4: Render the Espresso-only field target and button**
@@ -185,10 +234,10 @@ use_grind_setting: "Use %{value}"
 Run:
 
 ```bash
-bin/rails test test/controllers/brews_controller_test.rb -n "/new renders private best-reference data|grind setting apply action/"
+bin/rails test test/controllers/brews_controller_test.rb -n "/new renders private best-reference data|grind setting apply action|new Espresso keeps apply data/"
 ```
 
-Expected: 2 runs, 0 failures, 0 errors.
+Expected: 3 runs, 0 failures, 0 errors.
 
 - [ ] **Step 6: Commit the rendered contract**
 
@@ -337,9 +386,9 @@ export default class extends Controller {
       (!selectedKey || selectedKey !== this.previousReferenceKeyValue)
     )
 
-    this.noticeTarget.hidden = !needsCheck
+    if (this.hasNoticeTarget) this.noticeTarget.hidden = !needsCheck
     this.updateSettingAction()
-    if (!needsCheck) return
+    if (!needsCheck || !this.hasSelectedReferenceTarget) return
 
     this.selectedReferenceTarget.textContent =
       selected.dataset.grinderReferenceLabel || this.unavailableValue
