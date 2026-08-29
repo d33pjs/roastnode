@@ -134,17 +134,23 @@ class CuppingRequests::UpdateFeedbackTest < ActiveSupport::TestCase
       brew_share: brew_share.snapshot.deep_dup,
       bean_share: bean_share.snapshot.deep_dup
     }
+    leaked_token = @request.token
     real_refresh = PublicBeanShareRefresher.method(:refresh_comparisons_for)
     failing_refresh = lambda do |record|
       real_refresh.call(record)
-      raise "public bean refresh failed"
+      raise "public bean refresh failed for #{leaked_token} with Must roll back"
     end
 
     assert_no_difference -> { ActivityEvent.count } do
       with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_comparisons_for, failing_refresh) do
-        assert_raises(RuntimeError) do
+        error = assert_raises(StandardError) do
           update_feedback(taste_balance: "very_bitter", rating: 1, feedback_comment: "Must roll back")
         end
+        assert_equal "CuppingRequests::UpdateFeedback::PersistenceError", error.class.name
+        assert_equal "RuntimeError", error.diagnostic_class
+        assert_equal "Cupping feedback could not be persisted", error.message
+        assert_nil error.cause
+        assert_no_match(/#{Regexp.escape(leaked_token)}|Must roll back/, error.message)
       end
     end
 

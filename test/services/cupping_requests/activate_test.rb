@@ -84,7 +84,7 @@ class CuppingRequests::ActivateTest < ActiveSupport::TestCase
     assert_equal "203.0.113.9", @request.last_guest_ip
   end
 
-  test "a failed expiration enqueue leaves activation committed and the dispatch marker absent" do
+  test "a failed expiration enqueue leaves activation committed and returns the request" do
     now = Time.zone.parse("2026-08-28 12:00:00")
     adapter = CuppingRequestExpirationJob.queue_adapter
     enqueue_failure = ->(*) { raise SolidQueue::Job::EnqueueError, "queue unavailable" }
@@ -92,9 +92,7 @@ class CuppingRequests::ActivateTest < ActiveSupport::TestCase
     travel_to now do
       assert_no_enqueued_jobs do
         with_stubbed_singleton_method(adapter, :enqueue_at, enqueue_failure) do
-          assert_raises(SolidQueue::Job::EnqueueError) do
-            CuppingRequests::Activate.call(request: @request, ip_address: "203.0.113.4")
-          end
+          assert_equal @request, CuppingRequests::Activate.call(request: @request, ip_address: "203.0.113.4")
         end
       end
     end
@@ -116,9 +114,7 @@ class CuppingRequests::ActivateTest < ActiveSupport::TestCase
 
     travel_to first_access do
       with_stubbed_singleton_method(adapter, :enqueue_at, enqueue_failure) do
-        assert_raises(SolidQueue::Job::EnqueueError) do
-          CuppingRequests::Activate.call(request: @request, ip_address: "203.0.113.4")
-        end
+        assert_equal @request, CuppingRequests::Activate.call(request: @request, ip_address: "203.0.113.4")
       end
     end
 

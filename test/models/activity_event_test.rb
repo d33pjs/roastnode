@@ -106,6 +106,14 @@ class ActivityEventTest < ActiveSupport::TestCase
       actor: users(:one), action: "brew.cupping_accessed", subject: brew,
       metadata: { "actor_kind" => "guest", "actor_label" => "Alex", "ip_address" => "203.0.113.4" }
     ))
+    cupping_user = ActivityEvent.new(base.merge(
+      actor: users(:one), action: "brew.cupping_accessed", subject: brew,
+      metadata: { "actor_kind" => "user", "actor_label" => "Jens", "ip_address" => "203.0.113.4" }
+    ))
+    cupping_system = ActivityEvent.new(base.merge(
+      actor: nil, action: "brew.cupping_accessed", subject: brew,
+      metadata: { "actor_kind" => "system", "actor_label" => "System", "ip_address" => "203.0.113.4" }
+    ))
     missing_cupping_subject = ActivityEvent.new(base.merge(
       actor: nil, action: "brew.cupping_accessed",
       metadata: { "actor_kind" => "guest", "actor_label" => "Alex", "ip_address" => "203.0.113.4" }
@@ -115,12 +123,14 @@ class ActivityEventTest < ActiveSupport::TestCase
       metadata: { "actor_kind" => "guest", "actor_label" => "Alex", "ip_address" => "203.0.113.4, 10.0.0.1" }
     ))
 
-    [ non_cupping_guest, guest_with_actor, missing_cupping_subject, invalid_ip ].each do |event|
+    [ non_cupping_guest, guest_with_actor, cupping_user, cupping_system, missing_cupping_subject, invalid_ip ].each do |event|
       assert_not event.valid?
       assert_raises(ActiveRecord::RecordInvalid) { event.save! }
     end
     assert_includes non_cupping_guest.errors[:metadata], "has an invalid actor kind"
     assert_includes guest_with_actor.errors[:actor], "must be blank for guest activity"
+    assert_includes cupping_user.errors[:metadata], "has an invalid actor kind"
+    assert_includes cupping_system.errors[:metadata], "has an invalid actor kind"
     assert_includes missing_cupping_subject.errors[:subject], "must be present for action"
     assert_includes invalid_ip.errors[:metadata], "contains a value that does not match its action schema"
 

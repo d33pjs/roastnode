@@ -31,6 +31,7 @@ class InstanceBackupRestorer
     @equipment_event_map = {}
     @inventory_adjustment_map = {}
     @cupping_request_map = {}
+    @restored_cupping_requests = []
     @attachment_map = {}
     @active_workspace_targets = {}
     @bean_remaining_grams = {}
@@ -63,6 +64,7 @@ class InstanceBackupRestorer
       restore_media_files
       restore_cupping_request_snapshots
       restore_primary_photos
+      reconcile_legacy_cupping_requests
       restore_active_workspaces
       restore_activity_events
       reset_exported_bean_inventory
@@ -410,6 +412,7 @@ class InstanceBackupRestorer
           end
 
           @cupping_request_map[old_id(row)] = request
+          @restored_cupping_requests << request
         end
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, KeyError, ArgumentError
@@ -517,6 +520,19 @@ class InstanceBackupRestorer
         restore_primary_photo_ids(Array(workspace_payload["external_coffees"]), @external_coffee_map)
         restore_primary_photo_ids(workspace_payload.fetch("equipment_events"), @equipment_event_map)
       end
+    end
+
+    def reconcile_legacy_cupping_requests
+      workspace_payloads.each do |workspace_payload|
+        next if workspace_payload.key?("cupping_requests")
+
+        workspace_payload.fetch("brews").each do |row|
+          request = CuppingRequests::Synchronize.call(@brew_map.fetch(row.fetch("id")))
+          @restored_cupping_requests << request if request
+        end
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, KeyError, ArgumentError
+      invalid_cupping_request_data!
     end
 
     def restore_cupping_request_snapshots
@@ -657,7 +673,7 @@ class InstanceBackupRestorer
         equipment: @equipment_map.size,
         preparation_tools: @preparation_tool_map.size,
         brews: @brew_map.size,
-        cupping_requests: @cupping_request_map.size,
+        cupping_requests: @restored_cupping_requests.size,
         external_coffees: @external_coffee_map.size,
         equipment_events: @equipment_event_map.size,
         inventory_adjustments: InventoryAdjustment.count,
@@ -698,14 +714,29 @@ class InstanceBackupRestorer
     end
 
     def schedule_restored_cupping_expirations
-      @cupping_request_map.each_value do |request|
+      @restored_cupping_requests.each do |request|
         next unless request.opened_at.present? && request.closed_at.blank? && request.feedback_expires_at&.future?
 
         CuppingRequestExpirationJob.schedule(
           request,
           dispatch_started_at: nil
         )
+      rescue StandardError => error
+        clear_restored_cupping_dispatch_markers(request)
+        Rails.logger.info("Restored cupping expiration scheduling failed: #{error.class}")
       end
+    end
+
+    def clear_restored_cupping_dispatch_markers(request)
+      return if request.expiration_job_enqueued_at.blank? && request.expiration_job_enqueueing_at.blank?
+
+      request.update_columns(
+        expiration_job_enqueued_at: nil,
+        expiration_job_enqueueing_at: nil,
+        updated_at: Time.current
+      )
+    rescue StandardError
+      nil
     end
 
     def invalid_cupping_request_data!

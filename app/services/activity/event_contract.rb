@@ -213,7 +213,7 @@ module Activity
       "record_kind" => { type: :string },
       "subject_label" => { type: :string }
     }.freeze
-    GUEST_ACTOR_KIND_SCHEMA = { type: :string, values: %w[user system guest] }.freeze
+    GUEST_ACTOR_KIND_SCHEMA = { type: :string, values: %w[guest] }.freeze
 
     METADATA_KEY_SCHEMAS = {
       "method" => { type: :string, values: %w[espresso quick_drip] },

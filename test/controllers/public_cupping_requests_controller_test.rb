@@ -218,6 +218,55 @@ class PublicCuppingRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal original_snapshot, @cupping_request.snapshot
   end
 
+  test "feedback infrastructure failures render a localized safe form and sanitized diagnostics" do
+    open_feedback_window!
+    leaked_token = @cupping_request.token
+    leaked_comment = "PRIVATE-FEEDBACK-INFRASTRUCTURE-SENTINEL"
+    failure = ->(*, **) { raise "refresh failed for #{leaked_token} with #{leaked_comment}" }
+    log_messages = []
+    capture = lambda do |*messages, **, &block|
+      log_messages << (messages.first || block&.call).to_s
+    end
+    raised_error = nil
+
+    with_stubbed_singleton_method(PublicBeanShareRefresher, :refresh_comparisons_for, failure) do
+      with_stubbed_singleton_method(Rails.logger, :info, capture) do
+        begin
+          patch public_cupping_feedback_path(@cupping_request.token), params: {
+            feedback: { taste_balance: "sour", rating: "5", feedback_comment: leaked_comment }
+          }, headers: { "HTTP_ACCEPT_LANGUAGE" => "de" }
+        rescue StandardError => error
+          raised_error = error
+        end
+      end
+    end
+
+    assert_nil raised_error, raised_error&.message
+    assert_response :unprocessable_entity
+    assert_select "[role=alert]", text: /Feedback konnte nicht gespeichert werden/
+    assert_equal "neutral", @brew.reload.taste_balance
+    assert_equal 4, @brew.rating
+    assert_nil @cupping_request.reload.feedback_comment
+    assert_match(/Public cupping feedback unavailable: RuntimeError/, log_messages.join("\n"))
+    assert_no_match(/#{Regexp.escape(leaked_token)}|#{Regexp.escape(leaked_comment)}|Private Guest Name/, log_messages.join("\n"))
+  end
+
+  test "expiration enqueue failure does not turn a successful first access into not found" do
+    adapter = CuppingRequestExpirationJob.queue_adapter
+    enqueue_failure = ->(*) { raise SolidQueue::Job::EnqueueError, "queue unavailable" }
+
+    with_stubbed_singleton_method(adapter, :enqueue_at, enqueue_failure) do
+      get public_cupping_request_path(@cupping_request.token),
+        headers: { "REMOTE_ADDR" => "203.0.113.10" }
+    end
+
+    assert_response :success
+    assert_select "[data-testid=cupping-feedback-form]"
+    assert @cupping_request.reload.feedback_open?
+    assert_nil @cupping_request.expiration_job_enqueued_at
+    assert_nil @cupping_request.expiration_job_enqueueing_at
+  end
+
   test "expired requests remain readable but replace the form and reject writes authoritatively" do
     deadline = 1.second.ago
     @cupping_request.update!(opened_at: 24.hours.ago, feedback_expires_at: deadline)

@@ -14,9 +14,15 @@ class CuppingRequestExpirationJob < ApplicationJob
   attr_accessor :dispatch_started_at
 
   def self.schedule(request, dispatch_started_at:)
-    job = new(request.id, request.feedback_expires_at.iso8601(6))
+    deadline = request.feedback_expires_at
+    job = new(request.id, deadline.iso8601(6))
     job.dispatch_started_at = dispatch_started_at
-    job.enqueue(wait_until: request.feedback_expires_at)
+    ActiveRecord.after_all_transactions_commit do
+      job.enqueue(wait_until: deadline)
+    rescue StandardError => error
+      Rails.logger.info("Cupping expiration scheduling failed: #{error.class}")
+      false
+    end
   end
 
   def perform(request_id, expected_deadline_iso8601)

@@ -67,7 +67,7 @@ class Activity::EventContractTest < ActiveSupport::TestCase
       assert_equal [ "ip_address", *details ].sort, definition.fetch(:detail_keys).sort
       assert_equal [ "actor_kind", "actor_label", "ip_address", *details ].sort,
         definition.fetch(:required_metadata_keys).sort
-      assert_equal %w[user system guest], definition.dig(:metadata_schema, "actor_kind", :values)
+      assert_equal %w[guest], definition.dig(:metadata_schema, "actor_kind", :values)
       assert_equal :ip_address, definition.dig(:metadata_schema, "ip_address", :type)
       assert_predicate definition.fetch(:subject_required), :itself
     end

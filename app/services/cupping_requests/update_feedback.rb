@@ -7,6 +7,14 @@ module CuppingRequests
     RATING_VALUES = (1..5).map(&:to_s).freeze
 
     class InvalidFeedback < StandardError; end
+    class PersistenceError < StandardError
+      attr_reader :diagnostic_class
+
+      def initialize(error)
+        @diagnostic_class = error.class.name.to_s.presence || "StandardError"
+        super("Cupping feedback could not be persisted")
+      end
+    end
 
     def self.call(request:, attributes:, ip_address:, now: nil)
       new(request:, attributes:, ip_address:, now:).call
@@ -41,6 +49,10 @@ module CuppingRequests
         emit_changed_events(old:, brew:)
         request
       end
+    rescue FeedbackClosed, InvalidFeedback, ActiveRecord::RecordInvalid
+      raise
+    rescue StandardError => error
+      raise PersistenceError.new(error), cause: nil
     end
 
     private

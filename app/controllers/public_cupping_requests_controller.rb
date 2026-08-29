@@ -31,6 +31,11 @@ class PublicCuppingRequestsController < ApplicationController
     @feedback_error = t(".invalid")
     prepare_page(feedback_values: feedback_params.to_h)
     render :show, status: :unprocessable_entity
+  rescue CuppingRequests::UpdateFeedback::PersistenceError => error
+    log_feedback_unavailable(error)
+    @feedback_error = t(".invalid")
+    prepare_page(feedback_values: feedback_params.to_h)
+    render :show, status: :unprocessable_entity
   end
 
   private
@@ -93,5 +98,11 @@ class PublicCuppingRequestsController < ApplicationController
 
     def log_unavailable(error)
       Rails.logger.info("Public cupping request unavailable: #{error.class}; request_id=#{request.request_id}")
+    end
+
+    def log_feedback_unavailable(error)
+      Rails.logger.info(
+        "Public cupping feedback unavailable: #{error.diagnostic_class}; request_id=#{request.request_id}"
+      )
     end
 end

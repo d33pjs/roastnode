@@ -126,7 +126,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       opened_at: now - 2.hours,
       feedback_expires_at: now + 22.hours,
       expiration_job_enqueued_at: now - 119.minutes,
-      expiration_job_enqueueing_at: now - 118.minutes
+      expiration_job_enqueueing_at: now - 118.minutes,
+      last_guest_ip: "203.0.113.20"
     )
     archive_bytes = travel_to(now) { InstanceBackupArchiveBuilder.new(generated_at: now).call }
     schedule_calls = []
@@ -152,6 +153,48 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_predicate restored, :expiration_dispatch_pending?
   end
 
+  test "restorer keeps a committed restore successful when expiration scheduling raises" do
+    now = Time.zone.parse("2026-08-29 12:00:00")
+    first = build_backup_cupping_request(
+      notes: "first failed restored schedule",
+      opened_at: now - 2.hours,
+      feedback_expires_at: now + 22.hours,
+      last_guest_ip: "203.0.113.21"
+    )
+    second = build_backup_cupping_request(
+      notes: "second failed restored schedule",
+      opened_at: now - 1.hour,
+      feedback_expires_at: now + 23.hours,
+      last_guest_ip: "203.0.113.22"
+    )
+    archive_bytes = travel_to(now) { InstanceBackupArchiveBuilder.new(generated_at: now).call }
+    schedule_calls = []
+
+    empty_instance!
+    summary = travel_to(now) do
+      with_stubbed_singleton_method(
+        CuppingRequestExpirationJob,
+        :schedule,
+        lambda do |restored_request, dispatch_started_at:|
+          schedule_calls << [ restored_request, dispatch_started_at ]
+          raise SolidQueue::Job::EnqueueError, "queue unavailable"
+        end
+      ) do
+        InstanceBackupRestorer.new(archive_bytes).call
+      end
+    end
+
+    restored = [ first, second ].map { |request| CuppingRequest.find_by_token!(request.token) }
+    assert_equal CuppingRequest.count, summary.fetch(:cupping_requests)
+    assert_equal restored.sort, schedule_calls.map(&:first).sort
+    assert schedule_calls.all? { |entry| entry.last.nil? }
+    restored.each do |request|
+      assert_nil request.expiration_job_enqueued_at
+      assert_nil request.expiration_job_enqueueing_at
+      assert_predicate request, :expiration_dispatch_pending?
+    end
+  end
+
   test "validator and restorer reject hostile cupping request state with full rollback" do
     request = build_backup_cupping_request(
       notes: "hostile cupping source",
@@ -169,6 +212,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       token_digest_mismatch: ->(row) { row["token_digest"] = Digest::SHA256.hexdigest("different-token") },
       overlong_comment: ->(row) { row["feedback_comment"] = "x" * 2_001 },
       invalid_deadline: ->(row) { row["feedback_expires_at"] = row.fetch("opened_at") },
+      missing_opened_ip: ->(row) { row["last_guest_ip"] = nil },
       nil_snapshot: ->(row) { row["snapshot"] = nil },
       scalar_snapshot: ->(row) { row["snapshot"] = "public-looking scalar" },
       array_snapshot: ->(row) { row["snapshot"] = [] },
@@ -889,6 +933,16 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
         row.fetch("metadata").delete("ip_address")
       end,
       lambda { |row| row["actor_id"] = users(:one).id },
+      lambda do |row|
+        row["actor_id"] = users(:one).id
+        row.fetch("metadata")["actor_kind"] = "user"
+        row.fetch("metadata")["actor_label"] = "Jens"
+      end,
+      lambda do |row|
+        row["actor_id"] = nil
+        row.fetch("metadata")["actor_kind"] = "system"
+        row.fetch("metadata")["actor_label"] = "System"
+      end,
       lambda { |row| row.fetch("metadata")["ip_address"] = "203.0.113.4, 10.0.0.1" },
       lambda do |row|
         row["subject_type"] = nil
@@ -1063,7 +1117,13 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
 
     assert_equal 0, ActivityEvent.count
     assert_equal 0, summary.fetch(:activity_events)
-    assert_equal 0, CuppingRequest.count
+    eligible_brews = Brew.where(method: "espresso", recipient_kind: "guest")
+    ineligible_brews = Brew.where.not(id: eligible_brews.select(:id))
+    assert_operator eligible_brews.count, :>, 0
+    assert_equal eligible_brews.count, CuppingRequest.count
+    assert_equal eligible_brews.count, summary.fetch(:cupping_requests)
+    assert eligible_brews.all? { |brew| brew.cupping_request.present? }
+    assert ineligible_brews.all? { |brew| brew.cupping_request.nil? }
     assert Workspace.exists?
   end
 

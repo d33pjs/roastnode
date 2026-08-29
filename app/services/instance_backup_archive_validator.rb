@@ -206,7 +206,8 @@ class InstanceBackupArchiveValidator
       return false if row["expiration_job_enqueueing_at"].present? != enqueueing_at.present?
 
       if opened_at
-        expires_at.present? && expires_at > opened_at && (closed_at.nil? || closed_at >= expires_at)
+        row["last_guest_ip"].present? && expires_at.present? && expires_at > opened_at &&
+          (closed_at.nil? || closed_at >= expires_at)
       else
         expires_at.nil? && closed_at.nil? && enqueued_at.nil? && enqueueing_at.nil?
       end
