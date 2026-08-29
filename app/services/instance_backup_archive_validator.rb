@@ -238,13 +238,13 @@ class InstanceBackupArchiveValidator
     def valid_cupping_workspace_snapshot?(value, logo_attachment_id)
       exact_hash?(value, PublicBrewShareSnapshotBuilder::WORKSPACE_KEYS) &&
         valid_string?(value["name"], present: true) &&
-        value["logo_attachment_id"] == logo_attachment_id
+        valid_cupping_identity_attachment_id?(value["logo_attachment_id"], logo_attachment_id)
     end
 
     def valid_cupping_user_snapshot?(value, avatar_attachment_id)
       exact_hash?(value, PublicBrewShareSnapshotBuilder::USER_KEYS) &&
         valid_string?(value["display_label"], present: true) &&
-        value["avatar_attachment_id"] == avatar_attachment_id
+        valid_cupping_identity_attachment_id?(value["avatar_attachment_id"], avatar_attachment_id)
     end
 
     def valid_cupping_brew_snapshot?(value)
@@ -306,7 +306,7 @@ class InstanceBackupArchiveValidator
     def valid_public_links?(value)
       value.is_a?(Array) && value.all? do |row|
         exact_hash?(row, PublicBrewShareSnapshotBuilder::LINK_KEYS) &&
-          valid_string?(row["label"], present: true, maximum: 120) &&
+          valid_character_string?(row["label"], present: true, maximum: 120) &&
           valid_public_url?(row["url"]) &&
           RecordLink::KINDS.include?(row["kind"]) &&
           row["position"].is_a?(Integer) && row["position"] >= 0
@@ -328,7 +328,8 @@ class InstanceBackupArchiveValidator
         exact_hash?(row, PublicBrewShareSnapshotBuilder::PUBLIC_MEDIA_KEYS) && row["attachment_id"].is_a?(Integer)
       end
 
-      value.pluck("attachment_id") == expected_attachment_ids
+      attachment_ids = value.pluck("attachment_id")
+      attachment_ids.uniq.length == attachment_ids.length && attachment_ids.all? { |id| expected_attachment_ids.include?(id) }
     end
 
     def valid_string?(value, present: false, maximum: 10_000)
@@ -337,6 +338,10 @@ class InstanceBackupArchiveValidator
 
     def valid_nullable_string?(value)
       value.nil? || valid_string?(value)
+    end
+
+    def valid_character_string?(value, present: false, maximum: 10_000)
+      value.is_a?(String) && value.length <= maximum && (!present || value.present?)
     end
 
     def valid_decimal_string?(value)
@@ -363,6 +368,10 @@ class InstanceBackupArchiveValidator
 
     def exact_hash?(value, keys)
       value.is_a?(Hash) && value.keys.sort == keys.sort
+    end
+
+    def valid_cupping_identity_attachment_id?(value, current_attachment_id)
+      value.nil? || value.is_a?(Integer) && value == current_attachment_id
     end
 
     def cupping_identity_attachment_ids(workspace_id:, brew:, media_files:)

@@ -237,6 +237,93 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal 0, ActiveStorage::Attachment.count
   end
 
+  test "validator accepts a stale cupping identity snapshot after logo and avatar replacement" do
+    request = cupping_requests(:guest_espresso)
+    workspace = request.workspace
+    user = request.brew.user
+    original_logo = attach_named_photo(workspace, :logo, filename: "original-logo.jpg")
+    original_avatar = attach_named_photo(user, :avatar, filename: "original-avatar.jpg")
+    request.refresh_snapshot!
+
+    attach_named_photo(workspace, :logo, filename: "replacement-logo.jpg")
+    attach_named_photo(user, :avatar, filename: "replacement-avatar.jpg")
+    archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-08-29 12:00:00")).call
+
+    result = InstanceBackupArchiveValidator.new(archive_bytes).call
+
+    assert_predicate result, :valid?
+    archived_snapshot = cupping_request_row(result.payload, request).fetch("snapshot")
+    assert_nil archived_snapshot.fetch("workspace").fetch("logo_attachment_id")
+    assert_nil archived_snapshot.fetch("user").fetch("avatar_attachment_id")
+    assert_equal [], archived_snapshot.fetch("public_media")
+    assert_not_equal workspace.logo.attachment.id, original_logo.id
+    assert_not_equal user.avatar.attachment.id, original_avatar.id
+  end
+
+  test "validator rejects a foreign cupping snapshot identity reference" do
+    request = cupping_requests(:guest_espresso)
+    workspace = request.workspace
+    user = request.brew.user
+    attach_named_photo(workspace, :logo, filename: "household-logo.jpg")
+    attach_named_photo(user, :avatar, filename: "logger-avatar.jpg")
+    request.refresh_snapshot!
+    foreign_attachment = attach_photo(beans(:open_household))
+    archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-08-29 12:00:00")).call
+
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      snapshot = cupping_request_row(payload, request).fetch("snapshot")
+      snapshot.fetch("workspace")["logo_attachment_id"] = foreign_attachment.id
+      snapshot["public_media"] = [ { "attachment_id" => foreign_attachment.id } ]
+    end
+
+    validation = InstanceBackupArchiveValidator.new(tampered_archive).call
+
+    assert_not_predicate validation, :valid?
+    assert_match(/cupping request/i, validation.errors.join(" "))
+  end
+
+  test "validator accepts a 120-character multibyte public link label" do
+    request = cupping_requests(:guest_espresso)
+    request.brew.record_links.create!(
+      workspace: request.workspace,
+      label: "ä" * 120,
+      url: "https://example.com/coffee",
+      kind: "info",
+      visibility: "public",
+      position: 10
+    )
+    request.refresh_snapshot!
+    archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-08-29 12:00:00")).call
+
+    result = InstanceBackupArchiveValidator.new(archive_bytes).call
+
+    assert_predicate result, :valid?
+  end
+
+  test "validator rejects a 121-character multibyte public link label" do
+    request = cupping_requests(:guest_espresso)
+    request.brew.record_links.create!(
+      workspace: request.workspace,
+      label: "ä" * 120,
+      url: "https://example.com/coffee",
+      kind: "info",
+      visibility: "public",
+      position: 10
+    )
+    request.refresh_snapshot!
+    archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-08-29 12:00:00")).call
+
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      link = cupping_request_row(payload, request).fetch("snapshot").fetch("brew").fetch("links").first
+      link["label"] = "ä" * 121
+    end
+
+    validation = InstanceBackupArchiveValidator.new(tampered_archive).call
+
+    assert_not_predicate validation, :valid?
+    assert_match(/cupping request/i, validation.errors.join(" "))
+  end
+
   test "restorer rebuilds users workspaces coffee records and media into an empty instance with remapped ids" do
     users(:one).update!(
       display_name: "Restore Admin",

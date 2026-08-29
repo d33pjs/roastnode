@@ -74,7 +74,7 @@ class InstanceReadableExportBuilder
           brew_id: request.brew_id,
           token: request.token,
           token_digest: request.token_digest,
-          snapshot: request.snapshot,
+          snapshot: archived_cupping_snapshot(request),
           feedback_comment: request.feedback_comment,
           opened_at: timestamp(request.opened_at),
           feedback_expires_at: timestamp(request.feedback_expires_at),
@@ -86,6 +86,25 @@ class InstanceReadableExportBuilder
           updated_at: timestamp(request.updated_at)
         }
       end
+    end
+
+    def archived_cupping_snapshot(request)
+      snapshot = request.snapshot.deep_dup
+      return snapshot unless snapshot.is_a?(Hash) && snapshot["workspace"].is_a?(Hash) &&
+        snapshot["user"].is_a?(Hash) && snapshot["public_media"].is_a?(Array)
+
+      workspace_logo_id = request.workspace.logo.attachment&.id
+      user_avatar_id = request.brew.user.avatar.attachment&.id
+      attachment_id = snapshot["workspace"]["logo_attachment_id"]
+      snapshot["workspace"]["logo_attachment_id"] = attachment_id == workspace_logo_id ? attachment_id : nil
+      attachment_id = snapshot["user"]["avatar_attachment_id"]
+      snapshot["user"]["avatar_attachment_id"] = attachment_id == user_avatar_id ? attachment_id : nil
+
+      allowed_attachment_ids = [ workspace_logo_id, user_avatar_id ].compact
+      snapshot["public_media"] = Array(snapshot["public_media"]).select do |media|
+        media.is_a?(Hash) && allowed_attachment_ids.include?(media["attachment_id"])
+      end
+      snapshot
     end
 
     def data_imports_payload(workspace)

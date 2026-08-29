@@ -29,6 +29,35 @@ class RecordLinkTest < ActiveSupport::TestCase
     assert_includes link.errors[:linkable], "must belong to the workspace"
   end
 
+  test "allows a 120-character multibyte label" do
+    link = RecordLink.new(
+      workspace: workspaces(:household),
+      linkable: beans(:open_household),
+      label: "ä" * 120,
+      url: "https://example.com/coffee",
+      kind: "info",
+      visibility: "public",
+      position: 10
+    )
+
+    assert_predicate link, :valid?
+  end
+
+  test "rejects a 121-character multibyte label" do
+    link = RecordLink.new(
+      workspace: workspaces(:household),
+      linkable: beans(:open_household),
+      label: "ä" * 121,
+      url: "https://example.com/coffee",
+      kind: "info",
+      visibility: "public",
+      position: 10
+    )
+
+    assert_not_predicate link, :valid?
+    assert_includes link.errors[:label], "is too long (maximum is 120 characters)"
+  end
+
   test "requires linkable to be a shareable record type" do
     link = RecordLink.new(
       workspace: workspaces(:household),
