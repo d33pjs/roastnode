@@ -3,7 +3,7 @@
 <% label = action.fetch(:label) %>
 <% icon = action.fetch(:icon, "more_vert") %>
 <% action_testid = local_assigns[:testid] || action[:testid] %>
-<% title = action.fetch(:title, label) %>
+<% action_title = action.fetch(:title, label) %>
 <% icon_button_class = "inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full text-stone-700 hover:bg-stone-100 hover:text-stone-950 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
 <% primary_icon_button_class = "inline-flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-stone-950 text-white hover:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
 <% menu_item_class = "flex w-full items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-left text-sm font-semibold text-stone-800 hover:bg-stone-100 focus:outline-none focus:ring-2 focus:ring-stone-400" %>
@@ -17,7 +17,7 @@
   <%= button_tag type: "button",
     class: action_class,
     aria: { label: label },
-    title: title,
+    title: label,
     data: {
       controller: "cupping-share",
       action: "click->cupping-share#share",
@@ -34,7 +34,7 @@
 <% when :native_share %>
   <%= render "shared/native_share_button",
     url: action.fetch(:url),
-    title: action.fetch(:title),
+    title: action_title,
     text: action.fetch(:text),
     label:,
     icon:,
@@ -50,7 +50,7 @@
     class: action_class,
     data: action.fetch(:button_data, {}),
     aria: { label: label },
-    title: title) do %>
+    title: action_title) do %>
     <%= material_symbol(icon) %>
     <span class="<%= label_class %>"><%= label %></span>
   <% end %>
@@ -61,7 +61,7 @@
     rel: action[:rel],
     class: action_class,
     aria: { label: label },
-    title: title) do %>
+    title: action_title) do %>
     <%= material_symbol(icon) %>
     <span class="<%= label_class %>"><%= label %></span>
   <% end %>

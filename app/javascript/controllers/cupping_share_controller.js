@@ -25,18 +25,26 @@ export default class extends Controller {
   async share(event) {
     event.preventDefault()
 
-    try {
-      const mobile = window.matchMedia("(pointer: coarse)").matches
-      if (mobile && navigator.share) {
+    const mobile = window.matchMedia("(pointer: coarse)").matches
+    if (mobile && navigator.share) {
+      try {
         await navigator.share(this.shareData)
         return
+      } catch (error) {
+        if (error.name === "AbortError") return
       }
+    }
+
+    await this.copyFallback()
+  }
+
+  async copyFallback() {
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable")
 
       await navigator.clipboard.writeText(this.urlValue)
       this.flashLabel(this.copiedLabelValue)
-    } catch (error) {
-      if (error.name === "AbortError") return
-
+    } catch (_error) {
       this.flashLabel(this.failedLabelValue)
     }
   }

@@ -2317,6 +2317,13 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?][data-native-share-url-value=?]",
       "brew-native-share-button-#{brew.id}",
       public_brew_page_url(share.token)
+    assert_select "[data-testid=?][title=?][aria-label=?]",
+      "brew-native-share-button-#{brew.id}",
+      I18n.t("shared.native_share.share_public_brew"),
+      I18n.t("shared.native_share.share_public_brew")
+    assert_select "[data-testid=?][data-native-share-title-value=?]",
+      "brew-native-share-button-#{brew.id}",
+      share.title
     assert_select "[data-testid=?] svg.material-symbol[data-symbol=ios_share][aria-hidden=true]", "brew-native-share-button-#{brew.id}"
     assert_appears_before "brew-native-share-button-#{brew.id}", edit_brew_public_brew_share_path(brew)
   end
@@ -2351,6 +2358,13 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?][data-cupping-share-url-value=?]",
       "brew-cupping-share-button-#{brew.id}",
       public_cupping_request_url(request.token)
+    assert_select "[data-testid=?][title=?][aria-label=?]",
+      "brew-cupping-share-button-#{brew.id}",
+      I18n.t("brews.show.share_for_cupping"),
+      I18n.t("brews.show.share_for_cupping")
+    assert_select "[data-testid=?][data-cupping-share-title-value=?]",
+      "brew-cupping-share-button-#{brew.id}",
+      brew.bean.display_name
     assert_select "[data-testid=?]", "brew-cupping-share-button-#{brew.id}-mobile"
     assert_select "[data-testid=?]", "brew-edit-link-#{brew.id}-mobile"
     assert_appears_before "brew-cupping-share-button-#{brew.id}-mobile", "brew-edit-link-#{brew.id}-mobile"
