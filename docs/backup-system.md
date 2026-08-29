@@ -64,6 +64,10 @@ Older version-1 rows without the new recipient fields use only a literal legacy 
 
 Bean website restore remains compatible with archive format/version `1`. Purchase Website and Coffee Origin Website are restored independently only when the stored value is an HTTP or HTTPS URL with a host; an unsafe value is dropped without discarding a safe value in the other field. Older version-1 archives that do not contain `coffee_origin_url` remain valid and restore it as blank.
 
+Cupping-request restore accepts only the exact public Brew snapshot structure emitted for Guest Espresso cupping pages. The root and every nested object must have the expected keys and renderable scalar types; private or unknown fields, malformed attachment references, and non-object roots fail validation before import. Cupping identity media may reference only the archived workspace logo and logger avatar. The readable payload and manifest media catalogs must agree exactly on attachment identity, ownership, paths, and metadata before either catalog is trusted for authorization or ID remapping.
+
+Expiration queue state is operational rather than durable backup data. Restore preserves the request's open/deadline/closed state but clears archived enqueue markers and leases because Solid Queue jobs are not part of the archive. An open request with a future deadline is scheduled from clean dispatch state after the restore transaction; a failed immediate enqueue remains marker-free so recurring expiration recovery can retry it.
+
 ## Open Design Decisions
 
 - whether production installs should keep the env-configurable default `storage/instance_backups` location and retention count of 7, or use host-specific defaults

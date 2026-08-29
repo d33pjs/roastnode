@@ -6,11 +6,10 @@ class InstanceBackupArchiveValidator
     id workspace_id brew_id token token_digest snapshot feedback_comment opened_at feedback_expires_at closed_at
     last_guest_ip expiration_job_enqueued_at expiration_job_enqueueing_at created_at updated_at
   ].freeze
-  UNSAFE_CUPPING_SNAPSHOT_KEYS = %w[
-    token token_digest password password_digest session invite_token signed_id signed_blob_id filename
-    recipient_name recipient_user_email_address notes purchase_price purchase_price_cents purchase_source purchase_url
-    coffee_origin_url raw_import_data feedback_comment last_guest_ip
+  MEDIA_FILE_KEYS = %w[
+    path record_type record_id attachment_id attachment_name filename content_type byte_size checksum created_at
   ].freeze
+  MANIFEST_MEDIA_FILE_KEYS = (MEDIA_FILE_KEYS + [ "sha256" ]).freeze
 
   Result = Struct.new(:errors, :manifest, :payload, :media_files, keyword_init: true) do
     def valid?
@@ -43,12 +42,12 @@ class InstanceBackupArchiveValidator
     Zip::File.open_buffer(archive_bytes) do |zip|
       manifest = read_json_entry(zip, "manifest.json", errors)
       validate_manifest(manifest, errors)
+      media_files = manifest["files"].is_a?(Array) ? manifest["files"] : []
 
       data_path = manifest.dig("data", "path")
       payload = read_json_entry(zip, data_path, errors) if data_path.present?
-      validate_payload(payload, errors)
+      validate_payload(payload, media_files, errors)
 
-      media_files = Array(manifest["files"])
       validate_media_files(zip, media_files, errors)
     end
   rescue Zip::Error, JSON::ParserError, KeyError => error
@@ -84,17 +83,55 @@ class InstanceBackupArchiveValidator
       end
     end
 
-    def validate_payload(payload, errors)
+    def validate_payload(payload, manifest_media_files, errors)
       unless payload["format"] == InstanceReadableExportBuilder::FORMAT
         errors << "Readable export format is not #{InstanceReadableExportBuilder::FORMAT}."
       end
       unless payload["version"] == InstanceReadableExportBuilder::VERSION
         errors << "Readable export version is not #{InstanceReadableExportBuilder::VERSION}."
       end
-      errors << "Archive contains an invalid cupping request." unless valid_cupping_requests?(payload)
+      errors << "Archive media catalogs do not match." unless valid_media_catalogs?(payload["media_files"], manifest_media_files)
+      errors << "Archive contains an invalid cupping request." unless valid_cupping_requests?(payload, manifest_media_files:)
     end
 
-    def valid_cupping_requests?(payload)
+    def valid_media_catalogs?(payload_files, manifest_files)
+      return false unless payload_files.is_a?(Array) && manifest_files.is_a?(Array)
+      return false unless payload_files.all? { |file| valid_media_catalog_row?(file, MEDIA_FILE_KEYS) }
+      return false unless manifest_files.all? { |file| valid_media_catalog_row?(file, MANIFEST_MEDIA_FILE_KEYS) }
+
+      payload_by_id = unique_media_catalog(payload_files)
+      manifest_by_id = unique_media_catalog(manifest_files)
+      return false unless payload_by_id && manifest_by_id && payload_by_id.keys.to_set == manifest_by_id.keys.to_set
+
+      payload_by_id.all? do |attachment_id, file|
+        file == manifest_by_id.fetch(attachment_id).except("sha256")
+      end
+    end
+
+    def valid_media_catalog_row?(file, expected_keys)
+      exact_hash?(file, expected_keys) &&
+        valid_string?(file["path"], present: true, maximum: 1_000) &&
+        valid_string?(file["record_type"], present: true, maximum: 100) &&
+        file["record_id"].is_a?(Integer) &&
+        file["attachment_id"].is_a?(Integer) &&
+        valid_string?(file["attachment_name"], present: true, maximum: 100) &&
+        valid_string?(file["filename"], present: true, maximum: 1_000) &&
+        valid_nullable_string?(file["content_type"]) &&
+        file["byte_size"].is_a?(Integer) && file["byte_size"] >= 0 &&
+        valid_nullable_string?(file["checksum"]) &&
+        valid_archived_time_string?(file["created_at"]) &&
+        (!file.key?("sha256") || file["sha256"].is_a?(String) && file["sha256"].match?(/\A[0-9a-f]{64}\z/))
+    end
+
+    def unique_media_catalog(files)
+      by_id = files.index_by { |file| file["attachment_id"] }
+      paths = files.map { |file| file["path"] }
+      return if by_id.length != files.length || paths.uniq.length != paths.length
+
+      by_id
+    end
+
+    def valid_cupping_requests?(payload, manifest_media_files:)
       seen_ids = Set.new
       seen_brew_ids = Set.new
       seen_tokens = Set.new
@@ -109,7 +146,7 @@ class InstanceBackupArchiveValidator
         brews = Array(workspace_payload["brews"]).index_by { |row| row["id"] }
         requests.all? do |row|
           valid_cupping_request_row?(
-            row, workspace_id:, brews:, media_files: Array(payload["media_files"]),
+            row, workspace_id:, brews:, media_files: manifest_media_files,
             seen_ids:, seen_brew_ids:, seen_tokens:, seen_digests:
           )
         end
@@ -117,7 +154,7 @@ class InstanceBackupArchiveValidator
     end
 
     def valid_cupping_request_row?(row, workspace_id:, brews:, media_files:, seen_ids:, seen_brew_ids:, seen_tokens:, seen_digests:)
-      return false unless row.is_a?(Hash) && (CUPPING_REQUEST_KEYS - row.keys).empty?
+      return false unless exact_hash?(row, CUPPING_REQUEST_KEYS)
 
       id = row["id"]
       brew_id = row["brew_id"]
@@ -135,7 +172,7 @@ class InstanceBackupArchiveValidator
       return false unless valid_cupping_timestamps?(row)
 
       valid_cupping_snapshot?(
-        row["snapshot"], allowed_attachment_ids: cupping_attachment_ids(workspace_id:, brew:, media_files:)
+        row["snapshot"], identity_attachment_ids: cupping_identity_attachment_ids(workspace_id:, brew:, media_files:)
       )
     end
 
@@ -181,38 +218,182 @@ class InstanceBackupArchiveValidator
       nil
     end
 
-    def valid_cupping_snapshot?(value, allowed_attachment_ids:, depth: 0)
-      return false if depth > 12
+    def valid_cupping_snapshot?(snapshot, identity_attachment_ids:)
+      return false unless exact_hash?(snapshot, PublicBrewShareSnapshotBuilder::SNAPSHOT_KEYS)
+      return false unless identity_attachment_ids.values.all? { |value| value.nil? || value.is_a?(Integer) }
 
-      case value
-      when Hash
-        value.all? do |key, nested|
-          key.is_a?(String) &&
-            !UNSAFE_CUPPING_SNAPSHOT_KEYS.include?(key) &&
-            (!key.end_with?("attachment_id") || nested.nil? || allowed_attachment_ids.include?(nested)) &&
-            valid_cupping_snapshot?(nested, allowed_attachment_ids:, depth: depth + 1)
-        end
-      when Array
-        value.all? { |nested| valid_cupping_snapshot?(nested, allowed_attachment_ids:, depth: depth + 1) }
-      when String
-        value.bytesize <= 10_000
-      when Integer, Float, TrueClass, FalseClass, NilClass
-        true
-      else
-        false
+      valid_string?(snapshot["title"], present: true) &&
+        valid_cupping_workspace_snapshot?(snapshot["workspace"], identity_attachment_ids[:workspace_logo]) &&
+        valid_cupping_user_snapshot?(snapshot["user"], identity_attachment_ids[:user_avatar]) &&
+        valid_cupping_brew_snapshot?(snapshot["brew"]) &&
+        exact_hash?(snapshot["hero"], []) &&
+        valid_cupping_bean_snapshot?(snapshot["bean"]) &&
+        valid_cupping_equipment_snapshot?(snapshot["equipment"]) &&
+        valid_cupping_tools_snapshot?(snapshot["tools"]) &&
+        snapshot["photos"] == [] &&
+        valid_archived_time_string?(snapshot["generated_at"]) &&
+        valid_cupping_public_media?(snapshot["public_media"], identity_attachment_ids.values.compact)
+    end
+
+    def valid_cupping_workspace_snapshot?(value, logo_attachment_id)
+      exact_hash?(value, PublicBrewShareSnapshotBuilder::WORKSPACE_KEYS) &&
+        valid_string?(value["name"], present: true) &&
+        value["logo_attachment_id"] == logo_attachment_id
+    end
+
+    def valid_cupping_user_snapshot?(value, avatar_attachment_id)
+      exact_hash?(value, PublicBrewShareSnapshotBuilder::USER_KEYS) &&
+        valid_string?(value["display_label"], present: true) &&
+        value["avatar_attachment_id"] == avatar_attachment_id
+    end
+
+    def valid_cupping_brew_snapshot?(value)
+      return false unless exact_hash?(value, PublicBrewShareSnapshotBuilder::BREW_KEYS)
+
+      valid_archived_time_string?(value["occurred_at"]) &&
+        value["method"] == "espresso" &&
+        valid_nullable_string?(value["public_note"]) &&
+        %w[bean_weight_grams ground_weight_grams dose_grams beverage_grams brew_temperature_celsius]
+          .all? { |key| valid_decimal_string?(value[key]) } &&
+        valid_nullable_string?(value["grind_setting"]) &&
+        %w[total_time_seconds preinfusion_seconds first_drip_seconds]
+          .all? { |key| valid_nullable_nonnegative_integer?(value[key]) } &&
+        [ true, false, nil ].include?(value["channeling"]) &&
+        valid_nullable_string?(value["taste_balance"]) &&
+        (value["rating"].nil? || value["rating"].is_a?(Integer) && (1..5).cover?(value["rating"])) &&
+        valid_nullable_string?(value["retention_marker"]) &&
+        valid_public_links?(value["links"]) &&
+        exact_hash?(value["recipient"], [ "kind" ]) && value.dig("recipient", "kind") == "guest"
+    end
+
+    def valid_cupping_bean_snapshot?(value)
+      return false unless exact_hash?(value, PublicBrewShareSnapshotBuilder::BEAN_KEYS)
+
+      %w[name display_name].all? { |key| valid_string?(value[key], present: true) } &&
+        %w[roaster_name origin process roast_type roast_level tasting_notes public_note]
+          .all? { |key| valid_nullable_string?(value[key]) } &&
+        %w[roast_date purchased_on opened_on].all? { |key| valid_date_string?(value[key]) } &&
+        valid_decimal_string?(value["roast_degree"]) &&
+        value["photo_attachment_id"].nil? && value["photos"] == [] && valid_public_links?(value["links"])
+    end
+
+    def valid_cupping_equipment_snapshot?(value)
+      return false unless value.is_a?(Array) && value.length <= 2
+
+      roles = value.filter_map { |row| row["role"] if row.is_a?(Hash) }
+      return false unless roles.uniq.length == roles.length
+
+      value.all? do |row|
+        exact_hash?(row, PublicBrewShareSnapshotBuilder::EQUIPMENT_KEYS) &&
+          %w[grinder machine].include?(row["role"]) &&
+          %w[name kind].all? { |key| valid_string?(row[key], present: true) } &&
+          %w[model public_note].all? { |key| valid_nullable_string?(row[key]) } &&
+          row["photo_attachment_id"].nil? && row["photos"] == [] && valid_public_links?(row["links"])
       end
     end
 
-    def cupping_attachment_ids(workspace_id:, brew:, media_files:)
-      media_files.filter_map do |file|
-        workspace_logo = file["record_type"] == "Workspace" && file["record_id"] == workspace_id && file["attachment_name"] == "logo"
-        user_avatar = file["record_type"] == "User" && file["record_id"] == brew["user_id"] && file["attachment_name"] == "avatar"
-        file["attachment_id"] if workspace_logo || user_avatar
-      end.to_set
+    def valid_cupping_tools_snapshot?(value)
+      value.is_a?(Array) && value.all? do |row|
+        exact_hash?(row, PublicBrewShareSnapshotBuilder::TOOL_KEYS) &&
+          valid_string?(row["name"], present: true) &&
+          valid_nullable_string?(row["brew_method"]) &&
+          valid_nullable_nonnegative_integer?(row["position"]) &&
+          valid_nullable_string?(row["public_note"]) &&
+          row["photo_attachment_id"].nil? && row["photos"] == [] && valid_public_links?(row["links"])
+      end
+    end
+
+    def valid_public_links?(value)
+      value.is_a?(Array) && value.all? do |row|
+        exact_hash?(row, PublicBrewShareSnapshotBuilder::LINK_KEYS) &&
+          valid_string?(row["label"], present: true, maximum: 120) &&
+          valid_public_url?(row["url"]) &&
+          RecordLink::KINDS.include?(row["kind"]) &&
+          row["position"].is_a?(Integer) && row["position"] >= 0
+      end
+    end
+
+    def valid_public_url?(value)
+      return false unless valid_string?(value, present: true, maximum: 2_000)
+
+      uri = URI.parse(value)
+      uri.is_a?(URI::HTTP) && uri.host.present?
+    rescue URI::InvalidURIError
+      false
+    end
+
+    def valid_cupping_public_media?(value, expected_attachment_ids)
+      return false unless value.is_a?(Array)
+      return false unless value.all? do |row|
+        exact_hash?(row, PublicBrewShareSnapshotBuilder::PUBLIC_MEDIA_KEYS) && row["attachment_id"].is_a?(Integer)
+      end
+
+      value.pluck("attachment_id") == expected_attachment_ids
+    end
+
+    def valid_string?(value, present: false, maximum: 10_000)
+      value.is_a?(String) && value.bytesize <= maximum && (!present || value.present?)
+    end
+
+    def valid_nullable_string?(value)
+      value.nil? || valid_string?(value)
+    end
+
+    def valid_decimal_string?(value)
+      return true if value.nil?
+      return false unless valid_string?(value, present: true, maximum: 100)
+
+      decimal = BigDecimal(value, exception: false)
+      decimal.present? && decimal.finite?
+    end
+
+    def valid_nullable_nonnegative_integer?(value)
+      value.nil? || (value.is_a?(Integer) && value >= 0)
+    end
+
+    def valid_archived_time_string?(value)
+      archived_time(value).present?
+    end
+
+    def valid_date_string?(value)
+      value.nil? || (value.is_a?(String) && Date.iso8601(value).iso8601 == value)
+    rescue Date::Error
+      false
+    end
+
+    def exact_hash?(value, keys)
+      value.is_a?(Hash) && value.keys.sort == keys.sort
+    end
+
+    def cupping_identity_attachment_ids(workspace_id:, brew:, media_files:)
+      {
+        workspace_logo: identity_attachment_id(
+          media_files, record_type: "Workspace", record_id: workspace_id, attachment_name: "logo"
+        ),
+        user_avatar: identity_attachment_id(
+          media_files, record_type: "User", record_id: brew["user_id"], attachment_name: "avatar"
+        )
+      }
+    end
+
+    def identity_attachment_id(media_files, record_type:, record_id:, attachment_name:)
+      matches = media_files.select do |file|
+        file.is_a?(Hash) && file["record_type"] == record_type && file["record_id"] == record_id &&
+          file["attachment_name"] == attachment_name
+      end
+      return if matches.empty?
+      return false unless matches.one?
+
+      matches.first["attachment_id"]
     end
 
     def validate_media_files(zip, media_files, errors)
       media_files.each do |file|
+        unless file.is_a?(Hash) && file["path"].is_a?(String)
+          errors << "Archive contains an invalid media file."
+          next
+        end
+
         path = file["path"]
         entry = zip.find_entry(path)
         unless entry

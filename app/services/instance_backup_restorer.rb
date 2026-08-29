@@ -400,8 +400,8 @@ class InstanceBackupRestorer
             feedback_expires_at: time(row["feedback_expires_at"]),
             closed_at: time(row["closed_at"]),
             last_guest_ip: row["last_guest_ip"],
-            expiration_job_enqueued_at: time(row["expiration_job_enqueued_at"]),
-            expiration_job_enqueueing_at: time(row["expiration_job_enqueueing_at"]),
+            expiration_job_enqueued_at: nil,
+            expiration_job_enqueueing_at: nil,
             created_at: time(row.fetch("created_at")),
             updated_at: time(row.fetch("updated_at"))
           )
@@ -703,7 +703,7 @@ class InstanceBackupRestorer
 
         CuppingRequestExpirationJob.schedule(
           request,
-          dispatch_started_at: request.expiration_job_enqueueing_at
+          dispatch_started_at: nil
         )
       end
     end

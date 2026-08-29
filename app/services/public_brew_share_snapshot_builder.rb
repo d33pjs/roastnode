@@ -1,4 +1,23 @@
 class PublicBrewShareSnapshotBuilder
+  SNAPSHOT_KEYS = %w[title workspace user brew hero bean equipment tools photos generated_at public_media].freeze
+  WORKSPACE_KEYS = %w[name logo_attachment_id].freeze
+  USER_KEYS = %w[display_label avatar_attachment_id].freeze
+  BREW_KEYS = %w[
+    occurred_at method public_note bean_weight_grams ground_weight_grams dose_grams beverage_grams grind_setting
+    brew_temperature_celsius total_time_seconds preinfusion_seconds first_drip_seconds channeling taste_balance rating
+    retention_marker links recipient
+  ].freeze
+  HERO_KEYS = %w[bean_photo_attachment_id brew_photo_attachment_id].freeze
+  BEAN_KEYS = %w[
+    name display_name roaster_name origin process roast_date purchased_on opened_on roast_type roast_level roast_degree
+    tasting_notes public_note photo_attachment_id photos links
+  ].freeze
+  EQUIPMENT_KEYS = %w[role name kind model public_note photo_attachment_id photos links].freeze
+  TOOL_KEYS = %w[name brew_method position public_note photo_attachment_id photos links].freeze
+  PHOTO_KEYS = %w[attachment_id].freeze
+  LINK_KEYS = %w[label url kind position].freeze
+  PUBLIC_MEDIA_KEYS = %w[attachment_id].freeze
+
   def initialize(brew:, title:, selected_photo_attachment_ids:)
     @brew = brew
     @title = title

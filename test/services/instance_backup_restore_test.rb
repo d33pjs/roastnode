@@ -6,6 +6,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
 
   setup do
     cupping_requests(:guest_espresso).brew.update!(recipient_kind: "guest", recipient_name: "Fixture Guest")
+    cupping_requests(:guest_espresso).refresh_snapshot!
   end
 
   test "validator accepts a full archive with matching media checksums" do
@@ -81,7 +82,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     )
     original = future_request.attributes.slice(
       "token", "token_digest", "snapshot", "feedback_comment", "opened_at", "feedback_expires_at", "closed_at",
-      "last_guest_ip", "expiration_job_enqueued_at", "expiration_job_enqueueing_at", "created_at", "updated_at"
+      "last_guest_ip", "created_at", "updated_at"
     )
     original_request_count = CuppingRequest.count
     archive_bytes = travel_to(now) { InstanceBackupArchiveBuilder.new(generated_at: now).call }
@@ -92,7 +93,10 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       with_stubbed_singleton_method(
         CuppingRequestExpirationJob,
         :schedule,
-        ->(request, dispatch_started_at:) { scheduled << [ request, dispatch_started_at ] }
+        lambda do |request, dispatch_started_at:|
+          scheduled << [ request, dispatch_started_at ]
+          true
+        end
       ) do
         InstanceBackupRestorer.new(archive_bytes).call
       end
@@ -107,10 +111,45 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal original, restored.attributes.slice(*original.keys)
     assert_equal 1, scheduled.size
     assert_equal restored, scheduled.first.first
-    assert_equal original.fetch("expiration_job_enqueueing_at"), scheduled.first.last
+    assert_nil scheduled.first.last
+    assert_nil restored.expiration_job_enqueued_at
+    assert_nil restored.expiration_job_enqueueing_at
     assert_not_includes scheduled.map { |entry| entry.first.token }, unopened_request.token
     assert_not_includes scheduled.map { |entry| entry.first.token }, closed_request.token
     assert_not_includes scheduled.map { |entry| entry.first.token }, expired_request.token
+  end
+
+  test "restorer clears archived expiration dispatch state when immediate scheduling returns false" do
+    now = Time.zone.parse("2026-08-29 12:00:00")
+    request = build_backup_cupping_request(
+      notes: "failed restored schedule",
+      opened_at: now - 2.hours,
+      feedback_expires_at: now + 22.hours,
+      expiration_job_enqueued_at: now - 119.minutes,
+      expiration_job_enqueueing_at: now - 118.minutes
+    )
+    archive_bytes = travel_to(now) { InstanceBackupArchiveBuilder.new(generated_at: now).call }
+    schedule_calls = []
+
+    empty_instance!
+    travel_to now do
+      with_stubbed_singleton_method(
+        CuppingRequestExpirationJob,
+        :schedule,
+        lambda do |restored_request, dispatch_started_at:|
+          schedule_calls << [ restored_request, dispatch_started_at ]
+          false
+        end
+      ) do
+        InstanceBackupRestorer.new(archive_bytes).call
+      end
+    end
+
+    restored = CuppingRequest.find_by_token!(request.token)
+    assert_equal [ [ restored, nil ] ], schedule_calls
+    assert_nil restored.expiration_job_enqueued_at
+    assert_nil restored.expiration_job_enqueueing_at
+    assert_predicate restored, :expiration_dispatch_pending?
   end
 
   test "validator and restorer reject hostile cupping request state with full rollback" do
@@ -130,7 +169,14 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       token_digest_mismatch: ->(row) { row["token_digest"] = Digest::SHA256.hexdigest("different-token") },
       overlong_comment: ->(row) { row["feedback_comment"] = "x" * 2_001 },
       invalid_deadline: ->(row) { row["feedback_expires_at"] = row.fetch("opened_at") },
-      unsafe_snapshot: ->(row) { row["snapshot"] = { "token" => "nested-secret" } }
+      nil_snapshot: ->(row) { row["snapshot"] = nil },
+      scalar_snapshot: ->(row) { row["snapshot"] = "public-looking scalar" },
+      array_snapshot: ->(row) { row["snapshot"] = [] },
+      missing_snapshot_structure: ->(row) { row.fetch("snapshot").delete("title") },
+      extra_private_snapshot_field: ->(row) { row.fetch("snapshot").fetch("brew")["notes"] = "nested-secret" },
+      malformed_attachment_reference: lambda do |row|
+        row.fetch("snapshot").fetch("public_media") << { "attachment_id" => { "id" => 123 } }
+      end
     }
 
     mutations.each do |case_name, mutation|
@@ -151,6 +197,44 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       assert_equal 0, CuppingRequest.count, case_name.to_s
       assert_equal 0, Workspace.count, case_name.to_s
     end
+  end
+
+  test "validator rejects payload media ownership that differs from the manifest before cupping restore" do
+    workspace = workspaces(:household)
+    logo = attach_named_photo(workspace, :logo, filename: "household-logo.jpg")
+    private_photo = attach_photo(beans(:open_household))
+    request = build_backup_cupping_request(
+      notes: "media catalog substitution",
+      opened_at: nil,
+      feedback_expires_at: nil
+    )
+    archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-08-28 12:00:00")).call
+
+    tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+      logo_file = payload.fetch("media_files").find { |file| file.fetch("attachment_id") == logo.id }
+      private_file = payload.fetch("media_files").find { |file| file.fetch("attachment_id") == private_photo.id }
+      ownership_keys = %w[record_type record_id attachment_name]
+      logo_ownership = logo_file.slice(*ownership_keys)
+      private_ownership = private_file.slice(*ownership_keys)
+      logo_file.merge!(private_ownership)
+      private_file.merge!(logo_ownership)
+
+      snapshot = cupping_request_row(payload, request).fetch("snapshot")
+      snapshot.fetch("workspace")["logo_attachment_id"] = private_photo.id
+      snapshot.fetch("public_media").find { |media| media.fetch("attachment_id") == logo.id }["attachment_id"] = private_photo.id
+    end
+
+    validation = InstanceBackupArchiveValidator.new(tampered_archive).call
+    assert_not_predicate validation, :valid?
+    assert_match(/media catalog/i, validation.errors.join(" "))
+
+    empty_instance!
+    error = assert_raises(InstanceBackupRestorer::RestoreError) do
+      InstanceBackupRestorer.new(tampered_archive).call
+    end
+    assert_match(/media catalog/i, error.message)
+    assert_equal 0, Workspace.count
+    assert_equal 0, ActiveStorage::Attachment.count
   end
 
   test "restorer rebuilds users workspaces coffee records and media into an empty instance with remapped ids" do
