@@ -31,7 +31,7 @@ class InstanceBackupRestorer
     @equipment_event_map = {}
     @inventory_adjustment_map = {}
     @cupping_request_map = {}
-    @restored_cupping_requests = []
+    @restored_cupping_requests_by_id = {}
     @attachment_map = {}
     @active_workspace_targets = {}
     @bean_remaining_grams = {}
@@ -64,7 +64,7 @@ class InstanceBackupRestorer
       restore_media_files
       restore_cupping_request_snapshots
       restore_primary_photos
-      reconcile_legacy_cupping_requests
+      reconcile_restored_cupping_requests
       restore_active_workspaces
       restore_activity_events
       reset_exported_bean_inventory
@@ -412,7 +412,7 @@ class InstanceBackupRestorer
           end
 
           @cupping_request_map[old_id(row)] = request
-          @restored_cupping_requests << request
+          @restored_cupping_requests_by_id[request.id] = request
         end
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, KeyError, ArgumentError
@@ -522,14 +522,10 @@ class InstanceBackupRestorer
       end
     end
 
-    def reconcile_legacy_cupping_requests
-      workspace_payloads.each do |workspace_payload|
-        next if workspace_payload.key?("cupping_requests")
-
-        workspace_payload.fetch("brews").each do |row|
-          request = CuppingRequests::Synchronize.call(@brew_map.fetch(row.fetch("id")))
-          @restored_cupping_requests << request if request
-        end
+    def reconcile_restored_cupping_requests
+      @brew_map.each_value do |brew|
+        request = CuppingRequests::Synchronize.call(brew)
+        @restored_cupping_requests_by_id[request.id] = request if request
       end
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, KeyError, ArgumentError
       invalid_cupping_request_data!
@@ -673,7 +669,7 @@ class InstanceBackupRestorer
         equipment: @equipment_map.size,
         preparation_tools: @preparation_tool_map.size,
         brews: @brew_map.size,
-        cupping_requests: @restored_cupping_requests.size,
+        cupping_requests: @restored_cupping_requests_by_id.size,
         external_coffees: @external_coffee_map.size,
         equipment_events: @equipment_event_map.size,
         inventory_adjustments: InventoryAdjustment.count,
@@ -714,7 +710,7 @@ class InstanceBackupRestorer
     end
 
     def schedule_restored_cupping_expirations
-      @restored_cupping_requests.each do |request|
+      @restored_cupping_requests_by_id.each_value do |request|
         next unless request.opened_at.present? && request.closed_at.blank? && request.feedback_expires_at&.future?
 
         CuppingRequestExpirationJob.schedule(

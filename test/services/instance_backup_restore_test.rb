@@ -1127,6 +1127,71 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert Workspace.exists?
   end
 
+  test "restorer reconciles eligible brews when a version one cupping collection is null" do
+    brew = create_restore_recipient_brew(
+      recipient_kind: "guest", recipient_name: "Null Collection Guest", cup_style: "Tasting Cup",
+      notes: "null cupping collection"
+    )
+    removed_request = CuppingRequests::Synchronize.call(brew)
+    preserved_request = cupping_requests(:guest_espresso)
+    preserved_token = preserved_request.token
+    archive_bytes = InstanceBackupArchiveBuilder.new.call
+    archive_with_null = mutate_backup_payload(archive_bytes) do |payload|
+      workspace_payload = payload.fetch("workspaces").find do |item|
+        item.dig("workspace", "id") == brew.workspace_id
+      end
+      workspace_payload["cupping_requests"] = nil
+    end
+
+    empty_instance!
+    summary = InstanceBackupRestorer.new(archive_with_null).call
+
+    restored_brew = Brew.find_by!(notes: "null cupping collection")
+    restored_request = restored_brew.cupping_request
+    assert restored_request
+    assert_not_equal removed_request.token, restored_request.token
+    assert CuppingRequest.find_by_token!(preserved_token)
+    assert_equal Brew.where(method: "espresso", recipient_kind: "guest").count, CuppingRequest.count
+    assert_equal CuppingRequest.count, summary.fetch(:cupping_requests)
+    assert Brew.where.not(method: "espresso", recipient_kind: "guest").all? { |item| item.cupping_request.nil? }
+  end
+
+  test "restorer preserves provided capabilities and fills a partial cupping collection without duplicates" do
+    first_brew = create_restore_recipient_brew(
+      recipient_kind: "guest", recipient_name: "Preserved Guest", cup_style: "First Cup",
+      notes: "partial preserved cupping"
+    )
+    second_brew = create_restore_recipient_brew(
+      recipient_kind: "guest", recipient_name: "Reconciled Guest", cup_style: "Second Cup",
+      notes: "partial missing cupping"
+    )
+    first_request = CuppingRequests::Synchronize.call(first_brew)
+    second_request = CuppingRequests::Synchronize.call(second_brew)
+    first_snapshot = first_request.snapshot.deep_dup
+    archive_bytes = InstanceBackupArchiveBuilder.new.call
+    partial_archive = mutate_backup_payload(archive_bytes) do |payload|
+      workspace_payload = payload.fetch("workspaces").find do |item|
+        item.dig("workspace", "id") == first_brew.workspace_id
+      end
+      workspace_payload["cupping_requests"].select! { |row| row.fetch("id") == first_request.id }
+    end
+
+    empty_instance!
+    summary = InstanceBackupRestorer.new(partial_archive).call
+
+    preserved = CuppingRequest.find_by_token!(first_request.token)
+    reconciled_brew = Brew.find_by!(notes: "partial missing cupping")
+    reconciled = reconciled_brew.cupping_request
+    assert_equal first_snapshot, preserved.snapshot
+    assert reconciled
+    assert_not_equal second_request.token, reconciled.token
+    assert_equal 1, CuppingRequest.where(brew_id: preserved.brew_id).count
+    assert_equal 1, CuppingRequest.where(brew_id: reconciled_brew.id).count
+    assert_equal Brew.where(method: "espresso", recipient_kind: "guest").count, CuppingRequest.count
+    assert_equal CuppingRequest.count, summary.fetch(:cupping_requests)
+    assert Brew.where.not(method: "espresso", recipient_kind: "guest").all? { |item| item.cupping_request.nil? }
+  end
+
   test "restorer degrades valid activity with an unexported subject to a tombstone" do
     source_event = Activity::Emitter.record!(
       action: "recipe.created", workspace: workspaces(:household), actor: users(:one),
