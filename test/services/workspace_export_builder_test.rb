@@ -1,4 +1,5 @@
 require "test_helper"
+require "zip"
 
 class WorkspaceExportBuilderTest < ActiveSupport::TestCase
   RECIPIENT_EXPORT_KEYS = %i[
@@ -105,6 +106,38 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
 
     duplicate_payload = payload[:beans].find { |row| row[:id] == duplicated.id }
     assert_equal beans(:open_household).id, duplicate_payload[:duplicated_from_bean_id]
+  end
+
+  test "exports private cupping feedback on brew JSON without exporting request capabilities" do
+    workspace = workspaces(:household)
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Private Guest")
+    request = CuppingRequests::Synchronize.call(brew)
+    request.update!(feedback_comment: "Private cupping feedback")
+
+    payload = WorkspaceExportBuilder.new(workspace, generated_at: Time.current).call
+    exported_brew = payload.fetch(:brews).find { |row| row.fetch(:id) == brew.id }
+    payload_json = JSON.generate(payload)
+
+    assert_equal "Private cupping feedback", exported_brew.fetch(:cupping_feedback_comment)
+    assert_not payload.key?(:cupping_requests)
+    assert_not_includes payload_json, request.token
+    assert_not_includes payload_json, request.token_digest
+
+    csv = WorkspaceCsvExportBuilder.new(workspace).brews_csv
+    assert_not_includes csv, "cupping_feedback_comment"
+    assert_not_includes csv, "Private cupping feedback"
+    assert_not_includes csv, request.token
+
+    archive = WorkspaceMediaArchiveBuilder.new(workspace, generated_at: Time.current).call
+    Zip::File.open_buffer(archive) do |zip|
+      archive_json = zip.read("data/workspace-export.json")
+
+      assert_includes archive_json, "Private cupping feedback"
+      assert_not_includes archive_json, request.token
+      assert_not_includes archive_json, request.token_digest
+      assert_not_includes JSON.parse(archive_json).keys, "cupping_requests"
+    end
   end
 
   test "exports exact recipient and cup fields for every serving kind including a former member" do

@@ -61,7 +61,30 @@ class InstanceReadableExportBuilder
         )
         payload[:data_imports] = data_imports_payload(workspace)
         payload[:workspace_invites] = workspace_invites_payload(workspace)
+        payload[:cupping_requests] = cupping_requests_payload(workspace)
         payload
+      end
+    end
+
+    def cupping_requests_payload(workspace)
+      workspace.cupping_requests.order(:id).map do |request|
+        {
+          id: request.id,
+          workspace_id: request.workspace_id,
+          brew_id: request.brew_id,
+          token: request.token,
+          token_digest: request.token_digest,
+          snapshot: request.snapshot,
+          feedback_comment: request.feedback_comment,
+          opened_at: timestamp(request.opened_at),
+          feedback_expires_at: timestamp(request.feedback_expires_at),
+          closed_at: timestamp(request.closed_at),
+          last_guest_ip: request.last_guest_ip,
+          expiration_job_enqueued_at: timestamp(request.expiration_job_enqueued_at),
+          expiration_job_enqueueing_at: timestamp(request.expiration_job_enqueueing_at),
+          created_at: timestamp(request.created_at),
+          updated_at: timestamp(request.updated_at)
+        }
       end
     end
 

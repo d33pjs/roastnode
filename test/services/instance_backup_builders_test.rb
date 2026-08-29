@@ -139,6 +139,67 @@ class InstanceBackupBuildersTest < ActiveSupport::TestCase
       manifest.fetch("files").find { |file| file.fetch("path") == media_path }.fetch("sha256")
   end
 
+  test "readable and full backups preserve workspace scoped cupping request state" do
+    brew = brews(:morning_espresso)
+    brew.update!(recipient_kind: "guest", recipient_name: "Backup Guest")
+    request = CuppingRequests::Synchronize.call(brew)
+    opened_at = Time.zone.parse("2026-08-28 10:00:00")
+    expires_at = opened_at + 24.hours
+    enqueued_at = opened_at + 1.minute
+    enqueueing_at = opened_at + 30.seconds
+    request.update_columns(
+      snapshot: { "title" => "Archived cupping page", "brew" => { "method" => "espresso" } },
+      feedback_comment: "Private archived feedback",
+      opened_at:,
+      feedback_expires_at: expires_at,
+      last_guest_ip: "203.0.113.44",
+      expiration_job_enqueued_at: enqueued_at,
+      expiration_job_enqueueing_at: enqueueing_at
+    )
+
+    readable = InstanceReadableExportBuilder.new(generated_at: Time.zone.parse("2026-08-28 12:00:00")).call
+    household = readable.fetch(:workspaces).find do |workspace_payload|
+      workspace_payload.dig(:workspace, :id) == brew.workspace_id
+    end
+    row = household.fetch(:cupping_requests).find { |item| item.fetch(:id) == request.id }
+
+    assert_equal(
+      {
+        id: request.id,
+        workspace_id: brew.workspace_id,
+        brew_id: brew.id,
+        token: request.token,
+        token_digest: request.token_digest,
+        snapshot: request.snapshot,
+        feedback_comment: "Private archived feedback",
+        opened_at: opened_at.iso8601,
+        feedback_expires_at: expires_at.iso8601,
+        closed_at: nil,
+        last_guest_ip: "203.0.113.44",
+        expiration_job_enqueued_at: enqueued_at.iso8601,
+        expiration_job_enqueueing_at: enqueueing_at.iso8601,
+        created_at: request.created_at.iso8601,
+        updated_at: request.updated_at.iso8601
+      },
+      row
+    )
+    assert household.fetch(:cupping_requests).all? { |item| item.fetch(:workspace_id) == brew.workspace_id }
+
+    archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-08-28 12:00:00")).call
+    Zip::File.open_buffer(archive_bytes) do |zip|
+      archived = JSON.parse(zip.read("data/instance-readable-export.json"))
+      archived_household = archived.fetch("workspaces").find do |workspace_payload|
+        workspace_payload.dig("workspace", "id") == brew.workspace_id
+      end
+      archived_row = archived_household.fetch("cupping_requests").find { |item| item.fetch("id") == request.id }
+
+      assert_equal request.token, archived_row.fetch("token")
+      assert_equal request.token_digest, archived_row.fetch("token_digest")
+      assert_equal "Private archived feedback", archived_row.fetch("feedback_comment")
+      assert_equal enqueueing_at.iso8601, archived_row.fetch("expiration_job_enqueueing_at")
+    end
+  end
+
   test "readable and full archive exports preserve workspace and instance activity" do
     readable = InstanceReadableExportBuilder.new(generated_at: Time.zone.parse("2026-08-21 12:00:00")).call
     household = readable.fetch(:workspaces).find do |workspace_payload|

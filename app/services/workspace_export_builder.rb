@@ -171,7 +171,7 @@ class WorkspaceExportBuilder
     end
 
     def brews_payload
-      workspace.brews.includes(:user, :recipient_user).order(:id).map do |brew|
+      workspace.brews.includes(:user, :recipient_user, :cupping_request).order(:id).map do |brew|
         {
           id: brew.id,
           user_id: brew.user_id,
@@ -206,6 +206,7 @@ class WorkspaceExportBuilder
           recipient_user_email_address: brew.recipient_user&.email_address,
           recipient_name: brew.recipient_name,
           cup_style: brew.cup_style,
+          cupping_feedback_comment: brew.cupping_request&.feedback_comment,
           notes: brew.notes,
           retention_marker: brew.retention_marker,
           primary_photo_attachment_id: brew.primary_photo_attachment_id,

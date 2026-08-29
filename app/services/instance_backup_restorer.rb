@@ -30,6 +30,7 @@ class InstanceBackupRestorer
     @external_coffee_map = {}
     @equipment_event_map = {}
     @inventory_adjustment_map = {}
+    @cupping_request_map = {}
     @attachment_map = {}
     @active_workspace_targets = {}
     @bean_remaining_grams = {}
@@ -54,16 +55,20 @@ class InstanceBackupRestorer
       restore_equipment
       restore_preparation_tools
       restore_brews
+      restore_cupping_requests
       restore_external_coffees
       restore_brew_preparation_tools
       restore_equipment_events
       restore_inventory_adjustments
       restore_media_files
+      restore_cupping_request_snapshots
       restore_primary_photos
       restore_active_workspaces
       restore_activity_events
       reset_exported_bean_inventory
     end
+
+    schedule_restored_cupping_expirations
 
     summary
   end
@@ -85,6 +90,7 @@ class InstanceBackupRestorer
         Equipment,
         PreparationTool,
         Brew,
+        CuppingRequest,
         ExternalCoffee,
         BrewPreparationTool,
         EquipmentEvent,
@@ -374,6 +380,42 @@ class InstanceBackupRestorer
       end
     end
 
+    def restore_cupping_requests
+      workspace_payloads.each do |workspace_payload|
+        workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
+        Array(workspace_payload["cupping_requests"]).each do |row|
+          brew = @brew_map.fetch(row.fetch("brew_id"))
+          unless row.fetch("workspace_id") == old_id(workspace_payload.fetch("workspace")) && brew.workspace == workspace
+            invalid_cupping_request_data!
+          end
+
+          request = CuppingRequest.create!(
+            workspace:,
+            brew:,
+            token: row.fetch("token"),
+            token_digest: row.fetch("token_digest"),
+            snapshot: row.fetch("snapshot").deep_dup,
+            feedback_comment: row["feedback_comment"],
+            opened_at: time(row["opened_at"]),
+            feedback_expires_at: time(row["feedback_expires_at"]),
+            closed_at: time(row["closed_at"]),
+            last_guest_ip: row["last_guest_ip"],
+            expiration_job_enqueued_at: time(row["expiration_job_enqueued_at"]),
+            expiration_job_enqueueing_at: time(row["expiration_job_enqueueing_at"]),
+            created_at: time(row.fetch("created_at")),
+            updated_at: time(row.fetch("updated_at"))
+          )
+          unless request.token_digest == row.fetch("token_digest") && request.eligible?
+            invalid_cupping_request_data!
+          end
+
+          @cupping_request_map[old_id(row)] = request
+        end
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, KeyError, ArgumentError
+      invalid_cupping_request_data!
+    end
+
     def restore_external_coffees
       workspace_payloads.each do |workspace_payload|
         workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
@@ -474,6 +516,35 @@ class InstanceBackupRestorer
         restore_primary_photo_ids(workspace_payload.fetch("brews"), @brew_map)
         restore_primary_photo_ids(Array(workspace_payload["external_coffees"]), @external_coffee_map)
         restore_primary_photo_ids(workspace_payload.fetch("equipment_events"), @equipment_event_map)
+      end
+    end
+
+    def restore_cupping_request_snapshots
+      workspace_payloads.each do |workspace_payload|
+        Array(workspace_payload["cupping_requests"]).each do |row|
+          request = @cupping_request_map.fetch(old_id(row))
+          request.update_columns(snapshot: remapped_cupping_snapshot(row.fetch("snapshot")))
+        end
+      end
+    rescue KeyError
+      invalid_cupping_request_data!
+    end
+
+    def remapped_cupping_snapshot(value)
+      case value
+      when Hash
+        value.to_h do |key, nested|
+          remapped = if key.end_with?("attachment_id") && nested.present?
+            @attachment_map.fetch(nested).id
+          else
+            remapped_cupping_snapshot(nested)
+          end
+          [ key, remapped ]
+        end
+      when Array
+        value.map { |nested| remapped_cupping_snapshot(nested) }
+      else
+        value
       end
     end
 
@@ -586,6 +657,7 @@ class InstanceBackupRestorer
         equipment: @equipment_map.size,
         preparation_tools: @preparation_tool_map.size,
         brews: @brew_map.size,
+        cupping_requests: @cupping_request_map.size,
         external_coffees: @external_coffee_map.size,
         equipment_events: @equipment_event_map.size,
         inventory_adjustments: InventoryAdjustment.count,
@@ -623,6 +695,21 @@ class InstanceBackupRestorer
       return if old_id.blank?
 
       map.fetch(old_id)
+    end
+
+    def schedule_restored_cupping_expirations
+      @cupping_request_map.each_value do |request|
+        next unless request.opened_at.present? && request.closed_at.blank? && request.feedback_expires_at&.future?
+
+        CuppingRequestExpirationJob.schedule(
+          request,
+          dispatch_started_at: request.expiration_job_enqueueing_at
+        )
+      end
+    end
+
+    def invalid_cupping_request_data!
+      raise RestoreError, "Archive contains an invalid cupping request."
     end
 
     def restore_brew_recipient!(brew, row, logger:)

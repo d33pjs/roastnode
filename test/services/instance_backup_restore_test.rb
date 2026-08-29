@@ -4,6 +4,10 @@ require "zip"
 class InstanceBackupRestoreTest < ActiveSupport::TestCase
   include PhotoTestHelper
 
+  setup do
+    cupping_requests(:guest_espresso).brew.update!(recipient_kind: "guest", recipient_name: "Fixture Guest")
+  end
+
   test "validator accepts a full archive with matching media checksums" do
     attachment = attach_photo(beans(:open_household))
     archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-05-28 12:00:00")).call
@@ -47,6 +51,106 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     end
 
     assert_match(/empty/i, error.message)
+  end
+
+  test "restorer round trips cupping requests and schedules only open future feedback" do
+    now = Time.zone.parse("2026-08-29 12:00:00")
+    future_request = build_backup_cupping_request(
+      notes: "future cupping restore",
+      opened_at: now - 2.hours,
+      feedback_expires_at: now + 22.hours,
+      expiration_job_enqueued_at: now - 119.minutes,
+      expiration_job_enqueueing_at: now - 118.minutes,
+      feedback_comment: "Private restore feedback",
+      last_guest_ip: "2001:db8::44"
+    )
+    unopened_request = cupping_requests(:guest_espresso)
+    unopened_request.brew.update!(recipient_kind: "guest", recipient_name: "Unopened Guest")
+    closed_request = build_backup_cupping_request(
+      notes: "closed cupping restore",
+      opened_at: now - 2.days,
+      feedback_expires_at: now - 1.day,
+      closed_at: now - 1.day,
+      last_guest_ip: "203.0.113.8"
+    )
+    expired_request = build_backup_cupping_request(
+      notes: "expired cupping restore",
+      opened_at: now - 25.hours,
+      feedback_expires_at: now - 1.hour,
+      last_guest_ip: "203.0.113.9"
+    )
+    original = future_request.attributes.slice(
+      "token", "token_digest", "snapshot", "feedback_comment", "opened_at", "feedback_expires_at", "closed_at",
+      "last_guest_ip", "expiration_job_enqueued_at", "expiration_job_enqueueing_at", "created_at", "updated_at"
+    )
+    original_request_count = CuppingRequest.count
+    archive_bytes = travel_to(now) { InstanceBackupArchiveBuilder.new(generated_at: now).call }
+    scheduled = []
+
+    empty_instance!
+    travel_to now do
+      with_stubbed_singleton_method(
+        CuppingRequestExpirationJob,
+        :schedule,
+        ->(request, dispatch_started_at:) { scheduled << [ request, dispatch_started_at ] }
+      ) do
+        InstanceBackupRestorer.new(archive_bytes).call
+      end
+    end
+
+    restored = CuppingRequest.find_by_token!(original.fetch("token"))
+    assert_equal original_request_count, CuppingRequest.count
+    assert_not_equal future_request.id, restored.id
+    assert_equal restored.workspace, restored.brew.workspace
+    assert_predicate restored.brew, :espresso?
+    assert_predicate restored.brew, :recipient_guest?
+    assert_equal original, restored.attributes.slice(*original.keys)
+    assert_equal 1, scheduled.size
+    assert_equal restored, scheduled.first.first
+    assert_equal original.fetch("expiration_job_enqueueing_at"), scheduled.first.last
+    assert_not_includes scheduled.map { |entry| entry.first.token }, unopened_request.token
+    assert_not_includes scheduled.map { |entry| entry.first.token }, closed_request.token
+    assert_not_includes scheduled.map { |entry| entry.first.token }, expired_request.token
+  end
+
+  test "validator and restorer reject hostile cupping request state with full rollback" do
+    request = build_backup_cupping_request(
+      notes: "hostile cupping source",
+      opened_at: Time.zone.parse("2026-08-28 10:00:00"),
+      feedback_expires_at: Time.zone.parse("2026-08-29 10:00:00"),
+      feedback_comment: "Safe private feedback",
+      last_guest_ip: "203.0.113.44"
+    )
+    archive_bytes = InstanceBackupArchiveBuilder.new(generated_at: Time.zone.parse("2026-08-28 12:00:00")).call
+    other_workspace_id = workspaces(:other_household).id
+    other_brew_id = brews(:other_workspace_brew).id
+    mutations = {
+      mismatched_workspace: ->(row) { row["workspace_id"] = other_workspace_id },
+      foreign_brew: ->(row) { row["brew_id"] = other_brew_id },
+      token_digest_mismatch: ->(row) { row["token_digest"] = Digest::SHA256.hexdigest("different-token") },
+      overlong_comment: ->(row) { row["feedback_comment"] = "x" * 2_001 },
+      invalid_deadline: ->(row) { row["feedback_expires_at"] = row.fetch("opened_at") },
+      unsafe_snapshot: ->(row) { row["snapshot"] = { "token" => "nested-secret" } }
+    }
+
+    mutations.each do |case_name, mutation|
+      tampered_archive = mutate_backup_payload(archive_bytes) do |payload|
+        row = cupping_request_row(payload, request)
+        mutation.call(row)
+      end
+      validation = InstanceBackupArchiveValidator.new(tampered_archive).call
+      assert_not_predicate validation, :valid?, case_name.to_s
+
+      empty_instance!
+      error = assert_raises(InstanceBackupRestorer::RestoreError, case_name.to_s) do
+        InstanceBackupRestorer.new(tampered_archive).call
+      end
+
+      assert_match(/cupping request/i, error.message, case_name.to_s)
+      assert_no_match(/nested-secret|Safe private feedback/, error.message, case_name.to_s)
+      assert_equal 0, CuppingRequest.count, case_name.to_s
+      assert_equal 0, Workspace.count, case_name.to_s
+    end
   end
 
   test "restorer rebuilds users workspaces coffee records and media into an empty instance with remapped ids" do
@@ -777,7 +881,10 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     ).call
     older_archive = mutate_backup_payload(archive_bytes) do |payload|
       payload.delete("instance_activity_events")
-      payload.fetch("workspaces").each { |workspace_payload| workspace_payload.delete("activity_events") }
+      payload.fetch("workspaces").each do |workspace_payload|
+        workspace_payload.delete("activity_events")
+        workspace_payload.delete("cupping_requests")
+      end
     end
 
     empty_instance!
@@ -785,6 +892,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
 
     assert_equal 0, ActivityEvent.count
     assert_equal 0, summary.fetch(:activity_events)
+    assert_equal 0, CuppingRequest.count
     assert Workspace.exists?
   end
 
@@ -1017,6 +1125,41 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
   end
 
   private
+    def build_backup_cupping_request(notes:, opened_at:, feedback_expires_at:, closed_at: nil,
+      expiration_job_enqueued_at: nil, expiration_job_enqueueing_at: nil, feedback_comment: nil, last_guest_ip: nil)
+      brew = create_restore_recipient_brew(
+        recipient_kind: "guest",
+        recipient_name: "Backup Guest",
+        cup_style: "Cupping Bowl",
+        notes:
+      )
+      request = CuppingRequests::Synchronize.call(brew)
+      request.update_columns(
+        snapshot: PublicBrewShareSnapshotBuilder.new(
+          brew:, title: PublicBrewShare.default_title_for(brew), selected_photo_attachment_ids: []
+        ).call,
+        opened_at:,
+        feedback_expires_at:,
+        closed_at:,
+        expiration_job_enqueued_at:,
+        expiration_job_enqueueing_at:,
+        feedback_comment:,
+        last_guest_ip:
+      )
+      request.update_columns(
+        created_at: request.created_at.change(usec: 0),
+        updated_at: request.updated_at.change(usec: 0)
+      )
+      request.reload
+    end
+
+    def cupping_request_row(payload, request)
+      workspace_payload = payload.fetch("workspaces").find do |item|
+        item.dig("workspace", "id") == request.workspace_id
+      end
+      workspace_payload.fetch("cupping_requests").find { |row| row.fetch("id") == request.id }
+    end
+
     def create_restore_recipient_brew(recipient_kind:, recipient_user: nil, recipient_name: nil, cup_style:, notes:)
       workspaces(:household).brews.create!(
         user: users(:one),
