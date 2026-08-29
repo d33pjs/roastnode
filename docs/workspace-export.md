@@ -17,6 +17,7 @@ Workspace Export is the first Roastnode data portability feature.
 - Rich private Bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, Purchase Website (`purchase_url`), Coffee Origin Website (`coffee_origin_url`), flavor profile, and variety information. Both direct website fields are included in the owner-only JSON and Beans CSV exports.
 - Equipment machine-capability flags for pre-infusion, low-flow start, and flow control.
 - Brew method fields, including espresso low-flow-start seconds and flow-control use, Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, and the private six-field recipient/Cup contract.
+- Private Guest cupping comments as `cupping_feedback_comment` on Brew rows in JSON only.
 - Quick Drip profile preferences are account-level data. Active workspace exports do not include enabled-method or grams-per-coffee-spoon preferences; full instance backup/readable export payloads include them so restores can rebuild user logging defaults.
 - Photo metadata for photo-enabled records.
 - Preparation tool lifecycle fields, including active status, position, and photo metadata.
@@ -43,6 +44,8 @@ The beans CSV includes flat bag metadata such as names, roaster, derived status 
 
 The brews CSV includes flat brew history such as occurred time, method, user labels, bean/equipment names, preparation tool snapshots, weights, Quick Drip cups/spoons/spoon grams, brew ratio, timing (including low-flow start), temperature, flow-control use, taste balance, rating, the exact private recipient/Cup fields below, retention marker, notes, and timestamps.
 
+The brews CSV deliberately omits `cupping_feedback_comment`. Use the owner-only JSON when the private Guest comment is needed.
+
 The External Coffees CSV includes occurred time, user labels, drink type, drink size, place name/location, private coordinates, price, currency, taste axes, rating, notes, public note, and timestamps.
 
 CSV exports are useful for spreadsheets and quick analysis. They are not intended to fully reconstruct all relationships; use the JSON export for that.
@@ -56,6 +59,7 @@ The export intentionally excludes:
 - password digests
 - sessions
 - invite tokens
+- cupping bearer tokens, token digests, deadlines, and request state
 - signed media URLs
 - records from other workspaces
 
@@ -99,6 +103,8 @@ Each JSON Brew object emits these six fields in this exact order, including keys
 6. `cup_style`
 
 `recipient_kind` is `self`, `household_member`, or `guest`. The User fields are populated only from the linked recipient User; a former member remains reconstructable because the exported local User relationship survives membership removal. `recipient_name` is private Guest text, and Cup is independent of recipient kind. New exports do not emit the legacy `served_for_guest` or `guest_name` columns. The embedded `data/workspace-export.json` in a media ZIP uses this same payload contract.
+
+Each Brew JSON object also includes `cupping_feedback_comment`, which is the private Guest comment or `null`. The workspace payload intentionally has no top-level `cupping_requests` collection. Its JSON and the media ZIP's embedded JSON therefore preserve the comment without preserving an anonymous bearer capability. Cupping requests select no record photos, so the media ZIP adds no cupping-specific media.
 
 ## Instance Backup Coverage
 

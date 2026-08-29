@@ -20,6 +20,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - Compact screenshot-worthy brew detail cards.
 - Public notes and multiple typed links for brews, beans, equipment, and preparation tools.
 - Curated public espresso brew sharing with optional passwords, selected photos, and public buy/affiliate links.
+- Espresso cupping sharing for another current household member through the authenticated private Brew URL, or for a Guest through a separate unlisted 24-hour feedback capability.
 - Curated public bean sharing for opened, finished, used-up, or previously opened archived bags with optional passwords, selected bean package photos, all-brew public summaries, and workspace settings management.
 - Private recipe profiles created from workspace brews, with editable exact espresso targets and prominent target markers.
 - Recipe-guided espresso logging that shows recipe targets without overwriting normal last-brew defaults.
@@ -224,6 +225,8 @@ Serving updates do not change inventory, brew measurements, equipment, preparati
 
 Serving metadata is private by default. Private Brew details and history cards may show the recipient and Cup. Owner-only workspace exports and instance backups preserve the six recipient/Cup export fields described in [Workspace Export](workspace-export.md). Public Brew and Bean snapshots receive only the automatic privacy-safe recipient projection: Guest names and Cup never become public. Recipe snapshots and recipe portability omit all recipient and Cup fields.
 
+Saved Espresso details expose **Share for cupping** only when served to another current household member or a Guest. A household member receives the normal authenticated private Brew URL. A Guest receives a separate unlisted bearer page whose first successful access starts a 24-hour window for taste, rating, and a private comment. Self Espresso and every Quick Drip remain ineligible. Guest capability creation and revocation follow serving changes transactionally; see [Cupping Requests](cupping-requests.md) for the public, Activity, queue, export, and backup contracts.
+
 ## Inventory Rules
 
 - New Beans default to full unopened stock: remaining grams initialize once from bag size, while `opened_on`, `finished_at`, and `archived_at` stay blank.
@@ -258,6 +261,7 @@ Serving metadata is private by default. Private Brew details and history cards m
 - Use `Bean#destroy_with_history!` for destructive bean deletion; plain `destroy!` is intentionally blocked by dependent brew and inventory guards.
 - Render photos through `media_attachment_path`, never raw Active Storage blob URLs.
 - Public brew pages are the exception to private media routing: they render selected snapshot media through `public_brew_media_path`, never raw Active Storage blob URLs.
+- Public cupping pages use `CuppingRequest` snapshots and `public_cupping_media_path`; they select no record photos and permit only current snapshotted workspace/logo identity media through request-specific opaque handles.
 - Public bean pages use curated `PublicBeanShare` snapshots. Selected bean package photos render only through `PublicBeanMediaController` with opaque handles; brew photos, purchase source, purchase cost, private notes, private links, and private record routes must not render.
 - Public recipe pages use curated `PublicRecipeShare` snapshots. Ingredients and finish notes are public snapshot content; selected recipe photos render only through `PublicRecipeMediaController` with opaque handles.
 - Remove photos through `MediaAttachmentsController#destroy` so workspace and write permissions stay centralized.

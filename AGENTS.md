@@ -39,6 +39,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Account labels, email placement, avatars, and public banners: `docs/account-privacy.md`
 - Decimal parsing, comma-friendly measurement inputs, and user number/time formats: `docs/formatting.md`
 - Espresso logging, bean/equipment basics, inventory, and last-brew defaults: `docs/coffee-core.md`
+- Espresso cupping requests, first-access expiry, Guest feedback, public privacy, and backup lifecycle: `docs/cupping-requests.md`
 - External/purchased coffee logging, comparison, sharing, and privacy: `docs/external-coffees.md`
 - Recipe profiles, exact targets, snapshots, guided logging, and public recipe sharing: `docs/recipe-profiles.md`
 - Brew form focus and hidden-field preferences: `docs/brew-form-preferences.md`

@@ -33,6 +33,7 @@ The full archive currently includes a manifest, a readable instance JSON export,
 - all beans, equipment, preparation tools, brews, External Coffees, equipment events, inventory adjustments, statistics source records, and import metadata
 - each Bean's private Purchase Website (`purchase_url`) and Coffee Origin Website (`coffee_origin_url`)
 - each Brew's recipient kind, mapped recipient User reference and safe inspection labels, private Guest name, and Cup style
+- workspace-scoped cupping requests with their bearer token/digest, safe snapshot, private comment, access/deadline/closure state, most recent Guest IP, and timestamps
 - all workspace media and account media, including originals
 - a manifest with format version, generated time, file checksums, and relationships between JSON records and media files
 
@@ -43,6 +44,8 @@ The full export must not include password digests, sessions, invite tokens, sign
 The readable export is for humans and inspection. It produces one JSON file with every household/workspace and its data in a clear nested structure. Media bytes may stay in files beside the JSON, but the JSON includes stable paths, checksums, content types, filenames, and ownership metadata.
 
 The readable export is embedded inside the full archive and is the data source used by restore tests. Bean Purchase Website and Coffee Origin Website are therefore present in both readable and full backup data.
+
+Unlike owner-facing workspace export, readable and full instance backups preserve the complete cupping request capability and state so existing unlisted links and their Activity history survive disaster recovery. Workspace JSON preserves only `cupping_feedback_comment` on the Brew and deliberately excludes the token and request row; Brew CSV excludes the comment as well.
 
 ## Restore Contract
 

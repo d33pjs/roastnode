@@ -2,6 +2,8 @@
 
 Public Brew Sharing lets a workspace writer publish one curated espresso brew page without opening the private workspace. Standalone Quick Drip public brew share pages are deferred; Quick Drip brews may appear only as public-safe summaries inside public bean shares.
 
+Temporary Guest [Cupping Requests](cupping-requests.md) reuse the public Brew snapshot presentation but are a separate capability at `/c/:token`. Creating or revoking a cupping request does not create, enable, disable, or reconfigure the Brew's permanent `PublicBrewShare` at `/s/:token`. Another household member's cupping action shares the authenticated private Brew URL instead.
+
 ## Included Now
 
 - One public share per espresso brew.
@@ -87,6 +89,8 @@ Public controllers look up shares by `token_digest`, not by raw token, so reques
 
 Public brew shares remain snapshot based, but current public-safe changes refresh every share that references the changed record.
 
+Accepted Guest cupping taste/rating changes refresh the cupping snapshot and any affected permanent public Brew and public Bean comparison snapshots in the same transaction. The private cupping comment is never copied into those snapshots.
+
 Refresh triggers include:
 
 - the shared brew
@@ -127,6 +131,8 @@ Older snapshots without `public_media` collect their curated attachment referenc
 The public media route applies the same password gate as the HTML page. It returns not found for disabled shares, unknown tokens, unselected attachments, attachments outside the share whitelist, and unsupported variants. Thumbnail responses may fall back to safe original raster bytes if local image processing fails, but a failed Hero transform returns not found instead of exposing an unbounded original. Logs must not include public bearer tokens or raw processor error messages.
 
 Because `/s/:token` and `/r/:token` are bearer access, Rails request logging redacts public share tokens and public media handles from `filtered_path`. Public share redirects are also configured through Rails redirect filtering. Password reset, workspace invite, and household invite bearer URLs are redacted by the same log-filtering initializer.
+
+The same path and redirect filtering covers `/c/:token` and its media handles. Cupping media is narrower than permanent public Brew media: automatic cupping snapshots select no Brew, Bean, equipment, or tool photos and can serve only the snapshotted current workspace logo and logger avatar through request-specific handles and the safe-raster gate.
 
 ## Public View Tracking
 
