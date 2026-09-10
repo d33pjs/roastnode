@@ -17,6 +17,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Recent consumption-by-day bars.
 - Manual date range filters and relative timeframe shortcuts for brew-based analytics.
 - Independent **Logged by** and **Served to** filters for Brew-based analytics.
+- Private persona statistics: maker and recipient rankings, maker-to-recipient stacked bars, beans received and highest-rated beans per recipient, self/others totals, distinct beans tried, and rating coverage.
 - Taste balance distribution.
 - Retention marker distribution.
 - Brew method distribution, including Quick Drip.
@@ -50,10 +51,10 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 
 - **Logged by** filters the User who recorded the Brew. It uses `logger_id=<user id>` and is independent of **Served to**.
 - **Served to** uses the exact tokens `recipient=self`, `recipient=guests`, or `recipient=user:<user id>`. Omitting either people parameter means all values for that dimension.
-- `recipient=self` includes Brews marked as served to their logger. `recipient=guests` combines every Guest Brew without exposing individual Guest names.
+- `recipient=self` includes Brews marked as served to their logger. `recipient=guests` selects all Guest Brews together; the persona section below can break down those results by saved guest name.
 - A named User selection combines that User's Self Brews with Brews explicitly served to that User as a household member.
 - Named logger options include current household members plus historical Users who logged a Brew in the active workspace. Named recipient options include current household members plus historical Users represented by a Self Brew or an explicit household-member serving in that workspace. The UI uses each User's safe `display_label`; it never uses an email address as an analytics label.
-- Guest names remain private Brew display data and never become analytics identities or filter options.
+- Guest filter options remain combined. On the private persona statistics section, named guests are grouped by trimmed, case-insensitive saved name; unnamed guests share a separate bucket. These names never enter public shares or new filter parameters. Guest and User identities stay separate even when names match.
 - Logger IDs and recipient tokens are validated against their corresponding option sets above. Unknown, malformed, dimension-ineligible, and foreign-workspace values receive the normal not-found response.
 - The people and date controls share a responsive filter surface that wraps at narrow widths and supports the light and dark themes.
 
@@ -74,4 +75,15 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Imported brews and beans count like native records.
 - Quick Drip is included in broad brew totals, consumed-grams totals, cost calculations when bean price is known, taste balance, method distributions, and brewer/preparation-tool usage analytics.
 - Channeling, retention, and grinder tendency metrics are espresso-only. Brewer and Quick Drip preparation-tool analytics should not imply channeling for Quick Drip.
-- Richer interactive charts on the dedicated statistics page remain deferred. The dashboard's decorative Chart.js microcharts do not change the server-owned analytics calculations or this statistics-page boundary.
+- The dedicated statistics page uses local Chart.js stacked horizontal bars for maker-to-recipient relationships. All exact counts remain available in HTML without JavaScript. Theme changes redraw the chart; Turbo disconnect destroys it. Rank, bean-use, and rating bars are server-rendered.
+
+## Persona Counts And Favorites
+
+- `WorkspacePersonaStatistics` receives the already filtered brew array from `WorkspaceStatistics`. Date, logger, and recipient selections apply consistently to every persona result. External Coffee records are outside this Brew-based scope.
+- The logger is the maker. Every logged Brew counts once, including Quick Drip batches; machine cups are not multiplied into these counts.
+- Self brews are received by their logger. Household servings belong to their recipient User. Historical users remain included, with safe `display_label` labels. Duplicate display names are separate identities internally.
+- Named guest identity is approximate: two guests with the same normalized name are combined. Names with different spelling remain separate. This is private household analytics, with no new guest records or public identities.
+- Bean counts refer to individual Bean records (bags), including repeat purchases. Beans with identical names remain separate entries.
+- Favorites use the arithmetic mean of non-null Brew ratings from 1–5. Guest cupping feedback already updates that authoritative value. The recipient grouping does not claim verified rating authorship because ratings may also be recorded through private Brew editing. Missing ratings never become zero.
+- Rankings show the mean and rated sample count; ties use rated count then label. A single rating may lead the ranking and is visibly identified as a small sample. Recipients with no rated brews see an explicit unrated state.
+- Persona/chart payloads contain only safe labels and aggregate numeric values, with escaped HTML/data attributes. No notes, feedback comments, email addresses, raw model serialization, media URLs, or cupping capabilities are included.

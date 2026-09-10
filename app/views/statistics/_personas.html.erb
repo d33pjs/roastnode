@@ -1,0 +1,47 @@
+<section data-testid="statistics-personas" aria-labelledby="statistics-personas-heading" class="mb-10 min-w-0 border-y border-rn-line py-8">
+  <div class="mb-6 min-w-0">
+    <p class="text-xs font-extrabold uppercase tracking-[0.14em] text-rn-muted"><%= t("statistics.personas.eyebrow") %></p>
+    <h2 id="statistics-personas-heading" class="mt-2 text-3xl font-black leading-tight text-rn-ink"><%= t("statistics.personas.title") %></h2>
+    <p class="mt-2 max-w-3xl text-sm leading-6 text-rn-muted"><%= t("statistics.personas.scope_help") %></p>
+  </div>
+
+  <% if personas[:makers].empty? %>
+    <p data-testid="statistics-personas-empty" class="rounded-2xl border border-rn-line bg-rn-surface p-5 text-sm leading-6 text-rn-muted"><%= t("statistics.personas.empty") %></p>
+  <% else %>
+    <% preparation_count = personas[:makers].sum { |maker| maker[:count] } %>
+    <dl class="grid min-w-0 grid-cols-2 gap-x-5 gap-y-6 rounded-2xl bg-[var(--rn-surface-muted)] p-5 sm:p-6 lg:grid-cols-4">
+      <% [ :served_to_others, :self_served, :recipient_count, :rated_count ].each do |metric| %>
+        <div class="min-w-0">
+          <dt class="text-sm font-bold text-rn-muted"><%= t("statistics.personas.metrics.#{metric}") %></dt>
+          <dd data-testid="statistics-personas-<%= metric.to_s.dasherize %>" class="mt-2 text-3xl font-black tabular-nums leading-none text-rn-ink"><%= personas[:totals][metric] %></dd>
+          <dd class="mt-2 text-xs leading-5 text-rn-muted">
+            <% if metric == :recipient_count %>
+              <%= t("statistics.personas.recipients_summary") %>
+            <% else %>
+              <%= t("statistics.personas.share_of_coffees", percent: statistics_bar_width(personas[:totals][metric], preparation_count)) %>
+            <% end %>
+          </dd>
+        </div>
+      <% end %>
+    </dl>
+
+    <div class="mt-6 grid min-w-0 gap-6 lg:grid-cols-2">
+      <%= render "statistics/persona_ranking", people: personas[:makers], kind: :makers %>
+      <%= render "statistics/persona_ranking", people: personas[:recipients], kind: :recipients %>
+    </div>
+
+    <%= render "statistics/persona_servings", servings: personas[:servings] %>
+
+    <section aria-labelledby="statistics-persona-beans-heading" class="mt-8 min-w-0">
+      <h3 id="statistics-persona-beans-heading" class="text-xl font-black text-rn-ink"><%= t("statistics.personas.beans_title") %></h3>
+      <p class="mt-2 max-w-3xl text-sm leading-6 text-rn-muted"><%= t("statistics.personas.ratings_help") %></p>
+      <div class="mt-4 min-w-0 divide-y divide-[var(--rn-line)] overflow-hidden rounded-2xl border border-rn-line bg-rn-surface">
+        <% personas[:recipient_beans].each_with_index do |recipient, index| %>
+          <%= render "statistics/persona_beans", recipient: recipient, favorites: personas[:favorites][index], index: index %>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <p data-testid="statistics-personas-guest-help" class="mt-5 max-w-3xl text-xs leading-5 text-rn-muted"><%= t("statistics.personas.guests_help") %></p>
+</section>

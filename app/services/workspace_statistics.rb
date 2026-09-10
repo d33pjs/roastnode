@@ -31,7 +31,8 @@ class WorkspaceStatistics
       series:,
       distributions:,
       rates:,
-      breakdowns:
+      breakdowns:,
+      personas: WorkspacePersonaStatistics.new(brews:).call
     }
   end
 
@@ -40,7 +41,7 @@ class WorkspaceStatistics
 
     def brews
       @brews ||= filtered_brew_scope
-        .includes(:bean, :grinder, :machine, :brewer)
+        .includes(:bean, :grinder, :machine, :brewer, :user, :recipient_user)
         .to_a
     end
 

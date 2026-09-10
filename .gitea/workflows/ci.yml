@@ -35,10 +35,10 @@ jobs:
       SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
       SOURCE_MIKEBOM_SPDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.spdx3.json
       SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
-      CDXGEN_VERSION: v12.8.4
-      CDXGEN_SHA256: 51de5a0a411163140d7f4bbcfd78f171166781ef50f8004b253da015689bda13
-      WAYBILL_VERSION: v0.2.0
-      WAYBILL_SHA256: 5f946e48de62f44d205ef92a21864f55fc49a7da4f71619aec0c1e4cd1c617bb
+      CDXGEN_VERSION: v13.1.0
+      CDXGEN_SHA256: b9575914c36e601296d75f322123643b2531251235159f51578b507da6d9931f
+      WAYBILL_VERSION: v0.7.0
+      WAYBILL_SHA256: d4c521ec20575ab8cee8fa04b064fb6601cb1da1c232bb3afacd894f68fd59e5
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
@@ -59,6 +59,14 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Set up Node for JavaScript tests
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+
+      - name: Test JavaScript controllers
+        run: node --test test/javascript/*.mjs
+
       - name: Lint Ruby
         run: bin/rubocop
 
@@ -75,7 +83,7 @@ jobs:
         run: bin/rails db:test:prepare test
 
       - name: Generate source Syft SPDX SBOM
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           format: spdx-json
           output-file: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
@@ -95,7 +103,7 @@ jobs:
             -F "file=@${SOURCE_SYFT_SPDX_SBOM};type=application/json"
 
       - name: Generate source Syft CycloneDX SBOM
-        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
         with:
           format: cyclonedx-json
           output-file: ${{ env.SOURCE_SYFT_CDX_SBOM }}
@@ -130,7 +138,7 @@ jobs:
           "$HOME/.local/bin/cdxgen" --version
 
       - name: Generate SBOM via cdxgen binary
-        run: cdxgen -o "${SOURCE_CDX_CDX_SBOM}" .
+        run: cdxgen --spec-version 1.6 --no-install-deps -o "${SOURCE_CDX_CDX_SBOM}" .
 
       - name: Upload source cdxgen CycloneDX SBOM to exodos.io
         if: ${{ env.EXODOS_API_TOKEN != '' && env.EXODOS_INVENTORYROOT_CDX_CDX_ID != '' }}

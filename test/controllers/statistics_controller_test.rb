@@ -3,6 +3,50 @@ require "test_helper"
 class StatisticsControllerTest < ActionDispatch::IntegrationTest
   include ActiveSupport::Testing::TimeHelpers
 
+  test "persona statistics show private guest counts and cupping ratings within the active workspace" do
+    users(:one).update!(display_name: "Jens")
+    brews(:morning_espresso).update!(recipient_kind: "guest", recipient_name: "Alex", rating: 5)
+    brews(:other_workspace_brew).update!(recipient_kind: "guest", recipient_name: "Foreign guest sentinel", rating: 1)
+    sign_in_as(users(:one))
+
+    get statistics_path
+
+    assert_response :success
+    assert_select "[data-testid=statistics-personas]" do
+      assert_select "[data-testid=statistics-persona-makers]", text: /Jens/
+      assert_select "[data-testid=statistics-persona-recipients]", text: /Alex \(guest\)/
+      assert_select "[data-testid=statistics-personas-served-to-others]", "1"
+      assert_select "[data-testid=statistics-personas-self-served]", "0"
+      assert_select "[data-testid=statistics-persona-favorites]", text: /House Blend/
+      assert_select "[data-testid=statistics-persona-favorites]", text: /1 rated out of 1 coffee/
+      assert_select "[data-testid=statistics-personas-rated-count]", "1"
+    end
+    chart_data = JSON.parse(css_select("[data-controller=statistics-chart]").first["data-statistics-chart-series-value"])
+    assert_equal [ "Jens" ], chart_data["labels"]
+    assert_equal [ { "label" => "Alex (guest)", "data" => [ 1 ] } ], chart_data["datasets"]
+    assert_not_includes response.body, "Foreign guest sentinel"
+    assert_not_includes response.body, "Other Workspace Bean"
+    assert_not_includes response.body, users(:one).email_address
+  end
+
+  test "persona sections honor filters and are readable by viewers" do
+    memberships(:owner).update!(role: "viewer")
+    brews(:morning_espresso).update!(recipient_kind: "guest", recipient_name: "Alex")
+    sign_in_as(users(:one))
+
+    get statistics_path, params: { recipient: "guests" }
+
+    assert_response :success
+    assert_select "[data-testid=statistics-persona-recipients]", text: /Alex/
+
+    get statistics_path, params: { recipient: "self" }
+
+    assert_response :success
+    assert_select "[data-testid=statistics-personas-empty]"
+    assert_select "[data-controller=statistics-chart]", count: 0
+    assert_not_includes response.body, "Alex"
+  end
+
   test "workspace member sees scoped statistics" do
     sign_in_as(users(:one))
 

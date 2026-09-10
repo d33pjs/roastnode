@@ -20,6 +20,8 @@ Users can upload an avatar and a public banner from the Profile page. On private
 
 Private Brew surfaces may show an optional Guest `recipient_name` and Cup style. Household recipients use `User#display_label`, never email. A historical household recipient who has left the Workspace keeps the safe display label but no avatar; only the focused serving-correction choice appends the localized **(former member)** marker so the historical selection is explicit.
 
+Private workspace statistics may also group named Guests by trimmed, case-insensitive saved name to show serving patterns and bean preferences. Unnamed Guests stay combined. This extension is limited to the authenticated statistics page; Guest filter options remain combined and public projections below still omit Guest names. See `docs/statistics.md` for counting and rating rules.
+
 Public Brew and Bean shares use an automatic curated recipient projection rather than the private fields or a per-share identity toggle:
 
 - Self publishes only its kind and renders as **themself**.

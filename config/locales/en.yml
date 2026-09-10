@@ -1720,7 +1720,7 @@ en:
       open_beans: "Open beans"
       origins: "Origins"
       people: "People"
-      people_filter_help: "A named person combines brews they logged for themself with brews served to them; Guests are grouped together."
+      people_filter_help: "A named person combines brews they logged for themself with brews served to them. The Guests filter selects all guests; saved names appear separately below."
       processes: "Processes"
       quick_timeframes: "Quick ranges"
       reset_all: "Reset all"

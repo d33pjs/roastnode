@@ -167,6 +167,8 @@
       </article>
     </section>
 
+    <%= render "statistics/personas", personas: @statistics[:personas] %>
+
     <div class="grid min-w-0 gap-6 lg:grid-cols-2">
       <section data-testid="statistics-equipment" class="min-w-0">
         <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".equipment") %></h2>

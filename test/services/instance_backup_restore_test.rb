@@ -150,7 +150,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal [ [ restored, nil ] ], schedule_calls
     assert_nil restored.expiration_job_enqueued_at
     assert_nil restored.expiration_job_enqueueing_at
-    assert_predicate restored, :expiration_dispatch_pending?
+    assert restored.expiration_dispatch_pending?(at: now)
   end
 
   test "restorer keeps a committed restore successful when expiration scheduling raises" do
@@ -191,7 +191,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     restored.each do |request|
       assert_nil request.expiration_job_enqueued_at
       assert_nil request.expiration_job_enqueueing_at
-      assert_predicate request, :expiration_dispatch_pending?
+      assert request.expiration_dispatch_pending?(at: now)
     end
   end
 

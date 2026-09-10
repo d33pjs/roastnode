@@ -1,0 +1,46 @@
+<details data-testid="statistics-persona-beans" class="group min-w-0" <%= "open" if index.zero? %>>
+  <summary class="min-h-16 cursor-pointer rounded-lg px-4 py-4 text-rn-ink outline-none hover:bg-[var(--rn-surface-muted)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--rn-accent-strong)] sm:px-5">
+    <span class="ml-1 break-words font-extrabold"><%= recipient[:label] %></span>
+    <span class="mt-1 block pl-5 text-xs leading-5 text-rn-muted sm:ml-3 sm:inline sm:pl-0"><%= t("statistics.personas.coffee_count", count: recipient[:count]) %> · <%= t("statistics.personas.beans_tried", count: recipient[:beans].length) %></span>
+  </summary>
+  <div class="grid min-w-0 gap-6 border-t border-rn-line px-4 py-5 sm:px-5 lg:grid-cols-2 lg:gap-8">
+    <section class="min-w-0" aria-labelledby="statistics-persona-beans-<%= index %>-heading">
+      <h4 id="statistics-persona-beans-<%= index %>-heading" class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("statistics.personas.received_beans") %></h4>
+      <ul class="mt-4 max-h-96 space-y-4 overflow-y-auto pr-1" tabindex="0" aria-label="<%= t("statistics.personas.received_beans") %>">
+        <% recipient[:beans].each do |bean| %>
+          <li class="min-w-0">
+            <div class="flex min-w-0 items-start justify-between gap-3 text-sm">
+              <span class="min-w-0 break-words font-bold text-rn-ink"><%= bean[:label] %></span>
+              <span class="shrink-0 font-extrabold tabular-nums text-rn-ink"><%= bean[:count] %><span class="sr-only"> <%= t("statistics.personas.coffees") %></span></span>
+            </div>
+            <div aria-hidden="true" class="mt-2 h-2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]"><div class="h-full rounded-full bg-[var(--rn-accent-strong)]" style="width: <%= statistics_bar_width(bean[:count], recipient[:beans].first[:count]) %>%"></div></div>
+            <% if bean[:rated_count].zero? %>
+              <p class="mt-1 text-xs leading-5 text-rn-muted"><%= t("statistics.personas.unrated") %></p>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+
+    <section class="min-w-0" aria-labelledby="statistics-persona-favorites-<%= index %>-heading">
+      <h4 id="statistics-persona-favorites-<%= index %>-heading" class="text-xs font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("statistics.personas.favorites_title") %></h4>
+      <% rated_beans = favorites[:beans].select { |bean| bean[:average_rating].present? } %>
+      <% if rated_beans.any? %>
+        <ol data-testid="statistics-persona-favorites" class="mt-4 max-h-96 space-y-4 overflow-y-auto pr-1" tabindex="0" aria-label="<%= t("statistics.personas.favorites_title") %>">
+          <% rated_beans.each do |bean| %>
+            <li class="min-w-0">
+              <div class="flex min-w-0 items-start justify-between gap-3 text-sm">
+                <span class="min-w-0 break-words font-bold text-rn-ink"><%= bean[:label] %></span>
+                <span class="shrink-0 font-black tabular-nums text-rn-ink"><%= statistics_persona_rating(bean[:average_rating]) %><span class="font-normal text-rn-muted"> / 5</span></span>
+              </div>
+              <div aria-hidden="true" class="mt-2 h-2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]"><div class="h-full rounded-full bg-[var(--rn-chart-up)]" style="width: <%= statistics_bar_width(bean[:average_rating], 5) %>%"></div></div>
+              <p class="mt-1 text-xs leading-5 text-rn-muted"><%= t("statistics.personas.rating_sample", rated: bean[:rated_count], count: bean[:count]) %></p>
+            </li>
+          <% end %>
+        </ol>
+      <% else %>
+        <p data-testid="statistics-persona-no-ratings" class="mt-4 text-sm leading-6 text-rn-muted"><%= t("statistics.personas.no_ratings") %></p>
+      <% end %>
+    </section>
+  </div>
+</details>

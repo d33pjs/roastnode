@@ -1,0 +1,47 @@
+<section data-testid="statistics-persona-servings"
+  data-controller="statistics-chart"
+  data-statistics-chart-series-value="<%= servings.to_json %>"
+  data-statistics-chart-error-value="<%= t("statistics.personas.chart_error") %>"
+  data-statistics-chart-axis-label-value="<%= t("statistics.personas.coffees") %>"
+  aria-labelledby="statistics-persona-servings-heading"
+  class="mt-6 min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 sm:p-6">
+  <h3 id="statistics-persona-servings-heading" class="text-xl font-black text-rn-ink"><%= t("statistics.personas.servings_title") %></h3>
+  <p class="mt-2 max-w-3xl text-sm leading-6 text-rn-muted"><%= t("statistics.personas.servings_help") %></p>
+  <p data-statistics-chart-target="status" role="status" class="mt-4 text-sm text-rn-muted" hidden><%= t("statistics.personas.chart_loading") %></p>
+
+  <div data-statistics-chart-target="frame" class="mt-5 max-h-[32rem] min-w-0 overflow-y-auto" tabindex="0" role="region" aria-label="<%= t("statistics.personas.servings_title") %>" hidden>
+    <div class="relative w-full" style="height: <%= [servings[:labels].length * 48 + 56, 180].max %>px">
+      <canvas data-statistics-chart-target="canvas" aria-hidden="true"></canvas>
+    </div>
+  </div>
+
+  <ul class="mt-4 flex max-h-40 flex-wrap gap-x-4 gap-y-2 overflow-y-auto text-xs font-semibold leading-5 text-rn-ink" aria-label="<%= t("statistics.personas.served_to") %>">
+    <% servings[:datasets].each_with_index do |dataset, index| %>
+      <li class="flex min-w-0 items-start gap-2">
+        <span data-statistics-chart-target="swatch" aria-hidden="true" class="mt-1 h-3 w-3 shrink-0 rounded-sm" style="background-color: <%= statistics_persona_color(index) %>"></span>
+        <span class="min-w-0 break-words"><%= dataset[:label] %></span>
+      </li>
+    <% end %>
+  </ul>
+
+  <details data-statistics-chart-target="fallback" class="mt-5 border-t border-rn-line pt-2" open>
+    <summary class="min-h-11 cursor-pointer content-center rounded-lg py-2 text-sm font-bold text-rn-ink outline-none hover:text-[var(--rn-accent-strong)] focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-[var(--rn-accent-strong)]"><%= t("statistics.personas.exact_pairings") %></summary>
+    <div data-testid="statistics-persona-pairings" class="mt-2 grid max-h-96 min-w-0 gap-5 overflow-y-auto pr-1 sm:grid-cols-2 lg:grid-cols-3" tabindex="0" role="region" aria-label="<%= t("statistics.personas.exact_pairings") %>">
+      <% servings[:labels].each_with_index do |maker, maker_index| %>
+        <div class="min-w-0">
+          <h4 class="break-words text-sm font-extrabold text-rn-ink"><%= t("statistics.personas.made_by", name: maker) %></h4>
+          <dl class="mt-2 space-y-2 text-sm">
+            <% servings[:datasets].each_with_index do |dataset, recipient_index| %>
+              <% count = dataset[:data][maker_index] %>
+              <% next unless count.positive? %>
+              <div class="flex min-w-0 items-start justify-between gap-3">
+                <dt class="flex min-w-0 items-start gap-2 text-rn-muted"><span aria-hidden="true" class="mt-1 h-3 w-3 shrink-0 rounded-sm" style="background-color: <%= statistics_persona_color(recipient_index) %>"></span><span class="min-w-0 break-words"><%= dataset[:label] %></span></dt>
+                <dd class="shrink-0 font-bold tabular-nums text-rn-ink"><%= count %></dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+      <% end %>
+    </div>
+  </details>
+</section>
