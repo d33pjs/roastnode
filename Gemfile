@@ -20,7 +20,7 @@ gem "tailwindcss-rails"
 # Ruby 3.4 removes csv from the default gems loaded without declaration.
 gem "csv"
 # Rails 8.1 passes positional parser options removed by JSON 3.
-gem "json", ">= 2.21.2", "< 3"
+gem "json", ">= 2.21.2", "< 4"
 # Build owner-only media archives without shelling out to system zip tools.
 gem "rubyzip", require: false
 
