@@ -91,7 +91,29 @@ class InstanceBackupArchiveValidator
         errors << "Readable export version is not #{InstanceReadableExportBuilder::VERSION}."
       end
       errors << "Archive media catalogs do not match." unless valid_media_catalogs?(payload["media_files"], manifest_media_files)
+      errors << "Archive contains invalid coffee history memberships." unless valid_coffee_histories?(payload)
       errors << "Archive contains an invalid cupping request." unless valid_cupping_requests?(payload, manifest_media_files:)
+    end
+
+    def valid_coffee_histories?(payload)
+      Array(payload["workspaces"]).all? do |workspace_payload|
+        beans = workspace_payload["beans"]
+        has_memberships = beans.is_a?(Array) && beans.any? { |row| row.is_a?(Hash) && row.key?("coffee_history_id") }
+        next !has_memberships unless workspace_payload.key?("coffee_histories")
+
+        histories = workspace_payload["coffee_histories"]
+        next false unless histories.is_a?(Array) && beans.is_a?(Array)
+
+        ids = histories.filter_map do |row|
+          next unless exact_hash?(row, %w[created_at id updated_at])
+          next unless row["id"].is_a?(Integer)
+          next unless valid_archived_time_string?(row["created_at"]) && valid_archived_time_string?(row["updated_at"])
+
+          row["id"]
+        end
+        ids.length == histories.length && ids.uniq.length == ids.length &&
+          beans.all? { |row| row.is_a?(Hash) && row.key?("coffee_history_id") && ids.include?(row["coffee_history_id"]) }
+      end
     end
 
     def valid_media_catalogs?(payload_files, manifest_files)

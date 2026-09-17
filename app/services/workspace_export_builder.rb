@@ -15,6 +15,7 @@ class WorkspaceExportBuilder
       workspace: workspace_payload,
       memberships: memberships_payload,
       data_imports: data_imports_payload,
+      coffee_histories: coffee_histories_payload,
       beans: beans_payload,
       equipment: equipment_payload,
       preparation_tools: preparation_tools_payload,
@@ -60,6 +61,7 @@ class WorkspaceExportBuilder
       workspace.beans.order(:id).map do |bean|
         {
           id: bean.id,
+          coffee_history_id: bean.coffee_history_id,
           name: bean.name,
           roaster_name: bean.roaster_name,
           origin: bean.origin,
@@ -105,6 +107,16 @@ class WorkspaceExportBuilder
           duplicated_from_bean_id: bean.duplicated_from_bean_id,
           raw_import_data: bean.raw_import_data,
           photos: photo_metadata(bean)
+        }
+      end
+    end
+
+    def coffee_histories_payload
+      workspace.coffee_histories.order(:id).map do |history|
+        {
+          id: history.id,
+          created_at: timestamp(history.created_at),
+          updated_at: timestamp(history.updated_at)
         }
       end
     end

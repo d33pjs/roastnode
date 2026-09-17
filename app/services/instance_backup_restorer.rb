@@ -23,6 +23,7 @@ class InstanceBackupRestorer
     @membership_map = {}
     @workspace_invite_map = {}
     @data_import_map = {}
+    @coffee_history_map = {}
     @bean_map = {}
     @equipment_map = {}
     @preparation_tool_map = {}
@@ -51,8 +52,10 @@ class InstanceBackupRestorer
       restore_memberships
       restore_workspace_invites
       restore_data_imports
+      restore_coffee_histories
       restore_beans
       restore_bean_duplicate_sources
+      rebuild_legacy_coffee_histories
       restore_equipment
       restore_preparation_tools
       restore_brews
@@ -89,6 +92,7 @@ class InstanceBackupRestorer
         WorkspaceInvite,
         DataImport,
         Bean,
+        CoffeeHistory,
         Equipment,
         PreparationTool,
         Brew,
@@ -204,6 +208,7 @@ class InstanceBackupRestorer
         workspace_payload.fetch("beans").each do |row|
           bean = Bean.create!(
             workspace:,
+            coffee_history: restored_coffee_history(workspace_payload, row),
             data_import: optional_lookup(@data_import_map, row["data_import_id"]),
             name: row.fetch("name"),
             roaster_name: row["roaster_name"],
@@ -263,6 +268,60 @@ class InstanceBackupRestorer
           @bean_map.fetch(old_id(row)).update!(duplicated_from_bean: @bean_map.fetch(source_id))
         end
       end
+    rescue ActiveRecord::RecordInvalid, KeyError
+      raise RestoreError, "Invalid bean relationship"
+    end
+
+    def restore_coffee_histories
+      workspace_payloads.each do |workspace_payload|
+        next unless workspace_payload.key?("coffee_histories")
+
+        workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
+        rows = workspace_payload.fetch("coffee_histories")
+        raise RestoreError, "Invalid coffee history data" unless rows.is_a?(Array)
+
+        rows.each do |row|
+          raise RestoreError, "Invalid coffee history data" unless row.is_a?(Hash) && row.keys.sort == %w[created_at id updated_at]
+
+          old_history_id = old_id(row)
+          key = [ old_id(workspace_payload.fetch("workspace")), old_history_id ]
+          raise RestoreError, "Invalid coffee history data" if @coffee_history_map.key?(key)
+
+          @coffee_history_map[key] = workspace.coffee_histories.create!(
+            created_at: time(row.fetch("created_at")),
+            updated_at: time(row.fetch("updated_at"))
+          )
+        end
+      end
+    rescue ActiveRecord::RecordInvalid, KeyError, ArgumentError, TypeError
+      raise RestoreError, "Invalid coffee history data"
+    end
+
+    def restored_coffee_history(workspace_payload, bean_row)
+      return unless workspace_payload.key?("coffee_histories")
+
+      workspace_id = old_id(workspace_payload.fetch("workspace"))
+      @coffee_history_map.fetch([ workspace_id, bean_row.fetch("coffee_history_id") ])
+    rescue KeyError
+      raise RestoreError, "Invalid coffee history membership"
+    end
+
+    def rebuild_legacy_coffee_histories
+      workspace_payloads.each do |workspace_payload|
+        next if workspace_payload.key?("coffee_histories")
+
+        beans = workspace_payload.fetch("beans").map { |row| @bean_map.fetch(old_id(row)) }
+        beans.each do |bean|
+          next unless bean.duplicated_from_bean
+
+          bean.update!(coffee_history: bean.duplicated_from_bean.coffee_history)
+        end
+        used_ids = beans.map(&:coffee_history_id).uniq
+        workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
+        workspace.coffee_histories.where.not(id: used_ids).delete_all
+      end
+    rescue ActiveRecord::RecordInvalid, KeyError
+      raise RestoreError, "Invalid bean data"
     end
 
     def restore_equipment

@@ -3,6 +3,55 @@ require "test_helper"
 class BeanTest < ActiveSupport::TestCase
   include ActiveSupport::Testing::TimeHelpers
 
+  test "creates an independent coffee history only when a new bean is valid" do
+    workspace = workspaces(:household)
+
+    invalid = workspace.beans.new(name: "", bag_size_grams: 250)
+    assert_no_difference("CoffeeHistory.count") { assert_not invalid.save }
+
+    bean = nil
+    assert_difference("CoffeeHistory.count", 1) do
+      bean = workspace.beans.create!(name: "Independent", bag_size_grams: 250)
+    end
+    assert_equal workspace, bean.coffee_history.workspace
+  end
+
+  test "duplicate bags reuse the source coffee history across a duplicate chain" do
+    source = beans(:open_household)
+    duplicate = source.duplicate_for_new_bag!
+    descendant = duplicate.duplicate_for_new_bag!
+
+    assert_equal source.coffee_history, duplicate.coffee_history
+    assert_equal source.coffee_history, descendant.coffee_history
+  end
+
+  test "rejects coffee history from another workspace" do
+    bean = beans(:open_household)
+    bean.coffee_history = beans(:other_workspace_open).coffee_history
+
+    assert_not bean.valid?
+    assert_includes bean.errors[:coffee_history], "must belong to the same workspace"
+  end
+
+  test "rejects duplicate ancestry from another workspace" do
+    bean = beans(:open_household)
+    bean.duplicated_from_bean = beans(:other_workspace_open)
+
+    assert_not bean.valid?
+    assert_includes bean.errors[:duplicated_from_bean], "must belong to the same workspace"
+  end
+
+  test "coffee history link survives deletion of the source bag" do
+    source = beans(:open_household)
+    duplicate = source.duplicate_for_new_bag!
+    history = source.coffee_history
+
+    source.destroy_with_history!
+
+    assert_equal history, duplicate.reload.coffee_history
+    assert CoffeeHistory.exists?(history.id)
+  end
+
   test "defaults remaining grams to bag size" do
     bean = workspaces(:household).beans.create!(
       name: "La Marianela",

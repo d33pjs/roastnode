@@ -2,6 +2,50 @@ require "test_helper"
 require "zip"
 
 class InstanceBackupRestoreTest < ActiveSupport::TestCase
+  test "round trip restores authoritative coffee history memberships with remapped ids" do
+    source = beans(:open_household)
+    duplicate = source.duplicate_for_new_bag!
+    original_history_id = source.coffee_history_id
+    archive = InstanceBackupArchiveBuilder.new.call
+
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+
+    restored_duplicate = Bean.where.not(duplicated_from_bean_id: nil).find_by!(name: duplicate.name)
+    restored_source = restored_duplicate.duplicated_from_bean
+    assert_equal restored_source.coffee_history, restored_duplicate.coffee_history
+    assert_not_equal original_history_id, restored_source.coffee_history_id
+  end
+
+  test "legacy archive without coffee history fields rebuilds duplicate families" do
+    source = beans(:open_household)
+    duplicate = source.duplicate_for_new_bag!
+    archive = mutate_backup_payload(InstanceBackupArchiveBuilder.new.call) do |payload|
+      payload.fetch("workspaces").each do |workspace_payload|
+        workspace_payload.delete("coffee_histories")
+        workspace_payload.fetch("beans").each { |row| row.delete("coffee_history_id") }
+      end
+    end
+
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+
+    restored_duplicate = Bean.where.not(duplicated_from_bean_id: nil).find_by!(name: duplicate.name)
+    restored_source = restored_duplicate.duplicated_from_bean
+    assert_equal restored_source.coffee_history, restored_duplicate.coffee_history
+  end
+
+  test "authoritative archive rejects unknown coffee history membership with rollback" do
+    archive = mutate_backup_payload(InstanceBackupArchiveBuilder.new.call) do |payload|
+      workspace_payload = payload.fetch("workspaces").first
+      workspace_payload.fetch("beans").first["coffee_history_id"] = -123
+    end
+    empty_instance!
+
+    assert_raises(InstanceBackupRestorer::RestoreError) { InstanceBackupRestorer.new(archive).call }
+    assert_equal 0, Workspace.count
+    assert_equal 0, CoffeeHistory.count
+  end
   include PhotoTestHelper
 
   setup do
@@ -1565,6 +1609,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       PreparationTool.delete_all
       Equipment.delete_all
       Bean.delete_all
+      CoffeeHistory.delete_all
       DataImport.delete_all
       Membership.delete_all
       PasskeyCredential.delete_all

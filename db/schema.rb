@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_17_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -63,7 +63,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
     t.index ["workspace_id", "occurred_at", "id"], name: "idx_activity_workspace_time"
     t.index ["workspace_id"], name: "index_activity_events_on_workspace_id"
     t.check_constraint "subject_type IS NULL AND subject_id IS NULL OR subject_type IS NOT NULL AND subject_id IS NOT NULL", name: "activity_events_subject_pair"
-    t.check_constraint "visibility::text = 'instance_admin'::text AND workspace_id IS NULL OR (visibility::text = ANY (ARRAY['workspace'::character varying, 'workspace_admin'::character varying]::text[])) AND workspace_id IS NOT NULL", name: "activity_events_visibility_scope"
+    t.check_constraint "visibility::text = 'instance_admin'::text AND workspace_id IS NULL OR (visibility::text = ANY (ARRAY['workspace'::character varying::text, 'workspace_admin'::character varying::text])) AND workspace_id IS NOT NULL", name: "activity_events_visibility_scope"
   end
 
   create_table "beans", force: :cascade do |t|
@@ -71,6 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
     t.decimal "bag_size_grams", precision: 10, scale: 2, null: false
     t.string "blend_percentage"
     t.string "blend_type", default: "unknown", null: false
+    t.bigint "coffee_history_id", null: false
     t.string "coffee_origin_url"
     t.string "continent"
     t.string "country"
@@ -112,6 +113,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
     t.datetime "updated_at", null: false
     t.string "variety"
     t.bigint "workspace_id", null: false
+    t.index ["coffee_history_id"], name: "index_beans_on_coffee_history_id"
     t.index ["data_import_id"], name: "index_beans_on_data_import_id"
     t.index ["duplicated_from_bean_id"], name: "index_beans_on_duplicated_from_bean_id"
     t.index ["primary_photo_attachment_id"], name: "index_beans_on_primary_photo_attachment_id"
@@ -190,6 +192,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
     t.index ["workspace_id"], name: "index_brews_on_workspace_id"
     t.check_constraint "recipient_kind::text = 'self'::text AND recipient_user_id IS NULL AND recipient_name IS NULL OR recipient_kind::text = 'household_member'::text AND recipient_user_id IS NOT NULL AND recipient_name IS NULL OR recipient_kind::text = 'guest'::text AND recipient_user_id IS NULL", name: "brews_recipient_shape"
+  end
+
+  create_table "coffee_histories", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "workspace_id", null: false
+    t.index ["workspace_id"], name: "index_coffee_histories_on_workspace_id"
   end
 
   create_table "cupping_requests", force: :cascade do |t|
@@ -628,6 +637,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
   add_foreign_key "activity_events", "users", column: "actor_id", on_delete: :nullify
   add_foreign_key "activity_events", "workspaces", on_delete: :cascade
   add_foreign_key "beans", "beans", column: "duplicated_from_bean_id"
+  add_foreign_key "beans", "coffee_histories"
   add_foreign_key "beans", "data_imports"
   add_foreign_key "beans", "workspaces"
   add_foreign_key "brew_preparation_tools", "brews"
@@ -641,6 +651,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_121000) do
   add_foreign_key "brews", "users"
   add_foreign_key "brews", "users", column: "recipient_user_id"
   add_foreign_key "brews", "workspaces"
+  add_foreign_key "coffee_histories", "workspaces"
   add_foreign_key "cupping_requests", "brews"
   add_foreign_key "cupping_requests", "workspaces"
   add_foreign_key "data_imports", "users"

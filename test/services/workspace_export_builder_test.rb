@@ -2,6 +2,16 @@ require "test_helper"
 require "zip"
 
 class WorkspaceExportBuilderTest < ActiveSupport::TestCase
+  test "exports workspace coffee histories and bean memberships" do
+    workspace = workspaces(:household)
+    payload = WorkspaceExportBuilder.new(workspace).call
+
+    assert_equal workspace.coffee_histories.order(:id).pluck(:id), payload.fetch(:coffee_histories).pluck(:id)
+    exported = payload.fetch(:beans).index_by { |row| row.fetch(:id) }
+    workspace.beans.find_each do |bean|
+      assert_equal bean.coffee_history_id, exported.fetch(bean.id).fetch(:coffee_history_id)
+    end
+  end
   RECIPIENT_EXPORT_KEYS = %i[
     recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style
   ].freeze

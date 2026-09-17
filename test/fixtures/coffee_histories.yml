@@ -1,0 +1,11 @@
+household_open:
+  workspace: household
+
+household_second:
+  workspace: household
+
+household_archived:
+  workspace: household
+
+other_workspace_open:
+  workspace: other_household

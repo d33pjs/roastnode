@@ -1,5 +1,6 @@
 open_household:
   workspace: household
+  coffee_history: household_open
   name: House Blend
   roaster_name: Good Coffee
   origin: Colombia
@@ -33,6 +34,7 @@ open_household:
 
 second_open_household:
   workspace: household
+  coffee_history: household_second
   name: Morning Lot
   roaster_name: North Star
   origin: Ethiopia
@@ -54,6 +56,7 @@ second_open_household:
 
 archived_household:
   workspace: household
+  coffee_history: household_archived
   name: Finished Bag
   roaster_name: Past Coffee
   origin: Brazil
@@ -75,6 +78,7 @@ archived_household:
 
 other_workspace_open:
   workspace: other_household
+  coffee_history: other_workspace_open
   name: Other Workspace Bean
   roaster_name: Elsewhere
   origin: Peru

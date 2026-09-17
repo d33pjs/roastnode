@@ -12,6 +12,7 @@ class Bean < ApplicationRecord
   PRIVATE_URL_FIELDS = %i[purchase_url coffee_origin_url].freeze
 
   belongs_to :workspace
+  belongs_to :coffee_history
   belongs_to :data_import, optional: true
   belongs_to :duplicated_from_bean, class_name: "Bean", optional: true, inverse_of: :duplicated_bean_bags
 
@@ -22,6 +23,7 @@ class Bean < ApplicationRecord
   has_many_attached :photos
 
   before_validation :set_default_remaining_grams
+  before_validation :set_default_coffee_history, on: :create
   normalizes(*PRIVATE_URL_FIELDS, with: ->(url) { url.to_s.strip.presence })
 
   scope :open, -> { where(archived_at: nil, finished_at: nil).where.not(opened_on: nil).where("remaining_grams > 0").order(Arel.sql("opened_on ASC NULLS LAST"), :created_at) }
@@ -60,6 +62,8 @@ class Bean < ApplicationRecord
   validates :roast_degree, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 5 }, allow_nil: true
   validate :roast_degree_half_step
   validate :private_urls_are_http_or_https
+  validate :coffee_history_belongs_to_workspace
+  validate :duplicate_source_belongs_to_workspace
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
 
   def open?
@@ -348,8 +352,25 @@ class Bean < ApplicationRecord
         blend_percentage:,
         country_of_manufacturer:,
         manufacturer:,
-        duplicated_from_bean: self
+        duplicated_from_bean: self,
+        coffee_history:
       }
+    end
+
+    def set_default_coffee_history
+      self.coffee_history ||= workspace&.coffee_histories&.build
+    end
+
+    def coffee_history_belongs_to_workspace
+      return if coffee_history.blank? || workspace.blank? || coffee_history.workspace == workspace
+
+      errors.add(:coffee_history, "must belong to the same workspace")
+    end
+
+    def duplicate_source_belongs_to_workspace
+      return if duplicated_from_bean.blank? || workspace.blank? || duplicated_from_bean.workspace == workspace
+
+      errors.add(:duplicated_from_bean, "must belong to the same workspace")
     end
 
     def duplicate_display_name_in?(beans)

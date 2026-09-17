@@ -19,6 +19,7 @@ class Workspace < ApplicationRecord
   has_many :household_invites, dependent: :nullify
   has_many :data_imports, dependent: :destroy
   has_many :beans, dependent: :destroy
+  has_many :coffee_histories, dependent: :destroy
   has_many :equipment, dependent: :destroy
   has_many :brews, dependent: :destroy
   has_many :external_coffees, dependent: :destroy
