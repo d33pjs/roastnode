@@ -35,6 +35,38 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
     assert_equal restored_source.coffee_history, restored_duplicate.coffee_history
   end
 
+  [ "reversed chain", "cycle" ].each do |topology|
+    test "legacy history reconstruction handles #{topology} independently of archive order" do
+      source = beans(:open_household)
+      source.update!(name: "Legacy root")
+      child = source.duplicate_for_new_bag!
+      child.update!(name: "Legacy child")
+      grandchild = child.duplicate_for_new_bag!
+      grandchild.update!(name: "Legacy grandchild")
+      source.update!(duplicated_from_bean: grandchild) if topology == "cycle"
+      archive = mutate_backup_payload(InstanceBackupArchiveBuilder.new.call) do |payload|
+        payload.fetch("workspaces").each do |workspace_payload|
+          workspace_payload.delete("coffee_histories")
+          workspace_payload.fetch("beans").each { |row| row.delete("coffee_history_id") }
+          if topology == "reversed chain"
+            workspace_payload.fetch("beans").reverse!
+          else
+            order = [ source.id, grandchild.id, child.id ]
+            workspace_payload.fetch("beans").sort_by! { |row| order.index(row.fetch("id")) || order.size }
+          end
+        end
+      end
+
+      empty_instance!
+      InstanceBackupRestorer.new(archive).call
+
+      restored = Bean.where(name: [ "Legacy root", "Legacy child", "Legacy grandchild" ])
+      assert_equal 3, restored.count
+      assert_equal 1, restored.distinct.count(:coffee_history_id)
+      assert_equal CoffeeHistory.count, Bean.distinct.count(:coffee_history_id), "no unused temporary groups remain"
+    end
+  end
+
   test "authoritative archive rejects unknown coffee history membership with rollback" do
     archive = mutate_backup_payload(InstanceBackupArchiveBuilder.new.call) do |payload|
       workspace_payload = payload.fetch("workspaces").first

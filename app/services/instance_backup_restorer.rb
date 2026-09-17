@@ -311,17 +311,40 @@ class InstanceBackupRestorer
         next if workspace_payload.key?("coffee_histories")
 
         beans = workspace_payload.fetch("beans").map { |row| @bean_map.fetch(old_id(row)) }
-        beans.each do |bean|
-          next unless bean.duplicated_from_bean
-
-          bean.update!(coffee_history: bean.duplicated_from_bean.coffee_history)
-        end
+        rebuild_legacy_history_components(beans)
         used_ids = beans.map(&:coffee_history_id).uniq
         workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
         workspace.coffee_histories.where.not(id: used_ids).delete_all
       end
     rescue ActiveRecord::RecordInvalid, KeyError
       raise RestoreError, "Invalid bean data"
+    end
+
+    def rebuild_legacy_history_components(beans)
+      by_id = beans.index_by(&:id)
+      neighbors = by_id.keys.index_with { [] }
+      beans.each do |bean|
+        source_id = bean.duplicated_from_bean_id
+        next unless by_id.key?(source_id)
+
+        neighbors.fetch(bean.id) << source_id
+        neighbors.fetch(source_id) << bean.id
+      end
+      visited = Set.new
+      beans.each do |bean|
+        next if visited.include?(bean.id)
+
+        history = bean.coffee_history
+        pending = [ bean.id ]
+        until pending.empty?
+          id = pending.pop
+          next unless visited.add?(id)
+
+          member = by_id.fetch(id)
+          member.update!(coffee_history: history) unless member.coffee_history_id == history.id
+          pending.concat(neighbors.fetch(id))
+        end
+      end
     end
 
     def restore_equipment
