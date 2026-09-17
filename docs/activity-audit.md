@@ -20,6 +20,8 @@ An event and every directly caused public-snapshot refresh are inserted in the s
 
 Metadata is a small flat object whose automatic and caller-supplied keys are allowlisted per action. It may contain safe display labels, record kind, short enum values, and bounded numeric summaries. It never contains passwords, password digests, invite/share/reset tokens, session or WebAuthn challenge identifiers, emails, private notes, costs, raw import payloads, raw errors, attachment/blob identifiers, filenames, signed/private media URLs, backup paths, checksums, environment variables, or infrastructure secrets. Actor labels are snapshotted from `User#display_label`; later profile or membership changes do not rewrite history.
 
+Bean create/update and lifecycle events allow a `coffee_history_changed` boolean for explicit history membership changes. The flag records the change without exposing history group IDs or related private settings.
+
 Cupping events are the narrow IP-address exception. First access; taste set/change/clear; rating set/change/clear; comment added/updated; and automatic closure require a normalized IP in their allowlisted metadata. They use the Brew as the private linked subject, no `actor_id`, the restricted `guest` actor kind, and the Brew's bounded private Guest label. Comment events never contain the comment text. The closure event uses the request's most recently observed IP and the authoritative feedback deadline as its occurrence time. See [Cupping Requests](cupping-requests.md).
 
 ## Timing, filtering, and presentation

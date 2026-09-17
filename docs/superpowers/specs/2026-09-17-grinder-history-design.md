@@ -1,6 +1,6 @@
 # Grinder History Across Bean Bags
 
-Status: proposed design for user review; application changes are not implemented.
+Status: approved by the user and implemented on 2026-09-17.
 
 ## Problem confirmed
 
@@ -15,7 +15,7 @@ an older `1/2,75` won over the latest `1/1,25`, an unrated first brew returned n
 reference, and an opened duplicate returned no reference despite its source's
 recorded setting. No production records were changed during diagnosis.
 
-## Proposed behavior
+## Approved behavior
 
 - Preserve the existing green Last used bean marker and normal form defaults.
 - The selected coffee's reference is its **last recorded nonblank setting**, not
