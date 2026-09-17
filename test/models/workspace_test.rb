@@ -1,6 +1,21 @@
 require "test_helper"
 
 class WorkspaceTest < ActiveSupport::TestCase
+  test "destroy with history removes beans before shared and independent coffee histories" do
+    workspace = Workspace.create!(name: "Delete coffee history workspace", default_currency: "EUR")
+    source = workspace.beans.create!(name: "Shared source", bag_size_grams: 250)
+    duplicate = source.duplicate_for_new_bag!
+    independent = workspace.beans.create!(name: "Independent", bag_size_grams: 250)
+    bean_ids = [ source.id, duplicate.id, independent.id ]
+    history_ids = [ source.coffee_history_id, independent.coffee_history_id ]
+
+    assert_nothing_raised { workspace.destroy_with_history! }
+
+    assert_not Workspace.exists?(workspace.id)
+    assert Bean.where(id: bean_ids).none?
+    assert CoffeeHistory.where(id: history_ids).none?
+  end
+
   test "buy me a coffee url is optional" do
     workspace = workspaces(:household)
 
