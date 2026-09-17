@@ -6,7 +6,7 @@ class BeansController < ApplicationController
     { key: "archived", statuses: %w[archived] }
   ].freeze
 
-  before_action :authorize_workspace_write!, only: %i[new create edit update rating finish close open_bag reopen duplicate destroy roaster_suggestions]
+  before_action :authorize_workspace_write!, only: %i[new create edit update rating finish close open_bag reopen duplicate destroy roaster_suggestions coffee_history_suggestions]
   before_action :set_bean, only: %i[show edit update rating finish close open_bag reopen duplicate destroy]
 
   def index
@@ -35,16 +35,34 @@ class BeansController < ApplicationController
     render json: { suggestions: suggestions }
   end
 
+  def coffee_history_suggestions
+    bean_id = params[:bean_id]
+    raise ActionController::BadRequest unless bean_id.nil? || bean_id.is_a?(String) || bean_id.is_a?(Integer)
+
+    bean = current_workspace.beans.find(bean_id) if bean_id.present?
+    matches = CoffeeHistorySuggestions.new(workspace: current_workspace,
+      name: params[:name], roaster_name: params[:roaster_name], bean:).call
+    render json: { suggestions: matches.map do |match|
+      source = match.fetch(:bean)
+      { id: source.coffee_history_id,
+        label: [ source.display_name, source.roast_date || source.purchased_on || source.created_at.to_date,
+          t("beans.grind_states.#{source.grind_state}") ].join(" · "),
+        bag_count: match.fetch(:bag_count) }
+    end }
+  end
+
   def edit
     prepare_record_links(@bean)
   end
 
   def create
     attributes = bean_params
+    @coffee_history_choice = attributes.delete(:coffee_history_choice)
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
     bag_status = extract_bag_status(attributes) || "stock"
     @bean = current_workspace.beans.new(attributes)
     @bean.apply_bag_status(bag_status)
+    apply_coffee_history_choice
 
     created = with_workspace_activity(action: "bean.created", subject: -> { @bean }) do
       saved = @bean.save
@@ -65,11 +83,13 @@ class BeansController < ApplicationController
 
   def update
     attributes = bean_params
+    @coffee_history_choice = attributes.delete(:coffee_history_choice)
     photos = Array(attributes.delete(:photos)).reject(&:blank?)
     bag_status = extract_bag_status(attributes)
     previous_status = @bean.bag_status
     @bean.assign_attributes(attributes)
     @bean.apply_bag_status(bag_status)
+    apply_coffee_history_choice
 
     updated = with_workspace_activity(
       action: -> { bean_update_activity_action(previous_status) }, subject: @bean
@@ -208,9 +228,25 @@ class BeansController < ApplicationController
       attributes.delete(:bag_status).presence_in(Bean::BAG_STATUSES)
     end
 
+    def apply_coffee_history_choice
+      return if @coffee_history_choice.blank?
+
+      @bean.coffee_history = if @coffee_history_choice == "separate"
+        current_workspace.coffee_histories.build
+      else
+        raise ActiveRecord::RecordNotFound unless @coffee_history_choice.match?(/\A[0-9]+\z/)
+
+        current_workspace.coffee_histories.find(@coffee_history_choice)
+      end
+    end
+
     def bean_params
+      choice = params.require(:bean)[:coffee_history_choice]
+      raise ActionController::BadRequest unless choice.nil? || choice.is_a?(String)
+
       normalize_decimal_attributes(params.expect(bean: [
         :name,
+        :coffee_history_choice,
         :roaster_name,
         :origin,
         :process,

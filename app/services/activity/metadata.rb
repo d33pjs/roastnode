@@ -85,7 +85,7 @@ module Activity
     def auto_details(subject)
       case subject
       when Brew then { "method" => subject.method }
-      when Bean then { "status" => subject.bag_status }
+      when Bean then { "status" => subject.bag_status, "coffee_history_changed" => subject.saved_change_to_coffee_history_id? }
       when InventoryAdjustment then { "amount_grams" => subject.delta_grams&.to_s("F") }
       when EquipmentEvent
         { "event_types" => subject.event_type_names.first(MAX_ARRAY), "equipment_labels" => subject.equipment.map(&:name).sort.first(MAX_ARRAY) }

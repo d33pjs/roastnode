@@ -3,6 +3,21 @@ require "test_helper"
 class PublicBeanShareSnapshotBuilderTest < ActiveSupport::TestCase
   include PhotoTestHelper
 
+  test "sharing grinder history does not broaden public bean snapshots" do
+    bean = beans(:open_household)
+    linked = bean.duplicate_for_new_bag!
+    linked.open_bag!
+    bean.workspace.brews.create!(user: users(:one), bean: linked,
+      grinder: equipment(:household_grinder), machine: equipment(:household_machine),
+      method: "espresso", bean_weight_grams: 1, grind_setting: "linked-only-setting")
+
+    snapshot = PublicBeanShareSnapshotBuilder.new(bean:, title: "Shared", selected_photo_attachment_ids: []).call
+
+    assert_equal bean.brews.count, snapshot.dig("stats", "brew_count")
+    assert_not_includes snapshot.to_json, "linked-only-setting"
+    assert_not_includes snapshot.to_json, "coffee_history"
+  end
+
   test "builds a public-safe bean snapshot with all brew methods" do
     bean = beans(:open_household)
     bean.update!(

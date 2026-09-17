@@ -170,6 +170,7 @@ module Activity
     }.freeze
 
     AUTOMATIC_METADATA_ACTIONS = {
+      "coffee_history_changed" => %w[bean.created bean.updated bean.opened bean.finished bean.used_up bean.archived bean.reopened],
       "method" => %w[brew.created brew.updated brew.taste_changed brew.serving_changed brew.deleted brew.media_updated],
       "status" => %w[
         bean.created bean.updated bean.duplicated bean.opened bean.finished bean.used_up bean.archived bean.reopened
@@ -216,6 +217,7 @@ module Activity
     GUEST_ACTOR_KIND_SCHEMA = { type: :string, values: %w[guest] }.freeze
 
     METADATA_KEY_SCHEMAS = {
+      "coffee_history_changed" => { type: :boolean },
       "method" => { type: :string, values: %w[espresso quick_drip] },
       "status" => { type: :string, values: %w[stock open finished used_up archived] },
       "amount_grams" => { type: :decimal_string },
