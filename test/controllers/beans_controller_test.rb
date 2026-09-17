@@ -1,6 +1,22 @@
 require "test_helper"
 
 class BeansControllerTest < ActionDispatch::IntegrationTest
+  test "invalid shared history choice renders complete localized selection details" do
+    sign_in_as(users(:one))
+    source = beans(:open_household)
+    { en: "1 bag", de: "1 Tüte" }.each do |locale, count_label|
+      I18n.with_locale(locale) do
+        post beans_path, params: { bean: { name: "", roaster_name: source.roaster_name,
+          bag_size_grams: 250, coffee_history_choice: source.coffee_history_id } }
+        assert_response :unprocessable_entity
+        assert_select "#coffee-history-details:not([hidden])", text: /#{Regexp.escape(source.display_name)}.*#{source.roast_date}.*#{Regexp.escape(count_label)}/
+        assert_select "#bean_coffee_history_choice[aria-describedby~=coffee-history-details]"
+      end
+    end
+    get new_bean_path
+    assert_select "#coffee-history-details[hidden]"
+  end
+
   test "index lists active workspace beans only" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

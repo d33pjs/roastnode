@@ -10,7 +10,7 @@
     </div>
   <% end %>
 
-  <section data-testid="bean-form-section" data-section="identity" data-controller="coffee-history-choice" data-coffee-history-choice-url-value="<%= coffee_history_suggestions_beans_path %>" data-coffee-history-choice-bean-id-value="<%= bean.id %>" <% %w[loading empty failed available bags].each do |state| %> data-coffee-history-choice-<%= state %>-value="<%= t("coffee_history.#{state}", count: "%{count}") %>" <% end %> class="<%= section_class %>">
+  <section data-testid="bean-form-section" data-section="identity" data-controller="coffee-history-choice" data-coffee-history-choice-url-value="<%= coffee_history_suggestions_beans_path %>" data-coffee-history-choice-bean-id-value="<%= bean.id %>" data-coffee-history-choice-bag-value="<%= t("coffee_history.bags.one", count: "%{count}") %>" data-coffee-history-choice-bags-value="<%= t("coffee_history.bags.other", count: "%{count}") %>" <% %w[loading empty failed available].each do |state| %> data-coffee-history-choice-<%= state %>-value="<%= t("coffee_history.#{state}", count: "%{count}") %>" <% end %> class="<%= section_class %>">
     <div>
       <h2 class="<%= section_title_class %>"><%= t("beans.form.sections.identity") %></h2>
     </div>

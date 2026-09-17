@@ -9,7 +9,7 @@ function harness() {
  vm.runInNewContext(source, sandbox)
  const c = new sandbox.Choice()
  const chosen = {value: '7', selected: true, dataset: {suggestion: 'true'}, remove() {throw Error('Explicit choice lost')} }
- Object.assign(c, { sequence: 0, nameTarget: {value: 'Coffee'}, roasterTarget: {value: 'Roaster'}, choiceTarget: { options: [{value: '', dataset: {}}, chosen], append(o) {this.options.push(o)} }, statusTarget: {}, urlValue: '/suggestions', bagsValue: '%{count} bags', loadingValue: 'loading', emptyValue: 'empty', availableValue: 'available', failedValue: 'failed' })
+ Object.assign(c, { sequence: 0, nameTarget: {value: 'Coffee'}, roasterTarget: {value: 'Roaster'}, choiceTarget: { options: [{value: '', dataset: {}}, chosen], append(o) {this.options.push(o)} }, detailsTarget: {}, statusTarget: {}, urlValue: '/suggestions', bagValue: '%{count} bag', bagsValue: '%{count} bags', loadingValue: 'loading', emptyValue: 'empty', availableValue: 'available', failedValue: 'failed' })
  return {c, requests, timers}
 }
 test('invalidates in-flight responses immediately, including during debounce; never auto-selects', async () => {
@@ -42,4 +42,20 @@ test('reconnect restarts the same identity and cannot accept pre-disconnect resp
  const sequence = c.sequence
  c.search()
  assert.equal(c.sequence, sequence, 'native blur change must not invalidate an unchanged menu')
+})
+
+test('shows complete selected metadata and localized singular bags without selecting automatically', async () => {
+ const {c, requests} = harness()
+ const result = c.fetchSuggestions(0)
+ requests[0]({ok:true,json:async()=>({suggestions:[{id:4,label:'Same name · 2026-09-17 · Whole bean',bag_count:1}]})}); await result
+ const option = c.choiceTarget.options.at(-1)
+ assert.equal(option.textContent, 'Same name · 2026-09-17 · Whole bean · 1 bag')
+ option.selected = true; c.choiceTarget.options[1].selected = false
+ c.choiceChanged()
+ assert.equal(c.detailsTarget.textContent, option.textContent)
+ assert.equal(c.detailsTarget.hidden, false)
+ option.selected = false; c.choiceTarget.options[0].selected = true
+ c.choiceChanged()
+ assert.equal(c.detailsTarget.hidden, true)
+ assert.equal(c.detailsTarget.textContent, '')
 })

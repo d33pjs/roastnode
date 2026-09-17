@@ -12,7 +12,8 @@ export default class extends Controller {
   updateReminder() {
     const grinder = this.grinderTargets.find((input) => input.checked)
     const bean = this.beanTargets.find((input) => input.checked)
-    this.contextTarget.textContent = grinder?.dataset.grinderName || this.noGrinderValue
+    this.contextTarget.textContent = grinder?.dataset.grinderName || ""
+    this.contextTarget.hidden = !grinder?.value
     this.history = null
     if (bean?.dataset.grindState === "pre_ground") {
       this.emptyTarget.textContent = this.preGroundValue

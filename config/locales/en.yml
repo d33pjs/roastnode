@@ -2047,7 +2047,9 @@ en:
     no_grinder: "Select a grinder to see its history."
     pre_ground: "Pre-ground coffee · no grinder setting needed."
   coffee_history:
-    bags: "%{count} bags"
+    bags:
+      one: "%{count} bag"
+      other: "%{count} bags"
     title: "Coffee history"
     keep: "Keep current history"
     separate: "Start a separate history for this bag"

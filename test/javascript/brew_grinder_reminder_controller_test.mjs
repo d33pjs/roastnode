@@ -27,3 +27,10 @@ test('pre-ground, absent grinder, hidden and disabled fields cannot copy', () =>
   c.updateReminder(); c.applySetting(); assert.equal(c.grindSettingTarget.value, '12'); assert.equal(c.applySettingTarget.hidden, true)
  }
 })
+
+test('no grinder gives a single instruction without duplicate context text', () => {
+ const c = setup(); c.grinderTargets[0].checked = false; c.updateReminder()
+ assert.equal(c.contextTarget.hidden, true)
+ assert.equal(c.contextTarget.textContent, '')
+ assert.equal(c.emptyTarget.textContent, 'Choose grinder')
+})

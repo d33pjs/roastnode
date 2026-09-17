@@ -82,12 +82,14 @@ de:
     pending: "Mahlgrad weicht ab"
     inherited: "Aus einer früheren Tüte dieses Kaffees"
     frequency: "Häufigste Mahlgrade · Anzahl Bezüge"
-    summary: "%{brews} Bezüge · %{bags} Tüten"
+    summary: "Bezüge: %{brews} · Tüten: %{bags}"
     no_history: "Für diesen Kaffee ist auf dieser Mühle noch kein Mahlgrad erfasst."
     no_grinder: "Wähle eine Mühle, um ihren Verlauf zu sehen."
     pre_ground: "Vorgemahlener Kaffee · kein Mahlgrad nötig."
   coffee_history:
-    bags: "%{count} Tüten"
+    bags:
+      one: "%{count} Tüte"
+      other: "%{count} Tüten"
     title: "Kaffeeverlauf"
     keep: "Aktuellen Verlauf behalten"
     separate: "Eigenen Verlauf für diese Tüte starten"

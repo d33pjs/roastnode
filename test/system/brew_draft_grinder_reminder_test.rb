@@ -151,13 +151,14 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_no_selector "[data-brew-grinder-reminder-target=history]:not([hidden])"
     assert_equal "9", find('input[name="brew[grind_setting]"]').value
     find("label[for=brew_grinder_id_none]").click
-    assert_text "Select a grinder to see its history."
+    assert_text "Select a grinder to see its history.", count: 1
     find("label[for=brew_grinder_id_#{equipment(:household_grinder).id}]").click
     assert_selector "[data-brew-grinder-reminder-target=latest]", text: "9"
   end
 
   test "coffee history offers explicit matching choices after roaster selection" do
     source = beans(:open_household)
+    source.update!(name: "A long coffee name whose matching history details must remain readable on mobile")
     source.duplicate_for_new_bag!
     sign_in_through_browser
     visit new_bean_path
@@ -168,9 +169,16 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_selector "#bean_coffee_history_choice option[value='#{source.coffee_history_id}']", text: "2 bags", visible: :all
     assert_equal "", find("#bean_coffee_history_choice").value
     option_label = find("#bean_coffee_history_choice option[value='#{source.coffee_history_id}']", visible: :all).text(:all)
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1000, deviceScaleFactor: 1, mobile: true)
     select option_label, from: "bean_coffee_history_choice"
+    assert_selector "#coffee-history-details", text: option_label
+    assert_equal false, evaluate_script("document.documentElement.scrollWidth > window.innerWidth")
+    find("#coffee-history-details").scroll_to(:center)
+    page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-history-choice-mobile.png"))
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     assert_equal source.coffee_history_id.to_s, find("#bean_coffee_history_choice").value
     fill_in "bean_name", with: "Changed coffee"
+    assert_selector "#coffee-history-details", text: option_label
     assert_equal source.coffee_history_id.to_s, find("#bean_coffee_history_choice").value
   end
 

@@ -1,11 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "name", "roaster", "choice", "status" ]
-  static values = { url: String, beanId: String, loading: String, empty: String, failed: String, available: String, bags: String }
+  static targets = [ "name", "roaster", "choice", "details", "status" ]
+  static values = { url: String, beanId: String, loading: String, empty: String, failed: String, available: String, bag: String, bags: String }
 
-  connect() { this.sequence = this.sequence || 0; this.identity = null; this.search() }
+  connect() { this.sequence = this.sequence || 0; this.identity = null; this.choiceChanged(); this.search() }
   disconnect() { this.sequence++; clearTimeout(this.timer); this.request?.abort() }
+
+  choiceChanged() {
+    const option = Array.from(this.choiceTarget.options).find((item) => item.selected)
+    const shared = option?.value && option.value !== "separate"
+    this.detailsTarget.textContent = shared ? option.textContent : ""
+    this.detailsTarget.hidden = !shared
+  }
 
   search() {
     const identity = JSON.stringify([ this.nameTarget.value.trim(), this.roasterTarget.value.trim() ])
@@ -44,7 +51,8 @@ export default class extends Controller {
         if (Array.from(this.choiceTarget.options).some((option) => option.value === String(suggestion.id))) continue
         const option = document.createElement("option")
         option.value = String(suggestion.id)
-        option.textContent = `${suggestion.label} · ${this.bagsValue.replace("%{count}", suggestion.bag_count)}`
+        const bagLabel = suggestion.bag_count === 1 ? this.bagValue : this.bagsValue
+        option.textContent = `${suggestion.label} · ${bagLabel.replace("%{count}", suggestion.bag_count)}`
         option.dataset.suggestion = "true"
         this.choiceTarget.append(option)
       }
