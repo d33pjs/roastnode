@@ -10,7 +10,7 @@
     </div>
   <% end %>
 
-  <section data-testid="bean-form-section" data-section="identity" class="<%= section_class %>">
+  <section data-testid="bean-form-section" data-section="identity" data-controller="coffee-history-choice" data-coffee-history-choice-url-value="<%= coffee_history_suggestions_beans_path %>" data-coffee-history-choice-bean-id-value="<%= bean.id %>" <% %w[loading empty failed available bags].each do |state| %> data-coffee-history-choice-<%= state %>-value="<%= t("coffee_history.#{state}", count: "%{count}") %>" <% end %> class="<%= section_class %>">
     <div>
       <h2 class="<%= section_title_class %>"><%= t("beans.form.sections.identity") %></h2>
     </div>
@@ -18,7 +18,7 @@
     <div class="grid gap-4 sm:grid-cols-2">
       <div>
         <%= form.label :name, t("beans.form.name"), class: label_class %>
-        <%= form.text_field :name, autofocus: true, class: input_class %>
+        <%= form.text_field :name, autofocus: true, class: input_class, data: { coffee_history_choice_target: "name", action: "input->coffee-history-choice#search change->coffee-history-choice#search" } %>
       </div>
 
       <div data-controller="roaster-suggestions" data-roaster-suggestions-url-value="<%= roaster_suggestions_beans_path(format: :json) %>" class="relative">
@@ -28,11 +28,14 @@
           class: input_class,
           data: {
             roaster_suggestions_target: "input",
-            action: "input->roaster-suggestions#search focus->roaster-suggestions#search blur->roaster-suggestions#blur"
+            coffee_history_choice_target: "roaster",
+            action: "input->roaster-suggestions#search focus->roaster-suggestions#search blur->roaster-suggestions#blur input->coffee-history-choice#search change->coffee-history-choice#search"
           } %>
         <div data-roaster-suggestions-target="list" class="hidden absolute z-20 mt-2 max-h-56 w-full overflow-auto rounded-2xl border border-rn-line bg-rn-surface p-1 shadow-lg" role="listbox"></div>
       </div>
     </div>
+
+    <%= render "beans/coffee_history", bean:, input_class:, label_class: %>
 
     <div>
       <%= form.label :photos, t("beans.form.photos"), class: label_class %>

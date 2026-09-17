@@ -76,6 +76,7 @@ export default class extends Controller {
   choose(event) {
     this.inputTarget.value = event.currentTarget.dataset.roasterName
     this.clear()
+    this.inputTarget.dispatchEvent(new Event("change", { bubbles: true }))
     this.inputTarget.focus()
   }
 

@@ -35,6 +35,22 @@ module BeansHelper
     ].compact
   end
 
+  def coffee_history_options(bean, choice)
+    options = [ [ t("coffee_history.keep"), "" ], [ t("coffee_history.separate"), "separate" ] ]
+    if choice.present? && choice != "separate" && bean.coffee_history&.persisted?
+      source = bean.coffee_history.beans.order(created_at: :desc).first
+      label = if source
+        [ source.display_name, source.roast_date || source.purchased_on || source.created_at.to_date,
+          t("beans.grind_states.#{source.grind_state}") ].join(" · ")
+      else
+        t("coffee_history.shared")
+      end
+      label = "#{label} · #{t("coffee_history.bags", count: bean.coffee_history.beans.count)}"
+      options << [ label, bean.coffee_history_id.to_s ]
+    end
+    options
+  end
+
   private
     def bean_private_system_link(url, label:, kind:, testid:)
       safe_url = Bean.safe_http_url(url)

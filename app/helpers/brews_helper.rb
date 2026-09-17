@@ -170,6 +170,20 @@ module BrewsHelper
     reference.display_parts.join(" · ")
   end
 
+  def brew_grinder_histories(reminder, bean)
+    reminder.histories_for(bean).transform_values do |history|
+      reference = history.reference
+      {
+        setting: reference.grind_setting.strip,
+        bean: bean.display_name,
+        source: "#{reference.bean.display_name} · #{profile_timestamp(reference.brew.occurred_at)}",
+        inherited: history.inherited,
+        summary: t("grinder_history.summary", brews: history.brew_count, bags: history.bag_count),
+        settings: history.settings
+      }
+    end
+  end
+
   private
     def related_photo_group(title, name, record)
       return unless record&.photos&.attached?

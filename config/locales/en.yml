@@ -2035,3 +2035,27 @@ en:
       view_all: "View all"
     update:
       updated: "Workspace updated."
+
+  grinder_history:
+    title: "Grinder history"
+    latest: "Last recorded for selected coffee"
+    pending: "Setting differs"
+    inherited: "From a previous bag of this coffee"
+    frequency: "Most-used settings · brew count"
+    summary: "Brews: %{brews} · Bags: %{bags}"
+    no_history: "No settings recorded for this coffee on this grinder yet."
+    no_grinder: "Select a grinder to see its history."
+    pre_ground: "Pre-ground coffee · no grinder setting needed."
+  coffee_history:
+    bags: "%{count} bags"
+    title: "Coffee history"
+    keep: "Keep current history"
+    separate: "Start a separate history for this bag"
+    shared: "Shared coffee history"
+    current_shared: "History shared across %{count} bags."
+    current_independent: "This bag has its own history."
+    help: "Choose a matching coffee to share grinder settings. Inventory and statistics remain per bag. Matching names never link automatically."
+    loading: "Looking for matching coffees…"
+    empty: "No other matching coffee history found."
+    available: "Matching coffee histories are available in the menu. Choose one to link this bag."
+    failed: "Matching coffees could not be loaded. Edit the name or roaster to retry."

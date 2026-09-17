@@ -78,9 +78,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid=?]", "brew-bean-last-used-#{beans(:second_open_household).id}", count: 0
   end
 
-  test "new renders private best-reference data without changing grind defaults" do
+  test "new renders private grinder histories without changing grind defaults" do
     grinder = equipment(:household_grinder)
     selected_bean = beans(:second_open_household)
+    selected_bean.update!(grind_state: "whole_bean")
     workspaces(:household).brews.create!(
       user: users(:one),
       bean: selected_bean,
@@ -107,10 +108,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       form["data-brew-grinder-reminder-use-setting-template-value"]
 
     selected_input = form.at_css("input[value='#{selected_bean.id}']")
-    assert_equal [ grinder.id.to_s, "1/1,50" ].to_json, selected_input["data-grinder-reference-key"]
-    assert_equal "1/1,50", selected_input["data-grind-setting"]
-    assert_includes selected_input["data-grinder-reference-label"], selected_bean.display_name
-    assert_includes selected_input["data-grinder-reference-label"], "1/1,50"
+    history = JSON.parse(selected_input["data-grinder-histories"]).fetch(grinder.id.to_s)
+    assert_equal "1/1,50", history.fetch("setting")
+    assert_includes history.fetch("source"), selected_bean.display_name
+    assert_equal [ { "setting" => "1/1,50", "count" => 1 } ], history.fetch("settings")
 
     grind_input = form.at_css("input[name='brew[grind_setting]']")
     assert_equal "grindSetting", grind_input["data-brew-grinder-reminder-target"]
@@ -125,14 +126,10 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
       "brew-grinder-reminder#applySetting"
 
     notice = form.at_css("[data-testid='brew-grinder-reminder']")
-    assert_equal %w[
-      brew-grinder-reminder-title
-      brew-grinder-reminder-previous
-      brew-grinder-reminder-selected
-    ], notice.element_children.map { |child| child["data-testid"] }
-    assert_includes notice.at_css("[data-testid='brew-grinder-reminder-title']").text, "Check grinder settings"
+    assert_equal "polite", notice["aria-live"]
+    assert_includes notice.at_css("[data-testid='brew-grinder-reminder-title']").text, "Grinder history"
     assert_includes notice.at_css("[data-testid='brew-grinder-reminder-previous']").text, "Previous brew"
-    assert_includes notice.at_css("[data-testid='brew-grinder-reminder-selected']").text, "Best for selected bean"
+    assert_includes notice.at_css("[data-testid='brew-grinder-reminder-selected']").text, "Last recorded for selected coffee"
     assert_select "input[name=?][value=?]", "brew[grind_setting]", "1/1,75"
   end
 
@@ -154,6 +151,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
 
   test "new Espresso keeps apply data when the latest brew has no grinder reference" do
     selected_bean = beans(:second_open_household)
+    selected_bean.update!(grind_state: "whole_bean")
     workspaces(:household).brews.create!(
       user: users(:one),
       bean: selected_bean,
@@ -179,8 +177,8 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     form = document.at_css("form[data-controller~='brew-grinder-reminder']")
     assert form
     assert_equal "1/1,50",
-      form.at_css("input[value='#{selected_bean.id}']")["data-grind-setting"]
-    assert_nil form.at_css("[data-testid='brew-grinder-reminder']")
+      JSON.parse(form.at_css("input[value='#{selected_bean.id}']")["data-grinder-histories"]).fetch(equipment(:household_grinder).id.to_s).fetch("setting")
+    assert form.at_css("[data-testid='brew-grinder-reminder']")
   end
 
   test "repeat brew keeps its bean selection while last-used marker describes actual history" do
@@ -208,6 +206,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "failed create preserves the selected bean and actual last-used marker" do
     last_brew = brews(:morning_espresso)
     selected_bean = beans(:second_open_household)
+    selected_bean.update!(grind_state: "whole_bean")
     sign_in_as(users(:one))
 
     post brews_path, params: {
@@ -249,6 +248,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
   test "new shows one historical last-used status when the actual last bean is closed" do
     closed_bean = beans(:open_household)
     selected_bean = beans(:second_open_household)
+    selected_bean.update!(grind_state: "whole_bean")
     closed_bean.update!(remaining_grams: 0, archived_at: Time.current)
     brews(:morning_espresso).update!(occurred_at: 1.minute.ago, grind_setting: "truthful 12")
     sign_in_as(users(:one))

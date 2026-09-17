@@ -1,6 +1,6 @@
 <% reminder = local_assigns.fetch(:grinder_reminder, nil) %>
 <% previous = reminder&.previous %>
-<% controller_enabled = reminder && (form.object.espresso? || previous) %>
+<% controller_enabled = reminder.present? %>
 <% historical_last_bean = reminder&.last_bean unless @beans.include?(reminder&.last_bean) %>
 
 <section
@@ -19,18 +19,12 @@
     <% @beans.each do |bean| %>
       <% collection_name = bean.display_name_for_collection(@beans) %>
       <% collection_suffix = collection_name.delete_prefix(bean.display_name) %>
-      <% reference = reminder&.best_for(bean) %>
-      <% radio_data = if controller_enabled
-        {
-          brew_grinder_reminder_target: "bean",
-          action: "change->brew-grinder-reminder#beanChanged",
-          grinder_reference_key: reference&.comparison_key,
-          grinder_reference_label: reference ? brew_grinder_reference_label(reference) : nil,
-          grind_setting: reference&.grind_setting.presence
-        }.compact
-      else
-        {}
-      end %>
+      <% radio_data = controller_enabled ? {
+        brew_grinder_reminder_target: "bean",
+        action: "change->brew-grinder-reminder#beanChanged",
+        grind_state: bean.grind_state,
+        grinder_histories: brew_grinder_histories(reminder, bean).to_json
+      } : {} %>
       <label
         for="brew_bean_id_<%= bean.id %>"
         data-testid="brew-bean-option-<%= bean.id %>"
@@ -70,16 +64,5 @@
     <% end %>
   </div>
 
-  <% if reminder && previous %>
-    <div
-      hidden
-      role="alert"
-      data-testid="brew-grinder-reminder"
-      data-brew-grinder-reminder-target="notice"
-      class="mt-3 rounded-2xl border border-red-300 bg-red-50 px-3 py-2.5 text-sm text-red-900">
-      <p data-testid="brew-grinder-reminder-title" class="font-extrabold"><%= t("brews.form.check_grinder_settings") %></p>
-      <p data-testid="brew-grinder-reminder-previous" class="mt-1"><span class="font-bold"><%= t("brews.form.previous_brew") %></span> — <%= brew_grinder_reference_label(previous) %></p>
-      <p data-testid="brew-grinder-reminder-selected"><span class="font-bold"><%= t("brews.form.best_for_selected_bean") %></span> — <span data-brew-grinder-reminder-target="selectedReference"></span></p>
-    </div>
-  <% end %>
+  <%= render("brews/grinder_history", form:, reminder:) if reminder %>
 </section>

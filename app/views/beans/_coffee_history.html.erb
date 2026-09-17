@@ -1,0 +1,8 @@
+<div data-testid="bean-coffee-history" class="min-w-0 border-t border-rn-line pt-4">
+  <%= label_tag "bean_coffee_history_choice", t("coffee_history.title"), class: label_class %>
+  <% bag_count = bean.coffee_history&.persisted? ? bean.coffee_history.beans.count : 0 %>
+  <p class="mt-1 text-sm text-rn-muted"><%= bag_count > 1 ? t("coffee_history.current_shared", count: bag_count) : t("coffee_history.current_independent") %></p>
+  <%= select_tag "bean[coffee_history_choice]", options_for_select(coffee_history_options(bean, @coffee_history_choice), @coffee_history_choice.to_s), id: "bean_coffee_history_choice", class: input_class, data: { coffee_history_choice_target: "choice" }, aria: { describedby: "coffee-history-help coffee-history-status" } %>
+  <p id="coffee-history-help" class="mt-2 text-xs text-rn-muted"><%= t("coffee_history.help") %></p>
+  <p id="coffee-history-status" data-coffee-history-choice-target="status" aria-live="polite" class="mt-1 text-xs text-rn-muted"></p>
+</div>

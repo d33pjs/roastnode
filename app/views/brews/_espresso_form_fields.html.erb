@@ -44,15 +44,6 @@
               action: "input->brew-grinder-reminder#grindSettingChanged"
             },
             class: "min-w-0 flex-1 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
-          <button
-            hidden
-            type="button"
-            data-testid="brew-grind-setting-apply"
-            data-brew-grinder-reminder-target="applySetting"
-            data-action="brew-grinder-reminder#applySetting"
-            class="shrink-0 rounded-full border border-rn-line bg-rn-surface px-3 py-2 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
-            <%= t("brews.form.use_grind_setting", value: "") %>
-          </button>
         </div>
       </div>
     <% end %>
@@ -150,13 +141,13 @@
     <div class="mt-2 grid gap-2 sm:grid-cols-2">
       <label for="brew_grinder_id_none" class="flex cursor-pointer items-center justify-between rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)]">
         <span><%= t("brews.form.none") %></span>
-        <%= form.radio_button :grinder_id, "", id: "brew_grinder_id_none", class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+        <%= form.radio_button :grinder_id, "", id: "brew_grinder_id_none", data: { brew_grinder_reminder_target: "grinder", action: "change->brew-grinder-reminder#grinderChanged" }, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
       </label>
       <% @grinders.each do |item| %>
         <label for="brew_grinder_id_<%= item.id %>" class="grid cursor-pointer grid-cols-[2.75rem_1fr_auto] items-center gap-3 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-3 hover:bg-[var(--rn-surface-muted)]">
           <%= render "shared/record_photo_thumb", record: item, testid: "brew-grinder-option-photo", class_name: "h-11 w-11 shrink-0 rounded-xl object-contain ring-1 ring-stone-200" %>
           <span class="truncate text-sm font-extrabold text-rn-ink"><%= item.name %></span>
-          <%= form.radio_button :grinder_id, item.id, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
+          <%= form.radio_button :grinder_id, item.id, data: { brew_grinder_reminder_target: "grinder", grinder_name: item.name, action: "change->brew-grinder-reminder#grinderChanged" }, class: "h-5 w-5 border-rn-line text-[var(--rn-accent-strong)]" %>
         </label>
       <% end %>
     </div>

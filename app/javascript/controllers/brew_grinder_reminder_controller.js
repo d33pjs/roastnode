@@ -1,80 +1,86 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "bean", "notice", "selectedReference", "grindSetting", "applySetting" ]
-  static values = {
-    lastBeanId: String,
-    previousReferenceKey: String,
-    unavailable: String,
-    useSettingTemplate: String
-  }
+  static targets = [ "bean", "grinder", "context", "empty", "history", "latest", "selectedBean", "source", "inherited", "summary", "rows", "pending", "grindSetting", "applySetting" ]
+  static values = { useSettingTemplate: String, noHistory: String, noGrinder: String, preGround: String }
 
-  connect() {
-    this.updateReminder()
-  }
+  connect() { this.updateReminder() }
+  beanChanged() { this.updateReminder() }
+  grinderChanged() { this.updateReminder() }
+  grindSettingChanged() { this.updateSettingAction() }
 
-  beanChanged() {
-    this.updateReminder()
-  }
-
-  grindSettingChanged() {
+  updateReminder() {
+    const grinder = this.grinderTargets.find((input) => input.checked)
+    const bean = this.beanTargets.find((input) => input.checked)
+    this.contextTarget.textContent = grinder?.dataset.grinderName || this.noGrinderValue
+    this.history = null
+    if (bean?.dataset.grindState === "pre_ground") {
+      this.emptyTarget.textContent = this.preGroundValue
+    } else if (!grinder?.value) {
+      this.emptyTarget.textContent = this.noGrinderValue
+    } else {
+      const histories = JSON.parse(bean?.dataset.grinderHistories || "{}")
+      this.history = histories[grinder.value]
+      this.emptyTarget.textContent = this.noHistoryValue
+    }
+    this.historyTarget.hidden = !this.history
+    this.emptyTarget.hidden = Boolean(this.history)
+    if (this.history) {
+      this.selectedBeanTarget.textContent = this.history.bean
+      this.latestTarget.textContent = this.history.setting
+      this.sourceTarget.textContent = this.history.source
+      this.inheritedTarget.hidden = !this.history.inherited
+      this.summaryTarget.textContent = this.history.summary
+      this.renderBars(this.history.settings)
+    } else {
+      this.rowsTarget.replaceChildren()
+    }
     this.updateSettingAction()
   }
 
-  applySetting() {
-    const setting = this.selectedGrindSetting
-    if (!setting || !this.hasGrindSettingTarget) return
+  renderBars(settings) {
+    const maximum = Math.max(...settings.map((entry) => entry.count), 1)
+    const rows = settings.map(({ setting, count }) => {
+      const row = document.createElement("li")
+      row.className = "grid grid-cols-[minmax(3rem,auto)_1fr_auto] items-center gap-3 text-sm"
+      const label = document.createElement("span")
+      label.className = "max-w-32 break-words font-bold text-rn-ink"
+      label.textContent = setting
+      const track = document.createElement("span")
+      track.className = "h-2 overflow-hidden rounded bg-[var(--rn-surface-muted)]"
+      track.setAttribute("aria-hidden", "true")
+      const bar = document.createElement("span")
+      bar.className = "block h-full rounded bg-[var(--rn-accent-strong)]"
+      bar.style.width = `${count / maximum * 100}%`
+      track.append(bar)
+      const total = document.createElement("span")
+      total.className = "tabular-nums text-rn-muted"
+      total.textContent = String(count)
+      row.append(label, track, total)
+      return row
+    })
+    this.rowsTarget.replaceChildren(...rows)
+  }
 
-    this.grindSettingTarget.value = setting
+  get canCopy() {
+    return Boolean(this.history && this.hasGrindSettingTarget && !this.grindSettingTarget.disabled &&
+      !this.grindSettingTarget.closest("[hidden]") && this.grindSettingTarget.type !== "hidden")
+  }
+
+  updateSettingAction() {
+    const differs = this.canCopy && this.normalizedSetting(this.history.setting) !== this.normalizedSetting(this.grindSettingTarget.value)
+    this.pendingTarget.hidden = !differs
+    if (!this.hasApplySettingTarget) return
+    this.applySettingTarget.hidden = !differs
+    if (differs) this.applySettingTarget.textContent = this.useSettingTemplateValue.replace("%{value}", this.history.setting)
+  }
+
+  applySetting() {
+    if (!this.canCopy) return
+    this.grindSettingTarget.value = this.history.setting
     this.grindSettingTarget.dispatchEvent(new Event("input", { bubbles: true }))
     this.updateSettingAction()
   }
 
-  updateReminder() {
-    const selected = this.selectedBean
-    const selectedKey = (selected && selected.dataset.grinderReferenceKey) || ""
-    const sameBean = selected && selected.value === this.lastBeanIdValue
-    const needsCheck = Boolean(
-      selected &&
-      !sameBean &&
-      this.previousReferenceKeyValue &&
-      (!selectedKey || selectedKey !== this.previousReferenceKeyValue)
-    )
-
-    if (this.hasNoticeTarget) this.noticeTarget.hidden = !needsCheck
-    this.updateSettingAction()
-    if (!needsCheck || !this.hasSelectedReferenceTarget) return
-
-    this.selectedReferenceTarget.textContent =
-      selected.dataset.grinderReferenceLabel || this.unavailableValue
-  }
-
-  updateSettingAction() {
-    if (!this.hasGrindSettingTarget || !this.hasApplySettingTarget) return
-
-    const setting = this.selectedGrindSetting
-    const differs = Boolean(
-      setting &&
-      this.normalizedSetting(setting) !== this.normalizedSetting(this.grindSettingTarget.value)
-    )
-
-    this.applySettingTarget.hidden = !differs
-    if (!differs) return
-
-    this.applySettingTarget.textContent =
-      this.useSettingTemplateValue.replace("%{value}", setting.trim())
-  }
-
-  normalizedSetting(value) {
-    return value.trim().toLowerCase()
-  }
-
-  get selectedBean() {
-    return this.beanTargets.find((bean) => bean.checked)
-  }
-
-  get selectedGrindSetting() {
-    const setting = this.selectedBean?.dataset.grindSetting || ""
-    return setting.trim() ? setting : ""
-  }
+  normalizedSetting(value) { return value.trim().toLowerCase() }
 }
