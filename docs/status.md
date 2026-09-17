@@ -1,13 +1,13 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-09-10
+Last reviewed: 2026-09-17
 
 This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
 ## Built Now
 
 - Rails 8.1 monolith at the repository root, running Ruby 3.3.12 and PostgreSQL 17.11, with Hotwire, Turbo, Tailwind CSS, Active Storage, Solid Queue, Docker Compose, and local defaults for web port `3001` and PostgreSQL host port `5433`.
-- Dependency maintenance was refreshed on 2026-09-10: compatible gems and CI actions/scanners are current, with JSON constrained below 3 because Rails 8.1.3.1 still needs its positional parser API, bindata constrained by WebAuthn, and Marcel constrained by Active Storage. Fresh RubySec and npm audits report no vulnerabilities. cdxgen 13.1.0 preserves CycloneDX 1.6 output, Waybill is at 0.7.0, and CI runs the JavaScript controller tests. Ruby 4/PostgreSQL 18 major migrations remain outstanding; see `security-report/dependency-audit.md`.
+- Dependency maintenance was refreshed on 2026-09-17: all compatible gems, Bundler 4.0.21, and CI actions are current, including the Dependabot-requested JWT 3.3.0, Msgpack 1.8.5, and BigDecimal 4.1.3. JSON remains below 3 because its incompatibility with Rails 8.1.3.1 was reproduced again; bindata is constrained by WebAuthn and Marcel by Active Storage. Fresh RubySec and npm audits report no vulnerabilities. cdxgen 13.1.0 preserves CycloneDX 1.6 output, Waybill is at 0.7.0, and CI runs the JavaScript controller tests. Ruby 4/PostgreSQL 18 major migrations remain outstanding; see `security-report/dependency-audit.md`.
 - Rails-native authentication, first-user setup for empty installs, password reset, signed-in password change flows, optional user passkeys with browser-picker login and passkey second factor, private-by-default app shell, and an instance admin dashboard with safe read-only checks plus backup controls.
 - Workspace core: household onboarding, active workspace switching, owner/admin/member/viewer roles, invite links with optional email delivery and optional username capture during invite signup, accepted invite status display, resend/re-invite for email-bound invites, private invite-only account creation, instance-admin email invites for creating separate new households while public registration remains disabled, member role management/removal, owner-only ownership transfer, owner-only workspace deletion, and workspace-scoped controller patterns.
 - Profile settings: display name, username-style display label, avatar, public banner, preferred landing screen, enabled brew methods, grams per coffee spoon for Quick Drip estimates, espresso focus field, hidden espresso fields, number format, time format, and per-user IANA timezone.

@@ -1,19 +1,55 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-09-10 after refreshing compatible dependencies and the
+Verified on 2026-09-17 after refreshing compatible dependencies and the
 RubySec advisory database.
 
 ## Result
 
-- Status: no known vulnerabilities after the 2026-09-10 maintenance refresh.
+- Status: no known vulnerabilities in the RubySec and importmap audits after the 2026-09-17 maintenance refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 135 unique locked specs: 29 Gemfile declarations, 28 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `93b32f641f84282183ce58ab1d7204bee50885bd`, containing 1,242 advisories and last updated at 2026-09-08 15:34:44 -0400; 0 vulnerabilities matched.
+- RubySec evidence: database commit `44784c295391577f25d198a9205eae4ba73ec4da`, containing 1,245 advisories and last updated at 2026-09-16 10:35:37 -0400; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories; any future exception requires documented evidence.
 - JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.0.6 scanned Rails 8.1.3.1 with 0 errors and 0 warnings.
 - Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are the constrained `bindata` 3.x, `marcel` 2.x, and incompatible `json` 3.x releases described below.
 
-## 2026-09-10 Compatible Refresh
+## 2026-09-17 Compatible Refresh
+
+The four emailed Dependabot items are version-update PRs, all already closed
+without merging. Their titles alone do not establish security vulnerabilities.
+The authenticated GitHub alerts endpoint still returns HTTP 403, so remote
+security-alert counts and closure cannot be verified with the available token.
+
+| Dependabot item | Result |
+| --- | --- |
+| [Msgpack #77](https://github.com/d33pjs/roastnode/pull/77) | Updated 1.8.4 → 1.8.5. |
+| [JWT #78](https://github.com/d33pjs/roastnode/pull/78) | Updated 3.2.0 → 3.3.0. |
+| [BigDecimal #79](https://github.com/d33pjs/roastnode/pull/79) | Updated 4.1.2 → 4.1.3. |
+| [JSON #80](https://github.com/d33pjs/roastnode/pull/80) | Retained 2.21.2: JSON 3.0.2 still breaks Rails 8.1.3.1's JSON decoder. |
+
+- Refreshed the complete gem graph, also updating Fugit 1.13.0 → 1.14.0, io-console 0.9.2 → 0.9.3, and net-protocol 0.3.0 → 0.4.0. All six updated gems are transitive dependencies.
+- Updated Bundler 4.0.17 → stable 4.0.21, including its lockfile checksum. Bundler also added the checksum-protected generic FFI 1.17.4 variant while preserving the existing platform locks.
+- Updated immutable workflow pins for ruby/setup-ruby 1.321.0 → 1.323.0, docker/setup-qemu-action 4.3.0 → 4.4.0, docker/setup-buildx-action 4.3.0 → 4.4.1, and docker/build-push-action 7.3.0 → 7.4.0. The build-push release includes a fix for workflow command injection in metadata logs.
+- Checked every other workflow action and both downloaded CI scanners against their official latest releases; they were already current. Vendored Chart.js 4.5.1 is also current, and importmap reports no outdated packages.
+- Rails 8.1.3.1 remains the latest stable release. Ruby 3.3.12 and PostgreSQL 17.11 remain current patches on the configured release lines; the previously deferred major migrations remain separate work.
+- Reproduced the JSON incompatibility outside the application bundle with JSON 3.0.2 and Active Support 8.1.3.1: `ActiveSupport::JSON.decode('{"a":1}')` raises `ArgumentError: wrong number of arguments (given 2, expected 1)`. Retained the existing Gemfile constraint and added no advisory exclusions.
+- `bundle outdated --strict` reports `Bundle up to date!`; the unconstrained check lists only bindata 3.0.0, JSON 3.0.2, and Marcel 2.1.0, with the existing compatibility constraints documented below.
+
+Official sources: [Bundler 4.0.21](https://rubygems.org/gems/bundler/versions/4.0.21), [Ruby releases](https://www.ruby-lang.org/en/downloads/), [PostgreSQL versioning](https://www.postgresql.org/support/versioning/), [ruby/setup-ruby 1.323.0](https://github.com/ruby/setup-ruby/releases/tag/v1.323.0), [QEMU action 4.4.0](https://github.com/docker/setup-qemu-action/releases/tag/v4.4.0), [Buildx action 4.4.1](https://github.com/docker/setup-buildx-action/releases/tag/v4.4.1), and [build-push action 7.4.0](https://github.com/docker/build-push-action/releases/tag/v7.4.0).
+
+## Verification — 2026-09-17
+
+- `env POSTGRES_PORT=55433 PARALLEL_WORKERS=1 bin/rails test`: 1,450 tests and 14,865 assertions, no failures, errors, or skips. Uses Roastnode's PostgreSQL container and single-process execution for the existing macOS fork limitation.
+- `node --test test/javascript/*.mjs`: all 7 JavaScript controller tests passed.
+- `ruby test/services/release_version_configuration_test.rb`: 4 tests and 56 assertions passed, including immutable action pins and dependency inventory counts.
+- `bundle --version` reports 4.0.21; `bundle check` passes; RuboCop inspected 402 files with no offenses.
+- Fresh RubySec and importmap audits report no known vulnerabilities. Brakeman 8.0.6 reports 0 errors and 0 security warnings.
+- JSON 3.0.2 compatibility probe fails as described above; the retained JSON 2.21.2 passes the full Rails suite.
+- The CI seed check (`RAILS_ENV=test`, `POSTGRES_PORT=55433`, `bin/rails db:seed:replant`) passed. Independent review found no issues and rechecked all four action SHAs, the release configuration tests, and production schedule parsing with Fugit 1.14.0.
+- `docker build --pull -t roastnode:dependency-refresh .` passed on Linux ARM64, including a fresh base-image pull, Bundler installation, native gems, Bootsnap, and production Tailwind/Propshaft asset compilation. Resulting image: `sha256:74abfa4e18228c786f916107fabb41e0415b2deaaece1f4361c1db3d4f79757d`. The build did not capture local Git provenance because the default Xcode Git shim requires license acceptance; this does not affect the image build checks.
+- Remote GitHub/Gitea workflow execution and GitHub security-alert closure have not been verified.
+
+## 2026-09-10 Compatible Refresh (Historical)
 
 - Bootsnap 1.25.0 → 1.26.0; image_processing 2.0.3 → 2.1.0; RubyZip 3.5.0 → 3.6.0; Selenium WebDriver 4.47.0 → 4.49.0; Solid Queue 1.6.0 → 1.7.0; Thruster 0.1.25 → 0.1.26 across all locked platforms.
 - Transitive gems: et-orbi 1.4.1 → 1.4.2; net-imap 0.6.6 → 0.6.7; net-protocol 0.2.2 → 0.3.0; parallel 2.1.0 → 2.2.0; RBS 4.1.3 → 4.2.0; RuboCop 1.89.0 → 1.91.0.
@@ -140,7 +176,7 @@ Marcel 2.1.0 is available, but Active Storage 8.1.3.1 requires `marcel ~> 1.0`. 
 
 ### Ruby 4 and PostgreSQL 18
 
-Ruby 4.0.6 and PostgreSQL 18.6 are newer major releases. Roastnode remains on the current supported patches Ruby 3.3.12 and PostgreSQL 17.11. Installing Ruby 4 could not complete through the available local permission flow, so an untested runtime requirement was not committed. PostgreSQL 18 requires a data migration; the existing PostgreSQL 17 volume was retained. These two major migrations remain outstanding.
+Ruby 4.0.7 and PostgreSQL 18.6 are newer major releases as of 2026-09-17. Roastnode remains on the current supported patches Ruby 3.3.12 and PostgreSQL 17.11. During the prior refresh, installing Ruby 4 could not complete through the available local permission flow, so an untested runtime requirement was not committed. PostgreSQL 18 requires a data migration; the existing PostgreSQL 17 volume was retained. These two major migrations remain outstanding.
 
 ## Supply-Chain and License Review
 
