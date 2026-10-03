@@ -1,7 +1,7 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3"
+gem "rails", "~> 8.1.4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use postgresql as the database for Active Record
@@ -19,8 +19,6 @@ gem "tailwindcss-rails"
 
 # Ruby 3.4 removes csv from the default gems loaded without declaration.
 gem "csv"
-# Rails 8.1 passes positional parser options removed by JSON 3.
-gem "json", ">= 2.21.2", "< 3"
 # Build owner-only media archives without shelling out to system zip tools.
 gem "rubyzip", require: false
 

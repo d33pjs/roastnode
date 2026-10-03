@@ -1,17 +1,41 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-09-17 after refreshing compatible dependencies and the
+Verified on 2026-10-03 after refreshing compatible dependencies and the
 RubySec advisory database.
 
 ## Result
 
-- Status: no known vulnerabilities in the RubySec and importmap audits after the 2026-09-17 maintenance refresh.
+- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-03 maintenance refresh. The pre-update RubySec baseline was also clean.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
-- Ruby packages: 135 unique locked specs: 29 Gemfile declarations, 28 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `44784c295391577f25d198a9205eae4ba73ec4da`, containing 1,245 advisories and last updated at 2026-09-16 10:35:37 -0400; 0 vulnerabilities matched.
-- Advisory policy: `config/bundler-audit.yml` has no ignored advisories; any future exception requires documented evidence.
-- JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.0.6 scanned Rails 8.1.3.1 with 0 errors and 0 warnings.
-- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are the constrained `bindata` 3.x, `marcel` 2.x, and incompatible `json` 3.x releases described below.
+- Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
+- RubySec evidence: database commit `97659622944c19d42961c03813666f4196457229`, containing 1,252 advisories and last updated at 2026-10-02 16:20:52 -0400; 0 vulnerabilities matched.
+- Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
+- JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.1.0 scanned Rails 8.1.4 with 0 errors and 0 warnings.
+- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are bindata 3.0.1 and Marcel 2.1.0, constrained by their parent gems. The JSON 3 incompatibility is resolved.
+
+## 2026-10-03 Compatible Refresh
+
+- Updated Rails and its framework gems from 8.1.3.1 to 8.1.4. This release fixes JSON 3 decoding, allowing removal of the temporary direct JSON constraint and updating JSON 2.21.2 to 3.0.2. No framework monkey patch was added.
+- Updated the remaining compatible gem graph, including pg 1.7.0, image_processing 2.2.0, RubyZip 3.7.0, Solid Cable 4.1.0, Selenium WebDriver 4.50.0, Brakeman 8.1.0, and RuboCop Rails 2.38.0, together with transitive dependencies.
+- Updated Bundler 4.0.21 to 4.0.22. All locked platforms and gem checksums remain covered.
+- Updated immutable workflow pins for ruby/setup-ruby 1.327.0 and anchore/sbom-action 0.24.3. The remaining workflow actions were checked against their official releases and were already current.
+- Updated downloaded CI scanners to cdxgen 13.3.0 and Waybill 0.9.0, with verified official Linux release SHA-256 digests. CycloneDX 1.6 and offline/no-install settings remain configured. cdxgen's release includes security hardening of wrapper execution, path handling, and credential forwarding.
+- Ruby 3.3.12 and PostgreSQL 17.11 remain current patches on the configured release lines. Ruby 4 and PostgreSQL 18 major migrations remain separate work; the database volume was not migrated.
+- Vendored Chart.js 4.5.1 remains current. Importmap reports no outdated packages.
+- The latest Dependabot version-update PRs (#81–95) were already closed. GitHub's authenticated security-alert endpoint still returns HTTP 403, so remote security-alert counts and closure could not be verified. The local advisory scans establish the results above.
+
+Official sources: [Rails 8.1.4](https://github.com/rails/rails/releases/tag/v8.1.4), [Bundler 4.0.22](https://rubygems.org/gems/bundler/versions/4.0.22), [Ruby releases](https://www.ruby-lang.org/en/downloads/), [PostgreSQL versioning](https://www.postgresql.org/support/versioning/), [ruby/setup-ruby 1.327.0](https://github.com/ruby/setup-ruby/releases/tag/v1.327.0), [SBOM action 0.24.3](https://github.com/anchore/sbom-action/releases/tag/v0.24.3), [cdxgen 13.3.0](https://github.com/cdxgen/cdxgen/releases/tag/v13.3.0), and [Waybill 0.9.0](https://github.com/kusari-oss/waybill/releases/tag/v0.9.0).
+
+## Verification — 2026-10-03
+
+- Final full Rails suite: 1,483 tests, 14,983 assertions, no failures, errors, or skips (`POSTGRES_PORT=55433 PARALLEL_WORKERS=1`).
+- Updated-stack browser tests: 7 tests, 91 assertions, no failures or errors; covers new-bag first/second/third settings, browser Back, copying, draft recovery, and mobile light/dark layouts.
+- JavaScript controller tests: 18 passed. RuboCop: 406 files, no offenses. Fresh RubySec, importmap, and Brakeman checks passed as described above.
+- Production `assets:precompile` passed with a dummy build secret and build-only WebAuthn origin. Generated local production assets were cleaned afterward. The test-environment `db:seed:replant` CI check passed.
+- Independent review confirmed action SHAs and scanner digests against official metadata, checksum coverage for all 167 platform-specific locked specs, and compatibility of Rails/pg with JSON 3. No new schema requirement was found.
+- Verified macOS scanner binaries against official digests and generated SBOMs from a temporary fixture containing only the updated Gemfile and lockfile: cdxgen 13.3.0 and Waybill 0.9.0 each emitted CycloneDX 1.6 with 168 components; Waybill also emitted a nonempty SPDX 3 graph. The fixture's unlocked `tzinfo-data` declaration and absent repository identity produced expected Waybill warnings. No source or private runtime data was uploaded.
+- `docker build --pull -t roastnode:dependency-refresh .` was attempted twice; both attempts timed out resolving `docker/dockerfile:1` from Docker Hub before the application build began. Production Docker image verification remains unavailable for this refresh; the local asset build passed.
+- Remote GitHub/Gitea workflow execution and GitHub security-alert closure have not been verified.
 
 ## 2026-09-17 Compatible Refresh
 
@@ -124,7 +148,7 @@ Severity before remediation: Medium.
 - Bundler was updated from 4.0.9 to 4.0.17.
 - Compatible direct and transitive gems were updated, including Kamal, Selenium, Solid Cable, Solid Queue, Tailwind CSS, Thruster, RuboCop, Nokogiri, JSON, and Rails HTML Sanitizer.
 
-Rails is now at the current compatible 8.1.3.1 release.
+That historical refresh used Rails 8.1.3.1; the current refresh uses 8.1.4.
 
 ### DEP-003 — Image processing major upgrade
 
@@ -164,15 +188,15 @@ All third-party workflow actions are pinned to reviewed full commit SHAs, with t
 
 ### `bindata` 3.x
 
-`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.0, but WebAuthn 3.4.3 and TPM Key Attestation 0.14.2 both require `bindata ~> 2.4`. Version 2.5.1 has no matching RubySec advisory, so this is accepted until both parents widen their constraints.
+`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.1, but WebAuthn 3.4.3 and TPM Key Attestation 0.14.2 both require `bindata ~> 2.4`. Version 2.5.1 has no matching RubySec advisory, so this is accepted until both parents widen their constraints.
 
-### JSON 3.x
+### JSON 3.x — resolved on 2026-10-03
 
-JSON 3.0.2 removes positional parser options still passed by Active Support 8.1.3.1. The isolated reproducer `ActiveSupport::JSON.decode('{"a":1}')` raises `ArgumentError` and the full test suite confirms broad application breakage. Keep the latest 2.x release until Rails supports the new API. The 2.21.2 release has no matching advisory in the refreshed RubySec database.
+Rails 8.1.4 fixes JSON 3 decoding. The temporary JSON constraint was removed and the lockfile now uses JSON 3.0.2; the application and browser checks run on that version.
 
 ### Marcel 2.x
 
-Marcel 2.1.0 is available, but Active Storage 8.1.3.1 requires `marcel ~> 1.0`. The lockfile retains the latest compatible 1.2.1, which has no matching advisory in the refreshed RubySec database.
+Marcel 2.1.0 is available, but Active Storage 8.1.4 requires `marcel ~> 1.0`. The lockfile retains the latest compatible 1.2.1, which has no matching advisory in the refreshed RubySec database.
 
 ### Ruby 4 and PostgreSQL 18
 

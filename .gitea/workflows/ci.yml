@@ -35,10 +35,10 @@ jobs:
       SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
       SOURCE_MIKEBOM_SPDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.spdx3.json
       SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
-      CDXGEN_VERSION: v13.1.0
-      CDXGEN_SHA256: b9575914c36e601296d75f322123643b2531251235159f51578b507da6d9931f
-      WAYBILL_VERSION: v0.7.0
-      WAYBILL_SHA256: d4c521ec20575ab8cee8fa04b064fb6601cb1da1c232bb3afacd894f68fd59e5
+      CDXGEN_VERSION: v13.3.0
+      CDXGEN_SHA256: 1a1decfa0236284e12797f120d8638608af76a91baa4b17a244948182ca47952
+      WAYBILL_VERSION: v0.9.0
+      WAYBILL_SHA256: c09bd0ee0932f815269ab7c214d69618858df7f645bf1e1cf98d1c07da821b0b
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: set up ruby
-        uses: ruby/setup-ruby@984c0c890880bbf811283d6f09c4607c62d210a4 # v1.323.0
+        uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
         with:
           bundler-cache: true
 
@@ -83,7 +83,7 @@ jobs:
         run: bin/rails db:test:prepare test
 
       - name: Generate source Syft SPDX SBOM
-        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           format: spdx-json
           output-file: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
@@ -103,7 +103,7 @@ jobs:
             -F "file=@${SOURCE_SYFT_SPDX_SBOM};type=application/json"
 
       - name: Generate source Syft CycloneDX SBOM
-        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           format: cyclonedx-json
           output-file: ${{ env.SOURCE_SYFT_CDX_SBOM }}
