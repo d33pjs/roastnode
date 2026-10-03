@@ -87,6 +87,8 @@ Quick Drip omits espresso-only fields: temperature, preinfusion, low-flow start,
 
 The log form pre-fills setup fields from the current user's most recent brew for the selected method in the active workspace. If the current user has not logged that method in that workspace yet, it falls back to the workspace's most recent brew for that method so new household members start from the shared setup.
 
+Recency orders by occurrence time, creation time, then ID, matching the grinder-history panel even when timestamps tie. Browser Back/Forward refreshes the new log's history and defaults while preserving unsaved drafts. The red grinder check compares the selected coffee's reference with that grinder's last use across the household and both methods; copying the reference into the form leaves the physical-adjustment reminder visible.
+
 Users can hide optional fields from the new espresso form through Profile. Brew edit/correction screens always show the full log.
 
 New espresso and Quick Drip logs expose an editable log time that defaults to the current time. Brew edit/correction screens expose the saved log time; changing it also moves the associated inventory consumption adjustment so activity and inventory history stay aligned.

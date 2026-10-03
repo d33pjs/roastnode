@@ -10,6 +10,10 @@ The panel shows previous-brew context, the selected coffee's latest setting and 
 
 Bean and grinder changes update the panel from embedded, workspace-scoped data. They never overwrite the input. Espresso's explicit copy action preserves the recorded text and participates in draft recovery; hidden fields stay hidden. Quick Drip is informational, and pre-ground beans do not prompt for grinder settings. Recipe targets and Repeat Good Brew keep their separate behavior.
 
+The panel and latest coffee setting turn red with **Check grinder setting** when that coffee's reference differs from the selected grinder's last recorded use. The comparison follows all household members and brew methods because the physical grinder is shared. Its last-use line is separate from the operator's method-specific Previous brew. Missing coffee history or a blank last-use setting calls for a manual check; an older nonblank entry is not treated as the current position. Pre-ground coffee and no-grinder selections suppress the warning. Copying a value into the log does not confirm a physical adjustment, so the reminder stays visible until a subsequent recorded use matches. The copy button separately compares the reference with the input.
+
+New Brew Log pages opt out of Turbo's page cache so browser Back/Forward reloads current settings and bag history. Unsaved browser drafts still restore their entered values against that fresh history. Form defaults use the same occurrence/creation/ID recency tie-break as the panel, avoiding conflicting settings when timestamps match.
+
 `BrewGrinderReminder` uses bounded PostgreSQL latest-row queries and SQL frequency aggregation rather than loading all historical Brews or querying every bag individually.
 
 ## Bags and ownership

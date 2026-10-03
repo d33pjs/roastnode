@@ -13,6 +13,7 @@ Roastnode keeps unsaved form values in the browser while a user is logging a new
 - Restored drafts show a compact notice with a discard button.
 - Drafts clear when the form is submitted.
 - Restore and discard synchronize the machine-dependent fields and bean-switch grinder reminder after programmatic field changes without changing the restored grinder or grind-setting values.
+- The new Brew Log disables Turbo page caching: returning with Back/Forward fetches current grinder history and form defaults, then restores any unsaved draft. A submitted form cannot leave stale history in a restored page.
 
 ## Stored Fields
 

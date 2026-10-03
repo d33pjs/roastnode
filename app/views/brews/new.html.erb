@@ -1,3 +1,7 @@
+<% content_for :head do %>
+  <meta name="turbo-cache-control" content="no-cache">
+<% end %>
+
 <main class="rn-page">
   <section class="rn-shell <%= @recipe ? "max-w-6xl" : "max-w-4xl" %> py-6 sm:px-6 lg:py-10">
     <%= render "shared/back_link", label: t(".back"), path: dashboard_path, prefer_referrer: false %>

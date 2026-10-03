@@ -2039,7 +2039,9 @@ en:
   grinder_history:
     title: "Grinder history"
     latest: "Last recorded for selected coffee"
-    pending: "Setting differs"
+    pending: "Check grinder setting"
+    last_use: "Last used on this grinder"
+    unknown_setting: "No setting recorded"
     inherited: "From a previous bag of this coffee"
     frequency: "Most-used settings · brew count"
     summary: "Brews: %{brews} · Bags: %{bags}"

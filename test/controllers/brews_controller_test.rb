@@ -1,6 +1,20 @@
 require "test_helper"
 
 class BrewsControllerTest < ActionDispatch::IntegrationTest
+  test "last brew defaults and grinder history agree when brew timestamps tie" do
+    first = brews(:morning_espresso)
+    latest = first.dup
+    latest.grind_setting = "newest 14"
+    latest.save!
+    latest.update_columns(occurred_at: first.occurred_at, created_at: first.created_at)
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", "newest 14"
+  end
+
   test "new redirects to new bean when workspace has no open beans" do
     workspaces(:household).beans.update_all(remaining_grams: 0, archived_at: Time.current)
     sign_in_as(users(:one))

@@ -79,7 +79,9 @@ de:
   grinder_history:
     title: "Mahlgradverlauf"
     latest: "Zuletzt erfasst für den gewählten Kaffee"
-    pending: "Mahlgrad weicht ab"
+    pending: "Mahlgrad prüfen"
+    last_use: "Zuletzt auf dieser Mühle"
+    unknown_setting: "Kein Mahlgrad erfasst"
     inherited: "Aus einer früheren Tüte dieses Kaffees"
     frequency: "Häufigste Mahlgrade · Anzahl Bezüge"
     summary: "Bezüge: %{brews} · Tüten: %{bags}"

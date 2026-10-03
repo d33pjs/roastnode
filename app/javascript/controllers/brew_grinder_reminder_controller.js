@@ -1,8 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "bean", "grinder", "context", "empty", "history", "latest", "selectedBean", "source", "inherited", "summary", "rows", "pending", "grindSetting", "applySetting" ]
-  static values = { useSettingTemplate: String, noHistory: String, noGrinder: String, preGround: String }
+  static targets = [ "bean", "grinder", "panel", "lastUse", "context", "empty", "history", "latest", "selectedBean", "source", "inherited", "summary", "rows", "pending", "grindSetting", "applySetting" ]
+  static values = { lastUses: Object, useSettingTemplate: String, noHistory: String, noGrinder: String, preGround: String, unknownSetting: String }
 
   connect() { this.updateReminder() }
   beanChanged() { this.updateReminder() }
@@ -36,6 +36,13 @@ export default class extends Controller {
     } else {
       this.rowsTarget.replaceChildren()
     }
+    const lastUse = this.lastUsesValue[grinder?.value]
+    this.lastUseTarget.textContent = lastUse?.label || this.unknownSettingValue
+    this.lastUseTarget.parentElement.hidden = !grinder?.value || bean?.dataset.grindState === "pre_ground"
+    const adjustmentNeeded = Boolean(grinder?.value && bean && bean.dataset.grindState !== "pre_ground" &&
+      (!this.history || !lastUse?.setting?.trim() || this.normalizedSetting(this.history.setting) !== this.normalizedSetting(lastUse.setting)))
+    this.pendingTarget.hidden = !adjustmentNeeded
+    this.panelTarget.dataset.adjustmentNeeded = String(adjustmentNeeded)
     this.updateSettingAction()
   }
 
@@ -70,7 +77,6 @@ export default class extends Controller {
 
   updateSettingAction() {
     const differs = this.canCopy && this.normalizedSetting(this.history.setting) !== this.normalizedSetting(this.grindSettingTarget.value)
-    this.pendingTarget.hidden = !differs
     if (!this.hasApplySettingTarget) return
     this.applySettingTarget.hidden = !differs
     if (differs) this.applySettingTarget.textContent = this.useSettingTemplateValue.replace("%{value}", this.history.setting)

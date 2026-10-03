@@ -12,7 +12,7 @@ class BrewGrinderReminder
   end
 
   History = Data.define(:reference, :settings, :brew_count, :bag_count, :inherited)
-  Result = Data.define(:last_bean, :last_bean_id, :previous, :histories_by_bean_id) do
+  Result = Data.define(:last_bean, :last_bean_id, :previous, :histories_by_bean_id, :last_uses_by_grinder_id) do
     def histories_for(bean)
       histories_by_bean_id.fetch(bean.id, {})
     end
@@ -34,7 +34,8 @@ class BrewGrinderReminder
       last_bean: last_brew&.bean,
       last_bean_id: last_brew&.bean_id,
       previous: last_brew && Reference.new(brew: last_brew),
-      histories_by_bean_id: histories
+      histories_by_bean_id: histories,
+      last_uses_by_grinder_id: last_grinder_uses
     )
   end
 
@@ -48,6 +49,15 @@ class BrewGrinderReminder
 
     def ordered(scope)
       scope.preload(:bean, :grinder).order(Arel.sql(RECENCY))
+    end
+
+    def last_grinder_uses
+      scope = workspace.brews.joins(:bean)
+        .where(beans: { workspace_id: workspace.id, grind_state: "whole_bean" })
+        .where(grinder_id: workspace.equipment.grinder.select(:id))
+      latest_brews("brews.grinder_id", scope).to_h do |brew|
+        [ brew.grinder_id.to_s, Reference.new(brew:) ]
+      end
     end
 
     def eligible_brews

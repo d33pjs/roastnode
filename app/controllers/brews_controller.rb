@@ -500,7 +500,7 @@ class BrewsController < ApplicationController
     end
 
     def brew_default_scope(scope, method:)
-      scope.where(method:).includes(:bean, :grinder, :machine, :brewer, :preparation_tools).order(occurred_at: :desc, created_at: :desc)
+      scope.where(method:).includes(:bean, :grinder, :machine, :brewer, :preparation_tools).order(occurred_at: :desc, created_at: :desc, id: :desc)
     end
 
     def last_brew_for_defaults(method:)

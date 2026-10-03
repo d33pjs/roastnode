@@ -1,6 +1,50 @@
 require "application_system_test_case"
 
 class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
+  test "browser back refreshes history after a newer brew was logged while away" do
+    sign_in_through_browser
+    visit new_brew_path(method: "espresso")
+    wait_for_stimulus("brew-grinder-reminder")
+    assert_selector "[data-brew-grinder-reminder-target=latest]", text: "12"
+    find("a[href='#{dashboard_path}']", match: :first).click
+    assert_current_path dashboard_path
+    workspaces(:household).brews.create!(user: users(:one), bean: beans(:open_household),
+      grinder: equipment(:household_grinder), method: "espresso", bean_weight_grams: 1,
+      occurred_at: Time.current, grind_setting: "fresh 14")
+
+    page.go_back
+
+    assert_current_path new_brew_path(method: "espresso")
+    assert_selector "[data-brew-grinder-reminder-target=latest]", text: "fresh 14"
+    assert_equal "fresh 14", find('input[name="brew[grind_setting]"]').value
+  end
+
+  test "returning to the log after each of a new bag's first three brews shows fresh history" do
+    source = beans(:open_household)
+    duplicate = source.duplicate_for_new_bag!
+    duplicate.update!(opened_on: Date.current)
+    sign_in_through_browser
+    visit new_brew_path(method: "espresso")
+    wait_for_stimulus("brew-grinder-reminder")
+    choose "brew_bean_id_#{duplicate.id}"
+
+    %w[1/0,25 1/0,50 1/0,75].each do |setting|
+      fill_in "Grind setting", with: setting
+      fill_in "Bean in (g)", with: "1"
+      click_button "Save brew"
+      assert_current_path %r{\A/brews/\d+\z}
+      page.go_back
+      assert_current_path new_brew_path(method: "espresso")
+      wait_for_stimulus("brew-grinder-reminder")
+      assert_selector "#brew_bean_id_#{duplicate.id}:checked"
+      assert_selector "[data-brew-grinder-reminder-target=latest]", text: setting
+      assert_no_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true]"
+      assert_no_selector "[data-brew-grinder-reminder-target=inherited]:not([hidden])"
+      assert_equal setting, find('input[name="brew[grind_setting]"]').value
+      assert_equal "", find('input[name="brew[bean_weight_grams]"]').value
+    end
+  end
+
   test "Espresso can apply a differing selected-bean grind setting explicitly" do
     selected_bean = beans(:second_open_household)
     selected_bean.update!(grind_state: "whole_bean")
@@ -29,11 +73,22 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     assert_equal "1/1,75", grind_input.value
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
+    assert_no_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true]"
 
     choose "brew_bean_id_#{selected_bean.id}"
 
     assert_selector "#brew_bean_id_#{selected_bean.id}:checked"
     assert_selector "[data-testid=brew-grind-setting-apply]:not([hidden])", text: "Use 1/1,50"
+    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true]", text: "Check grinder setting"
+
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1000, deviceScaleFactor: 1, mobile: true)
+    find("[data-testid=brew-grinder-reminder]").scroll_to(:top)
+    assert_equal false, evaluate_script("document.documentElement.scrollWidth > window.innerWidth")
+    page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-adjustment-mobile-light.png"))
+    execute_script("document.documentElement.className = 'theme-dark'")
+    page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-adjustment-mobile-dark.png"))
+    execute_script("document.documentElement.className = 'theme-light'")
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
 
     fill_in "Grind setting", with: " 1/1,50 "
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
@@ -45,6 +100,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal "1/1,50", grind_input.value
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
     assert_equal grinder_id, find('input[name="brew[grinder_id]"]:checked').value
+    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true]", text: "Check grinder setting"
     assert_draft_field storage_key, "brew[grind_setting]", "1/1,50"
   end
 

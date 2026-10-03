@@ -1,11 +1,12 @@
-<section data-testid="brew-grinder-reminder" aria-live="polite" aria-atomic="true" class="mt-4 min-w-0 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] p-4 text-sm text-rn-ink">
+<section data-testid="brew-grinder-reminder" data-brew-grinder-reminder-target="panel" aria-live="polite" aria-atomic="true" class="rn-grinder-history mt-4 min-w-0 rounded-2xl border border-rn-line p-4 text-sm text-rn-ink">
   <div class="flex flex-wrap items-start justify-between gap-2">
     <h3 data-testid="brew-grinder-reminder-title" class="min-w-0 break-words font-extrabold"><%= t("grinder_history.title") %> · <%= form.object.espresso? ? "Espresso" : "Quick Drip" %><span data-brew-grinder-reminder-target="context" class="mt-1 block text-xs font-semibold text-rn-muted"></span></h3>
-    <span hidden data-brew-grinder-reminder-target="pending" class="rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-xs font-bold text-rn-ink"><%= t("grinder_history.pending") %></span>
+    <span hidden data-brew-grinder-reminder-target="pending" class="rounded-md border border-current px-2 py-1 text-xs font-bold"><%= t("grinder_history.pending") %></span>
   </div>
   <% if reminder.previous %>
     <p data-testid="brew-grinder-reminder-previous" class="mt-3 break-words border-t border-rn-line pt-3 text-xs text-rn-muted"><span class="font-bold"><%= t("brews.form.previous_brew") %></span> · <%= brew_grinder_reference_label(reminder.previous) %></p>
   <% end %>
+  <p class="mt-2 break-words text-xs text-rn-muted"><span class="font-bold"><%= t("grinder_history.last_use") %></span> · <span data-brew-grinder-reminder-target="lastUse"></span></p>
   <p data-brew-grinder-reminder-target="empty" class="mt-3 text-rn-muted"><%= t("grinder_history.no_grinder") %></p>
   <div hidden data-brew-grinder-reminder-target="history" class="mt-3">
     <p data-testid="brew-grinder-reminder-selected" class="text-xs font-bold text-rn-muted"><%= t("grinder_history.latest") %></p>

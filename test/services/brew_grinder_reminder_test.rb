@@ -151,6 +151,30 @@ class BrewGrinderReminderTest < ActiveSupport::TestCase
     assert_equal @bean.id, reminder.last_bean_id
   end
 
+  test "grinder's last use follows all household members and methods independently of coffee history" do
+    brews(:morning_espresso).update!(occurred_at: 4.days.ago)
+    own = brew(setting: "espresso", occurred_at: 2.days.ago)
+    latest = @workspace.brews.create!(user: users(:two), bean: beans(:open_household), grinder: @grinder,
+      brewer: equipment(:household_brewer), method: "quick_drip", machine_cups: 4,
+      bean_weight_grams: 1, occurred_at: 1.day.ago, grind_setting: "filter")
+    foreign = brews(:other_workspace_brew)
+    foreign.update_columns(grinder_id: @grinder.id, grind_setting: "secret", occurred_at: Time.current)
+
+    reminder = result
+    assert_equal own, reminder.histories_for(@bean)[@grinder.id.to_s].reference.brew
+    assert_equal latest, reminder.last_uses_by_grinder_id[@grinder.id.to_s].brew
+    assert_equal [ @grinder.id.to_s ], reminder.last_uses_by_grinder_id.keys
+  end
+
+  test "an unrecorded latest grinder setting stays unknown instead of assuming an older position" do
+    brews(:morning_espresso).update!(occurred_at: 4.days.ago)
+    brew(setting: "older", occurred_at: 2.days.ago)
+    latest = brew(setting: nil, occurred_at: 1.day.ago)
+
+    assert_equal latest, result.last_uses_by_grinder_id[@grinder.id.to_s].brew
+    assert_nil result.last_uses_by_grinder_id[@grinder.id.to_s].grind_setting
+  end
+
   test "falls back to workspace last brew and retains its closed bean" do
     brews(:morning_espresso).update!(user: users(:one), occurred_at: 4.days.ago)
     latest = brew(user: users(:one), setting: nil)
@@ -174,7 +198,7 @@ class BrewGrinderReminderTest < ActiveSupport::TestCase
       end
     end
     assert_operator count, :<=, 15
-    assert_operator loaded_brews, :<=, 3
+    assert_operator loaded_brews, :<=, 4
   end
 
   private

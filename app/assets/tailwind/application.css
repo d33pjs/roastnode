@@ -60,6 +60,20 @@
 }
 
 @layer components {
+  .rn-grinder-history {
+    background-color: var(--rn-canvas);
+  }
+
+  .rn-grinder-history[data-adjustment-needed="true"] {
+    border-color: var(--rn-chart-down-text);
+    background-color: color-mix(in srgb, var(--rn-chart-down-text) 7%, var(--rn-canvas));
+  }
+
+  .rn-grinder-history[data-adjustment-needed="true"] [data-brew-grinder-reminder-target="latest"],
+  .rn-grinder-history[data-adjustment-needed="true"] [data-brew-grinder-reminder-target="pending"] {
+    color: var(--rn-chart-down-text);
+  }
+
   .bg-rn-canvas {
     background-color: var(--rn-canvas);
   }
