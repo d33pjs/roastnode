@@ -101,6 +101,8 @@ If you need to rebuild or inspect a release before publication, run the workflow
 
 ## Verifying a Release
 
+If Gitea CI fails in **Install packages** before checkout with invalid signatures across every APT repository, check the CI host's free disk space first. A full Docker host can produce misleading signature errors. Recover space from unused build cache and older dangling images, then rerun CI before tagging; this failure does not establish an application or signing-key defect.
+
 Prefer the digest from the release asset `roastnode-image-vX.Y.Z.txt`.
 
 ```bash
