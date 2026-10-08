@@ -67,6 +67,8 @@ The public Hero Brew Card mirrors the private card's brew curve, timing guides, 
 
 A snapshot-only byline identifies Self, a household member, a generic Guest, or an unknown recipient truthfully. Self and Guest projections are kind-only; named and unnamed Guests both render as **a guest**. A current household recipient receives `User#display_label` and may receive an avatar reference only after current Workspace membership is authorized. A former member keeps the safe snapshotted label without an avatar, and malformed or unsupported data renders as **someone** with no borrowed identity. Small logger and authorized recipient avatars use opaque public-media handles; the existing household/user identity strip remains below the Hero.
 
+The Hero footer keeps equipment chips visible and limits preparation tools to two truncated chips in one row. A `+ N more` link reaches the complete public tool sections below. This presents the existing curated snapshot without adding fields or expanding media access.
+
 ## Share Management
 
 Workspace writers can create and manage public shares for espresso brews they logged. Owners and admins can manage any public espresso brew share in the workspace. Viewers cannot create or manage shares.

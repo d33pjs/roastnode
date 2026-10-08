@@ -204,7 +204,7 @@
           </div>
           <div>
             <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".tools") %></dt>
-            <dd data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
+            <dd id="brew-tools" data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
               <% if brew_card_tools(@brew).any? %>
                 <% brew_card_tools(@brew).each do |tool| %>
                   <%= link_to tool.tool_name, brew_card_tool_path(tool), data: { testid: "brew-detail-tool" }, class: "rounded-full bg-stone-100 px-2.5 py-1 text-stone-800 hover:bg-stone-200" %>
@@ -301,7 +301,7 @@
           </div>
           <div>
             <dt class="text-xs font-bold uppercase text-stone-500"><%= t(".tools") %></dt>
-            <dd data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
+            <dd id="brew-tools" data-testid="brew-detail-tools" class="mt-1 flex flex-wrap gap-1.5 text-sm font-semibold text-stone-950">
               <% if brew_card_tools(@brew).any? %>
                 <% brew_card_tools(@brew).each do |tool| %>
                   <%= link_to tool.tool_name, brew_card_tool_path(tool), data: { testid: "brew-detail-tool" }, class: "rounded-full bg-stone-100 px-2.5 py-1 text-stone-800 hover:bg-stone-200" %>

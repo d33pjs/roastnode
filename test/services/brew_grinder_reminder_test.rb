@@ -116,6 +116,22 @@ class BrewGrinderReminderTest < ActiveSupport::TestCase
     assert_equal [ 1, 1 ], history.settings.map { |row| row[:count] }
   end
 
+  test "offers recent and best average rated settings with explicit rating sample sizes" do
+    4.times { brew(setting: "popular", rating: 2, occurred_at: 4.days.ago) }
+    brew(setting: "best", rating: 5, occurred_at: 3.days.ago)
+    brew(setting: "best", rating: 3, occurred_at: 2.days.ago)
+    brew(setting: "unrated", occurred_at: 1.day.ago)
+    latest = brew(setting: "latest", rating: 3)
+
+    found = history
+    assert_equal [ "latest", "unrated", "best" ], found.recent_settings.map { |row| row[:setting] }
+    assert_equal [ "best", "latest", "popular" ], found.best_settings.map { |row| row[:setting] }
+    assert_equal 4.0, found.best_settings.first[:average_rating]
+    assert_equal 2, found.best_settings.first[:rating_count]
+    assert_equal latest.occurred_at, found.recent_settings.first[:occurred_at]
+    assert_equal "popular", found.settings.first[:setting]
+  end
+
   test "filters malformed cross workspace grinder and bean references" do
     saved = brew(setting: "foreign grinder")
     saved.update_columns(grinder_id: equipment(:other_workspace_grinder).id)

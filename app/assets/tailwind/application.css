@@ -64,14 +64,30 @@
     background-color: var(--rn-canvas);
   }
 
-  .rn-grinder-history[data-adjustment-needed="true"] {
+  .rn-grinder-history[data-setting-match="false"] {
     border-color: var(--rn-chart-down-text);
     background-color: color-mix(in srgb, var(--rn-chart-down-text) 7%, var(--rn-canvas));
   }
 
-  .rn-grinder-history[data-adjustment-needed="true"] [data-brew-grinder-reminder-target="latest"],
-  .rn-grinder-history[data-adjustment-needed="true"] [data-brew-grinder-reminder-target="pending"] {
+  .rn-grinder-history[data-setting-match="false"] [data-brew-grinder-reminder-target="latest"],
+  .rn-grinder-history[data-setting-match="false"] [data-brew-grinder-reminder-target="pending"],
+  [data-brew-grinder-reminder-target="fieldReminder"] {
     color: var(--rn-chart-down-text);
+  }
+
+  .rn-grinder-history[data-setting-match="true"] {
+    border-color: var(--rn-chart-up-text);
+    background-color: color-mix(in srgb, var(--rn-chart-up-text) 7%, var(--rn-canvas));
+  }
+
+  .rn-grinder-history[data-setting-match="true"] [data-brew-grinder-reminder-target="latest"],
+  .rn-grinder-history[data-setting-match="true"] [data-brew-grinder-reminder-target="pending"] {
+    color: var(--rn-chart-up-text);
+  }
+
+  [data-brew-grinder-reminder-target="grindSetting"][data-physical-check="true"] {
+    border-color: var(--rn-chart-down-text);
+    box-shadow: 0 0 0 1px var(--rn-chart-down-text);
   }
 
   .bg-rn-canvas {

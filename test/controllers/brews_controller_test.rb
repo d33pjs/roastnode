@@ -1,6 +1,21 @@
 require "test_helper"
 
 class BrewsControllerTest < ActionDispatch::IntegrationTest
+  test "normal log defaults use the shared grinder's latest household setting across methods" do
+    beans(:second_open_household).update!(grind_state: "whole_bean")
+    workspaces(:household).brews.create!(user: users(:two), bean: beans(:second_open_household),
+      grinder: equipment(:household_grinder), brewer: equipment(:household_brewer),
+      method: "quick_drip", machine_cups: 2, bean_weight_grams: 1,
+      grind_setting: "household 3", occurred_at: Time.current)
+    sign_in_as(users(:one))
+
+    get new_brew_path(method: "espresso")
+
+    assert_response :success
+    assert_select "input[name=?][value=?]", "brew[grind_setting]", "household 3"
+    assert_select "input[name=?][value=?][checked]", "brew[bean_id]", beans(:open_household).id.to_s
+  end
+
   test "last brew defaults and grinder history agree when brew timestamps tie" do
     first = brews(:morning_espresso)
     latest = first.dup
@@ -125,7 +140,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     history = JSON.parse(selected_input["data-grinder-histories"]).fetch(grinder.id.to_s)
     assert_equal "1/1,50", history.fetch("setting")
     assert_includes history.fetch("source"), selected_bean.display_name
-    assert_equal [ { "setting" => "1/1,50", "count" => 1 } ], history.fetch("settings")
+    assert_equal [ { "setting" => "1/1,50", "count" => 1 } ], history.fetch("settings").map { |row| row.slice("setting", "count") }
 
     grind_input = form.at_css("input[name='brew[grind_setting]']")
     assert_equal "grindSetting", grind_input["data-brew-grinder-reminder-target"]

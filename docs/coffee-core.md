@@ -66,7 +66,7 @@ Default selection order:
 
 Archived or depleted beans are not valid brew choices in this slice.
 
-The Brew Log keeps multi-bean operation visible at the top of the form. Every open bean choice shows remaining grams and rounded percentage, and the operator's last method-specific bean is marked with a green `Last used` check. If that actual last bean is no longer open, the heading shows one nonselectable green historical status instead of marking another open bean. A structured grinder panel shows the selected coffee's latest nonblank setting for the selected grinder and method, regardless of rating, plus a compact top-three frequency chart. Duplicated bags share history; independently created matching coffees can explicitly opt in. Settings are copied only through the Espresso action, never automatically on a bean/grinder switch. Quick Drip remains informational. See [Grinder history](grinder-history.md) for reference precedence, sharing, privacy, and portability.
+The Brew Log keeps multi-bean operation visible at the top of the form. Every open bean choice shows remaining grams and rounded percentage, and the operator's last method-specific bean is marked with a green `Last used` check. If that actual last bean is no longer open, the heading shows one nonselectable green historical status instead of marking another open bean. A structured grinder panel shows the selected coffee's latest nonblank setting for the selected grinder and method, regardless of rating, plus a compact top-three history with Recent, Best rated, and Most used views. Duplicated bags share history; independently created matching coffees can explicitly opt in. Settings are copied only through the Espresso action, never automatically on a bean/grinder switch. Quick Drip remains informational. See [Grinder history](grinder-history.md) for reference precedence, sharing, privacy, and portability.
 
 ## Quick Drip Logging
 
@@ -87,7 +87,7 @@ Quick Drip omits espresso-only fields: temperature, preinfusion, low-flow start,
 
 The log form pre-fills setup fields from the current user's most recent brew for the selected method in the active workspace. If the current user has not logged that method in that workspace yet, it falls back to the workspace's most recent brew for that method so new household members start from the shared setup.
 
-Recency orders by occurrence time, creation time, then ID, matching the grinder-history panel even when timestamps tie. Browser Back/Forward refreshes the new log's history and defaults while preserving unsaved drafts. The red grinder check compares the selected coffee's reference with that grinder's last use across the household and both methods; copying the reference into the form leaves the physical-adjustment reminder visible.
+The grind-setting default is shared: it uses the selected grinder's latest household use across users and both methods, including an unknown blank setting, while the other setup defaults remain operator-specific. Recency orders by occurrence time, creation time, then ID, matching the grinder-history panel even when timestamps tie. Browser Back/Forward refreshes history and defaults while preserving unsaved drafts. The panel compares the current input with the coffee reference live: red for a mismatch, green for a match. A separate red reminder beside the input compares against household grinder use and stays visible after copying when a physical adjustment is needed. See [Grinder history](grinder-history.md).
 
 Users can hide optional fields from the new espresso form through Profile. Brew edit/correction screens always show the full log.
 
@@ -101,7 +101,7 @@ Espresso copied fields:
 - grinder
 - machine
 - active preparation tools from the previous brew
-- grind setting
+- grind setting, from the selected grinder's latest household use
 - brew temperature
 - pre-infusion seconds, when the selected machine enables pre-infusion
 - low-flow-start seconds, when the selected machine enables low-flow start

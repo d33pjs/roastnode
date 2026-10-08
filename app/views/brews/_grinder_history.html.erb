@@ -18,8 +18,18 @@
       <button hidden type="button" data-testid="brew-grind-setting-apply" data-brew-grinder-reminder-target="applySetting" data-action="brew-grinder-reminder#applySetting" class="mt-3 max-w-full break-words rounded-xl border border-rn-line bg-rn-surface px-3 py-2 font-extrabold hover:bg-[var(--rn-surface-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--rn-accent-strong)]"><%= t("brews.form.use_grind_setting", value: "") %></button>
     <% end %>
     <div class="mt-4 border-t border-rn-line pt-3">
-      <div class="flex flex-wrap justify-between gap-1 text-xs text-rn-muted"><h4 class="font-bold"><%= t("grinder_history.frequency") %></h4><span data-brew-grinder-reminder-target="summary"></span></div>
-      <ol data-brew-grinder-reminder-target="rows" aria-label="<%= t("grinder_history.frequency") %>" class="mt-3 grid gap-2"></ol>
+      <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-rn-muted">
+        <label class="flex min-w-0 items-center gap-2 font-bold"><%= t("grinder_history.settings") %>
+          <select data-brew-grinder-reminder-target="sort" data-action="brew-grinder-reminder#sortChanged" class="min-w-0 rounded-lg border border-rn-line bg-rn-surface px-2 py-1 text-xs text-rn-ink">
+            <% %w[recent best frequency].each do |mode| %>
+              <option value="<%= mode %>"><%= t("grinder_history.sort.#{mode}") %></option>
+            <% end %>
+          </select>
+        </label>
+        <span data-brew-grinder-reminder-target="summary"></span>
+      </div>
+      <p hidden data-brew-grinder-reminder-target="noRatings" class="mt-3 text-xs text-rn-muted"><%= t("grinder_history.no_ratings") %></p>
+      <ol data-brew-grinder-reminder-target="rows" aria-label="<%= t("grinder_history.settings") %>" class="mt-3 grid gap-2"></ol>
     </div>
   </div>
 </section>

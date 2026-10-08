@@ -1,13 +1,21 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "bean", "grinder", "panel", "lastUse", "context", "empty", "history", "latest", "selectedBean", "source", "inherited", "summary", "rows", "pending", "grindSetting", "applySetting" ]
-  static values = { lastUses: Object, useSettingTemplate: String, noHistory: String, noGrinder: String, preGround: String, unknownSetting: String }
+  static targets = [ "bean", "grinder", "panel", "lastUse", "context", "empty", "history", "latest", "selectedBean", "source", "inherited", "summary", "rows", "pending", "grindSetting", "applySetting", "fieldReminder", "fieldDescription", "sort", "noRatings" ]
+  static values = { lastUses: Object, useSettingTemplate: String, noHistory: String, noGrinder: String, preGround: String, unknownSetting: String, matches: String, mismatch: String }
 
-  connect() { this.updateReminder() }
+  connect() {
+    this.updateReminder()
+    if (this.hasGrindSettingTarget) {
+      this.resizeObserver = new ResizeObserver(() => this.updateFieldReminder())
+      this.resizeObserver.observe(this.grindSettingTarget)
+    }
+  }
+  disconnect() { this.resizeObserver?.disconnect() }
   beanChanged() { this.updateReminder() }
   grinderChanged() { this.updateReminder() }
-  grindSettingChanged() { this.updateSettingAction() }
+  grindSettingChanged() { this.updateSettingState() }
+  sortChanged() { this.renderSettings() }
 
   updateReminder() {
     const grinder = this.grinderTargets.find((input) => input.checked)
@@ -32,23 +40,57 @@ export default class extends Controller {
       this.sourceTarget.textContent = this.history.source
       this.inheritedTarget.hidden = !this.history.inherited
       this.summaryTarget.textContent = this.history.summary
-      this.renderBars(this.history.settings)
+      this.renderSettings()
     } else {
       this.rowsTarget.replaceChildren()
     }
-    const lastUse = this.lastUsesValue[grinder?.value]
-    this.lastUseTarget.textContent = lastUse?.label || this.unknownSettingValue
+    this.lastUse = this.lastUsesValue[grinder?.value]
+    this.lastUseTarget.textContent = this.lastUse?.label || this.unknownSettingValue
     this.lastUseTarget.parentElement.hidden = !grinder?.value || bean?.dataset.grindState === "pre_ground"
-    const adjustmentNeeded = Boolean(grinder?.value && bean && bean.dataset.grindState !== "pre_ground" &&
-      (!this.history || !lastUse?.setting?.trim() || this.normalizedSetting(this.history.setting) !== this.normalizedSetting(lastUse.setting)))
-    this.pendingTarget.hidden = !adjustmentNeeded
-    this.panelTarget.dataset.adjustmentNeeded = String(adjustmentNeeded)
+    this.grinderRelevant = Boolean(grinder?.value && bean && bean.dataset.grindState !== "pre_ground")
+    this.updateSettingState()
+  }
+
+  updateSettingState() {
+    const inputSetting = this.hasVisibleSettingInput ? this.grindSettingTarget.value : this.lastUse?.setting
+    const matches = Boolean(this.history && this.normalizedSetting(inputSetting) === this.normalizedSetting(this.history.setting))
+    this.panelTarget.dataset.settingMatch = this.grinderRelevant ? String(matches) : ""
+    this.pendingTarget.hidden = !this.grinderRelevant
+    this.pendingTarget.textContent = matches ? this.matchesValue : this.mismatchValue
+    this.physicalCheck = Boolean(this.grinderRelevant && (!this.history || !this.lastUse?.setting?.trim() ||
+      this.normalizedSetting(this.history.setting) !== this.normalizedSetting(this.lastUse.setting) ||
+      this.normalizedSetting(inputSetting) !== this.normalizedSetting(this.lastUse.setting)))
+    this.panelTarget.dataset.adjustmentNeeded = String(this.physicalCheck)
+    this.updateFieldReminder()
     this.updateSettingAction()
+  }
+
+  updateFieldReminder() {
+    if (!this.hasFieldReminderTarget || !this.hasGrindSettingTarget) return
+    this.grindSettingTarget.dataset.physicalCheck = String(this.physicalCheck)
+    if (this.hasFieldDescriptionTarget) this.fieldDescriptionTarget.hidden = !this.physicalCheck
+    this.fieldReminderTarget.hidden = !this.physicalCheck
+    if (this.physicalCheck) {
+      this.fieldReminderTarget.hidden = this.settingTextWidth() + this.fieldReminderTarget.offsetWidth + 36 > this.grindSettingTarget.clientWidth
+    }
+  }
+
+  settingTextWidth() {
+    const context = document.createElement("canvas").getContext("2d")
+    context.font = getComputedStyle(this.grindSettingTarget).font
+    return context.measureText(this.grindSettingTarget.value).width
+  }
+
+  renderSettings() {
+    const mode = this.hasSortTarget ? this.sortTarget.value : "recent"
+    const settings = mode === "best" ? this.history.best_settings : mode === "recent" ? this.history.recent_settings : this.history.settings
+    if (this.hasNoRatingsTarget) this.noRatingsTarget.hidden = mode !== "best" || Boolean(settings?.length)
+    this.renderBars(settings || this.history.settings)
   }
 
   renderBars(settings) {
     const maximum = Math.max(...settings.map((entry) => entry.count), 1)
-    const rows = settings.map(({ setting, count }) => {
+    const rows = settings.map(({ setting, count, rating_label, last_used }) => {
       const row = document.createElement("li")
       row.className = "grid grid-cols-[minmax(3rem,auto)_1fr_auto] items-center gap-3 text-sm"
       const label = document.createElement("span")
@@ -65,13 +107,23 @@ export default class extends Controller {
       total.className = "tabular-nums text-rn-muted"
       total.textContent = String(count)
       row.append(label, track, total)
+      if (last_used || rating_label) {
+        const details = document.createElement("span")
+        details.className = "col-span-3 -mt-1 break-words text-xs text-rn-muted"
+        details.textContent = [rating_label, last_used].filter(Boolean).join(" · ")
+        row.append(details)
+      }
       return row
     })
     this.rowsTarget.replaceChildren(...rows)
   }
 
   get canCopy() {
-    return Boolean(this.history && this.hasGrindSettingTarget && !this.grindSettingTarget.disabled &&
+    return Boolean(this.history && this.hasVisibleSettingInput)
+  }
+
+  get hasVisibleSettingInput() {
+    return Boolean(this.hasGrindSettingTarget && !this.grindSettingTarget.disabled &&
       !this.grindSettingTarget.closest("[hidden]") && this.grindSettingTarget.type !== "hidden")
   }
 
@@ -86,8 +138,8 @@ export default class extends Controller {
     if (!this.canCopy) return
     this.grindSettingTarget.value = this.history.setting
     this.grindSettingTarget.dispatchEvent(new Event("input", { bubbles: true }))
-    this.updateSettingAction()
+    this.updateSettingState()
   }
 
-  normalizedSetting(value) { return value.trim().toLowerCase() }
+  normalizedSetting(value) { return (value || "").trim().toLowerCase() }
 }

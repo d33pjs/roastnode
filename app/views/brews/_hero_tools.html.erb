@@ -1,0 +1,11 @@
+<% tools = brew_card_tools(brew).to_a %>
+<% if tools.any? %>
+  <div data-testid="brew-hero-tools" class="mt-2 flex min-w-0 items-center gap-2">
+    <% tools.first(2).each do |tool| %>
+      <span data-testid="brew-tool" title="<%= tool.tool_name %>" class="min-w-0 max-w-48 flex-1 truncate rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200"><%= tool.tool_name %></span>
+    <% end %>
+    <% if tools.size > 2 %>
+      <%= link_to t("hero_tools.more", count: tools.size - 2), brew_path(brew, anchor: "brew-tools"), data: { testid: "brew-tools-more", turbo: false }, class: "shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200 hover:bg-white/25" %>
+    <% end %>
+  </div>
+<% end %>

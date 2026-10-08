@@ -371,6 +371,7 @@ class BrewsController < ApplicationController
 
       @selected_preparation_tools = default_preparation_tools(last_brew, method: "espresso")
       machine = default_equipment(last_brew&.machine)
+      grinder = default_equipment(last_brew&.grinder)
       attributes = {
         bean:,
         occurred_at: Time.current,
@@ -380,8 +381,8 @@ class BrewsController < ApplicationController
       return attributes unless last_brew
 
       attributes.merge(
-        grinder: default_equipment(last_brew.grinder),
-        grind_setting: last_brew.grind_setting,
+        grinder:,
+        grind_setting: household_grind_setting(grinder),
         brew_temperature_celsius: last_brew.brew_temperature_celsius,
         preinfusion_seconds: machine&.preinfusion_enabled? ? last_brew.preinfusion_seconds : nil,
         low_flow_start_seconds: machine&.low_flow_start_enabled? ? last_brew.low_flow_start_seconds : nil
@@ -395,15 +396,20 @@ class BrewsController < ApplicationController
       return { bean:, brewer: nil } if @brewers.empty?
 
       @selected_preparation_tools = default_preparation_tools(last_brew, method: "quick_drip")
+      grinder = bean.pre_ground? ? nil : default_equipment(last_brew&.grinder)
       {
         bean:,
         brewer: default_brewer(last_brew),
-        grinder: bean.pre_ground? ? nil : default_equipment(last_brew&.grinder),
+        grinder:,
         occurred_at: Time.current,
         machine_cups: last_brew&.machine_cups,
         coffee_spoons: last_brew&.coffee_spoons,
-        grind_setting: last_brew&.grind_setting
+        grind_setting: household_grind_setting(grinder)
       }
+    end
+
+    def household_grind_setting(grinder)
+      @grinder_reminder.last_uses_by_grinder_id[grinder&.id&.to_s]&.grind_setting
     end
 
     def repeat_source_brew_from_params

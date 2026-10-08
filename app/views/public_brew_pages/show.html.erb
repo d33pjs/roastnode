@@ -69,9 +69,11 @@
       <%= render "product_section", share: @share, kind: section["role"], section:, lightbox_sources: %>
     <% end %>
 
-    <% @snapshot.fetch("tools", []).each do |section| %>
-      <%= render "product_section", share: @share, kind: "tool", section:, lightbox_sources: %>
-    <% end %>
+    <div id="public-brew-tools">
+      <% @snapshot.fetch("tools", []).each do |section| %>
+        <%= render "product_section", share: @share, kind: "tool", section:, lightbox_sources: %>
+      <% end %>
+    </div>
 
     <div data-public-lightbox-target="dialog" data-action="touchstart->public-lightbox#touchStart touchend->public-lightbox#touchEnd" role="dialog" aria-modal="true" aria-hidden="true" class="hidden fixed inset-0 z-50 bg-black/90 p-4">
       <button type="button" data-action="public-lightbox#close" class="absolute right-4 top-4 rounded-full bg-white px-4 py-2 text-sm font-black text-stone-950"><%= t("public_brew_pages.show.close_photo") %></button>

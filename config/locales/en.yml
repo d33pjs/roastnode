@@ -2038,6 +2038,18 @@ en:
 
   grinder_history:
     title: "Grinder history"
+    matches: "Setting matches"
+    mismatch: "Check grinder setting"
+    field_reminder: "Double-check grinder"
+    physical_check: "Double-check the physical grinder setting. Copying a value does not adjust the grinder."
+    settings: "Settings"
+    sort:
+      recent: "Recent"
+      best: "Best rated"
+      frequency: "Most used"
+    no_ratings: "No rated brews for these settings yet."
+    rating: "★ %{value}/5 · %{count} rated"
+    last_used: "Last used %{date}"
     latest: "Last recorded for selected coffee"
     pending: "Check grinder setting"
     last_use: "Last used on this grinder"
@@ -2048,6 +2060,8 @@ en:
     no_history: "No settings recorded for this coffee on this grinder yet."
     no_grinder: "Select a grinder to see its history."
     pre_ground: "Pre-ground coffee · no grinder setting needed."
+  hero_tools:
+    more: "+ %{count} more"
   coffee_history:
     bags:
       one: "%{count} bag"

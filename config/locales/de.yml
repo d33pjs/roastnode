@@ -78,6 +78,18 @@ de:
 
   grinder_history:
     title: "Mahlgradverlauf"
+    matches: "Mahlgrad stimmt überein"
+    mismatch: "Mahlgrad prüfen"
+    field_reminder: "Mühle nochmals prüfen"
+    physical_check: "Prüfe den Mahlgrad an der Mühle. Das Kopieren eines Werts verstellt die Mühle nicht."
+    settings: "Mahlgrade"
+    sort:
+      recent: "Zuletzt verwendet"
+      best: "Bestbewertet"
+      frequency: "Am häufigsten"
+    no_ratings: "Für diese Mahlgrade gibt es noch keine bewerteten Bezüge."
+    rating: "★ %{value}/5 · %{count} bewertet"
+    last_used: "Zuletzt %{date}"
     latest: "Zuletzt erfasst für den gewählten Kaffee"
     pending: "Mahlgrad prüfen"
     last_use: "Zuletzt auf dieser Mühle"
@@ -88,6 +100,8 @@ de:
     no_history: "Für diesen Kaffee ist auf dieser Mühle noch kein Mahlgrad erfasst."
     no_grinder: "Wähle eine Mühle, um ihren Verlauf zu sehen."
     pre_ground: "Vorgemahlener Kaffee · kein Mahlgrad nötig."
+  hero_tools:
+    more: "+ %{count} weitere"
   coffee_history:
     bags:
       one: "%{count} Tüte"

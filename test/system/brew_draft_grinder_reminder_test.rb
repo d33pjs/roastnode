@@ -92,6 +92,8 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     fill_in "Grind setting", with: " 1/1,50 "
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
+    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=true]", text: "Setting matches"
+    assert_selector "input[data-physical-check=true]"
 
     fill_in "Grind setting", with: "manual 9"
     assert_selector "[data-testid=brew-grind-setting-apply]:not([hidden])", text: "Use 1/1,50"
@@ -100,7 +102,18 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal "1/1,50", grind_input.value
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
     assert_equal grinder_id, find('input[name="brew[grinder_id]"]:checked').value
-    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true]", text: "Check grinder setting"
+    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true][data-setting-match=true]", text: "Setting matches"
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1000, deviceScaleFactor: 1, mobile: true)
+    execute_script("document.querySelector('input[name=\"brew[grind_setting]\"]').scrollIntoView({block: 'center'})")
+    assert_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])", text: "Double-check grinder"
+    page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-field-reminder-mobile.png"))
+    fill_in "Grind setting", with: "A long grinder setting that needs all the available space"
+    assert_no_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])"
+    assert_selector "input[data-physical-check=true]"
+    page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-long-field-mobile.png"))
+    fill_in "Grind setting", with: "1/1,50"
+    assert_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])"
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
     assert_draft_field storage_key, "brew[grind_setting]", "1/1,50"
   end
 
@@ -188,8 +201,15 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
       assert_text "From a previous bag of this coffee"
       assert_selector "[data-brew-grinder-reminder-target=latest]", text: "9"
       assert_selector "[data-brew-grinder-reminder-target=rows] li", count: 3
-      assert_no_selector "[data-brew-grinder-reminder-target=rows] li", text: "9"
+      assert_selector "[data-brew-grinder-reminder-target=rows] li", text: "9"
     end
+    select "Most used", from: "Settings"
+    assert_no_selector "[data-brew-grinder-reminder-target=rows] li", text: "9"
+    select "Best rated", from: "Settings"
+    assert_selector "[data-brew-grinder-reminder-target=rows] li", count: 1, text: /12.*4\/5.*1 rated/m
+    assert_selector "[data-brew-grinder-reminder-target=latest]", text: "9"
+    assert_equal "manual", find('input[name="brew[grind_setting]"]').value
+    select "Most used", from: "Settings"
     page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-desktop-light.png"))
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1000, deviceScaleFactor: 1, mobile: true)
     find("[data-testid=brew-grinder-reminder]").scroll_to(:top)
@@ -236,6 +256,49 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     fill_in "bean_name", with: "Changed coffee"
     assert_selector "#coffee-history-details", text: option_label
     assert_equal source.coffee_history_id.to_s, find("#bean_coffee_history_choice").value
+  end
+
+  test "Hero tools stay on one bounded row and link to complete private and public lists" do
+    sign_in_through_browser
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1000, deviceScaleFactor: 1, mobile: true)
+    %w[espresso quick_drip].each do |method|
+      tools = 12.times.map do |index|
+        workspaces(:household).preparation_tools.create!(name: "A particularly long preparation tool name #{method} #{index}",
+          brew_method: method, active: true, position: index)
+      end
+      brew = workspaces(:household).brews.create!(user: users(:one), bean: beans(:open_household),
+        grinder: equipment(:household_grinder), machine: (equipment(:household_machine) if method == "espresso"),
+        brewer: (equipment(:household_brewer) if method == "quick_drip"), machine_cups: (2 if method == "quick_drip"),
+        method:, occurred_at: Time.current, bean_weight_grams: 1)
+      brew.snapshot_preparation_tools!(tools)
+
+      visit brew_path(brew)
+      assert_selector "[data-testid=brew-hero-tools] [data-testid=brew-tool]", count: 2
+      assert_selector "[data-testid=brew-tools-more]", text: "+ 10 more"
+      assert_selector "#brew-tools [data-testid=brew-detail-tool]", count: 12
+      assert_equal false, evaluate_script("document.documentElement.scrollWidth > window.innerWidth")
+      assert_operator find("[data-testid=brew-hero-tools]").rect.height, :<, 40
+      execute_script("document.querySelector('[data-testid=brew-hero-card]').scrollIntoView({block: 'start'})")
+      page.save_screenshot(Rails.root.join("tmp/screenshots/hero-tools-#{method}-mobile.png"))
+      find("[data-testid=brew-tools-more]").click
+      assert_current_path brew_path(brew)
+      assert_equal "#brew-tools", evaluate_script("window.location.hash")
+
+      next unless method == "espresso"
+
+      share = brew.create_public_brew_share!(workspace: brew.workspace, created_by: brew.user, updated_by: brew.user,
+        enabled: true, title: "Shared shot", snapshot: PublicBrewShareSnapshotBuilder.new(brew:, title: "Shared shot", selected_photo_attachment_ids: []).call)
+      visit public_brew_page_path(share.token)
+      assert_selector "[data-testid=public-brew-hero-tools] [data-testid=public-gear-anchor]", count: 2
+      assert_selector "[data-testid=public-brew-tools-more]", text: "+ 10 more"
+      assert_selector "#public-brew-tools [data-kind=tool]", count: 12
+      assert_equal false, evaluate_script("document.documentElement.scrollWidth > window.innerWidth")
+      page.save_screenshot(Rails.root.join("tmp/screenshots/hero-tools-public-mobile.png"))
+      find("[data-testid=public-brew-tools-more]").click
+      assert_current_path public_brew_page_path(share.token)
+      assert_equal "#public-brew-tools", evaluate_script("window.location.hash")
+    end
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
 
   private

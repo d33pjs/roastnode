@@ -68,7 +68,10 @@
 
   <div class="mt-4">
     <%= form.label :grind_setting, t("brews.form.grind_setting"), class: "block text-sm font-bold text-rn-muted" %>
-    <%= form.text_field :grind_setting, class: "mt-1 w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+    <div class="relative mt-1">
+      <%= form.text_field :grind_setting, data: { brew_grinder_reminder_target: "grindSetting", action: "input->brew-grinder-reminder#grindSettingChanged" }, aria: (@grinder_reminder ? { describedby: "brew-grinder-physical-check" } : {}), class: "w-full rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+      <%= render "grind_setting_reminder" if @grinder_reminder %>
+    </div>
   </div>
 
   <fieldset class="mt-4">

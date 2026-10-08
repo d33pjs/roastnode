@@ -11,7 +11,7 @@ class BrewGrinderReminder
     end
   end
 
-  History = Data.define(:reference, :settings, :brew_count, :bag_count, :inherited)
+  History = Data.define(:reference, :settings, :recent_settings, :best_settings, :brew_count, :bag_count, :inherited)
   Result = Data.define(:last_bean, :last_bean_id, :previous, :histories_by_bean_id, :last_uses_by_grinder_id) do
     def histories_for(bean)
       histories_by_bean_id.fetch(bean.id, {})
@@ -82,7 +82,8 @@ class BrewGrinderReminder
           summary = summaries.fetch([ bean.coffee_history_id, bean.grind_state, family_brew.grinder_id ])
           [ family_brew.grinder_id.to_s, History.new(
             reference: Reference.new(brew: reference_brew),
-            settings: summary[:settings], brew_count: summary[:brew_count], bag_count: summary[:bag_count],
+            settings: summary[:settings], recent_settings: summary[:recent_settings], best_settings: summary[:best_settings],
+            brew_count: summary[:brew_count], bag_count: summary[:bag_count],
             inherited: reference_brew.bean_id != bean.id
           ) ]
         end
@@ -96,12 +97,12 @@ class BrewGrinderReminder
         .preload(:bean, :grinder).to_a
     end
 
-    # Return only three representative settings per history/grind state/grinder.
+    # Return at most three settings per sort mode/history/grind state/grinder.
     # Counts stay in PostgreSQL; no historical Brew collection is instantiated.
     def setting_summaries
       source = eligible_brews.select(
         "brews.id, brews.bean_id, beans.coffee_history_id, beans.grind_state, brews.grinder_id, " \
-        "brews.grind_setting, brews.occurred_at, brews.created_at, " \
+        "brews.grind_setting, brews.rating, brews.occurred_at, brews.created_at, " \
         "LOWER(REGEXP_REPLACE(brews.grind_setting, '^[[:space:]]+|[[:space:]]+$', '', 'g')) AS normalized_setting"
       ).to_sql
       rows = Brew.connection.select_all(<<~SQL)
@@ -113,6 +114,8 @@ class BrewGrinderReminder
         ),
         settings AS (
           SELECT *, COUNT(*) OVER setting_group AS setting_count,
+            AVG(rating) OVER setting_group AS average_rating,
+            COUNT(rating) OVER setting_group AS rating_count,
             ROW_NUMBER() OVER (setting_group ORDER BY occurred_at DESC NULLS LAST, created_at DESC NULLS LAST, id DESC) AS latest
           FROM eligible
           WINDOW setting_group AS (PARTITION BY coffee_history_id, grind_state, grinder_id, normalized_setting)
@@ -121,17 +124,36 @@ class BrewGrinderReminder
           SELECT *, ROW_NUMBER() OVER (
             PARTITION BY coffee_history_id, grind_state, grinder_id
             ORDER BY setting_count DESC, occurred_at DESC NULLS LAST, created_at DESC NULLS LAST, id DESC
-          ) AS position
+          ) AS position,
+          ROW_NUMBER() OVER (
+            PARTITION BY coffee_history_id, grind_state, grinder_id
+            ORDER BY occurred_at DESC NULLS LAST, created_at DESC NULLS LAST, id DESC
+          ) AS recent_position,
+          ROW_NUMBER() OVER (
+            PARTITION BY coffee_history_id, grind_state, grinder_id
+            ORDER BY average_rating DESC NULLS LAST, rating_count DESC,
+              occurred_at DESC NULLS LAST, created_at DESC NULLS LAST, id DESC
+          ) AS best_position
           FROM settings WHERE latest = 1
         )
         SELECT ranked.*, totals.brew_count, totals.bag_count
         FROM ranked JOIN totals USING (coffee_history_id, grind_state, grinder_id)
-        WHERE position <= 3 ORDER BY coffee_history_id, grind_state, grinder_id, position
+        WHERE position <= 3 OR recent_position <= 3 OR (rating_count > 0 AND best_position <= 3)
+        ORDER BY coffee_history_id, grind_state, grinder_id, position
       SQL
       rows.group_by { |row| [ row["coffee_history_id"], row["grind_state"], row["grinder_id"] ] }
         .transform_values do |group|
           { brew_count: group.first["brew_count"], bag_count: group.first["bag_count"],
-            settings: group.map { |row| { setting: row["grind_setting"].strip, count: row["setting_count"] } } }
+            settings: ranked_settings(group, "position"),
+            recent_settings: ranked_settings(group, "recent_position"),
+            best_settings: ranked_settings(group.select { |row| row["rating_count"] > 0 }, "best_position") }
         end
+    end
+
+    def ranked_settings(rows, position)
+      rows.select { |row| row[position] <= 3 }.sort_by { |row| row[position] }.map do |row|
+        { setting: row["grind_setting"].strip, count: row["setting_count"],
+          average_rating: row["average_rating"]&.to_f, rating_count: row["rating_count"], occurred_at: row["occurred_at"] }
+      end
     end
 end

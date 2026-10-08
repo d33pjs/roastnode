@@ -139,11 +139,18 @@ end %>
         <% name = equipment["name"].presence || unknown %>
         <%= link_to "#{public_snapshot_equipment_role_label(role)}: #{name}", "##{public_product_anchor(role, name)}", data: { testid: "public-gear-anchor" }, class: "rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-stone-100 hover:bg-white/20" %>
       <% end %>
-
-      <% snapshot.fetch("tools", []).each do |tool| %>
-        <% name = tool["name"].presence || unknown %>
-        <%= link_to name, "##{public_product_anchor("tool", name)}", data: { testid: "public-gear-anchor" }, class: "rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200 hover:bg-white/25" %>
-      <% end %>
     </div>
+    <% tools = snapshot.fetch("tools", []) %>
+    <% if tools.any? %>
+      <div class="mt-2 flex min-w-0 items-center gap-2" data-testid="public-brew-hero-tools">
+        <% tools.first(2).each do |tool| %>
+          <% name = tool["name"].presence || unknown %>
+          <%= link_to name, "##{public_product_anchor("tool", name)}", title: name, data: { testid: "public-gear-anchor" }, class: "min-w-0 max-w-48 flex-1 truncate rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200 hover:bg-white/25" %>
+        <% end %>
+        <% if tools.size > 2 %>
+          <%= link_to t("hero_tools.more", count: tools.size - 2), "#public-brew-tools", data: { testid: "public-brew-tools-more", turbo: false }, class: "shrink-0 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-stone-200 hover:bg-white/25" %>
+        <% end %>
+      </div>
+    <% end %>
   </div>
 </article>

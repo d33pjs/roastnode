@@ -36,14 +36,16 @@
     <% unless hide_brew_field.call(:grind_setting) %>
       <div>
         <%= form.label :grind_setting, t("brews.form.grind_setting"), class: "block text-sm font-bold text-rn-muted" %>
-        <div class="mt-1 flex items-center gap-2">
+        <div class="relative mt-1 flex items-center gap-2">
           <%= form.text_field :grind_setting,
             autofocus: autofocus_field == "grind_setting",
             data: {
               brew_grinder_reminder_target: "grindSetting",
               action: "input->brew-grinder-reminder#grindSettingChanged"
             },
+            aria: (@grinder_reminder ? { describedby: "brew-grinder-physical-check" } : {}),
             class: "min-w-0 flex-1 rounded-2xl border border-rn-line bg-[var(--rn-canvas)] px-3 py-3 text-rn-ink shadow-sm focus:border-[var(--rn-accent-strong)] focus:outline-none" %>
+          <%= render "grind_setting_reminder" if @grinder_reminder %>
         </div>
       </div>
     <% end %>

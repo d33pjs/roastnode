@@ -179,8 +179,18 @@ module BrewsHelper
         source: "#{reference.bean.display_name} · #{profile_timestamp(reference.brew.occurred_at)}",
         inherited: history.inherited,
         summary: t("grinder_history.summary", brews: history.brew_count, bags: history.bag_count),
-        settings: history.settings
+        settings: brew_grinder_setting_rows(history.settings),
+        recent_settings: brew_grinder_setting_rows(history.recent_settings),
+        best_settings: brew_grinder_setting_rows(history.best_settings)
       }
+    end
+  end
+
+  def brew_grinder_setting_rows(settings)
+    settings.map do |row|
+      { setting: row[:setting], count: row[:count],
+        rating_label: (t("grinder_history.rating", value: profile_number(row[:average_rating], precision: 1), count: row[:rating_count]) if row[:rating_count].positive?),
+        last_used: (t("grinder_history.last_used", date: profile_timestamp(row[:occurred_at]).split.first) if row[:occurred_at].present?) }
     end
   end
 

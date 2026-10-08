@@ -11,6 +11,10 @@ function setup() {
   Object.assign(c, { beanTargets: [{checked: true, dataset: {grindState: 'whole_bean', grinderHistories: JSON.stringify({'1': history})}}], grinderTargets: [{checked: true, value: '1', dataset: {grinderName: 'Grinder A'}}], hasGrindSettingTarget: true, hasApplySettingTarget: true, grindSettingTarget: {value: '12', disabled: false, closest: () => null, dispatchEvent(e) { this.event = e }}, applySettingTarget: {}, pendingTarget: {}, contextTarget: {}, emptyTarget: {}, historyTarget: {}, latestTarget: {}, selectedBeanTarget: {}, sourceTarget: {}, inheritedTarget: {}, summaryTarget: {}, rowsTarget: {replaceChildren() {}}, useSettingTemplateValue: 'Use %{value}', noHistoryValue: 'No history', noGrinderValue: 'Choose grinder', preGroundValue: 'Pre-ground' })
   c.renderBars = (settings) => { c.rendered = settings }
   Object.assign(c, { panelTarget: {dataset: {}}, lastUseTarget: {parentElement: {}}, lastUsesValue: {'1': {setting: '12', label: 'Other coffee · 12'}}, unknownSettingValue: 'Unknown setting' })
+  Object.assign(c, { hasFieldReminderTarget: true, fieldReminderTarget: { offsetWidth: 150 }, hasFieldDescriptionTarget: true, fieldDescriptionTarget: {}, hasSortTarget: true, sortTarget: {value: 'recent'}, matchesValue: 'Setting matches', mismatchValue: 'Check grinder setting' })
+  c.grindSettingTarget.dataset = {}
+  c.grindSettingTarget.clientWidth = 320
+  c.settingTextWidth = () => c.grindSettingTarget.value.length * 8
   return c
 }
 test('bean and grinder switches never write input; history survives matching and copying', () => {
@@ -36,9 +40,11 @@ test('no grinder gives a single instruction without duplicate context text', () 
  assert.equal(c.emptyTarget.textContent, 'Choose grinder')
 })
 
-test('adjustment stays highlighted after copying or restoring a matching form field', () => {
+test('physical reminder stays red after copying while the matching panel turns green', () => {
  const c = setup(); c.updateReminder(); c.applySetting()
- assert.equal(c.pendingTarget.hidden, false)
+ assert.equal(c.panelTarget.dataset.settingMatch, 'true')
+ assert.equal(c.pendingTarget.textContent, 'Setting matches')
+ assert.equal(c.fieldReminderTarget.hidden, false)
  assert.equal(c.panelTarget.dataset.adjustmentNeeded, 'true')
  assert.equal(c.lastUseTarget.textContent, 'Other coffee · 12')
  c.updateReminder()
@@ -47,9 +53,41 @@ test('adjustment stays highlighted after copying or restoring a matching form fi
 
 test('matching last grinder use clears the warning regardless of the selected bag', () => {
  const c = setup(); c.lastUsesValue['1'].setting = ' 7 '; c.updateReminder()
- assert.equal(c.pendingTarget.hidden, true)
- assert.equal(c.panelTarget.dataset.adjustmentNeeded, 'false')
+ assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+ assert.equal(c.panelTarget.dataset.adjustmentNeeded, 'true')
  assert.equal(c.applySettingTarget.hidden, false)
+ c.grindSettingTarget.value = ' 7 '; c.grindSettingChanged()
+ assert.equal(c.panelTarget.dataset.settingMatch, 'true')
+ assert.equal(c.fieldReminderTarget.hidden, true)
+})
+
+test('typing updates panel match independently of saved grinder values', () => {
+ const c = setup(); c.updateReminder()
+ assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+ c.grindSettingTarget.value = ' 7 '; c.grindSettingChanged()
+ assert.equal(c.panelTarget.dataset.settingMatch, 'true')
+ assert.equal(c.fieldReminderTarget.hidden, false)
+ c.grindSettingTarget.value = ''; c.grindSettingChanged()
+ assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+})
+
+test('long input hides the overlay while keeping its red outline and accessible reminder', () => {
+ const c = setup(); c.updateReminder()
+ assert.equal(c.fieldReminderTarget.hidden, false)
+ c.grindSettingTarget.value = 'a very long grinder setting that needs the whole input'; c.grindSettingChanged()
+ assert.equal(c.fieldReminderTarget.hidden, true)
+ assert.equal(c.grindSettingTarget.dataset.physicalCheck, 'true')
+ assert.equal(c.fieldDescriptionTarget.hidden, false)
+})
+
+test('setting sort modes keep latest reference and input unchanged', () => {
+ const c = setup(); c.updateReminder()
+ c.history.recent_settings = [{setting: 'latest', count: 1}]
+ c.history.best_settings = [{setting: 'best', average_rating: 5, rating_count: 2}]
+ c.sortTarget.value = 'best'; c.sortChanged()
+ assert.equal(c.rendered[0].setting, 'best')
+ assert.equal(c.latestTarget.textContent, '7')
+ assert.equal(c.grindSettingTarget.value, '12')
 })
 
 test('unknown coffee or grinder settings require a check even with hidden grind fields', () => {
@@ -73,4 +111,10 @@ test('pre-ground and absent grinders clear the physical adjustment warning', () 
   assert.equal(c.pendingTarget.hidden, true)
   assert.equal(c.panelTarget.dataset.adjustmentNeeded, 'false')
  }
+})
+
+test('hidden grind input keeps the household physical mismatch visible in the panel', () => {
+ const c = setup(); c.hasGrindSettingTarget = false; c.hasFieldReminderTarget = false; c.updateReminder()
+ assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+ assert.equal(c.pendingTarget.textContent, 'Check grinder setting')
 })

@@ -19,7 +19,7 @@
   <% form_data[:brew_grinder_reminder_last_bean_id_value] = @grinder_reminder.last_bean_id %>
   <% form_data[:brew_grinder_reminder_last_uses_value] = brew_grinder_last_uses(@grinder_reminder).to_json %>
   <% form_data[:brew_grinder_reminder_use_setting_template_value] = t("brews.form.use_grind_setting", value: "%{value}") %>
-  <% %w[no_history no_grinder pre_ground unknown_setting].each do |state| %>
+  <% %w[no_history no_grinder pre_ground unknown_setting matches mismatch].each do |state| %>
     <% form_data["brew_grinder_reminder_#{state}_value"] = t("grinder_history.#{state}") %>
   <% end %>
 <% end %>

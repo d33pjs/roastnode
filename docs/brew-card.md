@@ -15,6 +15,7 @@ The brew detail page and dashboard use compact Hero Brew Cards for screenshot-wo
 - Dose from the espresso form on espresso cards.
 - Brew ratio calculated from beverage yield and dose, including total time when present.
 - Grind setting.
+- Grinder/machine/brewer chips remain visible in the footer. Preparation tools occupy one bounded row with two truncated chips and a `+ N more` link to the complete tools list. This applies to private Espresso/Quick Drip and curated public Brew Heroes; saved tool snapshots and full detail lists remain complete.
 - Grinder retention calculated from bean-in minus ground-out weight.
 - Rating as five visual bean marks.
 - Taste balance as its own compact metric rectangle.
