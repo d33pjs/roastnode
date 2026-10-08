@@ -13,13 +13,13 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "image/jpeg", response.media_type
     assert_match "public-brew-media", response.headers["Content-Disposition"]
     assert_no_match "photo.jpg", response.headers["Content-Disposition"]
-    assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
+    assert_match(/\Ainline; filename="public-brew-media"(?:; filename\*=UTF-8''public-brew-media)?\z/, response.headers["Content-Disposition"])
 
     get public_media_path_for(share, photo, variant: "thumbnail")
     assert_response :success
     assert_equal "thumbnail", response.headers["X-Roastnode-Media-Variant"]
     assert_match "public-brew-thumbnail", response.headers["Content-Disposition"]
-    assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
+    assert_match(/\Ainline; filename="public-brew-thumbnail"(?:; filename\*=UTF-8''public-brew-thumbnail)?\z/, response.headers["Content-Disposition"])
   end
 
   test "streams a bounded public hero from enabled share" do
@@ -32,7 +32,7 @@ class PublicBrewMediaControllerTest < ActionDispatch::IntegrationTest
     assert_equal "hero", response.headers["X-Roastnode-Media-Variant"]
     assert_match "public-brew-hero", response.headers["Content-Disposition"]
     assert_no_match "photo.png", response.headers["Content-Disposition"]
-    assert_no_match photo.id.to_s, response.headers["Content-Disposition"]
+    assert_match(/\Ainline; filename="public-brew-hero"(?:; filename\*=UTF-8''public-brew-hero)?\z/, response.headers["Content-Disposition"])
     hero = Vips::Image.new_from_buffer(response.body, "")
     assert_equal 1200, [ hero.width, hero.height ].max
   end

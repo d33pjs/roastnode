@@ -13,13 +13,14 @@ class PublicCuppingMediaControllerTest < ActionDispatch::IntegrationTest
     handle = @cupping_request.public_media_handle_for(avatar.id)
 
     assert handle.present?
-    assert_no_match(/#{avatar.id}/, handle)
+    assert_match(/\A[0-9a-f]{32}\z/, handle)
+    assert_not_equal avatar.id.to_s, handle
 
     get public_cupping_media_path(@cupping_request.token, handle)
     assert_response :success
     assert_equal "image/jpeg", response.media_type
     assert_match "public-cupping-media", response.headers["Content-Disposition"]
-    assert_no_match(/private-original-name\.jpg|#{avatar.id}/, response.headers["Content-Disposition"])
+    assert_match(/\Ainline; filename="public-cupping-media"(?:; filename\*=UTF-8''public-cupping-media)?\z/, response.headers["Content-Disposition"])
 
     get public_cupping_media_path(@cupping_request.token, handle, variant: "thumbnail")
     assert_response :success
