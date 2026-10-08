@@ -86,8 +86,8 @@
   }
 
   [data-brew-grinder-reminder-target="grindSetting"][data-physical-check="true"] {
-    border-color: var(--rn-chart-down-text);
-    box-shadow: 0 0 0 1px var(--rn-chart-down-text);
+    border-color: var(--rn-chart-down-text) !important;
+    box-shadow: 0 0 0 1px var(--rn-chart-down-text) !important;
   }
 
   .bg-rn-canvas {

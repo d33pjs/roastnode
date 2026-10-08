@@ -1,5 +1,5 @@
 class BrewsController < ApplicationController
-  before_action :authorize_workspace_write!, only: %i[new create edit update taste serving destroy]
+  before_action :authorize_workspace_write!, only: %i[new create edit update taste serving destroy grinder_history]
   before_action :set_brew, only: %i[show edit update taste serving destroy]
   before_action :set_recipe_guide, only: %i[new create]
   before_action :set_selected_method, only: %i[new create]
@@ -14,6 +14,19 @@ class BrewsController < ApplicationController
   end
 
   def show
+  end
+
+  def grinder_history
+    method = params[:method].presence_in(Brew::BREW_METHODS)
+    return head :bad_request unless method
+
+    beans = current_workspace.beans.open.to_a
+    reminder = BrewGrinderReminder.new(workspace: current_workspace, user: Current.user, method:, beans:).call
+    response.headers["Cache-Control"] = "private, no-store"
+    render json: {
+      histories: beans.to_h { |bean| [ bean.id.to_s, helpers.brew_grinder_histories(reminder, bean) ] },
+      last_uses: helpers.brew_grinder_last_uses(reminder)
+    }
   end
 
   def edit

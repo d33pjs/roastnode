@@ -1,6 +1,31 @@
 require "application_system_test_case"
 
 class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
+  test "an already open phone form refreshes household grinder changes without replacing its draft" do
+    brews(:morning_espresso).update!(grind_setting: "1/1,00", occurred_at: 1.day.ago)
+    sign_in_through_browser
+    visit new_brew_path(method: "espresso")
+    wait_for_stimulus("brew-grinder-reminder")
+    fill_in "Grind setting", with: "1/1,00"
+    fill_in "Bean in (g)", with: "18"
+    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=true]"
+
+    workspaces(:household).brews.create!(user: users(:two), bean: beans(:open_household),
+      grinder: equipment(:household_grinder), method: "espresso", bean_weight_grams: 1,
+      grind_setting: "1/3,0", occurred_at: Time.current)
+    execute_script("window.dispatchEvent(new Event('focus'))")
+
+    assert_selector "[data-brew-grinder-reminder-target=latest]", text: "1/3,0"
+    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=false]", text: "Check grinder setting"
+    assert_selector "input[data-physical-check=true]"
+    assert_equal "1/1,00", find('input[name="brew[grind_setting]"]').value
+    assert_equal "18", find('input[name="brew[bean_weight_grams]"]').value
+    find("[data-testid=brew-grind-setting-apply]").click
+    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=true]"
+    assert_equal "1/3,0", find('input[name="brew[grind_setting]"]').value
+    assert_no_selector "input[data-physical-check=true]"
+  end
+
   test "browser back refreshes history after a newer brew was logged while away" do
     sign_in_through_browser
     visit new_brew_path(method: "espresso")
@@ -26,7 +51,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     sign_in_through_browser
     visit new_brew_path(method: "espresso")
     wait_for_stimulus("brew-grinder-reminder")
-    choose "brew_bean_id_#{duplicate.id}"
+    find("label[for='brew_bean_id_#{duplicate.id}']").click
 
     %w[1/0,25 1/0,50 1/0,75].each do |setting|
       fill_in "Grind setting", with: setting
@@ -75,7 +100,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
     assert_no_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true]"
 
-    choose "brew_bean_id_#{selected_bean.id}"
+    find("label[for='brew_bean_id_#{selected_bean.id}']").click
 
     assert_selector "#brew_bean_id_#{selected_bean.id}:checked"
     assert_selector "[data-testid=brew-grind-setting-apply]:not([hidden])", text: "Use 1/1,50"
@@ -107,9 +132,11 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     execute_script("document.querySelector('input[name=\"brew[grind_setting]\"]').scrollIntoView({block: 'center'})")
     assert_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])", text: "Double-check grinder"
     page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-field-reminder-mobile.png"))
-    fill_in "Grind setting", with: "A long grinder setting that needs all the available space"
+    fill_in "Grind setting", with: "A long grinder setting that needs all the available space", fill_options: { rapid: false }
+    assert_equal "A long grinder setting that needs all the available space", grind_input.value
     assert_no_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])"
     assert_selector "input[data-physical-check=true]"
+    assert_equal true, evaluate_script("getComputedStyle(document.querySelector('input[data-physical-check=true]')).borderColor === getComputedStyle(document.querySelector('[data-brew-grinder-reminder-target=fieldReminder]')).color")
     page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-long-field-mobile.png"))
     fill_in "Grind setting", with: "1/1,50"
     assert_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])"
@@ -130,7 +157,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     wait_for_stimulus("brew-draft")
     assert_no_selector "#brew_bean_id_#{draft_bean.id}:checked"
-    choose "brew_bean_id_#{draft_bean.id}"
+    find("label[for='brew_bean_id_#{draft_bean.id}']").click
     assert_selector "#brew_bean_id_#{draft_bean.id}:checked"
     assert_draft_field storage_key, "brew[bean_id]", draft_bean.id.to_s
 
@@ -194,7 +221,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     visit new_brew_path(method: "espresso")
     wait_for_stimulus("brew-grinder-reminder")
     wait_for_stimulus("brew-draft")
-    choose "brew_bean_id_#{duplicate.id}"
+    find("label[for='brew_bean_id_#{duplicate.id}']").click
     assert_selector "#brew_bean_id_#{duplicate.id}:checked"
     fill_in "Grind setting", with: "manual"
     within "[data-testid=brew-grinder-reminder]" do
@@ -305,7 +332,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     def wait_for_stimulus(identifier)
       page.document.synchronize(errors: [ Capybara::ExpectationNotMet ]) do
         connected = evaluate_script(<<~JAVASCRIPT, identifier)
-          window.Stimulus.controllers.some((controller) => controller.identifier === arguments[0])
+          document.fonts.status === "loaded" && window.Stimulus.controllers.some((controller) => controller.identifier === arguments[0])
         JAVASCRIPT
         raise Capybara::ExpectationNotMet, "#{identifier} did not connect" unless connected
       end
@@ -322,6 +349,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     def sign_in_through_browser
       visit new_session_path
+      evaluate_async_script("document.fonts.ready.then(arguments[0])")
       fill_in "Email", with: users(:one).email_address
       fill_in "Password", with: "password"
       click_button "Sign in"

@@ -79,6 +79,7 @@ de:
   grinder_history:
     title: "Mahlgradverlauf"
     matches: "Mahlgrad stimmt überein"
+    stale: "Haushaltsverlauf nicht verfügbar · Mühle nochmals prüfen"
     mismatch: "Mahlgrad prüfen"
     field_reminder: "Mühle nochmals prüfen"
     physical_check: "Prüfe den Mahlgrad an der Mühle. Das Kopieren eines Werts verstellt die Mühle nicht."

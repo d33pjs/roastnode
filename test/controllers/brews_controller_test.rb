@@ -1,6 +1,40 @@
 require "test_helper"
 
 class BrewsControllerTest < ActionDispatch::IntegrationTest
+  test "live grinder history follows another household member without disclosing foreign history" do
+    sign_in_as(users(:one))
+    get "/brews/grinder_history", params: { method: "espresso" }
+    assert_response :success
+    assert_equal "12", response.parsed_body.fetch("last_uses").fetch(equipment(:household_grinder).id.to_s).fetch("setting")
+
+    workspaces(:household).brews.create!(user: users(:two), bean: beans(:open_household),
+      grinder: equipment(:household_grinder), method: "espresso", bean_weight_grams: 1,
+      grind_setting: "1/3,0", occurred_at: Time.current)
+    get "/brews/grinder_history", params: { method: "espresso" }
+
+    assert_response :success
+    body = response.parsed_body
+    assert_equal "1/3,0", body.fetch("last_uses").fetch(equipment(:household_grinder).id.to_s).fetch("setting")
+    assert_equal "1/3,0", body.fetch("histories").fetch(beans(:open_household).id.to_s).fetch(equipment(:household_grinder).id.to_s).fetch("setting")
+    assert_not body.fetch("histories").key?(beans(:other_workspace_open).id.to_s)
+    assert_not body.fetch("last_uses").key?(equipment(:other_workspace_grinder).id.to_s)
+    assert_includes response.headers["Cache-Control"], "no-store"
+    assert_no_match /email_address|notes|token|photo|cost/, response.body
+  end
+
+  test "live grinder history requires a signed-in workspace writer and a valid method" do
+    get "/brews/grinder_history", params: { method: "espresso" }
+    assert_redirected_to new_session_path
+    memberships(:member).update!(role: "viewer")
+    users(:two).update!(active_workspace: workspaces(:household))
+    sign_in_as(users(:two))
+    get "/brews/grinder_history", params: { method: "espresso" }
+    assert_redirected_to root_path
+    sign_in_as(users(:one))
+    get "/brews/grinder_history", params: { method: "external" }
+    assert_response :bad_request
+  end
+
   test "normal log defaults use the shared grinder's latest household setting across methods" do
     beans(:second_open_household).update!(grind_state: "whole_bean")
     workspaces(:household).brews.create!(user: users(:two), bean: beans(:second_open_household),

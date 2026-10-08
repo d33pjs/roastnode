@@ -14,6 +14,8 @@ The panel and latest coffee setting turn red with **Check grinder setting** when
 
 New Brew Log pages opt out of Turbo's page cache so browser Back/Forward reloads current settings and bag history. Normal new logs default the selected grinder's setting from its latest household use across users and methods, including blank unknown settings. Other setup defaults remain operator-specific. Unsaved drafts and Repeat Good Brew retain their intentional input values against fresh household guidance. Defaults use the same occurrence/creation/ID recency tie-break as the panel.
 
+Already-open logs refresh shared history through an authenticated, writer-only, active-workspace JSON endpoint on phone/app focus, visibility return, and every 15 seconds while visible. Responses and requests bypass caching. Refresh updates coffee references and household grinder use, never form values or drafts. A wife/partner's newer saved `1/3,0` therefore makes an older `1/1,00` input visibly require a check without a reload. Failed or five-second timed-out refreshes remove the green match signal and keep a manual physical-check reminder until a successful refresh. Request cancellation and sequence checks prevent earlier responses or disconnected controllers from restoring stale state. Hidden pages do not poll.
+
 `BrewGrinderReminder` uses bounded PostgreSQL latest-row queries and SQL frequency/rating/recency aggregation rather than loading all historical Brews or querying every bag individually. It returns at most the union of the three top-three modes per compatible history and grinder.
 
 ## Bags and ownership

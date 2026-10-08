@@ -2039,6 +2039,7 @@ en:
   grinder_history:
     title: "Grinder history"
     matches: "Setting matches"
+    stale: "Household settings unavailable · double-check grinder"
     mismatch: "Check grinder setting"
     field_reminder: "Double-check grinder"
     physical_check: "Double-check the physical grinder setting. Copying a value does not adjust the grinder."

@@ -2,20 +2,75 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [ "bean", "grinder", "panel", "lastUse", "context", "empty", "history", "latest", "selectedBean", "source", "inherited", "summary", "rows", "pending", "grindSetting", "applySetting", "fieldReminder", "fieldDescription", "sort", "noRatings" ]
-  static values = { lastUses: Object, useSettingTemplate: String, noHistory: String, noGrinder: String, preGround: String, unknownSetting: String, matches: String, mismatch: String }
+  static values = { lastUses: Object, useSettingTemplate: String, noHistory: String, noGrinder: String, preGround: String, unknownSetting: String, matches: String, mismatch: String, refreshUrl: String, stale: String }
 
   connect() {
+    this.connected = true
+    this.sharedStateFresh = true
+    this.refreshSequence = this.refreshSequence || 0
     this.updateReminder()
     if (this.hasGrindSettingTarget) {
       this.resizeObserver = new ResizeObserver(() => this.updateFieldReminder())
       this.resizeObserver.observe(this.grindSettingTarget)
     }
+    this.refreshHandler = () => this.refreshHistory()
+    window.addEventListener("focus", this.refreshHandler)
+    document.addEventListener("visibilitychange", this.refreshHandler)
+    this.refreshInterval = setInterval(this.refreshHandler, 15000)
+    this.refreshHistory()
   }
-  disconnect() { this.resizeObserver?.disconnect() }
+  disconnect() {
+    this.connected = false
+    this.refreshSequence++
+    this.refreshRequest?.abort()
+    clearInterval(this.refreshInterval)
+    window.removeEventListener("focus", this.refreshHandler)
+    document.removeEventListener("visibilitychange", this.refreshHandler)
+    this.resizeObserver?.disconnect()
+  }
   beanChanged() { this.updateReminder() }
   grinderChanged() { this.updateReminder() }
   grindSettingChanged() { this.updateSettingState() }
   sortChanged() { this.renderSettings() }
+
+  async refreshHistory() {
+    if (!this.connected || document.hidden || !this.refreshUrlValue) return
+    const sequence = this.refreshSequence = (this.refreshSequence || 0) + 1
+    this.refreshRequest?.abort()
+    const request = this.refreshRequest = new AbortController()
+    const timeout = setTimeout(() => {
+      if (this.connected && sequence === this.refreshSequence) {
+        this.sharedStateFresh = false
+        this.updateSettingState()
+      }
+      request.abort()
+    }, 5000)
+    try {
+      const response = await fetch(this.refreshUrlValue, {
+        headers: { Accept: "application/json" }, credentials: "same-origin", cache: "no-store", signal: request.signal
+      })
+      if (!response.ok) throw new Error("Household history unavailable")
+      const data = await response.json()
+      if (!this.connected || sequence !== this.refreshSequence || request.signal.aborted) return
+      let changed = this.sharedStateFresh === false || JSON.stringify(this.lastUsesValue) !== JSON.stringify(data.last_uses)
+      for (const bean of this.beanTargets) {
+        const histories = JSON.stringify(data.histories[bean.value] || {})
+        if (bean.dataset.grinderHistories !== histories) {
+          bean.dataset.grinderHistories = histories
+          changed = true
+        }
+      }
+      this.lastUsesValue = data.last_uses
+      this.sharedStateFresh = true
+      if (changed) this.updateReminder()
+    } catch (error) {
+      if (!this.connected || sequence !== this.refreshSequence || error.name === "AbortError") return
+      this.sharedStateFresh = false
+      this.updateSettingState()
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
 
   updateReminder() {
     const grinder = this.grinderTargets.find((input) => input.checked)
@@ -53,11 +108,12 @@ export default class extends Controller {
 
   updateSettingState() {
     const inputSetting = this.hasVisibleSettingInput ? this.grindSettingTarget.value : this.lastUse?.setting
-    const matches = Boolean(this.history && this.normalizedSetting(inputSetting) === this.normalizedSetting(this.history.setting))
+    const fresh = this.sharedStateFresh !== false
+    const matches = Boolean(fresh && this.history && this.normalizedSetting(inputSetting) === this.normalizedSetting(this.history.setting))
     this.panelTarget.dataset.settingMatch = this.grinderRelevant ? String(matches) : ""
     this.pendingTarget.hidden = !this.grinderRelevant
-    this.pendingTarget.textContent = matches ? this.matchesValue : this.mismatchValue
-    this.physicalCheck = Boolean(this.grinderRelevant && (!this.history || !this.lastUse?.setting?.trim() ||
+    this.pendingTarget.textContent = !fresh ? this.staleValue : matches ? this.matchesValue : this.mismatchValue
+    this.physicalCheck = Boolean(this.grinderRelevant && (!fresh || !this.history || !this.lastUse?.setting?.trim() ||
       this.normalizedSetting(this.history.setting) !== this.normalizedSetting(this.lastUse.setting) ||
       this.normalizedSetting(inputSetting) !== this.normalizedSetting(this.lastUse.setting)))
     this.panelTarget.dataset.adjustmentNeeded = String(this.physicalCheck)
