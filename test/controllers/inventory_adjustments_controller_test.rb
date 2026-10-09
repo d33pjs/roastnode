@@ -1,6 +1,63 @@
 require "test_helper"
 
 class InventoryAdjustmentsControllerTest < ActionDispatch::IntegrationTest
+  test "weighing refreshes curated public remaining and terminal waste without private notes" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    bean.finish!
+    share = PublicBeanShare.create!(workspace: bean.workspace, bean:, created_by: users(:one), updated_by: users(:one), title: "Shared coffee")
+    PublicBeanShareRefresher.refresh(share)
+    post bean_inventory_adjustments_path(bean), params: { inventory_adjustment: {
+      adjustment_mode: "set_remaining", target_remaining_grams: "12,5", note: "Private weighing note" } }
+    assert_redirected_to bean_path(bean)
+    assert_equal BigDecimal("12.5"), share.reload.snapshot.fetch("bean").fetch("remaining_grams").to_d
+    assert_equal "12.5", share.snapshot.fetch("stats").fetch("dead_grams")
+    assert_not_includes share.snapshot.to_json, "Private weighing note"
+  end
+
+  test "weighing form displays current inventory and target mode" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    get new_bean_inventory_adjustment_path(bean)
+    assert_select "[data-testid=inventory-current-remaining]", text: /150/
+    assert_select "select[name=?] option[value=set_remaining]", "inventory_adjustment[adjustment_mode]"
+    assert_select "input[name=?][inputmode=decimal]", "inventory_adjustment[target_remaining_grams]"
+  end
+
+  test "writer can weigh with comma decimals and then set zero" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    post bean_inventory_adjustments_path(bean), params: { inventory_adjustment: {
+      adjustment_mode: "set_remaining", target_remaining_grams: "12,5g" } }
+    assert_redirected_to bean_path(bean)
+    assert_equal BigDecimal("12.5"), bean.reload.remaining_grams
+    assert_equal BigDecimal("-137.5"), bean.inventory_adjustments.manual.last.delta_grams
+
+    post bean_inventory_adjustments_path(bean), params: { inventory_adjustment: {
+      adjustment_mode: "set_remaining", target_remaining_grams: "0" } }
+    assert_redirected_to bean_path(bean)
+    assert_equal 0.to_d, bean.reload.remaining_grams
+  end
+
+  test "unchanged weighing creates no activity or adjustment" do
+    sign_in_as(users(:one))
+    bean = beans(:open_household)
+    assert_no_difference [ -> { ActivityEvent.count }, -> { InventoryAdjustment.count } ] do
+      post bean_inventory_adjustments_path(bean), params: { inventory_adjustment: {
+        adjustment_mode: "set_remaining", target_remaining_grams: "150" } }
+    end
+    assert_redirected_to bean_path(bean)
+  end
+
+  test "weighing cannot reach a foreign workspace" do
+    sign_in_as(users(:one))
+    bean = beans(:other_workspace_open)
+    post bean_inventory_adjustments_path(bean), params: { inventory_adjustment: {
+      adjustment_mode: "set_remaining", target_remaining_grams: "0" } }
+    assert_response :not_found
+    assert_equal 200.to_d, bean.reload.remaining_grams
+  end
+
   test "writer can open manual inventory adjustment form for bean" do
     sign_in_as(users(:one))
     bean = beans(:open_household)

@@ -12,7 +12,7 @@ class BeansController < ApplicationController
   def index
     @beans = current_workspace.beans
       .left_joins(:brews)
-      .includes(:primary_photo_record, photos_attachments: :blob)
+      .includes(:primary_photo_record, :inventory_transfers, photos_attachments: :blob)
       .select("beans.*, MAX(brews.occurred_at) AS latest_brew_at")
       .group("beans.id")
       .to_a
@@ -149,12 +149,30 @@ class BeansController < ApplicationController
   end
 
   def finish
+    @leftover_destinations = BeanLeftoverTransfer.destinations(@bean)
+    return render :finish unless request.patch?
+
+    destination = params[:destination]
+    raise ActionController::BadRequest unless destination.nil? || destination.is_a?(String) || destination.is_a?(Integer)
+    if destination.present?
+      transferred_to = BeanLeftoverTransfer.new(source: @bean, destination:, user: Current.user).call do |source, target|
+        refresh_public_shares_for(source)
+        refresh_public_shares_for(target)
+      end
+      return redirect_to transferred_to, notice: t(".transferred")
+    end
+
     with_workspace_activity(action: "bean.finished", subject: @bean) do
       @bean.finish!
       refresh_public_shares_for(@bean)
       true
     end
     redirect_to @bean, notice: t(".finished")
+  rescue BeanLeftoverTransfer::InvalidTransfer
+    @bean.reload
+    @leftover_destinations = BeanLeftoverTransfer.destinations(@bean)
+    @transfer_error = t(".invalid_transfer")
+    render :finish, status: :unprocessable_entity
   end
 
   def reopen

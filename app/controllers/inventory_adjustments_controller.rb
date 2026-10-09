@@ -29,8 +29,12 @@ class InventoryAdjustmentsController < ApplicationController
         actor: Current.user,
         subject: @inventory_adjustment,
         occurred_at: @inventory_adjustment.occurred_at
-      )
+      ) if @inventory_adjustment.persisted?
       record_used_up_transition!(@bean, previous_status:)
+      if @inventory_adjustment.persisted?
+        PublicBrewShareRefresher.refresh_for(@bean)
+        PublicBeanShareRefresher.refresh_for(@bean)
+      end
     end
 
     if created
@@ -41,7 +45,7 @@ class InventoryAdjustmentsController < ApplicationController
   end
 
   private
-    DECIMAL_INVENTORY_ADJUSTMENT_FIELDS = %i[delta_grams].freeze
+    DECIMAL_INVENTORY_ADJUSTMENT_FIELDS = %i[delta_grams target_remaining_grams].freeze
 
     def set_bean
       @bean = current_workspace.beans.find(params[:bean_id])
@@ -50,6 +54,8 @@ class InventoryAdjustmentsController < ApplicationController
     def inventory_adjustment_params
       normalize_decimal_attributes(params.expect(inventory_adjustment: [
         :delta_grams,
+        :adjustment_mode,
+        :target_remaining_grams,
         :occurred_at,
         :note
       ]), *DECIMAL_INVENTORY_ADJUSTMENT_FIELDS)

@@ -274,6 +274,17 @@ en:
       destroyed: "Bean and brew history deleted."
     finish:
       finished: "Bean bag marked finished."
+      transferred: "Leftovers moved and the previous bag marked finished."
+      invalid_transfer: "These leftovers could not be moved. Check the current weights and choose an open or unopened matching bag."
+      title: "Finish bag"
+      remaining: "Remaining in this bag: %{amount}"
+      leftovers: "What should happen to the leftovers?"
+      help: "Move all remaining grams to a matching bag, or keep them recorded with this finished bag. Unopened destination bags will be opened. You can weigh the leftovers using Adjust inventory first."
+      keep: "Finish and keep leftovers recorded here"
+      new_bag: "Duplicate a new bag, open it, and add leftovers"
+      bag_option: "%{name} · %{amount} · %{status}"
+      confirm: "Finish bag / move leftovers"
+      move_leftovers: "Move leftovers"
     open_bag:
       opened: "Bean bag opened."
       not_stock: "Only stock bags can be opened this way."
@@ -1076,6 +1087,12 @@ en:
       created: "Inventory adjusted."
     form:
       add: "+ Add beans"
+      current_remaining: "Current remaining: %{amount}"
+      mode: "Adjustment method"
+      set_remaining: "Set remaining weight"
+      change_by: "Add or remove an amount"
+      target_remaining_grams: "Weighed remaining (g)"
+      weigh_help: "Enter what is left on your scale. We record the difference automatically."
       delta_grams: "Adjustment (g)"
       note: "Note"
       occurred_at: "Occurred at"
@@ -1682,6 +1699,20 @@ en:
       rate_limited: "Try again later."
       updated: "Password changed."
   statistics:
+    waste:
+      title: "Leftovers & wasted coffee"
+      per_bag: "Top five individual bags. Repeat purchases stay separate."
+      leftovers: "Most leftovers"
+      leftovers_help: "All-time remaining grams in finished or archived opened bags. Date and people filters do not apply. Moved leftovers are excluded."
+      grounds: "Most trashed grounds"
+      grounds_help: "Measured ground coffee minus the dose used, clamped at zero. Espresso only; selected date and people filters apply. Missing measurements are excluded."
+      channeling: "Most channeling"
+      channeling_help: "Ranked by channeling count. Espresso only; selected date and people filters apply. The rate includes only recorded Yes/No results."
+      channeling_result: "%{count} of %{samples} recorded brews · %{percent}%"
+      measured_brews:
+        one: "1 measured brew"
+        other: "%{count} measured brews"
+      empty: "No matching recorded leftovers or waste."
     index:
       all_brews: "All brews"
       all_loggers: "All loggers"

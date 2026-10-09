@@ -2,6 +2,17 @@ require "test_helper"
 require "zip"
 
 class WorkspaceExportBuilderTest < ActiveSupport::TestCase
+  test "exports paired leftover transfers with unchanged inventory totals" do
+    source = beans(:open_household)
+    source.update!(remaining_grams: 14)
+    destination = BeanLeftoverTransfer.new(source:, destination: "new", user: users(:one)).call
+    payload = WorkspaceExportBuilder.new(source.workspace).call
+    transfers = payload[:inventory_adjustments].select { |row| row[:reason] == "transfer" }
+    assert_equal 2, transfers.size
+    assert_equal [ source.id, destination.id ].sort, transfers.pluck(:bean_id).sort
+    assert_equal 0.to_d, transfers.sum { |row| row[:delta_grams].to_d }
+  end
+
   test "exports workspace coffee histories and bean memberships" do
     workspace = workspaces(:household)
     payload = WorkspaceExportBuilder.new(workspace).call

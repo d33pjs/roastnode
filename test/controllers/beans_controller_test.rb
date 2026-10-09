@@ -1710,7 +1710,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "a[href=?]", new_bean_inventory_adjustment_path(bean), text: I18n.t("beans.show.adjust_inventory")
     assert_select "form[data-testid=bean-finish-form][action=?]", finish_bean_path(bean)
-    assert_select "form[data-testid=bean-finish-form] input[name=_method][value=patch]"
+    assert_select "form[data-testid=bean-finish-form][method=get]"
     assert_select "[data-testid=bean-issues-zone]"
     assert_select "[data-testid=bean-issues-zone] form[action=?]", close_bean_path(bean)
     assert_select "[data-testid=bean-issues-zone]", text: /best before/i

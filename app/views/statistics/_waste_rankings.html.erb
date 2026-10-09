@@ -1,0 +1,31 @@
+<section class="mt-8 min-w-0">
+  <h2 class="text-xl font-black text-rn-ink"><%= t("statistics.waste.title") %></h2>
+  <p class="mt-1 text-sm text-rn-muted"><%= t("statistics.waste.per_bag") %></p>
+  <div class="mt-4 grid min-w-0 gap-4 lg:grid-cols-3">
+    <% %i[leftovers grounds channeling].each do |kind| %>
+      <section data-testid="statistics-waste-<%= kind %>" class="min-w-0 rounded-2xl border border-rn-line bg-rn-surface p-4 shadow-sm">
+        <h3 class="font-extrabold text-rn-ink"><%= t("statistics.waste.#{kind}") %></h3>
+        <p class="mt-2 text-sm leading-5 text-rn-muted"><%= t("statistics.waste.#{kind}_help") %></p>
+        <% if waste[kind].empty? %>
+          <p class="mt-4 text-sm text-rn-muted"><%= t("statistics.waste.empty") %></p>
+        <% else %>
+          <ol class="mt-4 grid gap-3">
+            <% waste[kind].each_with_index do |row, index| %>
+              <li class="min-w-0 border-t border-rn-line pt-3">
+                <%= link_to "#{index + 1}. #{row[:bean].display_name}", bean_path(row[:bean]), class: "block break-words font-bold text-rn-ink underline decoration-rn-line underline-offset-4" %>
+                <p class="mt-1 text-sm text-rn-muted">
+                  <% if kind == :channeling %>
+                    <%= t("statistics.waste.channeling_result", count: row[:count], samples: row[:sample_count], percent: row[:percent]) %>
+                  <% else %>
+                    <%= statistics_grams(row[:grams]) %>
+                    <% if row[:sample_count] %> · <%= t("statistics.waste.measured_brews", count: row[:sample_count]) %><% end %>
+                  <% end %>
+                </p>
+              </li>
+            <% end %>
+          </ol>
+        <% end %>
+      </section>
+    <% end %>
+  </div>
+</section>

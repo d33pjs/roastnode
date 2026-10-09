@@ -1,0 +1,21 @@
+<main class="rn-page">
+  <section class="rn-shell max-w-2xl py-8 sm:px-6">
+    <%= render "shared/back_link", label: t("beans.edit.back"), path: bean_path(@bean) %>
+    <h1 class="mt-5 text-3xl font-black text-rn-ink"><%= t(".title") %></h1>
+    <p class="mt-2 text-rn-muted"><%= @bean.display_name %></p>
+    <%= form_with url: finish_bean_path(@bean), method: :patch, class: "mt-6 grid gap-5 rounded-2xl border border-rn-line bg-rn-surface p-5 shadow-sm" do |form| %>
+      <% if @transfer_error %>
+        <p role="alert" class="text-red-700"><%= @transfer_error %></p>
+      <% end %>
+      <p data-testid="bean-finish-remaining" class="text-lg font-bold text-rn-ink"><%= t(".remaining", amount: statistics_grams(@bean.remaining_grams)) %></p>
+      <% if @bean.opened_on.present? && !@bean.archived? && @bean.remaining_grams.positive? %>
+        <div>
+          <%= form.label :destination, t(".leftovers"), class: "block font-bold text-rn-ink" %>
+          <p class="mt-2 text-sm text-rn-muted"><%= t(".help") %></p>
+          <%= form.select :destination, [[t(".keep"), ""], *@leftover_destinations.map { |bean| [t(".bag_option", name: bean.display_name, amount: statistics_grams(bean.remaining_grams), status: t("beans.statuses.#{bean.bag_status}")), bean.id] }, [t(".new_bag"), "new"]], {}, class: "mt-3 min-h-11 w-full min-w-0 rounded-xl border border-rn-line bg-rn-surface px-3 py-2 text-rn-ink" %>
+        </div>
+      <% end %>
+      <%= form.submit t(".confirm"), class: "min-h-11 rounded-xl bg-[var(--rn-accent-strong)] px-4 py-3 font-bold text-[var(--rn-canvas)]" %>
+    <% end %>
+  </section>
+</main>

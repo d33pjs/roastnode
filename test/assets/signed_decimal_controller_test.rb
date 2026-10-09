@@ -5,7 +5,6 @@ class SignedDecimalControllerTest < ActiveSupport::TestCase
     controller = Rails.root.join("app/javascript/controllers/signed_decimal_controller.js")
     source = controller.read
 
-    assert_includes source, "static targets = [ \"input\" ]"
     assert_includes source, "markAdd()"
     assert_includes source, "markRemove()"
     assert_includes source, "this.mark(\"+\")"

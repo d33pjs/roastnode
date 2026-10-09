@@ -81,9 +81,12 @@
               icon: "check_circle",
               label: t(".finish"),
               path: finish_bean_path(@bean),
-              method: :patch,
+              method: :get,
               form_testid: "bean-finish-form"
             } %>
+          <% end %>
+          <% if @bean.finished? && @bean.remaining_grams.positive? %>
+            <% bean_actions << { icon: "swap_horiz", label: t("beans.finish.move_leftovers"), path: finish_bean_path(@bean), testid: "bean-move-leftovers" } %>
           <% end %>
           <% bean_actions << {
             icon: "scale",

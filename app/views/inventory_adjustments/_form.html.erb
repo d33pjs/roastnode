@@ -5,9 +5,19 @@
     </div>
   <% end %>
 
+  <p data-testid="inventory-current-remaining" class="text-lg font-bold text-stone-950"><%= t("inventory_adjustments.form.current_remaining", amount: statistics_grams(bean.remaining_grams)) %></p>
   <div>
+    <%= form.label :adjustment_mode, t("inventory_adjustments.form.mode"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.select :adjustment_mode, [[t("inventory_adjustments.form.set_remaining"), "set_remaining"], [t("inventory_adjustments.form.change_by"), "delta"]], { selected: inventory_adjustment.adjustment_mode || "set_remaining" }, data: { signed_decimal_target: "mode", action: "change->signed-decimal#updateMode" }, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950" %>
+  </div>
+  <div data-signed-decimal-target="targetFields">
+    <%= form.label :target_remaining_grams, t("inventory_adjustments.form.target_remaining_grams"), class: "block text-sm font-medium text-stone-700" %>
+    <%= form.text_field :target_remaining_grams, inputmode: "decimal", autofocus: inventory_adjustment.adjustment_mode != "delta", value: inventory_adjustment.target_remaining_grams || bean.remaining_grams.to_s("F"), class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950" %>
+    <p class="mt-2 text-sm text-stone-600"><%= t("inventory_adjustments.form.weigh_help") %></p>
+  </div>
+  <div data-signed-decimal-target="deltaFields">
     <%= form.label :delta_grams, t("inventory_adjustments.form.delta_grams"), class: "block text-sm font-medium text-stone-700" %>
-    <%= form.text_field :delta_grams, inputmode: "text", autofocus: true, data: { signed_decimal_target: "input" }, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
+    <%= form.text_field :delta_grams, inputmode: "text", autofocus: inventory_adjustment.adjustment_mode == "delta", data: { signed_decimal_target: "input" }, class: "mt-1 w-full rounded-md border border-stone-300 px-3 py-2 text-stone-950 shadow-sm focus:border-stone-900 focus:outline-none" %>
     <div class="mt-2 grid grid-cols-2 gap-2">
       <%= button_tag t("inventory_adjustments.form.add"), type: "button", data: { action: "signed-decimal#markAdd" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>
       <%= button_tag t("inventory_adjustments.form.remove"), type: "button", data: { action: "signed-decimal#markRemove" }, class: "rounded-md border border-stone-300 px-3 py-2 text-sm font-semibold text-stone-900 hover:bg-stone-100" %>

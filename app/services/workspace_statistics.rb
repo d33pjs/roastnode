@@ -32,6 +32,7 @@ class WorkspaceStatistics
       distributions:,
       rates:,
       breakdowns:,
+      waste: WorkspaceWasteStatistics.new(beans:, brews:).call,
       personas: WorkspacePersonaStatistics.new(brews:).call
     }
   end

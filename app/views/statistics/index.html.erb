@@ -199,6 +199,8 @@
       </section>
     </div>
 
+    <%= render "statistics/waste_rankings", waste: @statistics[:waste] %>
+
     <div class="mt-8 grid min-w-0 gap-6 lg:grid-cols-2">
       <section class="min-w-0">
         <h2 class="mb-3 text-xl font-black text-rn-ink"><%= t(".brews_by_day") %></h2>

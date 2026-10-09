@@ -2,6 +2,22 @@ require "test_helper"
 require "zip"
 
 class InstanceBackupRestoreTest < ActiveSupport::TestCase
+  test "round trip preserves leftover transfer balances reasons and finished usage" do
+    source = beans(:open_household)
+    source.update!(remaining_grams: 14)
+    destination = BeanLeftoverTransfer.new(source:, destination: "new", user: users(:one)).call
+    archive = InstanceBackupArchiveBuilder.new.call
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+    restored_destination = Bean.where.not(duplicated_from_bean_id: nil).find_by!(name: destination.name)
+    restored_source = restored_destination.duplicated_from_bean
+    assert_equal 264.to_d, restored_destination.remaining_grams
+    assert_equal 0.to_d, restored_source.remaining_grams
+    assert_equal 236.to_d, restored_source.finished_used_grams
+    assert_equal 2, InventoryAdjustment.where(reason: "transfer").count
+    assert_equal 0.to_d, InventoryAdjustment.where(reason: "transfer").sum(:delta_grams)
+  end
+
   test "round trip restores authoritative coffee history memberships with remapped ids" do
     source = beans(:open_household)
     duplicate = source.duplicate_for_new_bag!

@@ -20,6 +20,7 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Private persona statistics: maker and recipient rankings, maker-to-recipient stacked bars, beans received and highest-rated beans per recipient, self/others totals, distinct beans tried, and rating coverage.
 - Taste balance distribution.
 - Retention marker distribution.
+- Top-five private per-bag rankings for leftovers, trashed grounds, and channeling.
 - Brew method distribution, including Quick Drip.
 - Bean breakdowns by roaster, origin, and process.
 - Bean detail analytics through `BeanStatistics`.
@@ -66,6 +67,14 @@ Roastnode's first analytics slice is a private workspace statistics page at `/st
 - Daily charts show at most the final ten days of the selected range. Their empty copy describes the displayed chart window, so older matching Brews elsewhere in a longer range are not misreported as absent from the complete filter scope.
 - Current Bean catalog facts intentionally ignore date and people filters: open Bean count, known Bean spend, and Bean breakdowns by roaster, origin, and process remain current for the whole workspace. Visible copy identifies this exception.
 - Empty current-inventory cards explain when there are no open Beans or no recorded Bean costs. Average Brew cost explains when the selected Brew scope has no known cost data.
+
+## Leftovers And Waste Rankings
+
+- Repeat purchases remain separate bag entries, consistent with existing bean/persona analytics. Each entry links to its private bean page.
+- **Most leftovers** ranks remaining grams in finished/archived bags that were opened, across the current workspace inventory. It explicitly ignores date and people filters. Transferred leftovers are removed from the old bag and do not count as waste; generic manual corrections are not inferred to be discarded coffee.
+- **Most trashed grounds** totals `max(ground_weight_grams - dose_grams, 0)` for Espresso brews with both measurements. Missing measurements and Quick Drip are excluded. Measured-brew counts show sample size; this measures unused output, not inferred grinder retention.
+- **Most channeling** ranks the number of Espresso brews marked Yes, then rate, sample count, label, and ID. The visible rate denominator includes only explicit Yes/No results; missing results are unknown. Zero-channeling bags are omitted.
+- Grounds and channeling respect the selected dates, logger, and recipient together. Empty results display explicit no-data copy. No guest identities, notes, emails, media capabilities, or new public-share fields are included.
 
 ## Agent Notes
 
