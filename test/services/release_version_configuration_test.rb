@@ -16,7 +16,10 @@ class ReleaseVersionConfigurationTest < Minitest::Test
     assert_includes steps[cache_index].fetch("run"), 'config["registry-mirrors"]'
     assert_includes steps[cache_index].fetch("run"), "https://mirror.gcr.io"
     assert_includes steps[cache_index].fetch("run"), "sudo systemctl restart docker"
+    qemu = steps[qemu_index]
+    assert_match(%r{\Amirror\.gcr\.io/tonistiigi/binfmt@sha256:[0-9a-f]{64}\z}, qemu.fetch("with", {}).fetch("image", ""))
     buildx = steps.find { |step| step["name"] == "Set up Docker Buildx" }
+    assert_match(%r{image=mirror\.gcr\.io/moby/buildkit@sha256:[0-9a-f]{64}}, buildx.fetch("with").fetch("driver-opts", ""))
     assert_includes buildx.fetch("with").fetch("buildkitd-config-inline"), '[registry."docker.io"]'
     assert_includes buildx.fetch("with").fetch("buildkitd-config-inline"), 'mirrors = ["mirror.gcr.io"]'
   end
