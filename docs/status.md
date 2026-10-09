@@ -1,6 +1,6 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-10-09
+Last reviewed: 2026-10-10
 
 This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
@@ -45,6 +45,7 @@ This is the compact public status ledger for humans and AI agents. It distills t
 
 ## Bean Leftovers And Waste Verification — 2026-10-09
 
+- Released **v0.9.30** and verified production deployment on 2026-10-10: the signed image digest, both architecture revisions, BuildKit application provenance, and the dispatch workflow attestation were verified; Ansible completed with zero failures; HTTP, database, app version, and a newly queued full archive/checksum check passed. Docker Hub quota failures were resolved through the documented cache and pinned startup images; Gitea CI passed for both recovery commits.
 - Full Rails suite passed **1512 runs / 15192 assertions** with one worker because the local macOS PostgreSQL driver crashes on fork. **31 JavaScript tests**, RuboCop (**412 files**), Brakeman, and Ruby/importmap vulnerability audits passed.
 - Focused inventory/transfer/bean/statistics coverage passed **182 runs / 1952 assertions**; export/backup coverage passed **56 runs / 631 assertions**. Regression checks cover read-only HEAD, accurate public snapshot refresh without private notes, zero/no-op weighing, retries, rollback, matching, and isolation. Independent review found no remaining material defects after those fixes.
 - In-app browser checks verified current-weight display, active/disabled amount fields when switching modes, Finish bag choices, and all three ranking sections at **375px** without horizontal overflow. Existing development data was left unchanged.
