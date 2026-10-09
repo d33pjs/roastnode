@@ -6,6 +6,21 @@ require "yaml"
 class ReleaseVersionConfigurationTest < Minitest::Test
   ROOT = Pathname.new(File.expand_path("../..", __dir__))
 
+  def test_release_builder_uses_public_cache_before_pulling_qemu_and_for_buildkit
+    workflow = YAML.load_file(ROOT.join(".github/workflows/release-container.yml"), aliases: true)
+    steps = workflow.fetch("jobs").fetch("publish").fetch("steps")
+    cache_index = steps.index { |step| step["name"] == "Configure public Docker Hub cache" }
+    qemu_index = steps.index { |step| step["name"] == "Set up QEMU" }
+    refute_nil cache_index, "Host pulls must use the public cache before QEMU setup"
+    assert_operator cache_index, :<, qemu_index
+    assert_includes steps[cache_index].fetch("run"), 'config["registry-mirrors"]'
+    assert_includes steps[cache_index].fetch("run"), "https://mirror.gcr.io"
+    assert_includes steps[cache_index].fetch("run"), "sudo systemctl restart docker"
+    buildx = steps.find { |step| step["name"] == "Set up Docker Buildx" }
+    assert_includes buildx.fetch("with").fetch("buildkitd-config-inline"), '[registry."docker.io"]'
+    assert_includes buildx.fetch("with").fetch("buildkitd-config-inline"), 'mirrors = ["mirror.gcr.io"]'
+  end
+
   def test_release_container_image_bakes_release_tag_as_default_app_version
     dockerfile = ROOT.join("Dockerfile").read
 
@@ -19,6 +34,8 @@ class ReleaseVersionConfigurationTest < Minitest::Test
 
     assert_match(/\Adocker\/build-push-action@[0-9a-f]{40}\z/, build_step.fetch("uses"))
     assert_includes build_step.fetch("with").fetch("build-args"), "ROASTNODE_VERSION=${{ env.RELEASE_TAG }}"
+    metadata_step = workflow.fetch("jobs").fetch("publish").fetch("steps").find { |step| step["name"] == "Extract Docker metadata" }
+    assert_includes metadata_step.fetch("with").fetch("labels"), "org.opencontainers.image.revision=${{ steps.source.outputs.sha }}"
   end
 
   def test_external_workflow_actions_are_pinned_to_immutable_commits
