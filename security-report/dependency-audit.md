@@ -1,17 +1,56 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-10-03 after refreshing compatible dependencies and the
+Verified on 2026-10-15 after refreshing compatible dependencies and the
 RubySec advisory database.
 
 ## Result
 
-- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-03 maintenance refresh. The pre-update RubySec baseline was also clean.
+- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-15 maintenance refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `97659622944c19d42961c03813666f4196457229`, containing 1,252 advisories and last updated at 2026-10-02 16:20:52 -0400; 0 vulnerabilities matched.
+- RubySec evidence: database commit `a6847b0651a702488f5844081e848dd1ec9dbf1d`, containing 1,263 advisories and last updated at 2026-10-10 09:26:59 -0400; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
 - JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.1.0 scanned Rails 8.1.4 with 0 errors and 0 warnings.
 - Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are bindata 3.0.1 and Marcel 2.1.0, constrained by their parent gems. The JSON 3 incompatibility is resolved.
+
+## 2026-10-15 Compatible Refresh
+
+Updated every gem that Bundler can resolve within the app's current dependency
+constraints, including all six packages from the Dependabot email list:
+
+| Package | Previous | Updated |
+| --- | --- | --- |
+| date | 3.5.1 | 3.6.0 |
+| JSON | 3.0.2 | 3.1.0 |
+| net-imap | 0.6.7 | 0.6.8 |
+| net-ssh | 7.3.3 | 7.3.6 |
+| prettyprint | 0.2.0 | 0.2.1 |
+| RuboCop | 1.91.0 | 1.92.0 |
+| Selenium WebDriver | 4.50.0 | 4.51.0 |
+| Thruster | 0.1.26 | 0.1.27 |
+| URI | 1.1.1 | 1.1.2 |
+| Bundler | 4.0.22 | 4.0.23 |
+
+- Preserved all locked platforms and checksum coverage, including every Thruster platform variant. No Gemfile constraint changes or application patches were needed.
+- Updated immutable CI action pins for ruby/setup-ruby 1.329.0 and actions/setup-node 7.1.0. Checked every other configured action against its latest official release; all were already current.
+- Updated cdxgen 13.3.0 → 13.4.0 and Waybill 0.9.0 → 0.10.0. Verified the pinned Linux SHA-256 values against both GitHub release metadata and upstream checksum files. Existing CycloneDX 1.6 and offline/no-install invocation settings are preserved.
+- Rails 8.1.4 and vendored Chart.js 4.5.1 were already current. Ruby 3.3.12 and PostgreSQL 17.11 remain the latest patches on the selected runtime lines. Ruby 4/PostgreSQL 18 migrations remain separate work; no database-volume migration was performed.
+- `bundle outdated --strict` reports `Bundle up to date!`. The unrestricted check lists only bindata 3.0.1 and Marcel 2.1.0, blocked by upstream constraints documented below.
+- Context7 was unavailable; compatibility review used official package release notes and registry metadata. JSON 3.1 tightens generation of non-ASCII binary strings, so existing export/backup/import tests are included in the full Rails verification.
+
+Official sources: [URI 1.1.2](https://github.com/ruby/uri/releases/tag/v1.1.2), [Date 3.6.0](https://github.com/ruby/date/releases/tag/v3.6.0), [Selenium changelog](https://github.com/SeleniumHQ/selenium/blob/trunk/rb/CHANGES), [RuboCop changelog](https://github.com/rubocop/rubocop/blob/master/CHANGELOG.md), [Thruster 0.1.27](https://github.com/basecamp/thruster/releases/tag/v0.1.27), [JSON changelog](https://github.com/ruby/json/blob/master/CHANGES.md), [Bundler 4.0.23](https://rubygems.org/gems/bundler/versions/4.0.23), [ruby/setup-ruby 1.329.0](https://github.com/ruby/setup-ruby/releases/tag/v1.329.0), [setup-node 7.1.0](https://github.com/actions/setup-node/releases/tag/v7.1.0), [cdxgen 13.4.0](https://github.com/cdxgen/cdxgen/releases/tag/v13.4.0), and [Waybill 0.10.0](https://github.com/kusari-oss/waybill/releases/tag/v0.10.0).
+
+## Verification — 2026-10-15
+
+- Full Rails suite: 1,513 tests, 15,211 assertions, no failures, errors, or skips (`POSTGRES_PORT=55433 PARALLEL_WORKERS=1`). Includes export, backup/restore, media, authentication, and workspace-isolation coverage.
+- Browser suite on Selenium 4.51.0: 9 tests, 136 assertions, no failures, errors, or skips.
+- JavaScript controller tests: 31 passed. RuboCop 1.92.0: 412 files, no offenses. Release/dependency configuration checks: 5 tests, 75 assertions, no failures or errors.
+- Fresh RubySec and importmap audits passed; Brakeman 8.1.0 reported 0 errors and 0 security warnings. Both importmap currentness and strict Bundler currentness checks passed.
+- Production `assets:precompile` passed using a dummy build secret and build-only WebAuthn origin; generated production assets were cleaned afterward. The test-only `db:seed:replant` CI check passed.
+- Checksum-verified macOS builds of cdxgen 13.4.0 and Waybill 0.10.0 generated CycloneDX 1.6 with 168 components each from a temporary fixture containing only Gemfile and Gemfile.lock. Waybill also produced a nonempty SPDX 3 graph. No source or runtime data was uploaded. Linux CI asset hashes were independently cross-checked against upstream checksum files.
+- Independent read-only review found no actionable issues and confirmed Ruby compatibility, preserved platform locks, local gem artifact checksums, immutable action pins, and scanner asset digests.
+- Restarted `bin/dev` in the `roastnode-dev` tmux session with the updated bundle; `/up` returned HTTP 200 through localhost and the configured LAN DNS hostname on port 3001, listening on all interfaces.
+- Production Docker image builds and remote GitHub/Gitea workflow execution were not verified for this refresh. No remote Dependabot PR or alert state was changed.
 
 ## 2026-10-03 Compatible Refresh
 
@@ -192,7 +231,7 @@ All third-party workflow actions are pinned to reviewed full commit SHAs, with t
 
 ### JSON 3.x — resolved on 2026-10-03
 
-Rails 8.1.4 fixes JSON 3 decoding. The temporary JSON constraint was removed and the lockfile now uses JSON 3.0.2; the application and browser checks run on that version.
+Rails 8.1.4 fixes JSON 3 decoding. The temporary JSON constraint was removed. The 2026-10-15 refresh now uses JSON 3.1.0.
 
 ### Marcel 2.x
 
