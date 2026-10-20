@@ -44,6 +44,7 @@ This file is the short operating guide for coding agents. Durable product decisi
 - Recipe profiles, exact targets, snapshots, guided logging, and public recipe sharing: `docs/recipe-profiles.md`
 - Brew form focus and hidden-field preferences: `docs/brew-form-preferences.md`
 - Browser-local espresso draft recovery: `docs/brew-draft-recovery.md`
+- Parallel espresso logs and exact grinder-use chronology: `docs/parallel-coffees.md`
 - Brew corrections and inventory-safe update/delete helpers: `docs/brew-corrections.md`
 - Bean lifecycle, deletion, inventory corrections, analytics, and Beanconqueror import: `docs/coffee-core.md`, `docs/bean-danger-zone.md`, `docs/inventory-adjustments.md`, `docs/bean-analytics.md`, `docs/beanconqueror-import.md`
 - Hero Brew Card, brew detail cross-links, and mobile back-link behavior: `docs/brew-card.md`, `docs/navigation.md`

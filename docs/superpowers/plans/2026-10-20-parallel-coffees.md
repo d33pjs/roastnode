@@ -43,3 +43,6 @@ Read ActinoideAsCode guidance and operational docs, confirm SSH connectivity and
 
 - Design approved in conversation; implementation authorized without further gates.
 - Initial checkout clean on main at 59d2e77; latest local tag v0.9.31.
+- Tasks 1–3 complete. Backend and frontend review fixes passed; independent final code review and visual evaluation approved.
+- Integration: Ruby 4.0.7 full Rails 1551 runs/15394 assertions, Node 26.12.0 JavaScript 52 tests, browser 15 runs/206 assertions; all pass. RuboCop 419 files, Brakeman and dependency audits clear; production asset build passes.
+- Fresh production backup/checksum validated. Local tmux preview restarted on Ruby 4.0.7 and LAN health checked. Ansible source now selects PostgreSQL 17.11; syntax check from santiago passes. Push/remote CI, release v0.9.32 and deployment remain.

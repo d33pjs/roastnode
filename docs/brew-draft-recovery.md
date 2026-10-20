@@ -2,6 +2,8 @@
 
 Roastnode keeps unsaved form values in the browser while a user is logging a new brew.
 
+Espresso now uses a version-2 session containing up to two independent coffees, with stable numbering, active selection, view, scroll, retry UUID and grinder-confirmation context. Existing version-1 drafts migrate automatically. The session owns Espresso persistence while the existing `brew-draft` controller remains available for non-session forms. Recipe-guided sessions append recipe context to their key. See [Parallel coffees](parallel-coffees.md).
+
 ## Included Now
 
 - The new brew form uses the `brew-draft` Stimulus controller.
@@ -11,7 +13,7 @@ Roastnode keeps unsaved form values in the browser while a user is logging a new
 - Repeat Good Brew uses a separate key, `roastnode:brew:repeat:<source-method>:<workspace-id>:<user-id>:<source-brew-id>`, so a browser draft from normal logging does not overwrite a deliberate repeat form and repeat drafts stay tied to the source method and source brew.
 - Drafts restore automatically when the matching new brew form opens again.
 - Restored drafts show a compact notice with a discard button.
-- Drafts clear when the form is submitted.
+- Drafts clear only after a successful save; failed submissions retain recovery values. An Espresso save clears only the acknowledged coffee.
 - Restore and discard synchronize the machine-dependent fields and bean-switch grinder reminder after programmatic field changes without changing the restored grinder or grind-setting values.
 - The new Brew Log disables Turbo page caching: returning with Back/Forward fetches current grinder history and form defaults, then restores any unsaved draft. A submitted form cannot leave stale history in a restored page.
 

@@ -277,7 +277,7 @@ jobs:
           if [[ "${{ steps.release.outputs.exists }}" == "true" ]]; then
             gh release upload "$RELEASE_TAG" "${assets[@]}" --clobber
           else
-            create_flags=(--verify-tag --title "$RELEASE_TAG" --generate-notes)
+            create_flags=(--verify-tag --title "$RELEASE_TAG" --notes-from-tag)
 
             if [[ "${{ steps.release.outputs.is_prerelease }}" == "true" ]]; then
               create_flags+=(--prerelease)

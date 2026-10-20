@@ -36,6 +36,7 @@ Coffee Core is the first usable household coffee workflow after Workspace Core.
 - User enabled brew methods and grams-per-coffee-spoon preference in Profile.
 - User espresso form focus preference for fast daily logging.
 - Browser-local unsaved draft recovery for new brew logs.
+- Two unfinished espresso coffees with a mobile switcher, independent drafts and inventory-safe saves; confirmed grinding updates household grinder references before the Brew is saved. See [Parallel coffees](parallel-coffees.md).
 - One-way ground-out to dose prefill while logging espresso.
 - Dashboard compact live time-since-last-coffee header that includes Self and household-member Brews, excludes only Guest Brews, and still includes External Coffees; row-major four-column metric grid for mixed Brew and External Coffee daily/weekly cards; rough daily/weekly spend; unopened-stock versus open-bean inventory split; open-bean count; closed-bag daily/weekly counts; last-4-week trend line chart components; open bean cockpit with current open-bag age, roast age, remaining inventory pressure, latest brew setup, best rated brew, compact status, and recent activity.
 - Dashboard bean stock shelf with unopened in-stock bags, quick-open actions, and bean cost metrics for stocked/open inventory.

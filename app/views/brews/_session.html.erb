@@ -1,0 +1,37 @@
+<% session_storage_key = @recipe ? "#{@draft_storage_key}:recipe:#{@recipe.id}" : @draft_storage_key %>
+<%= tag.div data: {
+  controller: "brew-session",
+  testid: "brew-session",
+  brew_session_storage_key_value: session_storage_key,
+  brew_session_grinder_uses_url_value: grinder_uses_path,
+  brew_session_history_url_value: grinder_history_brews_path(method: "espresso"),
+  brew_session_time_zone_value: Time.zone.tzinfo.identifier,
+  brew_session_labels_value: t("brews.session")
+}, class: "min-w-0" do %>
+  <div data-brew-session-target="toolbar" hidden class="sticky top-0 z-20 mt-5 min-w-0 rounded-3xl border border-rn-line bg-[var(--rn-canvas)] p-3 shadow-sm sm:p-4">
+    <div data-brew-session-target="coffees" role="group" aria-label="<%= t("brews.session.coffees") %>" class="grid min-w-0 grid-cols-2 gap-2"></div>
+    <div role="group" aria-label="<%= t("brews.session.stages") %>" class="mt-3 grid grid-cols-4 gap-1 border-t border-rn-line pt-3">
+      <% %w[prepare extract taste all].each do |stage| %>
+        <button type="button" data-brew-session-target="stage" data-stage="<%= stage %>" data-action="brew-session#changeStage" aria-pressed="<%= stage == "all" %>" class="min-h-11 min-w-0 rounded-xl px-1 py-2 text-xs font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--rn-accent-strong)] sm:text-sm"><%= t("brews.session.#{stage}") %></button>
+      <% end %>
+    </div>
+
+  </div>
+  <div data-brew-session-target="actions" hidden class="mt-3 min-w-0">
+    <button type="button" data-brew-session-target="add" data-action="brew-session#add" class="mt-2 flex min-h-11 w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-rn-line bg-rn-surface px-3 py-2 text-sm font-extrabold text-rn-ink hover:bg-[var(--rn-surface-muted)] disabled:opacity-60">
+      <span aria-hidden="true" class="text-xl leading-none">+</span>
+      <%= t("brews.session.add") %>
+    </button>
+    <p data-brew-session-target="addHelp" class="mt-1 text-center text-xs font-semibold text-rn-muted"><%= t("brews.session.add_help") %></p>
+    <p data-brew-session-target="confirmation" hidden role="status" class="mt-2 text-sm font-semibold text-rn-ink"></p>
+    <button type="button" data-brew-session-target="continue" data-action="brew-session#confirmPreparation" class="mt-2 min-h-11 w-full rounded-2xl bg-[var(--rn-coffee)] px-3 py-2 text-sm font-extrabold text-[var(--rn-canvas)] hover:opacity-90 disabled:opacity-60"><%= t("brews.session.continue") %></button>
+  </div>
+  <div data-brew-session-target="notice" hidden class="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm font-semibold text-rn-ink"><%= t("brews.session.restored") %></div>
+  <p data-brew-session-target="photos" hidden role="status" class="mt-3 text-sm font-semibold text-rn-ink"><%= t("brews.session.reattach") %></p>
+  <div data-brew-session-target="error" data-testid="brew-session-error" hidden role="alert" class="mt-4 rounded-2xl border border-red-400/50 bg-red-500/10 p-4 text-sm font-semibold text-rn-ink"></div>
+  <div data-brew-session-target="forms" class="min-w-0"><%= form_markup %></div>
+  <div class="mt-3 flex justify-end">
+    <button type="button" data-action="brew-session#discard" data-brew-session-discard hidden class="min-h-11 rounded-2xl border border-rn-line px-4 py-2 text-sm font-extrabold text-rn-muted hover:bg-[var(--rn-surface-muted)]"><%= t("brews.session.discard") %></button>
+  </div>
+  <template data-brew-session-target="template"></template>
+<% end %>

@@ -5,24 +5,29 @@ export default class extends Controller {
   static values = { storageKey: String }
 
   connect() {
+    // Espresso sessions own both drafts, submission acknowledgements and recovery.
+    this.sessionManaged = Boolean(this.element.closest('[data-controller~="brew-session"]'))
+    if (this.sessionManaged) return
     this.defaultFields = this.serializeFields(this.restorableFields)
     this.inputHandler = () => this.persist()
-    this.submitHandler = () => this.clear()
+    this.submitHandler = (event) => { if (event.detail?.success) this.clear() }
 
     this.element.addEventListener("input", this.inputHandler)
     this.element.addEventListener("change", this.inputHandler)
-    this.element.addEventListener("submit", this.submitHandler)
+    this.element.addEventListener("turbo:submit-end", this.submitHandler)
 
     this.restore()
   }
 
   disconnect() {
+    if (this.sessionManaged) return
     this.element.removeEventListener("input", this.inputHandler)
     this.element.removeEventListener("change", this.inputHandler)
-    this.element.removeEventListener("submit", this.submitHandler)
+    this.element.removeEventListener("turbo:submit-end", this.submitHandler)
   }
 
   discard() {
+    if (this.sessionManaged) return
     this.applyFields(this.defaultFields)
     this.clear()
     this.hideNotice()

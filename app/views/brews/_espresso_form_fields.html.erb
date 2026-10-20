@@ -52,7 +52,7 @@
   </div>
 </section>
 
-<% extraction_fields = %w[preinfusion_seconds low_flow_start_seconds first_drip_seconds total_time_seconds beverage_grams channeling flow_control_used photos] %>
+<% extraction_fields = %w[preinfusion_seconds low_flow_start_seconds first_drip_seconds total_time_seconds beverage_grams channeling flow_control_used] %>
 <% unless extraction_fields.all? { |field| hide_brew_field.call(field) } %>
   <section data-testid="brew-form-section" data-section="extraction" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
     <h2 class="text-sm font-extrabold uppercase tracking-[0.08em] text-rn-muted"><%= t("brews.form.sections.extraction") %></h2>
@@ -125,13 +125,15 @@
         </label>
       <% end %>
 
-      <% unless hide_brew_field.call(:photos) %>
-        <div class="sm:col-span-2">
-          <%= form.label :photos, t("brews.form.photos"), class: "block text-sm font-bold text-rn-muted" %>
-          <%= render "shared/photo_upload_input", form: %>
-        </div>
-      <% end %>
+
     </div>
+  </section>
+<% end %>
+
+<% unless hide_brew_field.call(:photos) %>
+  <section data-testid="brew-form-section" data-section="photos" class="rounded-3xl border border-rn-line bg-rn-surface p-4 shadow-sm sm:p-5">
+    <%= form.label :photos, t("brews.form.photos"), class: "block text-sm font-bold text-rn-muted" %>
+    <%= render "shared/photo_upload_input", form: %>
   </section>
 <% end %>
 

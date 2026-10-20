@@ -12,6 +12,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/account-privacy.md` describes where to use display labels instead of email addresses.
 - `docs/brew-form-preferences.md` describes per-user brew-method, spoon estimate, and espresso form focus behavior.
 - `docs/brew-draft-recovery.md` describes browser-local unsaved method-aware brew draft recovery.
+- `docs/parallel-coffees.md` describes two overlapping espresso logs, exact grinder-use chronology and save retries.
 - `docs/formatting.md` describes comma-friendly decimal entry and pending profile-formatting decisions.
 - `docs/coffee-core.md` describes beans, equipment, espresso and Quick Drip logging, inventory deduction, and current coffee workflow scope.
 - `docs/grinder-history.md` describes latest grinder references, top-three setting counts, and explicit shared history across bean bags.

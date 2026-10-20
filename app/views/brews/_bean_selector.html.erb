@@ -23,6 +23,7 @@
         brew_grinder_reminder_target: "bean",
         action: "change->brew-grinder-reminder#beanChanged",
         grind_state: bean.grind_state,
+        bean_label: bean.display_name,
         grinder_histories: brew_grinder_histories(reminder, bean).to_json
       } : {} %>
       <label

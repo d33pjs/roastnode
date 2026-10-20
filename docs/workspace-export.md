@@ -15,6 +15,7 @@ Workspace Export is the first Roastnode data portability feature.
 - Beans, equipment, preparation tools, brews, External Coffees, brew preparation tool snapshots, equipment events, equipment event links, and inventory adjustments.
 - External Coffees include drink type, drink size, place text, private coordinates, price/currency, taste axes, rating, notes, public note, and photo metadata.
 - Workspace-owned `coffee_histories` rows (`id`, `created_at`, `updated_at`) and each Bean's `coffee_history_id`, preserving explicit shared grinder history without duplicating Brew settings.
+- Private `grinder_uses` confirmations preserve exact setting strings, grinding times and scoped retry UUIDs. Brew JSON preserves `ground_at` and `client_draft_key`; Brew CSV includes `ground_at`. Browser-local unfinished coffee drafts and photos awaiting upload are not server records and are not exported. See [Parallel coffees](parallel-coffees.md).
 - Rich private Bean metadata, including roast type, grind state (`whole_bean` or `pre_ground`), degree of roast, blend type, decaf flag, cost, Purchase Website (`purchase_url`), Coffee Origin Website (`coffee_origin_url`), flavor profile, and variety information. Both direct website fields are included in the owner-only JSON and Beans CSV exports.
 - Equipment machine-capability flags for pre-infusion, low-flow start, and flow control.
 - Brew method fields, including espresso low-flow-start seconds and flow-control use, Quick Drip brewer, machine cups, coffee spoons, grams per coffee spoon, coffee amount source, and the private six-field recipient/Cup contract.
@@ -84,6 +85,7 @@ The top-level JSON shape is:
   "equipment": [],
   "preparation_tools": [],
   "brews": [],
+  "grinder_uses": [],
   "external_coffees": [],
   "brew_preparation_tools": [],
   "equipment_events": [],

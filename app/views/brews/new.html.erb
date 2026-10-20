@@ -32,6 +32,8 @@
         hidden_brew_fields: @hidden_brew_fields %>
     <% end %>
 
+    <% logging_markup = @selected_method == "espresso" ? render("brews/session", form_markup:) : form_markup %>
+
     <% if @recipe %>
       <div class="mt-6 grid gap-5 lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start">
         <div class="grid gap-4 lg:order-2 lg:sticky lg:top-6">
@@ -39,11 +41,11 @@
           <%= render "recipes/finish_card", recipe: @recipe %>
         </div>
         <div class="min-w-0 lg:order-1">
-          <%= form_markup %>
+          <%= logging_markup %>
         </div>
       </div>
     <% else %>
-      <%= form_markup %>
+      <%= logging_markup %>
     <% end %>
   </section>
 </main>

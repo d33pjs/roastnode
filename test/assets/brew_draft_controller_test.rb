@@ -7,7 +7,7 @@ class BrewDraftControllerTest < ActiveSupport::TestCase
 
     assert_includes source, "localStorage.setItem"
     assert_includes source, "localStorage.removeItem"
-    assert_includes source, 'addEventListener("submit"'
+    assert_includes source, 'addEventListener("turbo:submit-end"'
     assert_includes source, 'field.type === "file"'
     assert_includes source, 'static targets = [ "notice" ]'
     assert_includes source, "this.serializeFields(this.restorableFields)"

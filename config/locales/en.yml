@@ -516,6 +516,8 @@ en:
       updated: "Bean updated."
   brews:
     create:
+      invalid_draft: "Invalid coffee draft. Reload the log and try again."
+      preparation_changed: "The preparation changed. Confirm grinding again before saving this coffee."
       created: "Brew logged."
       method_disabled: "%{method} is disabled in your Profile."
     destroy:
@@ -523,6 +525,29 @@ en:
     methods:
       espresso: "Espresso"
       quick_drip: "Quick Drip"
+    session:
+      coffees: "Active coffees"
+      coffee: "Coffee %{number}"
+      choose_bean: "Choose a bean"
+      add: "Prepare next coffee"
+      add_help: "Confirms this preparation before opening the next coffee."
+      stages: "Coffee stage"
+      prepare: "Prepare"
+      extract: "Extract"
+      taste: "Taste"
+      all: "Full form"
+      continue: "Continue to extraction"
+      working: "Confirming preparation…"
+      confirmation_required: "Confirm grinding before saving this coffee. Use Continue to extraction when you have ground it."
+      confirmed: "Grinding confirmed · this coffee keeps its place in grinder history."
+      preparation_changed: "Preparation changed. Confirm grinding again before saving."
+      restored: "Unsaved coffees restored from this browser."
+      reattach: "Attach photos again · browser recovery keeps your fields, but cannot restore selected files."
+      failed: "Could not connect. Your coffees are kept here. Try again."
+      timeout: "The request took too long. Your coffees are kept here. Try again."
+      authentication: "Your session may have expired. Your coffees are kept here. Sign in again, then return to this log."
+      discard: "Discard this coffee"
+      discard_confirm: "Discard this unsaved coffee? The other coffee will be kept."
     recipients:
       a_guest: "a guest"
       a_household_member: "a household member"

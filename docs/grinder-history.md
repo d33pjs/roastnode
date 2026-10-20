@@ -1,5 +1,7 @@
 # Grinder history
 
+Parallel espresso preparation records a private confirmed grinder use before saving a Brew. Physical last-use references compare confirmed grinding time with saved Brew `ground_at`, falling back to `occurred_at` for legacy/unconfirmed logs. Save order never overrides newer confirmed grinding. Exact setting strings are retained in defaults and live reference payloads. Bean-specific saved history and the grouping/ranking rules below keep their separate semantics. See [Parallel coffees](parallel-coffees.md).
+
 The Brew Log reads the latest recorded setting for the selected coffee, grinder, and brew method. The green Last used marker still describes the operator's previous method-specific bean, falling back to the workspace when the operator has no history.
 
 ## References and chart

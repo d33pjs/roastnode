@@ -83,6 +83,8 @@ If exodos.io settings are missing, the workflow keeps the SBOM artifact but skip
    git push origin v0.1.0
    ```
 
+   Put the reviewed public changelog in the annotated tag message. The release workflow uses `--notes-from-tag`, so GitHub publishes that changelog together with the digest/SBOM assets before release immutability takes effect. An explicit instruction to release without further approval authorizes this step without another confirmation.
+
 4. Confirm Gitea mirrored the tag to GitHub.
 5. Confirm the GitHub `Release Container` workflow starts automatically from the mirrored tag.
 6. The automatic tag run publishes the GitHub Release after attaching generated assets. This is required when GitHub release immutability is enabled, because published immutable releases cannot accept new or replacement assets.

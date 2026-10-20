@@ -17,13 +17,13 @@ end %>
 
     <div class="rn-choice-grid mt-3">
       <label class="rn-choice">
-        <%= form.radio_button :recipient_selection, "self", checked: selection == "self", class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged" } %>
+        <%= form.radio_button :recipient_selection, "self", checked: selection == "self", class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged", recipient_label: t("brews.recipients.myself") } %>
         <span class="rn-choice-label justify-start text-left"><%= t("brews.recipients.myself") %></span>
       </label>
 
       <% Array(@recipient_users).reject { |user| user.id == logger_id }.each do |user| %>
         <label class="rn-choice">
-          <%= form.radio_button :recipient_selection, "member:#{user.id}", checked: selection == "member:#{user.id}", class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged" } %>
+          <%= form.radio_button :recipient_selection, "member:#{user.id}", checked: selection == "member:#{user.id}", class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged", recipient_label: user.display_label } %>
           <span class="rn-choice-label justify-start gap-2 text-left">
             <% if user.avatar.attached? %>
               <%= image_tag media_attachment_path(user.avatar.attachment, variant: :thumbnail), alt: "", class: "h-8 w-8 shrink-0 rounded-full object-contain" %>
@@ -35,13 +35,13 @@ end %>
 
       <% if selection == "existing_recipient" %>
         <label class="rn-choice">
-          <%= form.radio_button :recipient_selection, "existing_recipient", checked: true, class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged" } %>
+          <%= form.radio_button :recipient_selection, "existing_recipient", checked: true, class: "rn-choice-input", data: { brew_recipient_target: "selection", action: "brew-recipient#selectionChanged", recipient_label: brew.recipient_user.display_label } %>
           <span class="rn-choice-label justify-start text-left"><%= t("brews.recipients.former_member", name: brew.recipient_user.display_label) %></span>
         </label>
       <% end %>
 
       <label class="rn-choice">
-        <%= form.radio_button :recipient_selection, "guest", checked: selection == "guest", class: "rn-choice-input", data: { brew_recipient_target: "guest selection", action: "brew-recipient#selectionChanged" } %>
+        <%= form.radio_button :recipient_selection, "guest", checked: selection == "guest", class: "rn-choice-input", data: { brew_recipient_target: "guest selection", action: "brew-recipient#selectionChanged", recipient_label: t("brews.recipients.guest") } %>
         <span class="rn-choice-label justify-start text-left"><%= t("brews.recipients.guest") %></span>
       </label>
     </div>

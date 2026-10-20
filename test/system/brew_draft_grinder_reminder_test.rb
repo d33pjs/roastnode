@@ -173,7 +173,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal grind_setting, find('input[name="brew[grind_setting]"]').value
     assert_equal grinder_id, find('input[name="brew[grinder_id]"]:checked').value
 
-    click_button "Discard"
+    accept_confirm { click_button "Discard this coffee" }
 
     assert_selector "#brew_bean_id_#{default_bean.id}:checked"
     assert_selector "[data-brew-grinder-reminder-target=latest]", text: "12"
@@ -341,7 +341,10 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     def assert_draft_field(storage_key, field_name, expected_value)
       page.document.synchronize(errors: [ Capybara::ExpectationNotMet ]) do
         actual_value = evaluate_script(<<~JAVASCRIPT, storage_key, field_name)
-          JSON.parse(localStorage.getItem(arguments[0]) || "{}").fields?.[arguments[1]]
+          (() => {
+            const payload = JSON.parse(localStorage.getItem(arguments[0]) || "{}")
+            return payload.drafts?.find(draft => draft.id === payload.activeId)?.fields?.[arguments[1]] ?? payload.fields?.[arguments[1]]
+          })()
         JAVASCRIPT
         raise Capybara::ExpectationNotMet, "expected stored #{field_name} to be #{expected_value.inspect}, got #{actual_value.inspect}" unless actual_value == expected_value
       end
