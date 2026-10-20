@@ -51,6 +51,7 @@ class User < ApplicationRecord
   has_many :accepted_household_invites, class_name: "HouseholdInvite", foreign_key: :accepted_by_id, dependent: :nullify,
     inverse_of: :accepted_by
   has_many :data_imports, dependent: :restrict_with_exception
+  has_many :grinder_uses, dependent: :restrict_with_exception
   has_many :brews, dependent: :restrict_with_exception
   has_many :received_brews,
     class_name: "Brew",

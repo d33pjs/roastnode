@@ -72,6 +72,7 @@ Rails.application.routes.draw do
     patch :reopen, on: :member
   end
   get "coffees" => "brews#index", as: :coffees
+  resources :grinder_uses, only: :create
   resources :brews, only: %i[index new create show edit update destroy] do
     get :grinder_history, on: :collection
     patch :taste, on: :member

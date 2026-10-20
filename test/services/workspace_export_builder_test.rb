@@ -23,6 +23,23 @@ class WorkspaceExportBuilderTest < ActiveSupport::TestCase
       assert_equal bean.coffee_history_id, exported.fetch(bean.id).fetch(:coffee_history_id)
     end
   end
+  test "private export preserves confirmations and ground time within the workspace" do
+    assert Object.const_defined?(:GrinderUse), "confirmed grinder uses must be available"
+    use = workspaces(:household).grinder_uses.create!(user: users(:one), bean: beans(:open_household),
+      grinder: equipment(:household_grinder), method: "espresso", grind_setting: "1/2,50", confirmation_key: SecureRandom.uuid)
+    brew = brews(:morning_espresso)
+    brew.update!(ground_at: use.occurred_at, client_draft_key: SecureRandom.uuid)
+    payload = WorkspaceExportBuilder.new(workspaces(:household)).call
+    row = payload.fetch(:grinder_uses).sole
+    assert_equal use.confirmation_key, row.fetch(:confirmation_key)
+    assert_equal "1/2,50", row.fetch(:grind_setting)
+    assert_equal use.occurred_at.iso8601(6), row.fetch(:occurred_at)
+    exported_brew = payload.fetch(:brews).find { |item| item[:id] == brew.id }
+    assert_equal brew.ground_at.iso8601(6), exported_brew.fetch(:ground_at)
+    assert_equal brew.client_draft_key, exported_brew.fetch(:client_draft_key)
+    assert_empty WorkspaceExportBuilder.new(workspaces(:other_household)).call.fetch(:grinder_uses)
+  end
+
   RECIPIENT_EXPORT_KEYS = %i[
     recipient_kind recipient_user_id recipient_user_display_name recipient_user_email_address recipient_name cup_style
   ].freeze

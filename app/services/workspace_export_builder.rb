@@ -20,6 +20,7 @@ class WorkspaceExportBuilder
       equipment: equipment_payload,
       preparation_tools: preparation_tools_payload,
       brews: brews_payload,
+      grinder_uses: grinder_uses_payload,
       external_coffees: external_coffees_payload,
       brew_preparation_tools: brew_preparation_tools_payload,
       equipment_events: equipment_events_payload,
@@ -194,6 +195,8 @@ class WorkspaceExportBuilder
           brewer_id: brew.brewer_id,
           method: brew.method,
           occurred_at: timestamp(brew.occurred_at),
+          ground_at: brew.ground_at&.iso8601(6),
+          client_draft_key: brew.client_draft_key,
           bean_weight_grams: decimal(brew.bean_weight_grams),
           ground_weight_grams: decimal(brew.ground_weight_grams),
           dose_grams: decimal(brew.dose_grams),
@@ -229,6 +232,16 @@ class WorkspaceExportBuilder
           import_source_id: brew.import_source_id,
           raw_import_data: brew.raw_import_data,
           photos: photo_metadata(brew)
+        }
+      end
+    end
+
+    def grinder_uses_payload
+      workspace.grinder_uses.order(:id).map do |use|
+        {
+          id: use.id, user_id: use.user_id, bean_id: use.bean_id, grinder_id: use.grinder_id,
+          method: use.method, grind_setting: use.grind_setting, confirmation_key: use.confirmation_key,
+          occurred_at: use.occurred_at.iso8601(6), created_at: use.created_at.iso8601(6), updated_at: use.updated_at.iso8601(6)
         }
       end
     end

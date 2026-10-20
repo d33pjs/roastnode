@@ -196,11 +196,11 @@ module BrewsHelper
 
   def brew_grinder_last_uses(reminder)
     reminder.last_uses_by_grinder_id.transform_values do |reference|
-      setting = reference.grind_setting.to_s.strip
+      setting = reference.grind_setting.to_s
       {
         setting:,
         label: [ reference.bean.display_name, setting.presence || t("grinder_history.unknown_setting"),
-          profile_timestamp(reference.brew.occurred_at) ].join(" · ")
+          profile_timestamp(reference.occurred_at) ].join(" · ")
       }
     end
   end

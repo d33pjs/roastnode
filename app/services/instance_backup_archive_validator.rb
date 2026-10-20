@@ -6,6 +6,7 @@ class InstanceBackupArchiveValidator
     id workspace_id brew_id token token_digest snapshot feedback_comment opened_at feedback_expires_at closed_at
     last_guest_ip expiration_job_enqueued_at expiration_job_enqueueing_at created_at updated_at
   ].freeze
+  GRINDER_USE_KEYS = %w[id user_id bean_id grinder_id method grind_setting confirmation_key occurred_at created_at updated_at].freeze
   MEDIA_FILE_KEYS = %w[
     path record_type record_id attachment_id attachment_name filename content_type byte_size checksum created_at
   ].freeze
@@ -84,6 +85,11 @@ class InstanceBackupArchiveValidator
     end
 
     def validate_payload(payload, manifest_media_files, errors)
+      unless valid_chronology_catalog_shapes?(payload)
+        errors << "Archive contains invalid grinder confirmations or brewing times."
+        return
+      end
+
       unless payload["format"] == InstanceReadableExportBuilder::FORMAT
         errors << "Readable export format is not #{InstanceReadableExportBuilder::FORMAT}."
       end
@@ -91,8 +97,53 @@ class InstanceBackupArchiveValidator
         errors << "Readable export version is not #{InstanceReadableExportBuilder::VERSION}."
       end
       errors << "Archive media catalogs do not match." unless valid_media_catalogs?(payload["media_files"], manifest_media_files)
+      errors << "Archive contains invalid grinder confirmations or brewing times." unless valid_grinder_uses?(payload)
       errors << "Archive contains invalid coffee history memberships." unless valid_coffee_histories?(payload)
       errors << "Archive contains an invalid cupping request." unless valid_cupping_requests?(payload, manifest_media_files:)
+    end
+
+    def valid_chronology_catalog_shapes?(payload)
+      return false unless payload.is_a?(Hash) && payload["users"].is_a?(Array) && payload["users"].all? { |row| row.is_a?(Hash) }
+      return false unless payload["workspaces"].is_a?(Array)
+
+      payload["workspaces"].all? do |workspace_payload|
+        workspace_payload.is_a?(Hash) && %w[beans equipment brews grinder_uses].all? do |catalog|
+          rows = workspace_payload.fetch(catalog, [])
+          rows.is_a?(Array) && rows.all? { |row| row.is_a?(Hash) }
+        end
+      end
+    end
+
+    def valid_grinder_uses?(payload)
+      users = Array(payload["users"]).filter_map { |row| row["id"] if row.is_a?(Hash) }
+      seen_ids = Set.new
+      Array(payload["workspaces"]).all? do |workspace_payload|
+        beans = Array(workspace_payload["beans"]).index_by { |row| row["id"] }
+        equipment = Array(workspace_payload["equipment"]).index_by { |row| row["id"] }
+        confirmations = workspace_payload.fetch("grinder_uses", [])
+        next false unless confirmations.is_a?(Array)
+
+        keys = Set.new
+        valid_confirmations = confirmations.all? do |row|
+          next false unless exact_hash?(row, GRINDER_USE_KEYS)
+          next false unless row["id"].is_a?(Integer) && seen_ids.add?(row["id"])
+          next false unless users.include?(row["user_id"]) && beans.key?(row["bean_id"])
+          next false unless row["grinder_id"].nil? || equipment.dig(row["grinder_id"], "kind") == "grinder"
+          next false unless Brew::BREW_METHODS.include?(row["method"])
+          next false unless row["grind_setting"].nil? || (row["grind_setting"].is_a?(String) && row["grind_setting"].length <= 255)
+          next false unless row["confirmation_key"].is_a?(String) && row["confirmation_key"].match?(GrinderUse::UUID_FORMAT)
+          next false unless keys.add?([ row["user_id"], row["confirmation_key"].downcase ])
+
+          %w[occurred_at created_at updated_at].all? { |attribute| valid_archived_time_string?(row[attribute]) }
+        end
+        draft_keys = Set.new
+        valid_confirmations && Array(workspace_payload["brews"]).all? do |row|
+          ground_at = row["ground_at"]
+          key = row["client_draft_key"]
+          (ground_at.nil? || valid_archived_time_string?(ground_at)) &&
+            (key.nil? || (key.is_a?(String) && key.match?(GrinderUse::UUID_FORMAT) && draft_keys.add?([ row["user_id"], key.downcase ])))
+        end
+      end
     end
 
     def valid_coffee_histories?(payload)

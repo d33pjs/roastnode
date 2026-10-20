@@ -2,6 +2,99 @@ require "test_helper"
 require "zip"
 
 class InstanceBackupRestoreTest < ActiveSupport::TestCase
+  test "round trip preserves confirmed uses grinding time and save retry keys" do
+    assert Object.const_defined?(:GrinderUse), "confirmed grinder uses must be available"
+    use = workspaces(:household).grinder_uses.create!(user: users(:one), bean: beans(:open_household),
+      grinder: equipment(:household_grinder), method: "espresso", grind_setting: "1/2,50", confirmation_key: SecureRandom.uuid)
+    brew = brews(:morning_espresso)
+    brew.update!(ground_at: use.occurred_at, client_draft_key: SecureRandom.uuid)
+    key = brew.client_draft_key
+    archive = InstanceBackupArchiveBuilder.new.call
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+    restored = GrinderUse.find_by!(confirmation_key: use.confirmation_key)
+    restored_brew = Brew.find_by!(client_draft_key: key)
+    assert_equal "1/2,50", restored.grind_setting
+    assert_equal use.occurred_at, restored.occurred_at
+    assert_equal restored.occurred_at, restored_brew.ground_at
+    assert_equal restored.workspace, restored_brew.workspace
+    assert_equal restored.bean, restored_brew.bean
+    assert_equal restored.grinder, restored_brew.grinder
+  end
+
+  test "legacy backups omit confirmations and grinding fields without changing brew times" do
+    archive = mutate_backup_payload(InstanceBackupArchiveBuilder.new.call) do |payload|
+      payload.fetch("workspaces").each do |workspace_payload|
+        workspace_payload.delete("grinder_uses")
+        workspace_payload.fetch("brews").each do |row|
+          row.delete("ground_at")
+          row.delete("client_draft_key")
+        end
+      end
+    end
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+    assert_empty GrinderUse.all
+    assert Brew.all.all? { |brew| brew.ground_at.nil? && brew.client_draft_key.nil? && brew.occurred_at.present? }
+  end
+
+  test "round trip retains confirmations after equipment deletion and bean grind state changes" do
+    grinder = workspaces(:household).equipment.create!(name: "Disposable grinder", kind: "grinder")
+    use = workspaces(:household).grinder_uses.create!(user: users(:one), bean: beans(:open_household),
+      grinder:, method: "espresso", grind_setting: "1/2,50", confirmation_key: SecureRandom.uuid)
+    grinder.destroy_with_history!
+    beans(:open_household).update!(grind_state: "pre_ground")
+    archive = InstanceBackupArchiveBuilder.new.call
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+    restored = GrinderUse.find_by!(confirmation_key: use.confirmation_key)
+    assert_nil restored.grinder_id
+    assert_equal "pre_ground", restored.bean.grind_state
+    assert_equal use.occurred_at, restored.occurred_at
+  end
+
+  test "restored confirmed physical use survives subsequent pre ground bean metadata" do
+    use = workspaces(:household).grinder_uses.create!(user: users(:one), bean: beans(:open_household),
+      grinder: equipment(:household_grinder), method: "espresso", grind_setting: "1/2,50", confirmation_key: SecureRandom.uuid)
+    beans(:open_household).update!(grind_state: "pre_ground")
+    archive = InstanceBackupArchiveBuilder.new.call
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+
+    restored = GrinderUse.find_by!(confirmation_key: use.confirmation_key)
+    reminder = BrewGrinderReminder.new(workspace: restored.workspace, user: restored.user, method: "espresso", beans: []).call
+    assert_equal restored, reminder.last_uses_by_grinder_id[restored.grinder_id.to_s]&.brew
+    assert_equal use.occurred_at, reminder.last_uses_by_grinder_id[restored.grinder_id.to_s]&.occurred_at
+  end
+
+  test "validator rejects malformed chronology catalogs without exceptions" do
+    archive = InstanceBackupArchiveBuilder.new.call
+    %w[beans equipment brews grinder_uses].each do |catalog|
+      tampered = mutate_backup_payload(archive) do |payload|
+        payload.fetch("workspaces").first[catalog] = [ nil ]
+      end
+      assert_not InstanceBackupArchiveValidator.new(tampered).call.valid?, catalog
+    end
+    tampered = mutate_backup_payload(archive) { |payload| payload["workspaces"] = [ nil ] }
+    assert_not InstanceBackupArchiveValidator.new(tampered).call.valid?
+  end
+
+  test "validator rejects foreign grinder confirmation references before restore" do
+    assert Object.const_defined?(:GrinderUse), "confirmed grinder uses must be available"
+    workspaces(:household).grinder_uses.create!(user: users(:one), bean: beans(:open_household),
+      grinder: equipment(:household_grinder), method: "espresso", grind_setting: "1/2,50", confirmation_key: SecureRandom.uuid)
+    archive = InstanceBackupArchiveBuilder.new.call
+    %w[bean_id grinder_id user_id confirmation_key occurred_at].each do |attribute|
+      invalid = { "bean_id" => beans(:other_workspace_open).id, "grinder_id" => equipment(:other_workspace_grinder).id,
+        "user_id" => -1, "confirmation_key" => "invalid", "occurred_at" => "not a time" }.fetch(attribute)
+      tampered = mutate_backup_payload(archive) do |payload|
+        workspace_payload = payload.fetch("workspaces").find { |row| row.dig("workspace", "id") == workspaces(:household).id }
+        workspace_payload.fetch("grinder_uses").first[attribute] = invalid
+      end
+      assert_not InstanceBackupArchiveValidator.new(tampered).call.valid?, attribute
+    end
+  end
+
   test "round trip preserves leftover transfer balances reasons and finished usage" do
     source = beans(:open_household)
     source.update!(remaining_grams: 14)
@@ -1653,6 +1746,7 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       PublicRecipeShare.delete_all
       Recipe.delete_all
       Brew.delete_all
+      GrinderUse.delete_all
       ExternalCoffee.delete_all
       PreparationTool.delete_all
       Equipment.delete_all

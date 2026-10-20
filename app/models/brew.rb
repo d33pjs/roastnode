@@ -78,6 +78,8 @@ class Brew < ApplicationRecord
   validates :rating, numericality: { only_integer: true, in: 1..5 }, allow_nil: true
   validates :recipient_name, :cup_style, length: { maximum: 120 }
   validates :import_source_id, uniqueness: { scope: %i[workspace_id import_source] }, allow_blank: true
+  validates :client_draft_key, uniqueness: { scope: %i[workspace_id user_id] }, allow_nil: true
+  validate :client_draft_key_is_uuid
   validate :quick_drip_required_fields
   validate :bean_belongs_to_workspace
   validate :equipment_belongs_to_workspace
@@ -141,6 +143,13 @@ class Brew < ApplicationRecord
   end
 
   private
+    def client_draft_key_is_uuid
+      value = client_draft_key_before_type_cast
+      return if value.blank? || value.to_s.match?(GrinderUse::UUID_FORMAT)
+
+      errors.add(:client_draft_key, "must be a UUID")
+    end
+
     def set_defaults
       self.method ||= "espresso"
       self.occurred_at ||= Time.current

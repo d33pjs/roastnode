@@ -2,6 +2,10 @@ class BrewGrinderReminder
   Reference = Data.define(:brew) do
     delegate :bean, :grinder, :grind_setting, to: :brew
 
+    def occurred_at
+      brew.is_a?(Brew) ? brew.ground_at || brew.occurred_at : brew.occurred_at
+    end
+
     def comparison_key
       [ grinder&.id&.to_s, grind_setting.to_s.strip.downcase.presence ].to_json
     end
@@ -19,6 +23,7 @@ class BrewGrinderReminder
   end
 
   RECENCY = "brews.occurred_at DESC NULLS LAST, brews.created_at DESC NULLS LAST, brews.id DESC".freeze
+  PHYSICAL_RECENCY = "COALESCE(brews.ground_at, brews.occurred_at) DESC NULLS LAST, brews.created_at DESC NULLS LAST, brews.id DESC".freeze
   GROUP_COLUMNS = "beans.coffee_history_id, beans.grind_state, brews.grinder_id".freeze
 
   def initialize(workspace:, user:, method:, beans:)
@@ -55,8 +60,21 @@ class BrewGrinderReminder
       scope = workspace.brews.joins(:bean)
         .where(beans: { workspace_id: workspace.id, grind_state: "whole_bean" })
         .where(grinder_id: workspace.equipment.grinder.select(:id))
-      latest_brews("brews.grinder_id", scope).to_h do |brew|
-        [ brew.grinder_id.to_s, Reference.new(brew:) ]
+      saved = latest_brews("brews.grinder_id", scope, recency: PHYSICAL_RECENCY)
+      confirmed = workspace.grinder_uses.joins(:bean)
+        .where(beans: { workspace_id: workspace.id })
+        .where(grinder_id: workspace.equipment.grinder.select(:id))
+        .select("DISTINCT ON (grinder_uses.grinder_id) grinder_uses.*")
+        .order(Arel.sql("grinder_uses.grinder_id, grinder_uses.occurred_at DESC, grinder_uses.created_at DESC, grinder_uses.id DESC"))
+        .preload(:bean, :grinder).to_a
+      (saved + confirmed).group_by(&:grinder_id).to_h do |grinder_id, uses|
+        latest = uses.max_by do |use|
+          reference = Reference.new(brew: use)
+          # Confirmations win equal-time ties with their saved Brew, whose later
+          # save timestamp says nothing about the physical grinder position.
+          [ reference.occurred_at || Time.at(0), use.is_a?(GrinderUse) ? 1 : 0, use.created_at || Time.at(0), use.id ]
+        end
+        [ grinder_id.to_s, Reference.new(brew: latest) ]
       end
     end
 
@@ -91,9 +109,9 @@ class BrewGrinderReminder
       end
     end
 
-    def latest_brews(columns, scope)
+    def latest_brews(columns, scope, recency: RECENCY)
       scope.select("DISTINCT ON (#{columns}) brews.*")
-        .order(Arel.sql("#{columns}, #{RECENCY}"))
+        .order(Arel.sql("#{columns}, #{recency}"))
         .preload(:bean, :grinder).to_a
     end
 

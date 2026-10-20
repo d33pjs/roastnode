@@ -59,6 +59,7 @@ class InstanceBackupRestorer
       restore_equipment
       restore_preparation_tools
       restore_brews
+      restore_grinder_uses
       restore_cupping_requests
       restore_external_coffees
       restore_brew_preparation_tools
@@ -96,6 +97,7 @@ class InstanceBackupRestorer
         Equipment,
         PreparationTool,
         Brew,
+        GrinderUse,
         CuppingRequest,
         ExternalCoffee,
         BrewPreparationTool,
@@ -412,6 +414,8 @@ class InstanceBackupRestorer
             data_import: optional_lookup(@data_import_map, row["data_import_id"]),
             method: row["method"],
             occurred_at: time(row["occurred_at"]),
+            ground_at: time(row["ground_at"]),
+            client_draft_key: row["client_draft_key"],
             bean_weight_grams: row["bean_weight_grams"],
             ground_weight_grams: row["ground_weight_grams"],
             dose_grams: row["dose_grams"],
@@ -446,6 +450,23 @@ class InstanceBackupRestorer
           @brew_map[old_id(row)] = brew
         end
       end
+    end
+
+    def restore_grinder_uses
+      workspace_payloads.each do |workspace_payload|
+        workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
+        workspace_payload.fetch("grinder_uses", []).each do |row|
+          use = workspace.grinder_uses.new(
+            user: @user_map.fetch(row.fetch("user_id")), bean: @bean_map.fetch(row.fetch("bean_id")),
+            grinder: optional_lookup(@equipment_map, row["grinder_id"]), method: row.fetch("method"),
+            grind_setting: row["grind_setting"], confirmation_key: row.fetch("confirmation_key"),
+            occurred_at: time(row.fetch("occurred_at")), created_at: time(row.fetch("created_at")), updated_at: time(row.fetch("updated_at"))
+          )
+          use.save!(context: :restore)
+        end
+      end
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique, KeyError, ArgumentError
+      raise RestoreError, "Invalid grinder confirmation data"
     end
 
     def restore_brew_preparation_tools

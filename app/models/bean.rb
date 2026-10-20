@@ -16,6 +16,7 @@ class Bean < ApplicationRecord
   belongs_to :data_import, optional: true
   belongs_to :duplicated_from_bean, class_name: "Bean", optional: true, inverse_of: :duplicated_bean_bags
 
+  has_many :grinder_uses, dependent: :destroy
   has_many :brews, dependent: :restrict_with_exception
   has_many :inventory_adjustments, dependent: :restrict_with_exception
   has_many :inventory_transfers, -> { where(reason: "transfer") }, class_name: "InventoryAdjustment"

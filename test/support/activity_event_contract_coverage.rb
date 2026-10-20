@@ -63,7 +63,7 @@ module Activity
         return [] unless pairs&.type == :LIST
 
         pairs.children.each_slice(2).filter_map do |key, value|
-          [ key.children.first, value ] if key&.type == :LIT
+          [ key.children.first, value ] if %i[LIT SYM].include?(key&.type)
         end
       end
 

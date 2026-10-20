@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_17_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -143,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_090000) do
     t.decimal "brew_temperature_celsius", precision: 5, scale: 2
     t.bigint "brewer_id"
     t.boolean "channeling"
+    t.uuid "client_draft_key"
     t.string "coffee_amount_source", default: "measured", null: false
     t.decimal "coffee_spoons", precision: 8, scale: 2
     t.datetime "created_at", null: false
@@ -154,6 +155,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_090000) do
     t.decimal "grams_per_coffee_spoon", precision: 8, scale: 2
     t.string "grind_setting"
     t.bigint "grinder_id"
+    t.datetime "ground_at"
     t.decimal "ground_weight_grams", precision: 8, scale: 2
     t.string "import_source"
     t.string "import_source_id"
@@ -192,6 +194,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_090000) do
     t.index ["workspace_id", "occurred_at"], name: "index_brews_on_workspace_id_and_occurred_at"
     t.index ["workspace_id"], name: "index_brews_on_workspace_id"
     t.check_constraint "recipient_kind::text = 'self'::text AND recipient_user_id IS NULL AND recipient_name IS NULL OR recipient_kind::text = 'household_member'::text AND recipient_user_id IS NOT NULL AND recipient_name IS NULL OR recipient_kind::text = 'guest'::text AND recipient_user_id IS NULL", name: "brews_recipient_shape"
+    t.index ["workspace_id", "user_id", "client_draft_key"], name: "index_brews_on_client_draft_key", unique: true
   end
 
   create_table "coffee_histories", force: :cascade do |t|
@@ -318,6 +321,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_090000) do
     t.index ["workspace_id", "occurred_at"], name: "index_external_coffees_on_workspace_id_and_occurred_at"
     t.index ["workspace_id", "place_name"], name: "index_external_coffees_on_workspace_id_and_place_name"
     t.index ["workspace_id"], name: "index_external_coffees_on_workspace_id"
+  end
+
+  create_table "grinder_uses", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "bean_id", null: false
+    t.bigint "grinder_id"
+    t.string "method", null: false
+    t.string "grind_setting"
+    t.uuid "confirmation_key", null: false
+    t.datetime "occurred_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bean_id"], name: "index_grinder_uses_on_bean_id"
+    t.index ["grinder_id"], name: "index_grinder_uses_on_grinder_id"
+    t.index ["user_id"], name: "index_grinder_uses_on_user_id"
+    t.index ["workspace_id", "grinder_id", "occurred_at"], name: "idx_on_workspace_id_grinder_id_occurred_at_9d56eb2979"
+    t.index ["workspace_id", "user_id", "confirmation_key"], name: "index_grinder_uses_on_confirmation", unique: true
+    t.index ["workspace_id"], name: "index_grinder_uses_on_workspace_id"
   end
 
   create_table "household_invites", force: :cascade do |t|
@@ -665,6 +687,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_17_090000) do
   add_foreign_key "external_coffees", "active_storage_attachments", column: "primary_photo_attachment_id"
   add_foreign_key "external_coffees", "users"
   add_foreign_key "external_coffees", "workspaces"
+  add_foreign_key "grinder_uses", "beans"
+  add_foreign_key "grinder_uses", "equipment", column: "grinder_id"
+  add_foreign_key "grinder_uses", "users"
+  add_foreign_key "grinder_uses", "workspaces"
   add_foreign_key "household_invites", "users", column: "accepted_by_id"
   add_foreign_key "household_invites", "users", column: "created_by_id"
   add_foreign_key "household_invites", "workspaces"

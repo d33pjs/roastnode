@@ -78,6 +78,14 @@ class BrewsController < ApplicationController
   end
 
   def create
+    @client_draft_key = params[:client_draft_key].presence
+    if @client_draft_key && (!@client_draft_key.is_a?(String) || !@client_draft_key.match?(GrinderUse::UUID_FORMAT))
+      return render json: { errors: [ t("brews.create.invalid_draft") ] }, status: :unprocessable_entity
+    end
+    if (existing = previously_saved_coffee)
+      return acknowledge_saved_coffee(existing, status: :ok)
+    end
+
     if @disabled_requested_method.present?
       return redirect_to new_brew_path, alert: t(".method_disabled", method: t("brews.methods.#{@disabled_requested_method}"))
     end
@@ -90,14 +98,16 @@ class BrewsController < ApplicationController
     @selected_preparation_tools = preparation_tools_from_ids(preparation_tool_ids)
     @brew = current_workspace.brews.new(attributes)
     @brew.user = Current.user
+    @brew.client_draft_key = @client_draft_key
     load_form_options(selected_bean: @brew.bean, selected_grinder: @brew.grinder, selected_machine: @brew.machine, selected_brewer: @brew.brewer)
     set_brew_form_preferences
     @draft_storage_key = brew_draft_storage_key
     apply_recipe_snapshot
+    apply_grinder_confirmation
 
     bean = @brew.bean
     previous_status = bean&.bag_status
-    created = with_workspace_activity(
+    created = @brew.errors.empty? && with_workspace_activity(
       action: "brew.created", subject: -> { @brew }, occurred_at: -> { @brew.occurred_at }
     ) do
       saved = save_brew_with_preparation_tools
@@ -110,12 +120,28 @@ class BrewsController < ApplicationController
     end
 
     if created
-      redirect_to @brew, notice: t(".created")
+      acknowledge_saved_coffee(@brew, status: :created)
     else
-      load_grinder_reminder
-      prepare_record_links(@brew)
-      render :new, status: :unprocessable_entity
+      # Another request may commit this draft after our first lookup but before
+      # uniqueness validation. Acknowledge that save without repeating effects.
+      if (existing = previously_saved_coffee)
+        return acknowledge_saved_coffee(existing, status: :ok)
+      end
+
+      if request.format.json?
+        response.headers["Cache-Control"] = "private, no-store"
+        render json: { errors: @brew.errors.full_messages }, status: :unprocessable_entity
+      else
+        load_grinder_reminder
+        prepare_record_links(@brew)
+        render :new, status: :unprocessable_entity
+      end
     end
+  rescue ActiveRecord::RecordNotUnique
+    existing = previously_saved_coffee
+    raise unless existing
+
+    acknowledge_saved_coffee(existing, status: :ok)
   end
 
   def update
@@ -204,6 +230,37 @@ class BrewsController < ApplicationController
   end
 
   private
+    def previously_saved_coffee
+      return unless @client_draft_key
+
+      current_workspace.brews.find_by(user: Current.user, client_draft_key: @client_draft_key)
+    end
+
+    def acknowledge_saved_coffee(brew, status:)
+      response.headers["Cache-Control"] = "private, no-store"
+      if request.format.json?
+        render json: { url: brew_path(brew) }, status:
+      else
+        redirect_to brew, notice: t("brews.create.created")
+      end
+    end
+
+    def apply_grinder_confirmation
+      if params[:grinder_use_id].blank?
+        if params[:grinder_confirmation_required] == "1" && @brew.espresso? && @brew.grinder.present? && @brew.bean&.grind_state == "whole_bean"
+          @brew.errors.add(:base, t("brews.create.preparation_changed"))
+        end
+        return
+      end
+
+      use = current_workspace.grinder_uses.where(user: Current.user).find_by(id: params[:grinder_use_id])
+      if use&.matches_brew?(@brew)
+        @brew.ground_at = use.occurred_at
+      else
+        @brew.errors.add(:base, t("brews.create.preparation_changed"))
+      end
+    end
+
     DECIMAL_BREW_FIELDS = %i[
       bean_weight_grams
       ground_weight_grams

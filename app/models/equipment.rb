@@ -11,6 +11,7 @@ class Equipment < ApplicationRecord
   belongs_to :workspace
   belongs_to :data_import, optional: true
 
+  has_many :grinder_uses, foreign_key: :grinder_id, dependent: :nullify, inverse_of: :grinder
   has_many :grinder_brews, class_name: "Brew", foreign_key: :grinder_id, dependent: :nullify, inverse_of: :grinder
   has_many :machine_brews, class_name: "Brew", foreign_key: :machine_id, dependent: :nullify, inverse_of: :machine
   has_many :brewer_brews, class_name: "Brew", foreign_key: :brewer_id, dependent: :nullify, inverse_of: :brewer

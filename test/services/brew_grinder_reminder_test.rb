@@ -217,6 +217,49 @@ class BrewGrinderReminderTest < ActiveSupport::TestCase
     assert_operator loaded_brews, :<=, 4
   end
 
+  test "confirmed uses update physical position while bean history remains saved only" do
+    assert Object.const_defined?(:GrinderUse), "confirmed grinder uses must be available"
+    saved = brew(setting: "saved", occurred_at: 3.days.ago)
+    use = @workspace.grinder_uses.create!(user: users(:two), bean: @bean, grinder: @grinder,
+      method: "quick_drip", grind_setting: "1/2,50", confirmation_key: SecureRandom.uuid)
+    assert_equal "1/2,50", result.last_uses_by_grinder_id[@grinder.id.to_s].grind_setting
+    assert_equal saved, history.reference.brew
+    assert_equal 1, history.brew_count
+    assert_equal use.occurred_at, result.last_uses_by_grinder_id[@grinder.id.to_s].occurred_at
+  end
+
+  test "saving the older coffee last cannot move physical grinder position backward" do
+    assert_includes Brew.column_names, "ground_at"
+    older = brew(setting: "older", occurred_at: 1.minute.from_now)
+    older.update!(ground_at: 2.hours.ago)
+    newer = brew(setting: "newer", occurred_at: 1.hour.ago)
+    newer.update!(ground_at: 1.hour.ago)
+    assert_equal newer, result.last_uses_by_grinder_id[@grinder.id.to_s].brew
+    assert_equal older, history.reference.brew, "selected-bean history continues to describe saved brews"
+  end
+
+  test "editing a bean to pre ground does not erase its confirmed physical grinder use" do
+    use = @workspace.grinder_uses.create!(user: users(:one), bean: @bean, grinder: @grinder,
+      method: "espresso", grind_setting: "1/2,50", confirmation_key: SecureRandom.uuid)
+    @bean.update!(grind_state: "pre_ground")
+
+    assert_equal use, result.last_uses_by_grinder_id[@grinder.id.to_s]&.brew
+    assert_equal "1/2,50", result.last_uses_by_grinder_id[@grinder.id.to_s]&.grind_setting
+  end
+
+  test "confirmed physical references have deterministic ties and reject malformed foreign contexts" do
+    assert Object.const_defined?(:GrinderUse), "confirmed grinder uses must be available"
+    time = Time.current.change(usec: 0)
+    uses = 2.times.map do |index|
+      @workspace.grinder_uses.create!(user: users(:one), bean: @bean, grinder: @grinder,
+        method: "espresso", grind_setting: "position #{index}", confirmation_key: SecureRandom.uuid,
+        occurred_at: time, created_at: time)
+    end
+    assert_equal uses.last.grind_setting, result.last_uses_by_grinder_id[@grinder.id.to_s].grind_setting
+    uses.last.update_columns(bean_id: beans(:other_workspace_open).id)
+    assert_equal uses.first.grind_setting, result.last_uses_by_grinder_id[@grinder.id.to_s].grind_setting
+  end
+
   private
     def result(beans: [ @bean ], user: users(:one), method: "espresso")
       BrewGrinderReminder.new(workspace: @workspace, user:, method:, beans:).call

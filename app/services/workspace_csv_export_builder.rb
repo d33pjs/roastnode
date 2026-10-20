@@ -9,7 +9,7 @@ class WorkspaceCsvExportBuilder
   ].freeze
 
   BREW_COLUMNS = %w[
-    id occurred_at method user_display_name user_email_address bean_id bean_name bean_roaster_name
+    id occurred_at ground_at client_draft_key method user_display_name user_email_address bean_id bean_name bean_roaster_name
     grinder_id grinder_name machine_id machine_name brewer_id brewer_name preparation_tools bean_weight_grams
     ground_weight_grams dose_grams beverage_grams machine_cups coffee_spoons grams_per_coffee_spoon
     coffee_amount_source brew_ratio grind_setting brew_temperature_celsius
@@ -74,6 +74,7 @@ class WorkspaceCsvExportBuilder
     def brew_value(brew, column)
       case column
       when "occurred_at", "created_at", "updated_at" then timestamp(brew.public_send(column))
+      when "ground_at" then brew.ground_at&.iso8601(6)
       when "user_display_name" then brew.user.display_label
       when "user_email_address" then brew.user.email_address
       when "recipient_user_display_name" then brew.recipient_user&.display_label
