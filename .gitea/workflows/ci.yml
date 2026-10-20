@@ -37,8 +37,8 @@ jobs:
       SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
       CDXGEN_VERSION: v13.4.0
       CDXGEN_SHA256: 2f8911129b773cf45a93cdab2e2578e3a0bdc6f0227b2a77ada62625c00ae1ed
-      WAYBILL_VERSION: v0.10.0
-      WAYBILL_SHA256: dfa9bbb57a9cb44178bbabca00409a03a64ae3b1a6cd128f0265f6d64df2b2f3
+      WAYBILL_VERSION: v0.11.0
+      WAYBILL_SHA256: 46f2b90745148ba64b5e75df1cbf6e04dd9d754c64c7b4c2c2a773c08d6d59b0
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
@@ -55,14 +55,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: set up ruby
-        uses: ruby/setup-ruby@651ff0d62c5c79bed6d53ec518387aae20e72c1a # v1.329.0
+        uses: ruby/setup-ruby@824c0e29fdfc7d689c191c27acc969d2d04b7dd8 # v1.331.0
         with:
+          rubygems: "4.0.23"
           bundler-cache: true
 
       - name: Set up Node for JavaScript tests
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "24"
+          node-version: "26.12.0"
 
       - name: Test JavaScript controllers
         run: node --test test/javascript/*.mjs
@@ -85,6 +86,7 @@ jobs:
       - name: Generate source Syft SPDX SBOM
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
+          syft-version: v1.55.0
           format: spdx-json
           output-file: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
           artifact-name: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
@@ -105,6 +107,7 @@ jobs:
       - name: Generate source Syft CycloneDX SBOM
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
+          syft-version: v1.55.0
           format: cyclonedx-json
           output-file: ${{ env.SOURCE_SYFT_CDX_SBOM }}
           artifact-name: ${{ env.SOURCE_SYFT_CDX_SBOM }}

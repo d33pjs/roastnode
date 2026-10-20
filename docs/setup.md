@@ -4,9 +4,9 @@ Roastnode is a Rails 8.1 app generated in the repository root.
 
 ## Requirements
 
-- Ruby 3.3.12 through rbenv or another Ruby version manager
-- Bundler 4.0.23
-- Node.js 24 LTS for the JavaScript controller tests (no npm install required)
+- Ruby 4.0.7 through rbenv or another Ruby version manager
+- RubyGems and Bundler 4.0.23
+- Node.js 26.12.0 for the JavaScript controller tests (no npm install required)
 - Docker Desktop with Docker Compose
 - PostgreSQL 17.11 is the default Compose image
 - libvips for Active Storage image variants (`brew install vips` on macOS or `apt install libvips` on Debian/Ubuntu)
@@ -59,7 +59,9 @@ Browser passkey APIs require a secure context. `http://localhost:3001` works for
 
 ```bash
 cp .env.example .env
-rbenv local 3.3.12
+rbenv install -s 4.0.7
+rbenv local 4.0.7
+gem update --system 4.0.23 --no-document
 bundle install
 docker compose up -d postgres
 bin/rails db:prepare
@@ -143,6 +145,13 @@ If `rails` resolves to an older global executable, use the app binstub:
 
 ```bash
 bin/rails --version
+```
+
+If building Ruby on macOS 26 with the macOS 27 SDK crashes in `miniruby`, use an
+updated ruby-build or the [upstream configure workaround](https://bugs.ruby-lang.org/issues/22311):
+
+```bash
+ac_cv_func_dup3=no ac_cv_func_pipe2=no rbenv install 4.0.7
 ```
 
 If Bundler warns that your home directory is not writable inside a sandboxed tool, it can still complete by using a temporary home directory. On a normal shell, Bundler should use your regular user gem paths.

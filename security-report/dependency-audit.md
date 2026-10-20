@@ -1,17 +1,40 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-10-15 after refreshing compatible dependencies and the
-RubySec advisory database.
+Verified on 2026-10-20 after upgrading runtime/tool dependencies and refreshing
+the RubySec advisory database.
 
 ## Result
 
-- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-15 maintenance refresh.
+- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-20 runtime/tool refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `a6847b0651a702488f5844081e848dd1ec9dbf1d`, containing 1,263 advisories and last updated at 2026-10-10 09:26:59 -0400; 0 vulnerabilities matched.
+- RubySec evidence: database commit `fa2295251efb3b0d1a300e5ce8ad700ff1f1b485`, containing 1,266 advisories and last updated at 2026-10-17 20:01:16 +0200; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
 - JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.1.0 scanned Rails 8.1.4 with 0 errors and 0 warnings.
 - Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are bindata 3.0.1 and Marcel 2.1.0, constrained by their parent gems. The JSON 3 incompatibility is resolved.
+
+## 2026-10-20 Runtime and Tool Refresh
+
+- Upgraded Ruby 3.3.12 → 4.0.7, the newest stable release. `.ruby-version`, Docker, CI and setup/production documentation agree. Docker and CI explicitly install RubyGems/Bundler 4.0.23 instead of retaining the older runtime default.
+- Updated CI JavaScript tests to Node.js 26.12.0, the newest stable Current release. Node is used for development/tests; production assets continue to use importmaps and the Rails Tailwind gem.
+- Updated immutable ruby/setup-ruby 1.329.0 → 1.331.0. Every other configured action was compared with its official newest release and already matched its immutable release commit.
+- Updated Waybill 0.10.0 → 0.11.0, verifying the Linux checksum against both GitHub release metadata and the published SHA256SUMS file. cdxgen 13.4.0 is already current.
+- Updated the digest-pinned BuildKit bootstrap image 0.33.1 → 0.34.0 and explicitly selected Buildx 0.38.0. Verified both Linux architecture manifests, configs and all layers for BuildKit, the unchanged current QEMU image, and Ruby 4.0.7-slim at the public cache.
+- Explicitly selected Cosign 3.1.4 and Syft 1.55.0. The latest installer/SBOM actions otherwise default to older Cosign 3.0.6 and Syft 1.54.0.
+- Compared all 134 locked gem names plus Bundler with official RubyGems stable metadata and ran `bundle update --all` on Ruby 4.0.7. The lockfile is unchanged: all compatible gems are already current. Strict currentness passes; only upstream-constrained BinData 3.0.1 and Marcel 2.1.0 remain unavailable. WebAuthn 3.4.3 and tpm-key_attestation 0.14.2 require `bindata ~> 2.4`; Active Storage 8.1.4 requires `marcel ~> 1.0`.
+- Chart.js 4.5.1, Turbo 8.0.23 and Stimulus 3.2.2 match newest npm metadata and their existing vendored/gem assets. Both importmap audits pass.
+- PostgreSQL 17.11 remains the newest patch on the existing major. PostgreSQL 18.6 requires a separate explicit cluster/data-volume migration; no existing volume was migrated. Prerelease Ruby 4.1/PostgreSQL 19 versions are excluded.
+- Context7 was unavailable; review used official release notes, RubyGems/npm registries and GitHub release APIs. The local Ruby build reproduced upstream macOS 26/SDK 27 issue [#22311](https://bugs.ruby-lang.org/issues/22311); the documented configure workaround produced a working 4.0.7 installation without an application patch.
+
+### Verification — 2026-10-20
+
+- Ruby 4.0.7 with RubyGems/Bundler 4.0.23: `bundle check`, `bundle update --all`, strict currentness, Rails 8.1.4 application boot and native CBOR/libvips/pg loading passed.
+- Fresh RubySec audit: 1,266 advisories, 0 vulnerabilities. Importmap reports no outdated or vulnerable packages. Brakeman 8.1.0 on Ruby 4.0.7 reports 0 errors and 0 security warnings.
+- Release/dependency configuration tests: 5 tests, 75 assertions, 0 failures/errors. Node 26.12.0 controller tests: 36 passed, 0 failed at this dependency checkpoint; integration adds further feature tests separately.
+- Checksum-verified Waybill 0.11.0 macOS binary emitted CycloneDX 1.6 with 168 components and a nonempty SPDX 3 graph from a manifest-only fixture. No source or runtime data was uploaded.
+- A full updated-stack Rails/browser suite and production asset/image verification are part of the parallel-coffee integration/release checks. Local Docker CLI inspection did not respond, so this dependency checkpoint does not claim a local production image build.
+
+Official sources: [Ruby 4.0.7](https://www.ruby-lang.org/en/news/2026/09/15/ruby-4-0-7-released/), [Ruby 4 release notes](https://www.ruby-lang.org/en/news/2025/12/25/ruby-4-0-0-released/), [RubyGems/Bundler 4.0.23](https://github.com/rubygems/rubygems/releases/tag/v4.0.23), [Node 26.12.0](https://github.com/nodejs/node/releases/tag/v26.12.0), [ruby/setup-ruby 1.331.0](https://github.com/ruby/setup-ruby/releases/tag/v1.331.0), [Waybill 0.11.0](https://github.com/kusari-oss/waybill/releases/tag/v0.11.0), [BuildKit 0.34.0](https://github.com/moby/buildkit/releases/tag/v0.34.0), [Buildx 0.38.0](https://github.com/docker/buildx/releases/tag/v0.38.0), [Cosign 3.1.4](https://github.com/sigstore/cosign/releases/tag/v3.1.4), [Syft 1.55.0](https://github.com/anchore/syft/releases/tag/v1.55.0), and [PostgreSQL 17.11](https://www.postgresql.org/docs/release/17.11/).
 
 ## 2026-10-15 Compatible Refresh
 

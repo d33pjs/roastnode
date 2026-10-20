@@ -37,6 +37,7 @@ jobs:
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           path: .
+          syft-version: v1.55.0
           format: spdx-json
           output-file: ${{ env.SOURCE_SBOM }}
           artifact-name: ${{ env.SOURCE_SBOM }}
