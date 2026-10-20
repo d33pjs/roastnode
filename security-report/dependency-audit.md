@@ -260,9 +260,9 @@ Rails 8.1.4 fixes JSON 3 decoding. The temporary JSON constraint was removed. Th
 
 Marcel 2.1.0 is available, but Active Storage 8.1.4 requires `marcel ~> 1.0`. The lockfile retains the latest compatible 1.2.1, which has no matching advisory in the refreshed RubySec database.
 
-### Ruby 4 and PostgreSQL 18
+### Ruby 4 — resolved on 2026-10-20; PostgreSQL 18 deferred
 
-Ruby 4.0.7 and PostgreSQL 18.6 are newer major releases as of 2026-09-17. Roastnode remains on the current supported patches Ruby 3.3.12 and PostgreSQL 17.11. During the prior refresh, installing Ruby 4 could not complete through the available local permission flow, so an untested runtime requirement was not committed. PostgreSQL 18 requires a data migration; the existing PostgreSQL 17 volume was retained. These two major migrations remain outstanding.
+Ruby 4.0.7 is now installed and verified with the full Rails/browser suites, native extensions and production asset compilation. The runtime requirement, Docker and CI agree. PostgreSQL remains on the current supported 17.11 patch; moving the existing cluster to PostgreSQL 18.6 requires a separate explicit data-volume migration.
 
 ## Supply-Chain and License Review
 
