@@ -159,6 +159,6 @@ Media requests and password-gate requests do not count as page views.
 - Use public media handles in public HTML; do not render Active Storage attachment IDs.
 - Keep public pages and public media independent from `current_workspace`.
 - Render only `public_note`, never private `notes`, on public pages.
-- Purchase Website, Coffee Origin Website, and Bean purchase cost are private. New public Bean, Brew, and Recipe snapshots omit them, and the public Brew renderer ignores a legacy `purchase_price_cents` key if an older stored snapshot still contains it. Intentional public `RecordLink` rows remain eligible for their relevant public section. Equipment and preparation-tool costs remain private too.
+- Purchase Website, Coffee Origin Website, and Bean purchase cost are private. Separately entered public bean-share prices may appear on bean pages/collections only; they are not copied into Brew snapshots. New public Bean, Brew, and Recipe snapshots omit them, and the public Brew renderer ignores a legacy `purchase_price_cents` key if an older stored snapshot still contains it. Intentional public `RecordLink` rows remain eligible for their relevant public section. Equipment and preparation-tool costs remain private too.
 - Page-view IP history is intentionally full IP storage for owner/admin share management, but retained per-share rows are capped.
 - Add negative tests whenever changing public sharing, especially for password gates, disabled shares, selected media, private notes, private links, and raw media URL leakage.

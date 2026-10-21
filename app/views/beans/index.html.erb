@@ -7,9 +7,14 @@
         <p class="mt-1 text-sm font-semibold text-rn-muted"><%= current_workspace.name %></p>
       </div>
 
-      <% if current_workspace_policy.write? %>
-        <%= link_to t(".new"), new_bean_path, class: "shrink-0 rounded-2xl bg-[var(--rn-accent-strong)] px-3.5 py-2.5 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90 sm:px-4 sm:py-3" %>
-      <% end %>
+      <div class="flex flex-wrap items-center gap-2">
+        <% if current_workspace_policy.manage? %>
+          <%= link_to t("bean_collections.entry.title"), edit_public_bean_collection_path, class: "rounded-2xl border border-rn-line bg-rn-surface px-3.5 py-2.5 text-sm font-extrabold text-rn-ink hover:bg-rn-canvas sm:py-3" %>
+        <% end %>
+        <% if current_workspace_policy.write? %>
+          <%= link_to t(".new"), new_bean_path, class: "shrink-0 rounded-2xl bg-[var(--rn-accent-strong)] px-3.5 py-2.5 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90 sm:px-4 sm:py-3" %>
+        <% end %>
+      </div>
     </header>
 
     <div data-testid="bean-card-list" class="grid max-w-full min-w-0 gap-6">

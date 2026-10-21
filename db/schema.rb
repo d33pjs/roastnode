@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_091000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -471,6 +471,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_090000) do
     t.index ["workspace_id"], name: "index_public_bean_share_views_on_workspace_id"
   end
 
+  create_table "public_bean_collections", force: :cascade do |t|
+    t.bigint "workspace_id", null: false
+    t.string "token", null: false
+    t.string "token_digest", null: false
+    t.string "title", null: false
+    t.text "description"
+    t.boolean "enabled", default: false, null: false
+    t.string "mode", default: "selected", null: false
+    t.jsonb "selected_share_ids", default: [], null: false
+    t.jsonb "excluded_share_ids", default: [], null: false
+    t.jsonb "representative_share_ids", default: [], null: false
+    t.jsonb "snapshot", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "excluded_history_ids", default: [], null: false
+    t.index ["token"], name: "index_public_bean_collections_on_token", unique: true
+    t.index ["token_digest"], name: "index_public_bean_collections_on_token_digest", unique: true
+    t.index ["workspace_id"], name: "index_public_bean_collections_on_workspace_id", unique: true
+    t.check_constraint "mode::text = ANY (ARRAY['selected'::character varying, 'automatic'::character varying]::text[])", name: "public_bean_collection_mode"
+  end
+
   create_table "public_bean_shares", force: :cascade do |t|
     t.bigint "bean_id", null: false
     t.datetime "created_at", null: false
@@ -493,6 +514,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_090000) do
     t.index ["updated_by_id"], name: "index_public_bean_shares_on_updated_by_id"
     t.index ["workspace_id", "enabled"], name: "index_public_bean_shares_on_workspace_id_and_enabled"
     t.index ["workspace_id"], name: "index_public_bean_shares_on_workspace_id"
+    t.integer "public_price_cents"
+    t.string "public_price_currency"
+    t.date "public_price_recorded_on"
+    t.check_constraint "public_price_cents IS NULL OR public_price_cents >= 0", name: "public_bean_share_price_nonnegative"
   end
 
   create_table "public_brew_share_views", force: :cascade do |t|
@@ -706,6 +731,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_090000) do
   add_foreign_key "preparation_tools", "workspaces"
   add_foreign_key "public_bean_share_views", "public_bean_shares"
   add_foreign_key "public_bean_share_views", "workspaces"
+  add_foreign_key "public_bean_collections", "workspaces"
   add_foreign_key "public_bean_shares", "beans"
   add_foreign_key "public_bean_shares", "users", column: "created_by_id"
   add_foreign_key "public_bean_shares", "users", column: "updated_by_id"

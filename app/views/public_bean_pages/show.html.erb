@@ -93,6 +93,14 @@
       </section>
     <% end %>
 
+    <% if (price = bean["public_price"]).is_a?(Hash) && price["amount"].present? %>
+      <section class="mt-5 rounded-2xl border border-rn-line bg-rn-surface p-5" data-testid="public-bean-deliberate-price">
+        <p class="text-xs font-bold uppercase text-rn-muted"><%= t("bean_collection_operations.public_price") %></p>
+        <p class="mt-2 text-2xl font-black"><%= number_with_precision(price["amount"], precision: 2) %> <%= price["currency"] %></p>
+        <p class="mt-1 text-sm text-rn-muted"><%= number_with_precision(price["per_kg"], precision: 2) %> <%= price["currency"] %> / kg · <%= price["recorded_on"] %></p>
+      </section>
+    <% end %>
+
     <%= render "timeline", share: @share, timeline:, status: bean["public_status"] %>
 
     <section class="grid gap-4 border-t border-rn-line py-8 sm:grid-cols-2 lg:grid-cols-4">

@@ -117,3 +117,7 @@ Instance backups and empty-server restore preserve the same Quick Drip durable f
 
 - Workspace deletion and transfer.
 - Non-owner export policy variants.
+
+## Public collection portability
+
+Workspace JSON includes optional collection settings and deliberate public bag settings with private bean/history/media references, through `BeanCollectionPortability`. It excludes bearer capabilities/passwords and stored public snapshots. Instance archive restore validates and remaps these references and creates disabled drafts with new tokens, requiring explicit review and republishing. See [Public bean collections](public-bean-collections.md). CSV formats are unchanged.

@@ -1,0 +1,106 @@
+<% content_for :title, t("bean_collections.editor.title") %>
+<%= render "public_bean_collection_pages/styles" %>
+<main class="rn-page collection-editor" data-testid="bean-collection-editor">
+  <section class="rn-shell max-w-4xl py-6 lg:py-10">
+    <%= render "shared/back_link", label: t("bean_collections.editor.back"), path: edit_workspace_path %>
+    <header class="mt-6 mb-7">
+      <p class="collection-eyebrow mb-3"><%= t("bean_collections.editor.eyebrow") %></p>
+      <h1 class="text-3xl font-black tracking-tight sm:text-5xl"><%= t("bean_collections.editor.title") %></h1>
+      <p class="mt-4 max-w-2xl text-sm leading-relaxed text-rn-muted"><%= t("bean_collections.editor.description") %></p>
+    </header>
+    <% if notice.present? %><p role="status" class="mb-5 rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] p-4 text-sm font-semibold"><%= notice %></p><% end %>
+    <% if alert.present? %><p role="alert" class="mb-5 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm font-semibold text-red-900"><%= alert %></p><% end %>
+    <% if @collection.persisted? %>
+      <aside class="mb-5 rounded-2xl border border-rn-line bg-[var(--rn-surface-muted)] p-5">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="collection-eyebrow"><%= t("bean_collections.editor.public_url") %></p>
+          <span class="text-xs font-bold"><%= t(@collection.enabled? ? "bean_collections.editor.live" : "bean_collections.editor.disabled") %></span>
+        </div>
+        <% if @collection.enabled? %>
+          <%= link_to public_bean_collection_page_url(token: @collection.token), public_bean_collection_page_path(token: @collection.token), target: "_blank", rel: "noopener noreferrer", class: "collection-link mt-3 block break-all text-sm" %>
+        <% else %>
+          <p class="mt-3 break-all text-sm text-rn-muted"><%= public_bean_collection_page_url(token: @collection.token) %></p>
+        <% end %>
+        <%= link_to t("bean_collections.editor.preview"), preview_public_bean_collection_path, class: "collection-pill mt-4", target: "_blank", rel: "noopener noreferrer" %>
+      </aside>
+    <% end %>
+    <%= form_with model: @collection, url: public_bean_collection_path, method: :patch, class: "grid gap-5" do |form| %>
+      <% if @collection.errors.any? %>
+        <div role="alert" class="rounded-2xl border border-red-300 bg-red-50 p-5 text-sm text-red-900">
+          <p class="font-bold"><%= t("bean_collections.editor.errors") %></p>
+          <ul class="mt-2 list-inside list-disc"><% @collection.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+        </div>
+      <% end %>
+      <section class="collection-editor-section grid gap-5">
+        <h2 class="text-xl font-black"><%= t("bean_collections.editor.page_settings") %></h2>
+        <div><%= form.label :title, t("bean_collections.editor.page_title"), class: "block text-sm font-bold" %><%= form.text_field :title, required: true, maxlength: 160, class: "collection-field" %></div>
+        <div><%= form.label :description, t("bean_collections.editor.page_description"), class: "block text-sm font-bold" %><%= form.text_area :description, rows: 4, maxlength: 3000, class: "collection-field" %></div>
+        <label class="flex items-start gap-3 rounded-2xl border border-rn-line bg-rn-canvas p-4">
+          <%= form.check_box :enabled, class: "mt-1 h-5 w-5 shrink-0" %>
+          <span><span class="block text-sm font-bold"><%= t("bean_collections.editor.enabled") %></span><span class="mt-1 block text-xs leading-relaxed text-rn-muted"><%= t("bean_collections.editor.enabled_help") %></span></span>
+        </label>
+      </section>
+      <section class="collection-editor-section">
+        <h2 class="text-xl font-black"><%= t("bean_collections.editor.selection_title") %></h2>
+        <p class="mt-2 text-sm leading-relaxed text-rn-muted"><%= t("bean_collections.editor.selection_help") %></p>
+        <div class="mt-5"><%= form.label :mode, t("bean_collections.editor.mode"), class: "block text-sm font-bold" %><%= form.select :mode, [[t("bean_collections.editor.selected_mode"), "selected"], [t("bean_collections.editor.automatic_mode"), "automatic"]], {}, class: "collection-field" %></div>
+        <p class="mt-3 text-xs leading-relaxed text-rn-muted"><%= t("bean_collections.editor.mode_help") %></p>
+        <p class="mt-4 rounded-xl bg-rn-canvas p-4 text-xs leading-relaxed text-rn-muted"><%= t("bean_collections.editor.protected_help") %></p>
+        <%= hidden_field_tag "public_bean_collection[selected_share_ids][]", "" %>
+        <%= hidden_field_tag "public_bean_collection[excluded_share_ids][]", "" %>
+        <%= hidden_field_tag "public_bean_collection[excluded_history_ids][]", "" %>
+        <%= hidden_field_tag "public_bean_collection[representative_share_ids][]", "" %>
+        <% if @available_shares.any? %>
+          <div class="mt-6 grid gap-4">
+            <% @available_shares.group_by { |share| share.bean.coffee_history_id }.each_value do |shares| %>
+              <fieldset class="rounded-2xl border border-rn-line px-4">
+                <legend class="px-2 text-base font-black"><%= shares.first.bean.name %><% if shares.first.bean.roaster_name.present? %><span class="ml-1 font-medium text-rn-muted">· <%= shares.first.bean.roaster_name %></span><% end %></legend>
+                <label class="my-3 flex items-start gap-2 rounded-xl bg-rn-canvas p-3 text-xs font-semibold">
+                  <%= check_box_tag "public_bean_collection[excluded_history_ids][]", shares.first.bean.coffee_history_id, @collection.excluded_history_ids.include?(shares.first.bean.coffee_history_id), id: "collection_exclude_coffee_#{shares.first.bean.coffee_history_id}", class: "mt-0.5" %>
+                  <%= t("bean_collections.editor.exclude_coffee") %>
+                </label>
+                <% shares.each do |share| %>
+                  <% bean = share.bean %>
+                  <div class="collection-editor-share first:border-t-0">
+                    <div>
+                      <p class="text-sm font-bold"><%= share.title.presence || bean.name %></p>
+                      <p class="mt-1 text-xs text-rn-muted"><%= collection_grams(bean.bag_size_grams) %><% if bean.opened_on.present? %> · <%= t("bean_collections.editor.opened", date: collection_date(bean.opened_on)) %><% end %></p>
+                      <%= link_to t("bean_collections.editor.edit_source"), edit_bean_public_bean_share_path(bean), class: "collection-link mt-3 inline-block text-xs" %>
+                    </div>
+                    <div class="grid gap-3 text-xs font-semibold">
+                      <label class="flex items-center gap-2"><%= check_box_tag "public_bean_collection[selected_share_ids][]", share.id, @collection.selected_share_ids.include?(share.id), id: "collection_include_#{share.id}" %><%= t("bean_collections.editor.include_bag") %></label>
+                      <label class="flex items-center gap-2"><%= check_box_tag "public_bean_collection[excluded_share_ids][]", share.id, @collection.excluded_share_ids.include?(share.id), id: "collection_exclude_#{share.id}" %><%= t("bean_collections.editor.exclude_bag") %></label>
+                      <label class="flex items-center gap-2"><%= check_box_tag "public_bean_collection[representative_share_ids][]", share.id, @collection.representative_share_ids.include?(share.id), id: "collection_representative_#{share.id}" %><%= t("bean_collections.editor.representative") %></label>
+                    </div>
+                  </div>
+                <% end %>
+              </fieldset>
+            <% end %>
+          </div>
+          <p class="mt-4 text-xs leading-relaxed text-rn-muted"><%= t("bean_collections.editor.representative_help") %></p>
+        <% else %><p class="mt-5 rounded-xl border border-dashed border-rn-line p-5 text-sm text-rn-muted"><%= t("bean_collections.editor.no_shares") %></p><% end %>
+      </section>
+      <% unpublished_beans = @publishable_beans.reject { |bean| bean.public_bean_share.present? } %>
+      <% if unpublished_beans.any? %>
+        <section class="collection-editor-section">
+          <h2 class="text-xl font-black"><%= t("bean_collections.editor.publish_title") %></h2>
+          <p class="mt-2 text-sm leading-relaxed text-rn-muted"><%= t("bean_collections.editor.publish_help") %></p>
+          <p class="mt-4 rounded-xl border border-rn-line bg-rn-canvas p-4 text-sm font-semibold leading-relaxed"><%= t("bean_collections.editor.publish_warning") %></p>
+          <%= hidden_field_tag "public_bean_collection[publish_bean_ids][]", "" %>
+          <div class="mt-5 divide-y divide-[var(--rn-line)]">
+            <% unpublished_beans.each do |bean| %>
+              <label class="flex items-start gap-3 py-4">
+                <%= check_box_tag "public_bean_collection[publish_bean_ids][]", bean.id, false, id: "collection_publish_#{bean.id}", class: "mt-1" %>
+                <span><span class="block text-sm font-bold"><%= bean.name %></span><span class="mt-1 block text-xs text-rn-muted"><%= [bean.roaster_name.presence, collection_grams(bean.bag_size_grams), (t("bean_collections.editor.opened", date: collection_date(bean.opened_on)) if bean.opened_on.present?)].compact.join(" · ") %></span></span>
+              </label>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+      <div class="flex flex-wrap items-center gap-4 pb-5">
+        <%= form.submit t("bean_collections.editor.save"), class: "cursor-pointer rounded-2xl bg-[var(--rn-accent-strong)] px-6 py-3.5 text-sm font-extrabold text-[var(--rn-canvas)] shadow-sm hover:opacity-90" %>
+        <p class="text-xs text-rn-muted"><%= t("bean_collections.editor.save_help") %></p>
+      </div>
+    <% end %>
+  </section>
+</main>

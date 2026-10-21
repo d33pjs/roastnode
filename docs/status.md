@@ -1,10 +1,12 @@
 # Roastnode Current Status
 
-Last reviewed: 2026-10-20
+Last reviewed: 2026-10-21
 
 This is the compact public status ledger for humans and AI agents. It distills the original product context plus the slice docs in this repository. Update it whenever a slice changes what is done or intentionally deferred.
 
 ## Built Now
+
+- Grouped public bean collections now provide an owner/admin draft/preview editor, Top 10/All views, duplicate/manual-linked coffee groups, dated per-bag details, representative selected photos/public links, separate bag/brew averages, persistent coffee/bag exclusions, explicit public prices and source-safe snapshots. Existing private purchase costs stay private. Portable collection settings restore as disabled drafts with new public tokens. See [Public bean collections](public-bean-collections.md).
 
 - Espresso logging now supports two overlapping coffees with a mobile switcher, independent recoverable drafts, freely accessible Prepare/Extract/Taste/Full views, exact per-grinder preparation confirmations and retry-safe saves. Physical grinder chronology follows confirmed grinding even when coffees save out of order; confirmations, grinding times and retry keys round-trip through private export/backup. See [Parallel coffees](parallel-coffees.md).
 

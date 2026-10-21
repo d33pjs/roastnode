@@ -1,0 +1,32 @@
+<% price = bag["public_price"] || {} %>
+<dl class="collection-bag" data-testid="collection-bag">
+  <div class="collection-bag-heading">
+    <dt><%= t("bean_collections.public.published_bag") %></dt>
+    <dd><% if bag["share_token"].present? %><%= link_to bag["share_title"].presence || t("bean_collections.public.bag_page"), public_bean_page_path(bag["share_token"]), class: "collection-link" %><% else %><%= bag["share_title"].presence || t("bean_collections.public.bag_page") %><% end %></dd>
+    <dd class="text-rn-muted"><%= collection_grams(bag["bag_size_grams"]) %><% if bag["public_status"].present? %> · <%= t("bean_collections.public.statuses.#{bag["public_status"]}", default: bag["public_status"]) %><% end %></dd>
+    <% if bag["photos"].present? %>
+      <dd class="mt-3 flex flex-wrap gap-2">
+        <% Array(bag["photos"]).each do |photo| %>
+          <% if photo["thumbnail_url"].present? %><%= link_to photo["url"].presence || photo["thumbnail_url"], target: "_blank", rel: "noopener noreferrer", aria: { label: t("bean_collections.public.view_bag_photo") } do %><%= image_tag photo["thumbnail_url"], alt: "", loading: "lazy", class: "h-14 w-14 rounded-lg bg-rn-canvas object-contain" %><% end %><% end %>
+        <% end %>
+      </dd>
+    <% end %>
+  </div>
+  <div>
+    <dt><%= t("bean_collections.public.bean_rating") %></dt><dd><%= collection_rating(bag["bean_rating"]) %></dd>
+    <dt class="mt-4"><%= t("bean_collections.public.brew_average") %></dt><dd><%= collection_rating(bag["brew_average"]) %></dd>
+    <dd class="text-xs text-rn-muted"><%= t("bean_collections.public.rated_brews", rated: bag["rated_brew_count"].to_i, total: bag["brew_count"].to_i) %></dd>
+  </div>
+  <div>
+    <% if (date = collection_date(bag["opened_on"])).present? %><dt><%= t("bean_collections.public.opened") %></dt><dd><%= date %></dd><% end %>
+    <% if (date = collection_date(bag["roast_date"])).present? %><dt class="mt-4"><%= t("bean_collections.public.roasted") %></dt><dd><%= date %></dd><% end %>
+  </div>
+  <div>
+    <dt><%= t("bean_collections.public.recorded_price") %></dt>
+    <% if price["amount"].present? && price["currency"].present? %>
+      <dd><%= collection_money(price["amount"], price["currency"]) %></dd>
+      <% if price["per_kg"].present? %><dd class="text-xs text-rn-muted"><%= collection_money(price["per_kg"], price["currency"]) %> / kg</dd><% end %>
+      <% if (date = collection_date(price["recorded_on"])).present? %><dd class="text-xs text-rn-muted"><%= date %></dd><% end %>
+    <% else %><dd class="text-rn-muted"><%= t("bean_collections.public.not_shared") %></dd><% end %>
+  </div>
+</dl>

@@ -25,6 +25,7 @@ This folder is the durable project memory for humans and AI agents.
 - `docs/brew-corrections.md` describes brew edits/deletes and inventory correction rules.
 - `docs/brew-card.md` describes the compact screenshot-worthy brew detail card.
 - `docs/public-brew-sharing.md` describes curated public brew pages, public notes, affiliate links, password gates, and public media privacy rules.
+- `docs/public-bean-collections.md` describes grouped ranked public coffees, individual bags, selection/exclusion, explicit public prices, and safe snapshot/export behavior.
 - `docs/public-bean-sharing.md` describes curated public bean bag pages, all-brew summaries, password gates, and selected bean package photo privacy rules.
 - `docs/beanconqueror-import.md` describes practical Beanconqueror JSON import.
 - `docs/equipment-events.md` describes maintenance events, equipment detail pages, and timeline activity rules.

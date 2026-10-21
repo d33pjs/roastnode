@@ -83,6 +83,14 @@
       <% end %>
     </div>
 
+    <% if current_workspace_policy.manage? %>
+      <section class="mt-6 rounded-2xl border border-rn-line bg-rn-surface p-6">
+        <h2 class="text-xl font-black text-rn-ink"><%= t("bean_collections.entry.title") %></h2>
+        <p class="mt-2 text-sm leading-relaxed text-rn-muted"><%= t("bean_collections.entry.description") %></p>
+        <%= link_to t("bean_collections.entry.manage"), edit_public_bean_collection_path, class: "mt-4 inline-block rounded-xl bg-[var(--rn-accent-strong)] px-4 py-3 text-sm font-extrabold text-[var(--rn-canvas)] hover:opacity-90" %>
+      </section>
+    <% end %>
+
     <%= render "public_brew_shares", public_brew_shares: @public_brew_shares %>
     <%= render "public_bean_shares", public_bean_shares: @public_bean_shares %>
 

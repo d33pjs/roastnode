@@ -31,7 +31,7 @@ Badge copy is `TOP N OF C BEANS`. Rank 1 uses a gold trophy, rank 2 a silver med
 
 ## Privacy Contract
 
-Public bean shares render from `PublicBeanShare` snapshots. Snapshot open duration uses the shared lifecycle calculator also used by private bean analytics, so terminal dates follow the same rules. They must not render private notes, purchase source, purchase cost, private links, brew photos, raw record/database IDs, raw attachment IDs, original filenames, signed Active Storage URLs, private media routes, user email addresses, invite tokens, session data, admin data, export data, backup data, environment variables, or infrastructure secrets.
+Public bean shares render from `PublicBeanShare` snapshots. Snapshot open duration uses the shared lifecycle calculator also used by private bean analytics, so terminal dates follow the same rules. They must not render private notes, purchase source, private purchase cost, private links, brew photos, raw record/database IDs, raw attachment IDs, original filenames, signed Active Storage URLs, private media routes, user email addresses, invite tokens, session data, admin data, export data, backup data, environment variables, or infrastructure secrets.
 
 Workspace comparisons enter the snapshot only as the shared bean's `rank` and `eligible_count` for each applicable metric. Competing bean names, identifiers, values, lifecycle states, and links remain private. Public bean controllers and views render these comparison results from the curated snapshot and must not query live private comparison beans.
 
@@ -42,6 +42,8 @@ The optional workspace support badge configuration is not copied into public bea
 Public bean pages include all espresso and Quick Drip brews for the bag as public-safe summaries. Brew summaries may include public notes, public metrics, method labels, taste, rating, channeling, equipment labels, and the curated logger/recipient projection from the snapshot, but they must not include private brew notes, Guest names, Cup style, legacy serving fields, or brew photos. The exact same projection payload is reused in compact cards and snapshot-only journey marker titles so the two surfaces cannot disagree or query live private Brew data.
 
 Dead grams include espresso retention (`bean_weight_grams - ground_weight_grams` where both values exist). When a bag is publicly finished while still showing remaining beans, the leftover remaining grams are also counted as dead grams and the remaining inventory hero card is omitted.
+
+Separately entered public price fields and the Bean’s own rating are deliberate public data. Public prices require an amount, currency and recorded date; they never inherit private purchase costs. See [Public bean collections](public-bean-collections.md), which can group approved bag shares without publishing private siblings.
 
 ## Public Media
 

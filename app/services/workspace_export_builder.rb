@@ -9,6 +9,7 @@ class WorkspaceExportBuilder
 
   def call
     {
+      **BeanCollectionPortability.export(workspace),
       format: FORMAT,
       version: VERSION,
       generated_at: timestamp(generated_at),

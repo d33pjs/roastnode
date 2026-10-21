@@ -22,7 +22,7 @@ Already-open logs refresh shared history through an authenticated, writer-only, 
 
 ## Bags and ownership
 
-`CoffeeHistory` belongs to a Workspace; every Bean belongs to one CoffeeHistory in that same workspace. The group stores membership only. Saved Brews remain the source of settings, so corrections and deletions are reflected immediately. Linking does not merge bag inventory, bag analytics, or public summaries.
+`CoffeeHistory` belongs to a Workspace; every Bean belongs to one CoffeeHistory in that same workspace. The group stores membership only. Saved Brews remain the source of settings, so corrections and deletions are reflected immediately. Linking does not merge bag inventory or per-bag analytics/public summaries. The optional [public bean collection](public-bean-collections.md) groups only separately approved published bags from the same CoffeeHistory. Bean details also offer an explicit Link bag / Separate bag control across workspace coffees, including different names.
 
 - Duplicating a bag automatically shares its existing group, including duplicate chains.
 - Independently created bags start separate. Nonblank matching roaster and coffee names offer an explicit sharing choice, normalized for case and whitespace.

@@ -1,0 +1,105 @@
+en:
+  bean_collections:
+    entry:
+      title: Coffee collection
+      description: Curate a public tasting journal from your household’s published coffee bags.
+      manage: Manage coffee collection
+    editor:
+      title: Your coffee collection
+      eyebrow: A public tasting journal
+      back: Back to workspace settings
+      description: Bring published bags together into one coffee collection. Ratings, package photos and selected public details become a page you can share with anyone who has the link.
+      public_url: Collection link
+      live: Public page enabled
+      disabled: Public page disabled
+      preview: Preview saved collection ↗
+      errors: Please check the following before saving.
+      page_settings: Make it yours
+      page_title: Collection title
+      page_description: Introduction
+      enabled: Enable public collection
+      enabled_help: Anyone with the link can view this page without signing in. Save with this switched off first to review the private preview.
+      selection_title: Choose the bags
+      selection_help: Bags of the same coffee appear together. Only enabled, unprotected public bag pages are eligible for this collection.
+      mode: Selection mode
+      selected_mode: Selected bags only
+      automatic_mode: All eligible published bags
+      mode_help: In selected mode, Include adds a bag. In automatic mode, all eligible bags are included. Exclude always removes a bag in either mode.
+      protected_help: Password-protected, disabled and unopened bag pages never appear here. Review a bag’s own sharing settings to change its eligibility.
+      opened: 'Opened %{date}'
+      edit_source: Edit public bag page
+      include_bag: Include bag (selected mode only)
+      exclude_coffee: Exclude this coffee, including future bags
+      exclude_bag: Exclude bag
+      representative: Use as cover & details
+      representative_help: Choose one representative bag per coffee to supply its cover photo and coffee details. If several are chosen, one is selected consistently. All included bags still contribute to the ratings.
+      no_shares: No eligible public bags yet. Publish an opened bag below or enable its public page first.
+      publish_title: Publish more bags
+      publish_help: These opened bags do not have a public page yet. Select only the bags you explicitly want to publish.
+      publish_warning: Saving publishes the selected bag pages, including their public notes, public links and a safe primary package photo when available. The collection is saved with public access switched off so you can review its preview and each source page before enabling it. Newly published bags are included automatically.
+      save: Save collection
+      save_help: Save changes before opening the preview.
+    public:
+      date_format: "%B %-d, %Y"
+      default_title: Our coffee collection
+      eyebrow: Coffee, collected
+      personal_experience: A personal tasting journal
+      coffee_count:
+        one: '%{count} coffee'
+        other: '%{count} coffees'
+      views: Collection view
+      top_ten: Top 10
+      all_coffees: All coffees
+      ranked_by: Ranked by average bag rating
+      rank: 'Rank %{rank}'
+      unrated_coffees: Unrated coffees
+      unranked: Unranked
+      bean_rating: Bag rating
+      brew_average: Brew average
+      rated_brews: '%{rated} of %{total} brews rated'
+      bag_count:
+        one: '%{count} published bag'
+        other: '%{count} published bags'
+      explore_bags:
+        one: 'Explore %{count} bag & coffee details'
+        other: 'Explore %{count} bags & coffee details'
+      not_rated: Unrated
+      not_recorded: Not recorded
+      not_shared: Not shared
+      no_photo: No package photo
+      view_photo: 'View package photo of %{name}'
+      view_bag_photo: View bag photo
+      unnamed_coffee: Untitled coffee
+      decaffeinated: Decaffeinated
+      process: Process
+      roast_type: Roast type
+      roast_level: Roast level
+      roast_types:
+        espresso: Espresso
+        filter: Filter
+        omni: Omni
+      tasting_notes: Tasting notes
+      published_bag: Published bag
+      bag_page: View bag page
+      opened: Opened
+      roasted: Roasted
+      recorded_price: Recorded price
+      statuses:
+        open: Open
+        finished: Finished
+        used_up: Finished
+        archived: Finished
+      website: Website
+      affiliate: Affiliate link
+      public_brews: Explore published brews
+      brew: View brew
+      empty_eyebrow: Room for discovery
+      empty_title: The next great coffee is ahead.
+      empty_top: There are no rated coffees in this collection yet. Explore all coffees to see the published bags.
+      empty_body: There are no published coffees in this collection yet. Come back after the next tasting.
+      methodology_title: How this collection is ranked
+      methodology: The bag rating averages the recorded coffee ratings of all included published bags equally, regardless of bag size. The brew average includes every rated brew from those bags. Missing ratings are omitted, never counted as zero. Coffees are ordered by bag rating, then brew average, then the number of rated brews. Coffees matching on all three share a rank; the Top 10 includes all coffees tied at the cutoff. Unrated coffees appear in All coffees without a rank.
+      disclaimer: This collection reflects personal tasting and preparation experience with the approved published bags. Recorded prices include their currency and date when available; they are historical observations, not current offers or availability. Links marked as affiliate links may support the publisher.
+      updated: 'Collection updated %{date}'
+      preview_notice: Private preview · This is the saved public view. Check the contents before enabling sharing.
+      back_to_editor: Back to editor

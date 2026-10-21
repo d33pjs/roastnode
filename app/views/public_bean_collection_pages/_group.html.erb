@@ -1,0 +1,72 @@
+<% bean = group["bean"] || {} %>
+<% bags = Array(group["bags"]) %>
+<% photo = Array(group["photos"]).first %>
+<article class="collection-entry" data-testid="collection-coffee">
+  <div class="collection-entry-main">
+    <p class="collection-rank" data-rank="<%= group["rank"] %>" aria-label="<%= group["rank"].present? ? t("bean_collections.public.rank", rank: group["rank"]) : t("bean_collections.public.unranked") %>"><%= group["rank"].presence || "—" %></p>
+    <% if photo && photo["thumbnail_url"].present? %>
+      <%= link_to photo["url"].presence || photo["thumbnail_url"], target: "_blank", rel: "noopener noreferrer", class: "collection-photo", aria: { label: t("bean_collections.public.view_photo", name: bean["name"]) } do %>
+        <%= image_tag photo["thumbnail_url"], alt: bean["name"].to_s, loading: "lazy" %>
+      <% end %>
+    <% else %>
+      <div class="collection-photo px-6 text-center" role="img" aria-label="<%= t("bean_collections.public.no_photo") %>"><span class="collection-eyebrow"><%= t("bean_collections.public.no_photo") %></span></div>
+    <% end %>
+    <div class="collection-entry-copy">
+      <% if bean["roaster_name"].present? %><p class="collection-eyebrow mb-2"><%= bean["roaster_name"] %></p><% end %>
+      <h2 class="collection-coffee-title"><%= bean["name"].presence || t("bean_collections.public.unnamed_coffee") %></h2>
+      <% if bean["origin"].present? %><p class="mt-2 text-sm font-semibold text-rn-muted"><%= bean["origin"] %></p><% end %>
+      <% if bean["decaffeinated"] %><p class="mt-2 text-xs font-bold text-rn-muted"><%= t("bean_collections.public.decaffeinated") %></p><% end %>
+      <dl class="collection-scores">
+        <div class="collection-score collection-score-primary">
+          <dt class="collection-eyebrow"><%= t("bean_collections.public.bean_rating") %></dt>
+          <dd class="collection-score-value"><%= collection_rating(group["bean_rating"]) %></dd>
+          <dd class="collection-score-note"><%= t("bean_collections.public.bag_count", count: group["bag_count"].to_i) %> <span aria-hidden="true">·</span> <%= collection_grams(group["total_grams"]) %></dd>
+        </div>
+        <div class="collection-score">
+          <dt class="collection-eyebrow"><%= t("bean_collections.public.brew_average") %></dt>
+          <dd class="collection-score-value"><%= collection_rating(group["brew_average"]) %></dd>
+          <dd class="collection-score-note"><%= t("bean_collections.public.rated_brews", rated: group["rated_brew_count"].to_i, total: group["brew_count"].to_i) %></dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+  <details class="collection-details">
+    <summary><span><%= t("bean_collections.public.explore_bags", count: bags.size) %></span></summary>
+    <div class="collection-expanded">
+      <dl class="collection-facts">
+        <% %w[process roast_type roast_level].each do |field| %>
+          <% if bean[field].present? && bean[field] != "unknown" %>
+            <div><dt><%= t("bean_collections.public.#{field}") %></dt><dd><%= field == "roast_type" ? t("bean_collections.public.roast_types.#{bean[field]}", default: bean[field]) : collection_fact(bean[field]) %></dd></div>
+          <% end %>
+        <% end %>
+      </dl>
+      <% if bean["tasting_notes"].present? %>
+        <div class="mb-5"><p class="collection-eyebrow"><%= t("bean_collections.public.tasting_notes") %></p><p class="mt-2 text-base font-semibold leading-relaxed"><%= collection_fact(bean["tasting_notes"]) %></p></div>
+      <% end %>
+      <% if bean["public_note"].present? %><p class="mb-6 whitespace-pre-line text-sm leading-relaxed text-rn-muted"><%= bean["public_note"] %></p><% end %>
+      <% bags.each do |bag| %><%= render "public_bean_collection_pages/bag", bag: %><% end %>
+      <% if Array(bean["links"]).any? %>
+        <div class="mt-5 flex flex-wrap gap-2">
+          <% Array(bean["links"]).each do |link| %>
+            <% if (url = collection_external_url(link["url"])).present? %>
+              <%= link_to url, target: "_blank", rel: link["kind"] == "affiliate" ? "sponsored noopener noreferrer" : "noopener noreferrer", class: "collection-pill" do %>
+                <%= link["label"].presence || t("bean_collections.public.website") %> <span aria-hidden="true">↗</span>
+                <% if link["kind"] == "affiliate" %><span class="text-rn-muted">· <%= t("bean_collections.public.affiliate") %></span><% end %>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+      <% if Array(group["public_brews"]).any? %>
+        <div class="mt-6 border-t border-rn-line pt-5">
+          <h3 class="collection-eyebrow"><%= t("bean_collections.public.public_brews") %></h3>
+          <div class="mt-3 flex flex-wrap gap-2">
+            <% Array(group["public_brews"]).each do |brew| %>
+              <% if brew["token"].present? %><%= link_to brew["title"].presence || t("bean_collections.public.brew"), public_brew_page_path(brew["token"]), class: "collection-pill" %><% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </details>
+</article>

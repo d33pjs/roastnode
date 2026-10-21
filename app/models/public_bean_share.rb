@@ -13,10 +13,40 @@ class PublicBeanShare < ApplicationRecord
 
   has_many :public_bean_share_views, dependent: :delete_all
 
-  before_validation :set_token, on: :create
+  before_validation :set_token, if: :new_record?
   before_validation :set_token_digest
   before_validation :set_workspace_from_bean
   after_save :clear_public_attachment_authorization_cache
+  after_save :refresh_collection
+  after_destroy :refresh_collection
+
+  validates :public_price_cents, numericality: { only_integer: true, greater_than_or_equal_to: 0, less_than_or_equal_to: 2_000_000_000 }, allow_nil: true
+  validates :public_price_currency, format: { with: /\A[A-Z]{3}\z/ }, presence: true, if: -> { public_price_cents.present? }
+  validates :public_price_recorded_on, presence: true, if: -> { public_price_cents.present? }
+
+  def public_price
+    public_price_cents && public_price_cents.to_d / 100
+  end
+
+  def public_price=(value)
+    normalized = LocalizedNumberParser.normalize_decimal(value)
+    number = BigDecimal(normalized.to_s, exception: false)
+    self.public_price_cents = if normalized.blank?
+      nil
+    elsif number&.finite? && number.between?(0, 20_000_000)
+      (number * 100).round
+    else
+      -1
+    end
+  end
+
+  def public_price_payload
+    return unless public_price_cents.present?
+
+    { "amount" => format("%.2f", public_price), "currency" => public_price_currency,
+      "recorded_on" => public_price_recorded_on&.iso8601,
+      "per_kg" => bean.bag_size_grams.to_d.positive? ? format("%.2f", public_price / bean.bag_size_grams * 1000) : nil }
+  end
 
   validates :token, presence: true, uniqueness: true
   validates :token_digest, presence: true, uniqueness: true
@@ -106,7 +136,7 @@ class PublicBeanShare < ApplicationRecord
       snapshot: PublicBeanShareSnapshotBuilder.new(
         bean:,
         title:,
-        selected_photo_attachment_ids:
+        selected_photo_attachment_ids:, public_price: public_price_payload
       ).call
     )
   end
@@ -116,6 +146,10 @@ class PublicBeanShare < ApplicationRecord
   end
 
   private
+    def refresh_collection
+      PublicBeanCollection.refresh_for_workspace(workspace_id)
+    end
+
     def set_token
       self.token ||= SecureRandom.urlsafe_base64(24)
     end
@@ -135,7 +169,7 @@ class PublicBeanShare < ApplicationRecord
     end
 
     def bean_must_be_publishable
-      return if bean.blank? || publishable?
+      return if bean.blank? || publishable? || (!enabled? && validation_context == :portability_restore)
 
       errors.add(:bean, "must be open, finished, used up, or archived after being opened")
     end

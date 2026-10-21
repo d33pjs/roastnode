@@ -5,11 +5,11 @@ class PublicBeanShareRefresher
     end
 
     def refresh_for(record)
-      shares_for(record).find_each { |share| refresh(share) }
+      PublicBeanCollection.defer_refreshes { shares_for(record).find_each { |share| refresh(share) } }
     end
 
     def refresh_comparisons_for(record)
-      comparison_shares_for(record).find_each { |share| refresh(share) }
+      PublicBeanCollection.defer_refreshes { comparison_shares_for(record).find_each { |share| refresh(share) } }
     end
 
     def shares_for(record)
@@ -63,6 +63,7 @@ class PublicBeanShareRefresher
     share.reload
     unless share.publishable?
       share.update_columns(enabled: false, updated_at: Time.current)
+      PublicBeanCollection.refresh_for_workspace(share.workspace_id)
       return
     end
 
@@ -71,7 +72,7 @@ class PublicBeanShareRefresher
     snapshot = PublicBeanShareSnapshotBuilder.new(
       bean: share.bean,
       title:,
-      selected_photo_attachment_ids:
+      selected_photo_attachment_ids:, public_price: share.public_price_payload
     ).call
 
     share.update!(

@@ -1,0 +1,19 @@
+de:
+  bean_collection_operations:
+    saved: "Öffentliche Kaffeeliste gespeichert."
+    default_title: "Unsere liebsten Kaffees"
+    linked: "Kaffee-Gruppierung aktualisiert."
+    link_title: "Beutel mit demselben Kaffee verknüpfen"
+    link_help: "Diesen Beutel einem Kaffee zuordnen oder trennen. Verknüpfte Beutel teilen Mahlgradverläufe und können gemeinsam in öffentlichen Listen erscheinen. Bestände bleiben getrennt; die Verknüpfung veröffentlicht nichts."
+    current_bags:
+      one: "Dieser Kaffee enthält %{count} Beutel."
+      other: "Dieser Kaffee enthält %{count} Beutel."
+    target: "Mit diesem Kaffee verknüpfen"
+    unopened: "Nicht geöffnet"
+    separate: "Diesen Beutel als eigenen Kaffee führen"
+    link_save: "Gruppierung speichern"
+    public_price: "Optionaler öffentlicher Preis"
+    price_help: "Nur einen bewusst zur Veröffentlichung bestimmten Preis mit Datum eintragen. Private Einkaufskosten werden nie automatisch übernommen. Ein leeres Preisfeld blendet den öffentlichen Preis aus."
+    amount: "Öffentlicher Beutelpreis"
+    currency: "Währung (ISO)"
+    price_date: "Preis erfasst am"

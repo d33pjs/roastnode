@@ -1,6 +1,7 @@
 class PublicBeanShareSnapshotBuilder
-  def initialize(bean:, title:, selected_photo_attachment_ids:)
+  def initialize(bean:, title:, selected_photo_attachment_ids:, public_price: nil)
     @bean = bean
+    @public_price = public_price
     @title = title
     @selected_photo_attachment_ids = Array(selected_photo_attachment_ids).map(&:to_i).uniq
     @brews = bean.brews.includes(
@@ -43,6 +44,8 @@ class PublicBeanShareSnapshotBuilder
 
     def bean_payload
       {
+        "rating" => bean.rating,
+        "public_price" => @public_price,
         "name" => bean.name,
         "display_name" => bean.display_name,
         "roaster_name" => bean.roaster_name,

@@ -32,6 +32,9 @@ Rails.application.routes.draw do
   resource :workspace, only: %i[edit update destroy] do
     patch :transfer_ownership
   end
+  resource :public_bean_collection, only: %i[edit update] do
+    get :preview
+  end
   resource :workspace_onboarding, only: %i[new create]
   resources :workspaces, only: [] do
     patch :switch, on: :member
@@ -60,6 +63,7 @@ Rails.application.routes.draw do
     patch :rating, on: :member
     post :duplicate, on: :member
     resources :inventory_adjustments, only: %i[new create]
+    resource :group_link, only: :update, controller: "bean_group_links"
     resource :public_bean_share, only: %i[new create edit update destroy]
   end
   resources :equipment, only: %i[index new create show edit update destroy] do
@@ -92,6 +96,7 @@ Rails.application.routes.draw do
   get "s/:token" => "public_brew_pages#show", as: :public_brew_page
   post "s/:token/password" => "public_brew_pages#unlock", as: :unlock_public_brew_page
   get "s/:token/media/:media_id" => "public_brew_media#show", as: :public_brew_media
+  get "l/:token" => "public_bean_collection_pages#show", as: :public_bean_collection_page
   get "b/:token" => "public_bean_pages#show", as: :public_bean_page
   post "b/:token/password" => "public_bean_pages#unlock", as: :unlock_public_bean_page
   get "b/:token/media/:media_id" => "public_bean_media#show", as: :public_bean_media

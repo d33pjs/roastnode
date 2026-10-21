@@ -1,0 +1,105 @@
+de:
+  bean_collections:
+    entry:
+      title: Kaffeesammlung
+      description: Gestalte ein öffentliches Verkostungsjournal aus den veröffentlichten Kaffeetüten deines Haushalts.
+      manage: Kaffeesammlung verwalten
+    editor:
+      title: Deine Kaffeesammlung
+      eyebrow: Ein öffentliches Verkostungsjournal
+      back: Zurück zu den Haushaltseinstellungen
+      description: Fasse veröffentlichte Tüten zu einer Kaffeesammlung zusammen. Bewertungen, Verpackungsfotos und ausgewählte öffentliche Angaben ergeben eine Seite für alle, die den Link kennen.
+      public_url: Link zur Sammlung
+      live: Öffentliche Seite aktiviert
+      disabled: Öffentliche Seite deaktiviert
+      preview: Gespeicherte Sammlung ansehen ↗
+      errors: Bitte prüfe diese Angaben vor dem Speichern.
+      page_settings: Deine persönliche Note
+      page_title: Titel der Sammlung
+      page_description: Einleitung
+      enabled: Öffentliche Sammlung aktivieren
+      enabled_help: Alle mit dem Link können diese Seite ohne Anmeldung ansehen. Speichere zuerst mit deaktivierter Freigabe, um die private Vorschau zu prüfen.
+      selection_title: Tüten auswählen
+      selection_help: Tüten desselben Kaffees werden zusammengefasst. Nur aktivierte, ungeschützte öffentliche Tütenseiten kommen für diese Sammlung infrage.
+      mode: Auswahlmodus
+      selected_mode: Nur ausgewählte Tüten
+      automatic_mode: Alle geeigneten veröffentlichten Tüten
+      mode_help: Im Auswahlmodus fügt „Aufnehmen“ eine Tüte hinzu. Im automatischen Modus werden alle geeigneten Tüten aufgenommen. „Ausschließen“ entfernt eine Tüte in beiden Modi.
+      protected_help: Passwortgeschützte, deaktivierte und ungeöffnete Tütenseiten erscheinen hier nie. Prüfe die Freigabeeinstellungen der Tüte, um ihre Eignung zu ändern.
+      opened: 'Geöffnet am %{date}'
+      edit_source: Öffentliche Tütenseite bearbeiten
+      include_bag: Aufnehmen (nur im Auswahlmodus)
+      exclude_coffee: Diesen Kaffee einschließlich zukünftiger Tüten ausschließen
+      exclude_bag: Ausschließen
+      representative: Als Titelbild & Details nutzen
+      representative_help: Wähle pro Kaffee eine repräsentative Tüte für Titelbild und Kaffeedetails. Bei mehreren gewählten Tüten wird eine nach einer festen Reihenfolge bestimmt. Alle aufgenommenen Tüten zählen weiterhin zur Bewertung.
+      no_shares: Noch keine geeigneten öffentlichen Tüten vorhanden. Veröffentliche unten eine geöffnete Tüte oder aktiviere zuerst ihre öffentliche Seite.
+      publish_title: Weitere Tüten veröffentlichen
+      publish_help: Diese geöffneten Tüten haben noch keine öffentliche Seite. Wähle nur Tüten, die du ausdrücklich veröffentlichen möchtest.
+      publish_warning: Beim Speichern werden die ausgewählten Tütenseiten samt öffentlichen Notizen, öffentlichen Links und einem sicheren Hauptfoto der Verpackung veröffentlicht, sofern vorhanden. Die Sammlung wird mit deaktiviertem öffentlichem Zugriff gespeichert, damit du ihre Vorschau und jede Quellseite vor dem Aktivieren prüfen kannst. Neu veröffentlichte Tüten werden automatisch aufgenommen.
+      save: Sammlung speichern
+      save_help: Speichere Änderungen vor dem Öffnen der Vorschau.
+    public:
+      date_format: "%d.%m.%Y"
+      default_title: Unsere Kaffeesammlung
+      eyebrow: Kaffee, gesammelt
+      personal_experience: Ein persönliches Verkostungsjournal
+      coffee_count:
+        one: '%{count} Kaffee'
+        other: '%{count} Kaffees'
+      views: Sammlungsansicht
+      top_ten: Top 10
+      all_coffees: Alle Kaffees
+      ranked_by: Sortiert nach durchschnittlicher Tütenbewertung
+      rank: 'Rang %{rank}'
+      unrated_coffees: Unbewertete Kaffees
+      unranked: Ohne Rang
+      bean_rating: Tütenbewertung
+      brew_average: Brühdurchschnitt
+      rated_brews: '%{rated} von %{total} Bezügen bewertet'
+      bag_count:
+        one: '%{count} veröffentlichte Tüte'
+        other: '%{count} veröffentlichte Tüten'
+      explore_bags:
+        one: '%{count} Tüte & Kaffeedetails ansehen'
+        other: '%{count} Tüten & Kaffeedetails ansehen'
+      not_rated: Unbewertet
+      not_recorded: Nicht erfasst
+      not_shared: Nicht geteilt
+      no_photo: Kein Verpackungsfoto
+      view_photo: 'Verpackungsfoto von %{name} ansehen'
+      view_bag_photo: Tütenfoto ansehen
+      unnamed_coffee: Unbenannter Kaffee
+      decaffeinated: Entkoffeiniert
+      process: Aufbereitung
+      roast_type: Rösttyp
+      roast_level: Röstgrad
+      roast_types:
+        espresso: Espresso
+        filter: Filter
+        omni: Omni
+      tasting_notes: Geschmacksnoten
+      published_bag: Veröffentlichte Tüte
+      bag_page: Tütenseite ansehen
+      opened: Geöffnet
+      roasted: Geröstet
+      recorded_price: Erfasster Preis
+      statuses:
+        open: Offen
+        finished: Aufgebraucht
+        used_up: Aufgebraucht
+        archived: Aufgebraucht
+      website: Webseite
+      affiliate: Affiliate-Link
+      public_brews: Veröffentlichte Bezüge entdecken
+      brew: Bezug ansehen
+      empty_eyebrow: Raum für Entdeckungen
+      empty_title: Der nächste Lieblingskaffee wartet schon.
+      empty_top: In dieser Sammlung gibt es noch keine bewerteten Kaffees. Unter „Alle Kaffees“ findest du die veröffentlichten Tüten.
+      empty_body: In dieser Sammlung gibt es noch keine veröffentlichten Kaffees. Schau nach der nächsten Verkostung wieder vorbei.
+      methodology_title: So entsteht die Rangliste
+      methodology: Die Tütenbewertung ist der gleich gewichtete Durchschnitt der erfassten Kaffeebewertungen aller aufgenommenen veröffentlichten Tüten, unabhängig von ihrer Größe. Der Brühdurchschnitt umfasst jeden bewerteten Bezug dieser Tüten. Fehlende Bewertungen werden ausgelassen und zählen nie als null. Sortiert wird nach Tütenbewertung, dann Brühdurchschnitt und schließlich der Anzahl bewerteter Bezüge. Stimmen alle drei Werte überein, teilen sich die Kaffees einen Rang; die Top 10 enthält alle Kaffees mit Gleichstand an der Grenze. Unbewertete Kaffees erscheinen ohne Rang unter „Alle Kaffees“.
+      disclaimer: Diese Sammlung zeigt persönliche Verkostungs- und Zubereitungserfahrungen mit den freigegebenen veröffentlichten Tüten. Erfasste Preise nennen Währung und Datum, sofern vorhanden; sie sind historische Angaben und keine aktuellen Angebote oder Verfügbarkeitsangaben. Als Affiliate-Links gekennzeichnete Links können den Herausgeber unterstützen.
+      updated: 'Sammlung aktualisiert am %{date}'
+      preview_notice: Private Vorschau · Dies ist die gespeicherte öffentliche Ansicht. Prüfe die Inhalte vor dem Aktivieren der Freigabe.
+      back_to_editor: Zurück zur Bearbeitung

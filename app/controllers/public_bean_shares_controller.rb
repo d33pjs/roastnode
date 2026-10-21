@@ -86,6 +86,11 @@ class PublicBeanSharesController < ApplicationController
           title: share_params[:title],
           enabled: share_params[:enabled] == "1"
         )
+        if share_params.key?(:public_price)
+          @share.public_price = share_params[:public_price]
+          @share.public_price_currency = share_params[:public_price_currency].to_s.strip.upcase.presence
+          @share.public_price_recorded_on = share_params[:public_price_recorded_on]
+        end
         @share.created_by ||= Current.user
         @share.updated_by = Current.user
         apply_password_changes
@@ -138,6 +143,7 @@ class PublicBeanSharesController < ApplicationController
         :enabled,
         :password,
         :clear_password,
+        :public_price, :public_price_currency, :public_price_recorded_on,
         selected_photo_attachment_ids: []
       )
     end

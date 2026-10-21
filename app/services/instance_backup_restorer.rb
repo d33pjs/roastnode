@@ -68,6 +68,7 @@ class InstanceBackupRestorer
       restore_media_files
       restore_cupping_request_snapshots
       restore_primary_photos
+      restore_public_bean_collection_settings
       reconcile_restored_cupping_requests
       restore_active_workspaces
       restore_activity_events
@@ -130,6 +131,17 @@ class InstanceBackupRestorer
         )
         @user_map[old_id(row)] = user
         @active_workspace_targets[user.id] = row["active_workspace_id"]
+      end
+    end
+
+    def restore_public_bean_collection_settings
+      workspace_payloads.each do |workspace_payload|
+        workspace = @workspace_map.fetch(old_id(workspace_payload.fetch("workspace")))
+        histories = workspace_payload.fetch("coffee_histories", []).to_h do |row|
+          [ [ workspace.id, row.fetch("id") ], @coffee_history_map.fetch([ old_id(workspace_payload.fetch("workspace")), row.fetch("id") ]).id ]
+        end
+        BeanCollectionPortability.restore(workspace:, payload: workspace_payload, beans: @bean_map,
+          histories:, attachments: @attachment_map)
       end
     end
 

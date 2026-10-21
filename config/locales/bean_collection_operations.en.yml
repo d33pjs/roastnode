@@ -1,0 +1,19 @@
+en:
+  bean_collection_operations:
+    saved: "Public bean collection saved."
+    default_title: "Our favorite coffees"
+    linked: "Coffee bag grouping updated."
+    link_title: "Link bag to the same coffee"
+    link_help: "Link this bag to another coffee or separate it. Linked bags share grinder history and can appear together in public collections. Inventory stays per bag; linking does not publish anything."
+    current_bags:
+      one: "This coffee contains %{count} bag."
+      other: "This coffee contains %{count} bags."
+    target: "Coffee to link with"
+    unopened: "Not opened"
+    separate: "Separate this bag into its own coffee"
+    link_save: "Update grouping"
+    public_price: "Optional public price"
+    price_help: "Enter a price you deliberately want to publish, with its date. Your private purchase cost is never copied automatically. Clear the amount to hide the public price."
+    amount: "Public bag price"
+    currency: "Currency (ISO)"
+    price_date: "Price recorded on"

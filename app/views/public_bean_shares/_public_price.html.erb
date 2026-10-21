@@ -1,0 +1,18 @@
+<section class="grid gap-4 rounded-2xl border border-rn-line bg-rn-surface p-5" data-testid="public-bean-price-editor">
+  <h2 class="text-lg font-black text-rn-ink"><%= t("bean_collection_operations.public_price") %></h2>
+  <p class="text-sm text-rn-muted"><%= t("bean_collection_operations.price_help") %></p>
+  <div class="grid gap-4 sm:grid-cols-3">
+    <div>
+      <%= form.label :public_price, t("bean_collection_operations.amount"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_field :public_price, inputmode: "decimal", placeholder: "14.90", class: "mt-1 w-full rounded-xl border border-rn-line bg-rn-surface px-3 py-3 text-rn-ink" %>
+    </div>
+    <div>
+      <%= form.label :public_price_currency, t("bean_collection_operations.currency"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.text_field :public_price_currency, value: share.public_price_currency.presence || current_workspace.default_currency, maxlength: 3, class: "mt-1 w-full rounded-xl border border-rn-line bg-rn-surface px-3 py-3 uppercase text-rn-ink" %>
+    </div>
+    <div>
+      <%= form.label :public_price_recorded_on, t("bean_collection_operations.price_date"), class: "block text-sm font-bold text-rn-muted" %>
+      <%= form.date_field :public_price_recorded_on, class: "mt-1 w-full rounded-xl border border-rn-line bg-rn-surface px-3 py-3 text-rn-ink" %>
+    </div>
+  </div>
+</section>

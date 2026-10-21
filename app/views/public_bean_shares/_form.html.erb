@@ -58,5 +58,7 @@
     <% end %>
   </section>
 
+  <%= render "public_bean_shares/public_price", form: form, share: share %>
+
   <%= form.submit submit_label, class: "rounded-2xl bg-[var(--rn-accent-strong)] px-5 py-3 text-sm font-extrabold text-[#f8faf6] shadow-sm hover:opacity-90" %>
 <% end %>

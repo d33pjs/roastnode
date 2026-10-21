@@ -2,6 +2,67 @@ require "test_helper"
 require "zip"
 
 class InstanceBackupRestoreTest < ActiveSupport::TestCase
+  test "collection selections and deliberate public prices restore as disabled drafts without bearer capabilities" do
+    bean = beans(:open_household)
+    share = bean.create_public_bean_share!(workspace: bean.workspace, title: "Published bag " * 100, enabled: true,
+      created_by: users(:one), updated_by: users(:one), public_price_cents: 1490,
+      public_price_currency: "EUR", public_price_recorded_on: Date.new(2026, 10, 21))
+    PublicBeanShareRefresher.refresh(share)
+    collection = bean.workspace.create_public_bean_collection!(title: "Our favorite coffees", enabled: true,
+      mode: "selected", selected_share_ids: [ share.id ])
+    old_token = collection.token
+    payload = WorkspaceExportBuilder.new(bean.workspace).call
+    assert_equal [ bean.id ], payload.dig(:public_bean_collection, :selected_bean_ids)
+    assert_not_includes payload.to_json, old_token
+    archive = InstanceBackupArchiveBuilder.new.call
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+    restored = PublicBeanCollection.find_by!(title: "Our favorite coffees")
+    refute restored.enabled?
+    assert_not_equal old_token, restored.token
+    restored_share = restored.workspace.public_bean_shares.sole
+    refute restored_share.enabled?
+    assert_equal "Published bag " * 100, restored_share.title
+    assert_equal 1490, restored_share.public_price_cents
+    assert_equal [ restored_share.id ], restored.selected_share_ids
+    assert_empty restored.snapshot["groups"]
+  end
+
+  test "collection portability rejects selected media outside the owning bag manifest" do
+    bean = beans(:open_household)
+    foreign_photo = attach_photo(beans(:other_workspace_open))
+    share = bean.create_public_bean_share!(workspace: bean.workspace, title: "Media", enabled: true,
+      created_by: users(:one), updated_by: users(:one))
+    bean.workspace.create_public_bean_collection!(title: "Media", mode: "automatic")
+    archive = mutate_backup_payload(InstanceBackupArchiveBuilder.new.call) do |payload|
+      workspace_payload = payload["workspaces"].find { |row| row.dig("workspace", "id") == bean.workspace_id }
+      row = workspace_payload["public_bean_settings"].find { |item| item["bean_id"] == bean.id }
+      row["selected_photo_attachment_ids"] = [ foreign_photo.id ]
+      workspace_payload["beans"].find { |item| item["id"] == bean.id }["photos"] << { "attachment_id" => foreign_photo.id }
+    end
+    refute InstanceBackupArchiveValidator.new(archive).call.valid?
+  end
+
+  test "temporarily unpublishable bags retain public draft settings and exclusions through restore" do
+    bean = beans(:open_household)
+    share = bean.create_public_bean_share!(workspace: bean.workspace, title: "Keep draft", enabled: true,
+      created_by: users(:one), updated_by: users(:one), public_price_cents: 1590,
+      public_price_currency: "EUR", public_price_recorded_on: Date.new(2026, 10, 21))
+    collection = bean.workspace.create_public_bean_collection!(title: "Keep exclusions", mode: "automatic", excluded_share_ids: [ share.id ])
+    bean.update!(opened_on: nil)
+    PublicBeanShareRefresher.refresh(share)
+    archive = InstanceBackupArchiveBuilder.new.call
+    assert InstanceBackupArchiveValidator.new(archive).call.valid?
+    empty_instance!
+    InstanceBackupRestorer.new(archive).call
+    restored = PublicBeanCollection.find_by!(title: collection.title)
+    source = restored.workspace.public_bean_shares.sole
+    assert_nil source.bean.opened_on
+    refute source.enabled?
+    assert_equal 1590, source.public_price_cents
+    assert_equal [ source.id ], restored.excluded_share_ids
+  end
+
   test "round trip preserves confirmed uses grinding time and save retry keys" do
     assert Object.const_defined?(:GrinderUse), "confirmed grinder uses must be available"
     use = workspaces(:household).grinder_uses.create!(user: users(:one), bean: beans(:open_household),
@@ -1743,6 +1804,8 @@ class InstanceBackupRestoreTest < ActiveSupport::TestCase
       BrewPreparationTool.delete_all
       EquipmentEventItem.delete_all
       EquipmentEvent.delete_all
+      PublicBeanCollection.delete_all
+      PublicBeanShare.delete_all
       PublicRecipeShare.delete_all
       Recipe.delete_all
       Brew.delete_all

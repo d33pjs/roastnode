@@ -81,3 +81,7 @@ Expiration queue state is operational rather than durable backup data. Restore p
 - whether backup files are encrypted by the app or by the host environment
 - whether offsite upload is built in v1 or documented as host-level setup
 - whether restore should remain task-only or gain a carefully audited UI later
+
+## Public collection drafts
+
+Full/readable exports include optional collection selection/group-exclusion settings and deliberate public bag price/photo settings. They omit permanent share/collection tokens, password digests and stored snapshots. Restore validates workspace-local bean/history/media references, rebuilds the approved fields, and creates disabled drafts with new tokens; users must review and republish them. Original permanent public URLs and Brew links do not survive this path. Legacy archives without these optional keys remain supported. See [Public bean collections](public-bean-collections.md).

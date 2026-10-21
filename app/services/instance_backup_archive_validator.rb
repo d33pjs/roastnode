@@ -98,6 +98,9 @@ class InstanceBackupArchiveValidator
       end
       errors << "Archive media catalogs do not match." unless valid_media_catalogs?(payload["media_files"], manifest_media_files)
       errors << "Archive contains invalid grinder confirmations or brewing times." unless valid_grinder_uses?(payload)
+      if payload["workspaces"].is_a?(Array) && payload["workspaces"].all? { |row| row.is_a?(Hash) }
+        errors << "Archive contains invalid public collection settings." unless payload["workspaces"].all? { |row| BeanCollectionPortability.valid?(row, media_files: manifest_media_files) }
+      end
       errors << "Archive contains invalid coffee history memberships." unless valid_coffee_histories?(payload)
       errors << "Archive contains an invalid cupping request." unless valid_cupping_requests?(payload, manifest_media_files:)
     end
