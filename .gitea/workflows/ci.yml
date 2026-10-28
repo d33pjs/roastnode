@@ -35,10 +35,10 @@ jobs:
       SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
       SOURCE_MIKEBOM_SPDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.spdx3.json
       SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
-      CDXGEN_VERSION: v13.4.0
-      CDXGEN_SHA256: 2f8911129b773cf45a93cdab2e2578e3a0bdc6f0227b2a77ada62625c00ae1ed
-      WAYBILL_VERSION: v0.11.0
-      WAYBILL_SHA256: 46f2b90745148ba64b5e75df1cbf6e04dd9d754c64c7b4c2c2a773c08d6d59b0
+      CDXGEN_VERSION: v13.5.0
+      CDXGEN_SHA256: b61a36124390ea7b64ca544f12eda902583f8769ff1de7b84e5e8ada2a2ec96a
+      WAYBILL_VERSION: v0.13.0
+      WAYBILL_SHA256: b607312fbf9e06e8d7d549aa57c9238e9ee6b2de6939eb8e508934046854fa1f
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: set up ruby
-        uses: ruby/setup-ruby@824c0e29fdfc7d689c191c27acc969d2d04b7dd8 # v1.331.0
+        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
         with:
           rubygems: "4.0.23"
           bundler-cache: true
@@ -63,7 +63,7 @@ jobs:
       - name: Set up Node for JavaScript tests
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: "26.12.0"
+          node-version: "26.13.0"
 
       - name: Test JavaScript controllers
         run: node --test test/javascript/*.mjs

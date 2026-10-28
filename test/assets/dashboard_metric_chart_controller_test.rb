@@ -7,9 +7,9 @@ class DashboardMetricChartControllerTest < ActiveSupport::TestCase
     vendored_chart = Rails.root.join("vendor/javascript/chart.js.js").read
     third_party_licenses = Rails.root.join("vendor/javascript/THIRD_PARTY_LICENSES.md").read
 
-    assert_includes importmap, 'pin "chart.js", preload: false # @4.5.1'
-    assert_includes vendored_chart, "Chart.js v4.5.1"
-    assert_includes third_party_licenses, "Chart.js 4.5.1"
+    assert_includes importmap, 'pin "chart.js", preload: false # @4.6.1'
+    assert_includes vendored_chart, "Chart.js v4.6.1"
+    assert_includes third_party_licenses, "Chart.js 4.6.1"
     assert_includes third_party_licenses, "Copyright (c) 2014-2024 Chart.js Contributors"
     assert_includes third_party_licenses, "@kurkle/color 0.3.2"
     assert_includes third_party_licenses, "Copyright (c) 2018-2024 Jukka Kurkela"

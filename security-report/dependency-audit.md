@@ -1,17 +1,59 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-10-20 after upgrading runtime/tool dependencies and refreshing
+Verified on 2026-10-28 after upgrading application/runtime/tool dependencies and refreshing
 the RubySec advisory database.
 
 ## Result
 
-- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-20 runtime/tool refresh.
+- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-28 refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `fa2295251efb3b0d1a300e5ce8ad700ff1f1b485`, containing 1,266 advisories and last updated at 2026-10-17 20:01:16 +0200; 0 vulnerabilities matched.
+- RubySec evidence: database commit `3df20d31748fbafd1f6c75ade50e5d1d266257ee`, containing 1,284 advisories and last updated at 2026-10-26 22:39:38 +0100; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
 - JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.1.0 scanned Rails 8.1.4 with 0 errors and 0 warnings.
-- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are bindata 3.0.1 and Marcel 2.1.0, constrained by their parent gems. The JSON 3 incompatibility is resolved.
+- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are BinData 3.0.1, Marcel 2.1.0, net-ssh 8.0.4 and Prism 2.1.0, constrained by their parent gems. The JSON 3 incompatibility is resolved.
+
+## 2026-10-28 Dependency Refresh
+
+Refreshed the entire compatible gem graph from official RubyGems metadata, including every package in the latest Dependabot email list:
+
+| Package | Previous | Updated |
+| --- | --- | --- |
+| WebAuthn | 3.4.3 | 3.5.0 |
+| parser | 3.3.12.0 | 3.3.13.0 |
+| Crass | 1.0.7 | 1.0.8 |
+| net-sftp | 4.0.0 | 4.1.0 |
+| net-scp | 4.1.0 | 4.1.3 |
+| net-ssh | 7.3.6 | 7.3.8 |
+| Bootsnap | 1.26.0 | 1.26.1 |
+| CSV | 3.3.6 | 3.3.7 |
+| io-console | 0.9.4 | 0.9.5 |
+| Msgpack | 1.8.5 | 1.8.6 |
+| Rack Test | 2.2.0 | 2.3.0 |
+| RuboCop | 1.92.0 | 1.92.1 |
+| tailwindcss-rails | 4.6.0 | 4.7.0 |
+
+- Crass fixes CSS sanitizer tokenization (GHSA-pq4g-8rxf-4g29); net-scp/net-sftp harden server-controlled download paths and transfer handling; net-ssh 7.3.8 includes the ProxyJump security fix (GHSA-g2r2-x3p2-5677); Msgpack fixes recursive-unpacker memory safety and excessive allocation.
+- WebAuthn 3.5 removes TokenBinding APIs that Roastnode does not use, strengthens backup-flag and credential-ID verification, and changes its default ceremony timeout to five minutes. Roastnode's challenge/session expiry and required user-verification settings remain in place.
+- Ruby 4.0.7 → 4.0.9 and Node 26.12.0 → 26.13.0 LTS. Ruby version, Docker, CI and setup/production docs agree. RubyGems/Bundler 4.0.23 remains current. Built Ruby locally using the documented macOS configure workaround and verified Node against its published SHA-256 checksum.
+- Vendored Chart.js 4.5.1 → 4.6.1, with matching importmap version, asset assertion and license attribution. Its bytes match the SHA-512-verified official npm tarball. Bundled @kurkle/color 0.3.2 and Hotwire Turbo/Stimulus are already current.
+- Updated immutable action pins: ruby/setup-ruby 1.331.0 → 1.335.0 and docker/login-action 4.6.0 → 4.7.0. Checked every other configured action against its official latest stable release.
+- Updated cdxgen 13.4.0 → 13.5.0 and Waybill 0.11.0 → 0.13.0. Linux CI and local macOS binaries match official GitHub asset digests and published checksum files. Both emit CycloneDX 1.6 with 168 components from a manifest-only fixture; Waybill also emits a nonempty SPDX 3 graph. No private source or runtime data was uploaded during these local checks.
+- Updated BuildKit 0.34.0 → 0.34.1 and Buildx 0.38.0 → 0.38.1. The new BuildKit public-cache digest and Ruby 4.0.9-slim both expose AMD64/ARM64 manifests with available configs/layers. Cosign 3.1.4 and Syft 1.55.0 remain current.
+- Strict Bundler currentness passes. Newer net-ssh 8.0.4 is blocked by Kamal 2.12.0's `~> 7.3`; Prism 2.1.0 is blocked by Minitest 6.0.6's `~> 1.5` and RuboCop AST 1.50.0's `~> 1.7`. BinData and Marcel remain constrained as documented below. No constraints were bypassed or advisories ignored.
+- PostgreSQL remains at supported 17.11; upgrading its major requires a separate explicit cluster/data-volume migration.
+- Context7 was unavailable; compatibility review used official package registries, release notes and GitHub APIs. No application behavior or database schema was changed.
+
+Official sources: [WebAuthn 3.5](https://github.com/cedarcode/webauthn-ruby/releases/tag/v3.5.0), [Crass 1.0.8](https://github.com/rgrove/crass/blob/v1.0.8/HISTORY.md), [net-scp changelog](https://github.com/net-ssh/net-scp/blob/master/CHANGES.txt), [net-sftp changelog](https://github.com/net-ssh/net-sftp/blob/master/CHANGES.txt), [net-ssh 7.3.8](https://rubygems.org/gems/net-ssh/versions/7.3.8), [Ruby 4.0.9](https://github.com/ruby/ruby/releases/tag/v4.0.9), [Node 26.13.0](https://github.com/nodejs/node/releases/tag/v26.13.0), [Chart.js 4.6.1](https://github.com/chartjs/Chart.js/releases/tag/v4.6.1), [cdxgen 13.5](https://github.com/cdxgen/cdxgen/releases/tag/v13.5.0), [Waybill 0.13](https://github.com/kusari-oss/waybill/releases/tag/v0.13.0).
+
+### Verification — 2026-10-28
+
+- Ruby 4.0.9 with RubyGems/Bundler 4.0.23: bundle installation/check, native pg/CBOR/libvips loading and full Rails suite passed: 1,574 tests, 15,538 assertions, zero failures/errors/skips. The preliminary run overlapped another test process and encountered two database deadlocks; both processes finished/stopped before the isolated successful full run.
+- Browser suite: 15 tests, 206 assertions, zero failures/errors/skips. Node 26.13.0 JavaScript suite: 52 passed, zero failed.
+- RuboCop inspected 432 files with no offenses. Release/dependency configuration: 5 tests, 75 assertions, zero failures/errors. Brakeman 8.1.0: zero errors/warnings. Fresh RubySec and importmap audits report no known vulnerabilities; importmap currentness passes.
+- Production `assets:precompile` passed using a dummy build secret and build-only WebAuthn origin; generated production assets were removed after validation. Both development/production Compose configuration checks passed.
+- Independent read-only review verified official checksums for all 13 changed gems, unchanged lockfile platform/checksum coverage, action release commits, scanner digests, Chart.js npm integrity/license and the BuildKit cache index. No actionable issues were found.
+- Local Docker API inspection timed out, so no local Docker image build is claimed. Official Ruby/BuildKit image availability was verified for both architectures; release image build verification remains part of release publishing.
 
 ## 2026-10-20 Runtime and Tool Refresh
 
@@ -250,7 +292,7 @@ All third-party workflow actions are pinned to reviewed full commit SHAs, with t
 
 ### `bindata` 3.x
 
-`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.1, but WebAuthn 3.4.3 and TPM Key Attestation 0.14.2 both require `bindata ~> 2.4`. Version 2.5.1 has no matching RubySec advisory, so this is accepted until both parents widen their constraints.
+`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.1, but WebAuthn 3.5.0 and TPM Key Attestation 0.14.2 both require `bindata ~> 2.4`. Version 2.5.1 has no matching RubySec advisory, so this is accepted until both parents widen their constraints.
 
 ### JSON 3.x — resolved on 2026-10-03
 
@@ -260,9 +302,13 @@ Rails 8.1.4 fixes JSON 3 decoding. The temporary JSON constraint was removed. Th
 
 Marcel 2.1.0 is available, but Active Storage 8.1.4 requires `marcel ~> 1.0`. The lockfile retains the latest compatible 1.2.1, which has no matching advisory in the refreshed RubySec database.
 
+### net-ssh 8.x and Prism 2.x
+
+Kamal 2.12.0 requires net-ssh `~> 7.3`, so the refresh uses patched 7.3.8 rather than 8.0.4. Minitest 6.0.6 requires Prism `~> 1.5` and RuboCop AST 1.50.0 requires `~> 1.7`, so Prism remains 1.9.0 rather than 2.1.0. These versions have no matching advisory in the fresh RubySec audit.
+
 ### Ruby 4 — resolved on 2026-10-20; PostgreSQL 18 deferred
 
-Ruby 4.0.7 is now installed and verified with the full Rails/browser suites, native extensions and production asset compilation. The runtime requirement, Docker and CI agree. PostgreSQL remains on the current supported 17.11 patch; moving the existing cluster to PostgreSQL 18.6 requires a separate explicit data-volume migration.
+Ruby 4.0.9 is now installed and verified with the full Rails/browser suites, native extensions and production asset compilation. The runtime requirement, Docker and CI agree. PostgreSQL remains on the current supported 17.11 patch; moving the existing cluster to PostgreSQL 18.6 requires a separate explicit data-volume migration.
 
 ## Supply-Chain and License Review
 
@@ -270,7 +316,7 @@ Ruby 4.0.7 is now installed and verified with the full Rails/browser suites, nat
 - The lockfile contains checksums for all locked gems.
 - No likely typo-squatted or dependency-confusion package names were identified.
 - All reviewed Ruby packages declare a license. Brakeman's custom public-use license is retained as an informational note; no new license conflict was introduced.
-- Chart.js 4.5.1 and its bundled `@kurkle/color` 0.3.2 dependency are current for the vendored asset.
+- Chart.js 4.6.1 and its bundled `@kurkle/color` 0.3.2 dependency are current for the vendored asset.
 - Elms Sans remains pinned to the selected upstream source revision.
 
 ## Historical Verification — 2026-08-20

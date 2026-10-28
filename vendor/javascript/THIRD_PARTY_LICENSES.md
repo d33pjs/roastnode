@@ -1,8 +1,8 @@
 # Third-party JavaScript licenses
 
-## Chart.js 4.5.1
+## Chart.js 4.6.1
 
-Source: https://github.com/chartjs/Chart.js/tree/v4.5.1
+Source: https://github.com/chartjs/Chart.js/tree/v4.6.1
 
 The MIT License (MIT)
 
