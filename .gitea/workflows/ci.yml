@@ -35,10 +35,10 @@ jobs:
       SOURCE_CDX_CDX_SBOM: roastnode-source-${{ github.sha }}.cdxgen.cdx.json
       SOURCE_MIKEBOM_SPDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.spdx3.json
       SOURCE_MIKEBOM_CDX_SBOM: roastnode-source-${{ github.sha }}.mikebom.cdx.json
-      CDXGEN_VERSION: v13.5.0
-      CDXGEN_SHA256: b61a36124390ea7b64ca544f12eda902583f8769ff1de7b84e5e8ada2a2ec96a
-      WAYBILL_VERSION: v0.13.0
-      WAYBILL_SHA256: b607312fbf9e06e8d7d549aa57c9238e9ee6b2de6939eb8e508934046854fa1f
+      CDXGEN_VERSION: v13.6.0
+      CDXGEN_SHA256: 8b2df49fdea1b21094a7ad4be0d369fe477981a4f36d75f25805970c5b2f2764
+      WAYBILL_VERSION: v0.14.0
+      WAYBILL_SHA256: ed060dc398d3c22820be77e1a949d5c31a64dde3eb32cb50c61d2111e29738de
       EXODOS_API_TOKEN: ${{ secrets.EXODOS_API_TOKEN }}
       EXODOS_API_URL: ${{ vars.EXODOS_API_URL }}
       EXODOS_INVENTORYROOT_SYFT_SPDX_ID: ${{ vars.EXODOS_INVENTORYROOT_SYFT_SPDX_ID }}
@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: set up ruby
-        uses: ruby/setup-ruby@7f797815d8adceb1c412e7abefdd1ab4abc47a5f # v1.335.0
+        uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
         with:
           rubygems: "4.0.23"
           bundler-cache: true
@@ -86,7 +86,7 @@ jobs:
       - name: Generate source Syft SPDX SBOM
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
-          syft-version: v1.55.0
+          syft-version: v1.56.0
           format: spdx-json
           output-file: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
           artifact-name: ${{ env.SOURCE_SYFT_SPDX_SBOM }}
@@ -107,7 +107,7 @@ jobs:
       - name: Generate source Syft CycloneDX SBOM
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
-          syft-version: v1.55.0
+          syft-version: v1.56.0
           format: cyclonedx-json
           output-file: ${{ env.SOURCE_SYFT_CDX_SBOM }}
           artifact-name: ${{ env.SOURCE_SYFT_CDX_SBOM }}

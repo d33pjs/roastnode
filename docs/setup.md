@@ -12,6 +12,11 @@ Roastnode is a Rails 8.1 app generated in the repository root.
 - libvips for Active Storage image variants (`brew install vips` on macOS or `apt install libvips` on Debian/Ubuntu)
 - PostgreSQL client tools are useful but not required if you use Compose
 
+Ruby 4.0.9 is the security baseline: it includes the regular-expression engine
+fixes underlying GitLab's CVE-2026-97229 and related issues. Existing production
+images running Ruby 4.0.7 must be rebuilt and redeployed; changing `.ruby-version`
+alone does not update a running container. See the [Ruby advisory](https://www.ruby-lang.org/en/news/2026/10/23/regexp-fixes-for-gitlab-cves/).
+
 ## Local Ports
 
 Roastnode avoids the common defaults because another local project already uses PostgreSQL on host port `5432`.

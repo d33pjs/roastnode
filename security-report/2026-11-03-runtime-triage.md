@@ -1,0 +1,11 @@
+# Ruby regexp runtime triage — 2026-11-03
+
+The user requested a predeployment compromise-indicator review before an urgent dependency refresh. A private Markdown report, available logs, process/socket and filesystem observations, collection manifest and SHA-256 checksums were saved locally outside the repository before replacing production containers. Private operational data and request context are intentionally absent here.
+
+Production was running v0.9.33 with Ruby 4.0.7. The checkout already targeted Ruby 4.0.9 but had not been deployed. Ruby's [official advisory](https://www.ruby-lang.org/en/news/2026/10/23/regexp-fixes-for-gitlab-cves/) identifies 4.0.8 as the first 4.0 release fixing the compiler overflow behind CVE-2026-97229, and 4.0.9 as including the additional repeat-ID overflow fix behind CVE-2026-110264.
+
+The focused review found no evidence of exploitation in the inspected available evidence. Source searches found no app/lib/config path compiling an attacker-controlled regexp; available application, worker, proxy and kernel logs had no matching native Ruby/Onigmo crash or exploit markers. Container changes, process names and application sockets showed no unexplained executable/source changes or external application connection in the snapshots.
+
+This does not establish that compromise never occurred: application logs only cover the current containers from October 29, proxy rotations cover September 27 onward, and historical process execution/outbound flow records and memory/disk images were unavailable. Successful exploitation may leave no crash. The review was scoped to Roastnode, not every application on its shared host. No exploit was run. The planned mitigation is a verified release using Ruby 4.0.9, fresh compatible gem security fixes and refreshed operating-system packages.
+
+Primary threat context: [Rapid7's advisory](https://www.rapid7.com/blog/post/etr-cve-2026-97229-critical-unauthenticated-remote-code-execution-in-gitlab/) and [Alpine's incident report](https://alpinelinux.org/posts/gitlab-security-incident-cve-2026-97229/). GitLab-specific CI/GraphQL markers were checked as opportunistic probes; Roastnode does not provide GitLab CI endpoints.

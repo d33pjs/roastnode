@@ -121,8 +121,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         with:
-          version: v0.38.1
-          driver-opts: image=mirror.gcr.io/moby/buildkit@sha256:99368f3e46177c6405b9740e4461d91cee004128daeecca78d4ceac50ec1da5c # v0.34.1
+          version: v0.38.2
+          driver-opts: image=mirror.gcr.io/moby/buildkit@sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe # v0.34.2
           buildkitd-config-inline: |
             [registry."docker.io"]
               mirrors = ["mirror.gcr.io"]
@@ -157,6 +157,7 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
+          pull: true
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -182,7 +183,7 @@ jobs:
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: ${{ steps.image.outputs.ref }}@${{ steps.build.outputs.digest }}
-          syft-version: v1.55.0
+          syft-version: v1.56.0
           format: spdx-json
           output-file: ${{ env.CONTAINER_SPDX_SBOM }}
           artifact-name: ${{ env.CONTAINER_SPDX_SBOM }}
@@ -192,7 +193,7 @@ jobs:
         uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           image: ${{ steps.image.outputs.ref }}@${{ steps.build.outputs.digest }}
-          syft-version: v1.55.0
+          syft-version: v1.56.0
           format: cyclonedx-json
           output-file: ${{ env.CONTAINER_CDX_SBOM }}
           artifact-name: ${{ env.CONTAINER_CDX_SBOM }}

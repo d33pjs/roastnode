@@ -1,17 +1,62 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-10-28 after upgrading application/runtime/tool dependencies and refreshing
+Verified on 2026-11-03 after upgrading application/runtime/tool dependencies and refreshing
 the RubySec advisory database.
 
 ## Result
 
-- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-10-28 refresh.
+- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-11-03 refresh.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `3df20d31748fbafd1f6c75ade50e5d1d266257ee`, containing 1,284 advisories and last updated at 2026-10-26 22:39:38 +0100; 0 vulnerabilities matched.
+- RubySec evidence: database commit `adeaf1283ee64aae48bb61150a773283ff285175`, containing 1,329 advisories and last updated at 2026-11-03 15:52:05 -0500; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
 - JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.1.0 scanned Rails 8.1.4 with 0 errors and 0 warnings.
-- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are BinData 3.0.1, Marcel 2.1.0, net-ssh 8.0.4 and Prism 2.1.0, constrained by their parent gems. The JSON 3 incompatibility is resolved.
+- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are BinData 3.0.1, Marcel 2.1.0, net-ssh 8.1.0 and Prism 2.1.0, constrained by their parent gems. Chart.js's bundled color helper remains at its upstream-distributed version, as documented below.
+
+## 2026-11-03 Security Refresh
+
+Ruby 4.0.9 remains the latest stable Ruby and is already pinned in this checkout.
+The previously deployed Ruby 4.0.7 does not include the integer-overflow fix
+underlying GitLab's CVE-2026-97229, first shipped in Ruby 4.0.8. Ruby 4.0.9 also
+includes the fix underlying CVE-2026-110264 and all related fixes listed in the
+[Ruby advisory](https://www.ruby-lang.org/en/news/2026/10/23/regexp-fixes-for-gitlab-cves/).
+The runtime fix takes effect only after rebuilding and redeploying the application
+image; changing the repository's version pin alone does not update production.
+
+Refreshed every compatible stable gem without changing Gemfile requirements:
+
+| Package | Previous | Updated |
+| --- | --- | --- |
+| Addressable | 2.9.0 | 2.9.2 |
+| Loofah | 2.25.2 | 2.25.3 |
+| Msgpack | 1.8.6 | 1.8.7 |
+| net-scp | 4.1.3 | 4.2.1 |
+| net-sftp | 4.1.0 | 4.1.1 |
+| Nokogiri | 1.19.4 | 1.19.7 |
+| Rack | 3.2.7 | 3.2.8 |
+| rails-html-sanitizer | 1.7.1 | 1.7.2 |
+| RuboCop | 1.92.1 | 1.92.2 |
+| Selenium WebDriver | 4.51.0 | 4.52.0 |
+| Solid Queue | 1.7.0 | 1.7.2 |
+
+- The before-refresh lockfile matched 22 distinct RubySec advisories across Addressable (7), Loofah (6), Nokogiri (3), Rack (4), and rails-html-sanitizer (2). Platform variants repeat Nokogiri findings in the raw scan. This includes Rack's high-severity multipart memory-exhaustion issue and sanitizer/XSS, URI-normalization, regular-expression denial-of-service, and Nokogiri memory-safety fixes. The refreshed graph matches no advisories; none were ignored.
+- Solid Queue 1.7.2 fixes semaphore ownership when concurrency-limited jobs expire or their class disappears. Its upgrade guide explicitly requires no migration for this patch; optional 1.7 batch tables remain unused. Selenium 4.52.0 tightens HTTPS Grid certificate verification; local browser tests use the existing local driver configuration.
+- Updated immutable ruby/setup-ruby 1.335.0 → 1.336.0, cdxgen 13.5.0 → 13.6.0, Waybill 0.13.0 → 0.14.0, Syft 1.55.0 → 1.56.0, BuildKit 0.34.1 → 0.34.2 and Buildx 0.38.1 → 0.38.2. BuildKit/Buildx releases include security fixes; Syft updates its vulnerable go-jose dependency. All other action commits match their official latest stable releases.
+- Verified scanner Linux SHA-256 pins against official GitHub release asset digests and published checksum files. Downloaded macOS scanner artifacts also match both sources before execution.
+- Verified BuildKit's new cache index `sha256:c5f8862f52499773af85bc07695b2379ef08e8002352b0df2c4864c91d78dabe` against Docker Hub and Google's public cache, including all AMD64/ARM64 configs and layers. Verified the current Ruby 4.0.9-slim index `sha256:575fcf0c168d396a6fa9fba87ea1e390ceb4904af6c3fe2bbfdf4824224628c3` and unchanged QEMU index/layers on both architectures too.
+- Release builds now explicitly pull current base images. The Docker base stage applies available Debian package upgrades within the existing distribution release before installing runtime packages; there is no distribution or PostgreSQL major migration.
+- Ruby 4.0.9, RubyGems/Bundler 4.0.23, Rails 8.1.4, Node 26.13.0 LTS, PostgreSQL 17.11, Cosign 3.1.4, Chart.js 4.6.1, Turbo 8.0.23 and Stimulus 3.2.2 remain current. PostgreSQL 18.6 still requires an explicit cluster migration and remains separate work.
+- Context7 is unavailable in this session; compatibility checks used official release notes, RubyGems/npm registries and upstream APIs. No application behavior or database schema was changed by this dependency refresh.
+
+Official sources: [Ruby downloads](https://www.ruby-lang.org/en/downloads/), [Node downloads](https://nodejs.org/en/download), [PostgreSQL versioning](https://www.postgresql.org/support/versioning/), [Rack 3.2.8 changelog](https://github.com/rack/rack/blob/v3.2.8/CHANGELOG.md), [Nokogiri 1.19.7](https://github.com/sparklemotion/nokogiri/releases/tag/v1.19.7), [Loofah 2.25.3](https://github.com/flavorjones/loofah/releases/tag/v2.25.3), [rails-html-sanitizer 1.7.2](https://github.com/rails/rails-html-sanitizer/releases/tag/v1.7.2), [Solid Queue upgrade guide](https://github.com/rails/solid_queue/blob/v1.7.2/UPGRADING.md), [setup-ruby 1.336.0](https://github.com/ruby/setup-ruby/releases/tag/v1.336.0), [cdxgen 13.6.0](https://github.com/cdxgen/cdxgen/releases/tag/v13.6.0), [Waybill 0.14.0](https://github.com/kusari-oss/waybill/releases/tag/v0.14.0), [Syft 1.56.0](https://github.com/anchore/syft/releases/tag/v1.56.0), [BuildKit 0.34.2](https://github.com/moby/buildkit/releases/tag/v0.34.2), [Buildx 0.38.2](https://github.com/docker/buildx/releases/tag/v0.38.2), [Docker image rebuild guidance](https://docs.docker.com/build/building/best-practices/#rebuild-your-images-often).
+
+### Verification — 2026-11-03 Dependency Checkpoint
+
+- Ruby 4.0.9 / Bundler 4.0.23: bundle installation/check and strict currentness pass. All 167 platform-specific locked specs retain checksum coverage; all 134 unique gem names and 10 lockfile platforms remain present.
+- Fresh RubySec: 1,329 advisories, zero matches. Importmap vulnerability/currentness checks pass. Explicit npm bulk audit of Chart.js 4.6.1, embedded @kurkle/color 0.3.2, Turbo 8.0.23 and Stimulus 3.2.2 also returns no advisories.
+- Brakeman 8.1.0 on Rails 8.1.4: zero errors and zero security warnings. Release/dependency configuration tests: 5 tests, 75 assertions, no failures/errors/skips. `git diff --check` passes.
+- Checksum-verified macOS cdxgen/Waybill binaries scan a temporary fixture containing only Gemfile, Gemfile.lock and .ruby-version. cdxgen emits valid CycloneDX 1.6 with 170 components, including the Ruby runtime; Waybill emits CycloneDX 1.6 with 168 components and a nonempty SPDX 3 graph (1,276 nodes). Fixture-only missing identity/unlocked tzinfo-data warnings are expected. No private source or runtime data was uploaded.
+- Full Rails/browser suites, the production image build and deployment verification belong to the integrated release checks and are not claimed by this checkpoint.
 
 ## 2026-10-28 Dependency Refresh
 
@@ -304,7 +349,16 @@ Marcel 2.1.0 is available, but Active Storage 8.1.4 requires `marcel ~> 1.0`. Th
 
 ### net-ssh 8.x and Prism 2.x
 
-Kamal 2.12.0 requires net-ssh `~> 7.3`, so the refresh uses patched 7.3.8 rather than 8.0.4. Minitest 6.0.6 requires Prism `~> 1.5` and RuboCop AST 1.50.0 requires `~> 1.7`, so Prism remains 1.9.0 rather than 2.1.0. These versions have no matching advisory in the fresh RubySec audit.
+Kamal 2.12.0 requires net-ssh `~> 7.3`, so the refresh uses patched 7.3.8 rather than 8.1.0. Minitest 6.0.6 requires Prism `~> 1.5` and RuboCop AST 1.50.0 requires `~> 1.7`, so Prism remains 1.9.0 rather than 2.1.0. These versions have no matching advisory in the fresh RubySec audit.
+
+### Chart.js's bundled color helper
+
+The newest official Chart.js 4.6.1 browser distribution still embeds
+`@kurkle/color` 0.3.2. Color 0.6.5 is newer than Chart.js's declared `^0.3.0`
+range; 0.3.4 is the newest release within that range, but is not in Chart.js's
+published browser bundle. Retain the verified upstream distribution instead of
+modifying or rebuilding its internals. Both the importmap audit and an explicit
+npm advisory check of the embedded 0.3.2 return no known vulnerabilities.
 
 ### Ruby 4 — resolved on 2026-10-20; PostgreSQL 18 deferred
 
@@ -316,7 +370,7 @@ Ruby 4.0.9 is now installed and verified with the full Rails/browser suites, nat
 - The lockfile contains checksums for all locked gems.
 - No likely typo-squatted or dependency-confusion package names were identified.
 - All reviewed Ruby packages declare a license. Brakeman's custom public-use license is retained as an informational note; no new license conflict was introduced.
-- Chart.js 4.6.1 and its bundled `@kurkle/color` 0.3.2 dependency are current for the vendored asset.
+- Chart.js 4.6.1 is the newest official browser distribution; its embedded `@kurkle/color` 0.3.2 remains as upstream shipped it, with the version limitation documented above.
 - Elms Sans remains pinned to the selected upstream source revision.
 
 ## Historical Verification — 2026-08-20

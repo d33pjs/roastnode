@@ -103,6 +103,11 @@ If you need to rebuild or inspect a release before publication, run the workflow
 
 ## Verifying a Release
 
+Release builds explicitly pull current base images and apply available Debian
+package upgrades within the base image's existing release. Ruby remains pinned
+to `.ruby-version`; the release's image digest, SBOMs and provenance record the
+resulting immutable application image.
+
 The GitHub release runner configures Google's public Docker Hub cache (`mirror.gcr.io`) before QEMU/Buildx setup, preserving any existing Docker daemon settings. QEMU and the BuildKit bootstrap image use explicit, digest-pinned cache references because the runner's default pull still fell back to rate-limited Docker Hub despite the daemon mirror setting. These two startup images must remain available at their pinned cache digests; refresh the pins from verified pulls if Google evicts them. BuildKit uses the cache for Dockerfile frontend/base-image pulls, with canonical Docker Hub as the fallback for cache misses. Cache hits avoid shared GitHub-runner anonymous pull quotas without adding registry credentials; cache misses can still encounter Docker Hub's quota. See [Google's cache documentation](https://docs.cloud.google.com/artifact-registry/docs/pull-cached-dockerhub-images).
 
 If an already-tagged release fails before building because of a runner/registry setup issue, fix the workflow on `main` and manually dispatch `release-container.yml` from `main` with that existing `release_tag`. The checkout step still builds the exact tag's application commit, and the image revision label plus digest asset's `source_sha` explicitly record that commit. GitHub-generated provenance uses the dispatch's OIDC ref/SHA, so verify `--source-digest` against the workflow's dispatched `main` commit and its actual workflow identity, then independently inspect BuildKit provenance/materials, image revision, and digest asset against the release tag. Keep the original tag unchanged. See [GitHub's provenance implementation](https://raw.githubusercontent.com/actions/toolkit/main/packages/attest/src/provenance.ts).
