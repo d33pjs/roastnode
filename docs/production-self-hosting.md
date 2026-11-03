@@ -235,11 +235,11 @@ For each production upgrade:
    gh attestation verify "oci://${IMAGE}" -R "${REPO}"
    ```
 
-4. Update `ROASTNODE_IMAGE` in the rendered `.env` file to the new digest.
+4. Update `ROASTNODE_IMAGE` in the rendered `.env` file to the new digest. If Ansible uses a shared maintenance catalogue or per-service image overrides, update both application-service pins there too; those values can take precedence over the role default.
 5. Pull the new image.
 6. Run `bin/rails db:prepare`.
 7. Start `web` and `jobs`.
-8. Check `/up`.
+8. Check `/up`, then inspect both running application containers for the exact release image digest and confirm the application and Ruby versions.
 9. Confirm a backup profile can enqueue and complete.
 10. Record the app version, image digest, backup file path, checksum, and restore-drill date in your host operations notes.
 
