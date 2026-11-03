@@ -121,6 +121,7 @@ class BrewGrinderReminder
       source = eligible_brews.select(
         "brews.id, brews.bean_id, beans.coffee_history_id, beans.grind_state, brews.grinder_id, " \
         "brews.grind_setting, brews.rating, brews.occurred_at, brews.created_at, " \
+        "brews.total_time_seconds, brews.dose_grams, brews.beverage_grams, " \
         "LOWER(REGEXP_REPLACE(brews.grind_setting, '^[[:space:]]+|[[:space:]]+$', '', 'g')) AS normalized_setting"
       ).to_sql
       rows = Brew.connection.select_all(<<~SQL)
@@ -171,7 +172,8 @@ class BrewGrinderReminder
     def ranked_settings(rows, position)
       rows.select { |row| row[position] <= 3 }.sort_by { |row| row[position] }.map do |row|
         { setting: row["grind_setting"].strip, count: row["setting_count"],
-          average_rating: row["average_rating"]&.to_f, rating_count: row["rating_count"], occurred_at: row["occurred_at"] }
+          average_rating: row["average_rating"]&.to_f, rating_count: row["rating_count"], occurred_at: row["occurred_at"],
+          total_time_seconds: row["total_time_seconds"], dose_grams: row["dose_grams"], beverage_grams: row["beverage_grams"] }
       end
     end
 end

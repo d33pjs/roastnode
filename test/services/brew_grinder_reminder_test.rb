@@ -132,6 +132,49 @@ class BrewGrinderReminderTest < ActiveSupport::TestCase
     assert_equal "popular", found.settings.first[:setting]
   end
 
+  test "setting rows use extraction measurements from the last brew rather than an average or older complete brew" do
+    older = brew(setting: " 1/3,00 ", rating: 5, occurred_at: 3.days.ago)
+    older.update!(total_time_seconds: 25, dose_grams: 18, beverage_grams: 36)
+    latest = brew(setting: "1/3,00", rating: 3, occurred_at: 2.days.ago)
+    latest.update!(total_time_seconds: 32, dose_grams: 18.5, beverage_grams: 42.5)
+    incomplete = brew(setting: "other", occurred_at: 1.day.ago)
+
+    [ history.settings, history.recent_settings, history.best_settings ].each do |rows|
+      row = rows.find { |entry| entry[:setting] == "1/3,00" }
+      assert_equal 32, row[:total_time_seconds]
+      assert_equal 18.5.to_d, row[:dose_grams]
+      assert_equal 42.5.to_d, row[:beverage_grams]
+      assert_equal 4.0, row[:average_rating]
+      assert_equal 2, row[:rating_count]
+    end
+    row = history.recent_settings.find { |entry| entry[:setting] == incomplete.grind_setting }
+    assert_nil row[:total_time_seconds]
+    assert_nil row[:dose_grams]
+    assert_nil row[:beverage_grams]
+    latest.update!(total_time_seconds: nil, dose_grams: nil, beverage_grams: nil)
+    row = history.recent_settings.find { |entry| entry[:setting] == "1/3,00" }
+    assert_nil row[:total_time_seconds], "missing latest measurements must not borrow from an earlier brew"
+    assert_nil row[:dose_grams]
+    assert_nil row[:beverage_grams]
+  end
+
+  test "closing the last used bag and opening a new coffee never falls back to an older open bag" do
+    brews(:morning_espresso).update!(occurred_at: 3.days.ago)
+    old = brew(setting: "1/1,00", occurred_at: 2.days.ago)
+    final = brew(bean: beans(:open_household), setting: "1/3,00", occurred_at: 1.day.ago)
+    final.bean.finish!
+    fresh = @workspace.beans.create!(name: "Fresh coffee", bag_size_grams: 250, grind_state: "whole_bean")
+
+    [ nil, Date.current ].each do |opened_on|
+      fresh.update!(opened_on:)
+      found = result(beans: @workspace.beans.open.to_a)
+      assert_equal final, found.last_uses_by_grinder_id[@grinder.id.to_s].brew
+      assert_equal "1/3,00", found.last_uses_by_grinder_id[@grinder.id.to_s].grind_setting
+      assert_not_equal old, found.last_uses_by_grinder_id[@grinder.id.to_s].brew
+      assert_empty found.histories_for(fresh)
+    end
+  end
+
   test "filters malformed cross workspace grinder and bean references" do
     saved = brew(setting: "foreign grinder")
     saved.update_columns(grinder_id: equipment(:other_workspace_grinder).id)

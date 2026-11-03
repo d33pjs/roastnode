@@ -1,6 +1,42 @@
 require "application_system_test_case"
 
 class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
+  test "a restored old setting stays red after closing the last used bag and opening another coffee" do
+    previous = beans(:second_open_household)
+    previous.update!(grind_state: "whole_bean")
+    brews(:morning_espresso).update!(grind_setting: "1/1,00", occurred_at: 2.days.ago)
+    workspaces(:household).brews.create!(user: users(:one), bean: previous,
+      grinder: equipment(:household_grinder), method: "espresso", bean_weight_grams: 1,
+      grind_setting: "1/1,00", occurred_at: 1.day.ago, total_time_seconds: 32, dose_grams: 18.5, beverage_grams: 42.5, rating: 4)
+    sign_in_through_browser
+    visit new_brew_path(method: "espresso")
+    wait_for_stimulus("brew-grinder-reminder")
+    fill_in "Bean in (g)", with: "18"
+    find("a[href='#{dashboard_path}']", match: :first).click
+
+    brews(:morning_espresso).update!(grind_setting: "1/3,00", occurred_at: Time.current)
+    beans(:open_household).finish!
+    fresh = previous.duplicate_for_new_bag!
+    fresh.open_bag!
+    visit new_brew_path(method: "espresso")
+    wait_for_stimulus("brew-grinder-reminder")
+    find("label[for='brew_bean_id_#{fresh.id}']").click
+
+    assert_equal "1/1,00", find('input[name="brew[grind_setting]"]').value
+    assert_equal "18", find('input[name="brew[bean_weight_grams]"]').value
+    assert_selector "[data-brew-grinder-reminder-target=lastUse]", text: "1/3,00"
+    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=false]", text: "Check grinder setting"
+    assert_selector "input[data-physical-check=true]"
+    assert_selector "[data-brew-grinder-reminder-target=rows] li", text: "Total time: 32s"
+    assert_selector "[data-brew-grinder-reminder-target=rows] li", text: "Beverage: 42,5g"
+    assert_selector "[data-brew-grinder-reminder-target=rows] li", text: "Ratio: 1:2,3"
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1400, deviceScaleFactor: 1, mobile: true)
+    find("[data-brew-grinder-reminder-target=rows]").scroll_to(:center)
+    assert_equal false, evaluate_script("document.documentElement.scrollWidth > window.innerWidth")
+    page.save_screenshot(Rails.root.join("tmp/screenshots/grinder-last-brew-mobile.png"))
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
   test "an already open phone form refreshes household grinder changes without replacing its draft" do
     brews(:morning_espresso).update!(grind_setting: "1/1,00", occurred_at: 1.day.ago)
     sign_in_through_browser
@@ -117,7 +153,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     fill_in "Grind setting", with: " 1/1,50 "
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
-    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=true]", text: "Setting matches"
+    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=false]", text: "Check grinder setting"
     assert_selector "input[data-physical-check=true]"
 
     fill_in "Grind setting", with: "manual 9"
@@ -127,7 +163,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal "1/1,50", grind_input.value
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
     assert_equal grinder_id, find('input[name="brew[grinder_id]"]:checked').value
-    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true][data-setting-match=true]", text: "Setting matches"
+    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true][data-setting-match=false]", text: "Check grinder setting"
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1000, deviceScaleFactor: 1, mobile: true)
     execute_script("document.querySelector('input[name=\"brew[grind_setting]\"]').scrollIntoView({block: 'center'})")
     assert_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])", text: "Double-check grinder"

@@ -50,6 +50,27 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name=?][value=?][checked]", "brew[bean_id]", beans(:open_household).id.to_s
   end
 
+  test "fresh defaults keep the final setting of a finished bag before and after opening a new coffee" do
+    grinder = equipment(:household_grinder)
+    beans(:second_open_household).update!(grind_state: "whole_bean")
+    workspaces(:household).brews.create!(user: users(:one), bean: beans(:second_open_household),
+      grinder:, method: "espresso", bean_weight_grams: 1, grind_setting: "1/1,00", occurred_at: 1.day.ago)
+    brews(:morning_espresso).update!(grind_setting: "1/3,00", occurred_at: 1.hour.ago)
+    beans(:open_household).finish!
+    fresh = workspaces(:household).beans.create!(name: "Fresh coffee", bag_size_grams: 250, grind_state: "whole_bean")
+    sign_in_as(users(:one))
+
+    [ nil, Date.current ].each do |opened_on|
+      fresh.update!(opened_on:)
+      get new_brew_path(method: "espresso")
+      assert_response :success
+      assert_select "input[name=?][value=?]", "brew[grind_setting]", "1/3,00"
+      get grinder_history_brews_path(method: "espresso"), as: :json
+      assert_response :success
+      assert_equal "1/3,00", response.parsed_body.fetch("last_uses").fetch(grinder.id.to_s).fetch("setting")
+    end
+  end
+
   test "last brew defaults and grinder history agree when brew timestamps tie" do
     first = brews(:morning_espresso)
     latest = first.dup

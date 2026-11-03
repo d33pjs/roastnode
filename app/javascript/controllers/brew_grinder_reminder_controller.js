@@ -6,7 +6,7 @@ export default class extends Controller {
 
   connect() {
     this.connected = true
-    this.sharedStateFresh = true
+    this.sharedStateFresh = !this.refreshUrlValue
     this.refreshSequence = this.refreshSequence || 0
     this.updateReminder()
     if (this.hasGrindSettingTarget) {
@@ -109,13 +109,13 @@ export default class extends Controller {
   updateSettingState() {
     const inputSetting = this.hasVisibleSettingInput ? this.grindSettingTarget.value : this.lastUse?.setting
     const fresh = this.sharedStateFresh !== false
-    const matches = Boolean(fresh && this.history && this.normalizedSetting(inputSetting) === this.normalizedSetting(this.history.setting))
-    this.panelTarget.dataset.settingMatch = this.grinderRelevant ? String(matches) : ""
-    this.pendingTarget.hidden = !this.grinderRelevant
-    this.pendingTarget.textContent = !fresh ? this.staleValue : matches ? this.matchesValue : this.mismatchValue
     this.physicalCheck = Boolean(this.grinderRelevant && (!fresh || !this.history || !this.lastUse?.setting?.trim() ||
       this.normalizedSetting(this.history.setting) !== this.normalizedSetting(this.lastUse.setting) ||
       this.normalizedSetting(inputSetting) !== this.normalizedSetting(this.lastUse.setting)))
+    const matches = Boolean(fresh && this.history && !this.physicalCheck && this.normalizedSetting(inputSetting) === this.normalizedSetting(this.history.setting))
+    this.panelTarget.dataset.settingMatch = this.grinderRelevant ? String(matches) : ""
+    this.pendingTarget.hidden = !this.grinderRelevant
+    this.pendingTarget.textContent = !fresh ? this.staleValue : matches ? this.matchesValue : this.mismatchValue
     this.panelTarget.dataset.adjustmentNeeded = String(this.physicalCheck)
     this.updateFieldReminder()
     this.updateSettingAction()
@@ -146,7 +146,7 @@ export default class extends Controller {
 
   renderBars(settings) {
     const maximum = Math.max(...settings.map((entry) => entry.count), 1)
-    const rows = settings.map(({ setting, count, rating_label, last_used }) => {
+    const rows = settings.map(({ setting, count, rating_label, last_used, last_brew }) => {
       const row = document.createElement("li")
       row.className = "grid grid-cols-[minmax(3rem,auto)_1fr_auto] items-center gap-3 text-sm"
       const label = document.createElement("span")
@@ -168,6 +168,12 @@ export default class extends Controller {
         details.className = "col-span-3 -mt-1 break-words text-xs text-rn-muted"
         details.textContent = [rating_label, last_used].filter(Boolean).join(" · ")
         row.append(details)
+      }
+      if (last_brew) {
+        const measurements = document.createElement("span")
+        measurements.className = "col-span-3 -mt-1 break-words text-xs text-rn-muted"
+        measurements.textContent = last_brew
+        row.append(measurements)
       }
       return row
     })

@@ -44,10 +44,10 @@ test('no grinder gives a single instruction without duplicate context text', () 
  assert.equal(c.emptyTarget.textContent, 'Choose grinder')
 })
 
-test('physical reminder stays red after copying while the matching panel turns green', () => {
+test('a matching or restored coffee setting stays red when the physical grinder last used another setting', () => {
  const c = setup(); c.updateReminder(); c.applySetting()
- assert.equal(c.panelTarget.dataset.settingMatch, 'true')
- assert.equal(c.pendingTarget.textContent, 'Setting matches')
+ assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+ assert.equal(c.pendingTarget.textContent, 'Check grinder setting')
  assert.equal(c.fieldReminderTarget.hidden, false)
  assert.equal(c.panelTarget.dataset.adjustmentNeeded, 'true')
  assert.equal(c.lastUseTarget.textContent, 'Other coffee · 12')
@@ -65,14 +65,27 @@ test('matching last grinder use clears the warning regardless of the selected ba
  assert.equal(c.fieldReminderTarget.hidden, true)
 })
 
-test('typing updates panel match independently of saved grinder values', () => {
+test('typing a coffee reference cannot clear a different physical grinder setting', () => {
  const c = setup(); c.updateReminder()
  assert.equal(c.panelTarget.dataset.settingMatch, 'false')
  c.grindSettingTarget.value = ' 7 '; c.grindSettingChanged()
- assert.equal(c.panelTarget.dataset.settingMatch, 'true')
+ assert.equal(c.panelTarget.dataset.settingMatch, 'false')
  assert.equal(c.fieldReminderTarget.hidden, false)
  c.grindSettingTarget.value = ''; c.grindSettingChanged()
  assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+})
+
+test('setting rows retain ratings and dates beside the last brew measurements using text content', () => {
+ const element = () => ({children: [], style: {}, setAttribute() {}, append(...children) {this.children.push(...children)}})
+ const c = setup({document: {createElement: element}})
+ delete c.renderBars
+ c.rowsTarget.replaceChildren = (...children) => {c.rowsTarget.children = children}
+ c.renderBars([{setting: '1/3,00', count: 2, rating_label: '★ 4,5/5 · 2 rated', last_used: 'Last used 03.11.2026',
+  last_brew: 'Total time: 32s · Beverage: 42,5g · Ratio: 1:2,3'}])
+ const row = c.rowsTarget.children[0]
+ assert.equal(row.children[0].textContent, '1/3,00')
+ assert.equal(row.children[3].textContent, '★ 4,5/5 · 2 rated · Last used 03.11.2026')
+ assert.equal(row.children[4].textContent, 'Total time: 32s · Beverage: 42,5g · Ratio: 1:2,3')
 })
 
 test('long input hides the overlay while keeping its red outline and accessible reminder', () => {
@@ -221,4 +234,22 @@ test('unchanged household history leaves the live region untouched', async () =>
  c.fetch = async () => ({ok: true, json: async () => ({histories: {coffee: history}, last_uses: c.lastUsesValue})})
  await c.refreshHistory()
  assert.equal(redraws, 0)
+})
+
+test('an initially matching rendered form stays cautious until live household history is verified', async () => {
+ const c = setup({document: {hidden: false, addEventListener() {}, removeEventListener() {}},
+  window: {addEventListener() {}, removeEventListener() {}},
+  ResizeObserver: class {observe() {} disconnect() {}}, setInterval() {return 1}})
+ c.beanTargets[0].value = 'coffee'
+ c.lastUsesValue['1'].setting = '7'
+ c.grindSettingTarget.value = '7'
+ const history = JSON.parse(c.beanTargets[0].dataset.grinderHistories)
+ c.fetch = async () => ({ok: true, json: async () => ({histories: {coffee: history}, last_uses: c.lastUsesValue})})
+ c.connect()
+ assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+ assert.equal(c.pendingTarget.textContent, 'Check household grinder history')
+ await c.refreshHistory()
+ assert.equal(c.panelTarget.dataset.settingMatch, 'true')
+ assert.equal(c.grindSettingTarget.value, '7')
+ c.disconnect()
 })

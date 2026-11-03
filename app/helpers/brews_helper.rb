@@ -188,9 +188,20 @@ module BrewsHelper
 
   def brew_grinder_setting_rows(settings)
     settings.map do |row|
+      ratio = if row[:dose_grams].to_d.positive? && row[:beverage_grams].present?
+        "1:#{profile_number(row[:beverage_grams].to_d / row[:dose_grams].to_d, precision: 2)}"
+      else
+        t("brews.show.unknown")
+      end
+      measurements = {
+        t("brews.show.total_time") => brew_card_seconds(row[:total_time_seconds]),
+        t("brews.show.yield") => profile_grams(row[:beverage_grams]),
+        t("brews.show.ratio") => ratio
+      }.map { |label, value| "#{label}: #{value}" }.join(" · ")
       { setting: row[:setting], count: row[:count],
         rating_label: (t("grinder_history.rating", value: profile_number(row[:average_rating], precision: 1), count: row[:rating_count]) if row[:rating_count].positive?),
-        last_used: (t("grinder_history.last_used", date: profile_timestamp(row[:occurred_at]).split.first) if row[:occurred_at].present?) }
+        last_used: (t("grinder_history.last_used", date: profile_timestamp(row[:occurred_at]).split.first) if row[:occurred_at].present?),
+        last_brew: measurements }
     end
   end
 
