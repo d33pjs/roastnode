@@ -36,6 +36,9 @@ class ReleaseVersionConfigurationTest < Minitest::Test
     build_step = workflow.fetch("jobs").fetch("publish").fetch("steps").find { |step| step["name"] == "Build and push image" }
 
     assert_match(/\Adocker\/build-push-action@[0-9a-f]{40}\z/, build_step.fetch("uses"))
+    assert_equal true, build_step.fetch("with").fetch("pull", false)
+    assert_equal "base", build_step.fetch("with").fetch("no-cache-filters", nil),
+      "Release package upgrades must run even when the Ruby base digest is unchanged"
     assert_includes build_step.fetch("with").fetch("build-args"), "ROASTNODE_VERSION=${{ env.RELEASE_TAG }}"
     metadata_step = workflow.fetch("jobs").fetch("publish").fetch("steps").find { |step| step["name"] == "Extract Docker metadata" }
     assert_includes metadata_step.fetch("with").fetch("labels"), "org.opencontainers.image.revision=${{ steps.source.outputs.sha }}"

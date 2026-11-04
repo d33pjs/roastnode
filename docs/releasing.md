@@ -103,8 +103,9 @@ If you need to rebuild or inspect a release before publication, run the workflow
 
 ## Verifying a Release
 
-Release builds explicitly pull current base images and apply available Debian
-package upgrades within the base image's existing release. Ruby remains pinned
+Release builds explicitly pull current base images and bypass the `base` stage's
+cache so available Debian package upgrades run even when the base digest has not
+changed. These upgrades stay within the base image's existing release. Ruby remains pinned
 to `.ruby-version`; the release's image digest, SBOMs and provenance record the
 resulting immutable application image.
 

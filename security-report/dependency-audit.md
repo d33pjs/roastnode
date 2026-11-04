@@ -1,17 +1,35 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-11-03 after upgrading application/runtime/tool dependencies and refreshing
+Verified on 2026-11-04 after upgrading application/runtime/tool dependencies and refreshing
 the RubySec advisory database.
 
 ## Result
 
-- Status: no known vulnerabilities in the fresh RubySec and importmap audits after the 2026-11-03 refresh.
+- Status: Rails and all 12 framework companion gems are patched to 8.1.4.1. Fresh RubySec and importmap audits report zero matches; today's Rails advisories have not yet reached the RubySec database, as documented below.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
 - RubySec evidence: database commit `adeaf1283ee64aae48bb61150a773283ff285175`, containing 1,329 advisories and last updated at 2026-11-03 15:52:05 -0500; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
-- JavaScript and static analysis: importmap reported no vulnerable or outdated packages; Brakeman 8.1.0 scanned Rails 8.1.4 with 0 errors and 0 warnings.
+- JavaScript: importmap reported no vulnerable or outdated packages. Integrated Brakeman 8.1.0 scanned Rails 8.1.4.1 with 0 errors and 0 warnings.
 - Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are BinData 3.0.1, Marcel 2.1.0, net-ssh 8.1.0 and Prism 2.1.0, constrained by their parent gems. Chart.js's bundled color helper remains at its upstream-distributed version, as documented below.
+
+## 2026-11-04 Rails Security Refresh
+
+- Updated Rails, Action Cable, Action Mailbox, Action Mailer, Action Pack, Action Text, Action View, Active Job, Active Model, Active Record, Active Storage, Active Support and Railties from 8.1.4 to 8.1.4.1. The official release addresses 21 security issues, including Active Storage external-tool processing, Strong Parameters, forwarded-IP handling, XSS, regular-expression/streaming denial of service, sessions, content negotiation, GCS direct uploads and Mailgun ingress.
+- Gemfile retains `~> 8.1.4` and adds `>= 8.1.4.1`, preventing a downgrade below the security release while admitting later compatible 8.1 patches. Action View now requires rails-html-sanitizer >= 1.7.2; the existing 1.7.2 / Loofah 2.25.3 / Nokogiri 1.19.7 stack already satisfies the new minimums.
+- Verified all 13 updated gem SHA-256 values against the Rails announcement, RubyGems version API, downloaded gem artifacts and lockfile. All 167 platform-specific specs retain checksum coverage; 134 unique gem names and all 10 platforms remain present. No unrelated gem version changed during `bundle update --all`.
+- Compatibility: `strip_tags` now encodes quotation marks, invalid filename metadata is handled without a data migration, and unsafe SafeBuffer values serialized through Active Support MessagePack use a new marker that older Rails cannot read. Replace web and jobs together rather than keeping old workers beside the new release. The framework's ImageMagick policy requires mini_magick >= 5.1 only when that processor is selected; Roastnode's declared processor remains libvips.
+- Rechecked every configured action against its official immutable release commit, plus RubyGems/Bundler, cdxgen, Waybill, Syft, Cosign, BuildKit and Buildx against official latest stable releases. All remain current at the versions recorded in the 2026-11-03 refresh; workflow pins and scanner checksums are unchanged. Ruby 4.0.9, Node 26.13.0 LTS, supported PostgreSQL 17.11 and vendored JavaScript also remain current. PostgreSQL major migration and the upstream-constrained gems/helper remain separate as documented below.
+- Context7 remains unavailable; compatibility review used official Rails release notes, RubyGems/npm metadata and upstream release APIs. No application code or database schema was changed by this dependency refresh.
+
+### Verification — 2026-11-04 Dependency Checkpoint
+
+- Ruby 4.0.9 / Bundler 4.0.23: installation, `bundle check` and `bundle outdated --strict` pass. The unconstrained check lists only BinData, Marcel, net-ssh and Prism newer versions already blocked by parents.
+- Fresh `bin/bundler-audit check --update` reports zero matches against 1,329 advisories at `adeaf1283ee64aae48bb61150a773283ff285175`, last updated 2026-11-03. It also reported zero matches before this Rails update: the database has not yet ingested today's Rails advisories. The official security release and four-way checksum verification establish the upgrade; a clean stale advisory index alone does not establish safety.
+- Importmap vulnerability/currentness checks pass. Release/dependency configuration checks pass: 5 tests, 77 assertions, zero failures/errors/skips. The new regression proved that cached base stages could skip package upgrades; release builds now set `no-cache-filters: base` alongside `pull: true`. The pinned build action supports this input.
+- Integrated local validation on Rails 8.1.4.1: 1,578 Rails tests / 15,583 assertions, 54 JavaScript tests and 16 browser tests / 216 assertions pass. Ruby lint (432 files), Brakeman, seed replant and production asset compilation pass. The final release-configuration delta also passed independent review and its focused tests. Image and production deployment verification remain release gates.
+
+Official sources: [Rails announcement and gem checksums](https://rubyonrails.org/2026/11/4/Rails-8.0.5.2-and-8.1.4.1-have-been-released), [Rails 8.1.4.1 release notes](https://github.com/rails/rails/releases/tag/v8.1.4.1), [RubyGems Rails metadata](https://rubygems.org/api/v2/rubygems/rails/versions/8.1.4.1.json), [Ruby downloads](https://www.ruby-lang.org/en/downloads/), [Node downloads](https://nodejs.org/en/download), [PostgreSQL versioning](https://www.postgresql.org/support/versioning/).
 
 ## 2026-11-03 Security Refresh
 
@@ -345,7 +363,7 @@ Rails 8.1.4 fixes JSON 3 decoding. The temporary JSON constraint was removed. Th
 
 ### Marcel 2.x
 
-Marcel 2.1.0 is available, but Active Storage 8.1.4 requires `marcel ~> 1.0`. The lockfile retains the latest compatible 1.2.1, which has no matching advisory in the refreshed RubySec database.
+Marcel 2.1.0 is available, but Active Storage 8.1.4.1 requires `marcel ~> 1.0`. The lockfile retains the latest compatible 1.2.1, which has no matching advisory in the refreshed RubySec database.
 
 ### net-ssh 8.x and Prism 2.x
 

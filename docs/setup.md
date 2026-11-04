@@ -6,6 +6,7 @@ Roastnode is a Rails 8.1 app generated in the repository root.
 
 - Ruby 4.0.9 through rbenv or another Ruby version manager
 - RubyGems and Bundler 4.0.23
+- Rails 8.1.4.1 or a newer compatible 8.1 patch (installed by Bundler)
 - Node.js 26.13.0 for the JavaScript controller tests (no npm install required)
 - Docker Desktop with Docker Compose
 - PostgreSQL 17.11 is the default Compose image
