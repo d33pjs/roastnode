@@ -38,7 +38,8 @@ end %>
         <div>
           <div class="flex min-w-0 items-end justify-between gap-3 text-xs font-extrabold text-rn-muted">
             <span class="shrink-0"><%= t("beans.index.remaining") %></span>
-            <span data-testid="bean-card-remaining-<%= bean.id %>" class="min-w-0 truncate text-right text-rn-ink"><%= t("beans.index.remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %></span>
+            <% estimate = @bean_brew_estimates[bean.id] %>
+            <span data-testid="bean-card-remaining-<%= bean.id %>" class="min-w-0 text-right text-rn-ink"><%= t("beans.index.remaining_of", remaining: statistics_grams(bean.remaining_grams), total: statistics_grams(bean.bag_size_grams)) %> (<%= statistics_percent(remaining_percent) %><%= ", #{t("shared.estimated_coffees", count: estimate)}" if estimate %>)</span>
           </div>
           <div class="mt-1.5 h-2 overflow-hidden rounded-full bg-[var(--rn-surface-muted)]">
             <div data-testid="bean-card-progress-<%= bean.id %>" data-remaining-state="<%= remaining_state %>" class="h-full rounded-full <%= remaining_bar_class %>" style="width: <%= remaining_percent %>%"></div>

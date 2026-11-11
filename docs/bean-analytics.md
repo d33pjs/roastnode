@@ -7,6 +7,7 @@ Bean detail pages include the first drill-down analytics slice for a single bag 
 - Brew count for the bean.
 - Total bean-in weight consumed through brews.
 - Current remaining percentage from `remaining_grams / bag_size_grams`.
+- Estimated coffees left at the bag's average recorded Bean In.
 - Lifecycle-aware open age from `opened_on`.
 - Average rating, channeling rate, the number of channeled brews, and live workspace comparison badges for both metrics.
 - Best-rated brews linked back to brew details.
@@ -24,6 +25,7 @@ Bean detail pages include the first drill-down analytics slice for a single bag 
 - The service uses live Active Record data; do not add summary tables until data volume requires them.
 - Brew links must go to private brew detail pages, not public share URLs.
 - Remaining percentage reflects the current bean inventory, including brew inventory deductions.
+- The Brew Log, bean list and private bean statistics use the same estimate: divide the bag's current remaining grams by the average positive Bean In across its saved brews, then round down to a whole brew. One Quick Drip batch counts as one brew. Bags without a usable history show no estimate. The calculation ignores date filters and never combines bags or workspaces.
 - Cost per shot uses purchase price per gram multiplied by average Espresso Bean In. Bean In is the full bag deduction, so Ground Out and Dose are not added again. The fallback is 18g before the first Espresso; Quick Drip and generic manual inventory corrections are excluded.
 - The bean list shows each bean's primary photo, derived bag status, and remaining amount as `remaining of bag size`; channeling stays on the bean detail analytics card through `BeanStatistics`.
 - A Bean-filtered Coffees request includes Espresso and Quick Drip for that active-workspace Bean only. Unknown/nonexistent, non-scalar, or foreign-workspace Bean IDs return not found; an omitted or blank Bean filter shows normal unfiltered Coffees. Compact/Hero, All/Brews, and pagination preserve the Bean; External clears it.

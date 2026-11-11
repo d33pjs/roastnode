@@ -44,6 +44,7 @@ class BeanStatistics
         brew_count: brews.size,
         total_bean_weight_grams: brews.sum(&:bean_weight_grams),
         remaining_percent: remaining_percent,
+        estimated_brews_remaining: BeanBrewEstimate.for_bags(workspace: bean.workspace, beans: [ bean ])[bean.id],
         open_age_days: open_age_days,
         finished_used_grams: bean.finished_used_grams,
         finished_open_days: bean.finished_open_days,

@@ -91,6 +91,7 @@ class BeanStatisticsTest < ActiveSupport::TestCase
       assert_equal 1, statistics[:totals][:brew_count]
       assert_equal 18.to_d, statistics[:totals][:total_bean_weight_grams]
       assert_equal 52, statistics[:totals][:remaining_percent]
+      assert_equal 6, statistics[:totals][:estimated_brews_remaining]
       assert_equal 0, statistics[:rates][:channeling_count]
       assert_equal 1, statistics[:rates][:channeling_brew_count]
       assert_equal 0, statistics[:rates][:channeling_percent]

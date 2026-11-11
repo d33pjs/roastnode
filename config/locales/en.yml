@@ -84,6 +84,10 @@ en:
     destroy:
       destroyed: "Photo removed."
   shared:
+    estimated_coffees:
+      zero: "less than 1 coffee"
+      one: "about %{count} coffee"
+      other: "about %{count} coffees"
     bean_comparison_rank: "TOP %{rank} OF %{count} BEANS"
     back_link:
       previous: "Back"
@@ -2094,7 +2098,7 @@ en:
 
   grinder_history:
     title: "Grinder history"
-    matches: "Setting matches"
+    matches: "Bean setting matches"
     stale: "Household settings unavailable · double-check grinder"
     mismatch: "Check grinder setting"
     field_reminder: "Double-check grinder"

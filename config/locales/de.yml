@@ -6,6 +6,10 @@ de:
     formats:
       short: "%d.%m.%Y, %H:%M"
   shared:
+    estimated_coffees:
+      zero: "weniger als 1 Kaffee"
+      one: "ca. %{count} Kaffee"
+      other: "ca. %{count} Kaffees"
     site_footer:
       buy_me_a_coffee: "Spendiere mir einen Kaffee"
       github: "GitHub"
@@ -104,7 +108,7 @@ de:
 
   grinder_history:
     title: "Mahlgradverlauf"
-    matches: "Mahlgrad stimmt überein"
+    matches: "Mahlgrad passt zur Bohne"
     stale: "Haushaltsverlauf nicht verfügbar · Mühle nochmals prüfen"
     mismatch: "Mahlgrad prüfen"
     field_reminder: "Mühle nochmals prüfen"

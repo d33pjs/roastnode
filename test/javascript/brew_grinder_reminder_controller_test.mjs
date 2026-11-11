@@ -44,10 +44,10 @@ test('no grinder gives a single instruction without duplicate context text', () 
  assert.equal(c.emptyTarget.textContent, 'Choose grinder')
 })
 
-test('a matching or restored coffee setting stays red when the physical grinder last used another setting', () => {
+test('copying the coffee reference turns the panel green but keeps the physical warning', () => {
  const c = setup(); c.updateReminder(); c.applySetting()
- assert.equal(c.panelTarget.dataset.settingMatch, 'false')
- assert.equal(c.pendingTarget.textContent, 'Check grinder setting')
+ assert.equal(c.panelTarget.dataset.settingMatch, 'true')
+ assert.equal(c.pendingTarget.textContent, c.matchesValue)
  assert.equal(c.fieldReminderTarget.hidden, false)
  assert.equal(c.panelTarget.dataset.adjustmentNeeded, 'true')
  assert.equal(c.lastUseTarget.textContent, 'Other coffee · 12')
@@ -69,7 +69,7 @@ test('typing a coffee reference cannot clear a different physical grinder settin
  const c = setup(); c.updateReminder()
  assert.equal(c.panelTarget.dataset.settingMatch, 'false')
  c.grindSettingTarget.value = ' 7 '; c.grindSettingChanged()
- assert.equal(c.panelTarget.dataset.settingMatch, 'false')
+ assert.equal(c.panelTarget.dataset.settingMatch, 'true')
  assert.equal(c.fieldReminderTarget.hidden, false)
  c.grindSettingTarget.value = ''; c.grindSettingChanged()
  assert.equal(c.panelTarget.dataset.settingMatch, 'false')

@@ -125,7 +125,7 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=?][multiple=multiple]", "brew[photos][]"
   end
 
-  test "new shows remaining percentage and marks only the method-specific last bean" do
+  test "new shows remaining percentage and estimated brews and marks only the method-specific last bean" do
     sign_in_as(users(:one))
 
     get new_brew_path(method: "espresso")
@@ -158,6 +158,9 @@ class BrewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes inventory["class"].split, "whitespace-nowrap"
     assert_equal 2, document.css("[data-testid^='brew-bean-option-status-']").size
     assert_select "[data-testid=?]", "brew-bean-option-meta-#{beans(:open_household).id}", text: /150(?:\.0)?g left.*60% left/
+    assert_select "[data-testid=?]", "brew-bean-option-estimate-#{bean.id}", text: "about 8 coffees"
+    assert_select "[data-testid=?]", "brew-bean-option-estimate-#{beans(:second_open_household).id}", count: 0
+    assert_select "[data-testid=?]", "brew-bean-option-estimate-#{beans(:other_workspace_open).id}", count: 0
     assert_select "[data-testid=?]", "brew-bean-last-used-#{beans(:open_household).id}", text: /Last used/, count: 1
     assert_select "[data-testid=?]", "brew-bean-last-used-#{beans(:second_open_household).id}", count: 0
   end

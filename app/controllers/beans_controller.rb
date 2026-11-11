@@ -16,6 +16,7 @@ class BeansController < ApplicationController
       .select("beans.*, MAX(brews.occurred_at) AS latest_brew_at")
       .group("beans.id")
       .to_a
+    @bean_brew_estimates = BeanBrewEstimate.for_bags(workspace: current_workspace, beans: @beans)
     @bean_groups = bean_index_groups(@beans)
   end
 

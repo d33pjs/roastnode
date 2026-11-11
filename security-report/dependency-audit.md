@@ -1,17 +1,23 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-11-04 after upgrading application/runtime/tool dependencies and refreshing
+Verified on 2026-11-11 after upgrading application/runtime/tool dependencies and refreshing
 the RubySec advisory database.
 
 ## Result
 
-- Status: Rails and all 12 framework companion gems are patched to 8.1.4.1. Fresh RubySec and importmap audits report zero matches; today's Rails advisories have not yet reached the RubySec database, as documented below.
+- Status: Rails and all 12 framework companion gems remain patched to 8.1.4.1. Fresh RubySec and importmap audits report zero matches.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `adeaf1283ee64aae48bb61150a773283ff285175`, containing 1,329 advisories and last updated at 2026-11-03 15:52:05 -0500; 0 vulnerabilities matched.
+- RubySec evidence: database commit `4d71b123428e33f694e805ce15351ee3d8d62ef7`, containing 1,359 advisories, including the November Rails advisories; 0 vulnerabilities matched.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
 - JavaScript: importmap reported no vulnerable or outdated packages. Integrated Brakeman 8.1.0 scanned Rails 8.1.4.1 with 0 errors and 0 warnings.
-- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; non-strict residuals are BinData 3.0.1, Marcel 2.1.0, net-ssh 8.1.0 and Prism 2.1.0, constrained by their parent gems. Chart.js's bundled color helper remains at its upstream-distributed version, as documented below.
+- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; newer releases of BinData (3.0.1), Marcel (2.1.0), and net-ssh (8.1.2) remain constrained by their parent gems. Chart.js's bundled color helper remains at its upstream-distributed version, as documented below.
+
+## 2026-11-11 Dependency Refresh
+
+- Updated CBOR 0.6.2.2, COSE 1.4.0, IRB 1.19.0, Minitest 6.1.0, net-ssh 7.3.10, Prism 2.1.0, RuboCop AST 1.51.0, Tailwind CSS 4.3.4 and WebAuthn 3.5.1 in the lockfile. The new WebAuthn and COSE releases admit CBOR 0.6; the full resolution also picked up the compatible Prism update.
+- Updated RubyGems/Bundler to 4.0.24 and Node LTS to 26.13.1. Ruby 4.0.9, PostgreSQL 17.11, the vendored JavaScript and Cosign 3.1.4 remain current on their configured lines.
+- Updated the pinned setup-ruby, Docker Login and Cosign Installer actions, plus cdxgen 13.7.0, Waybill 0.14.1, Syft 1.57.1, Buildx 0.39.0 and BuildKit 0.35.0. Verified the cdxgen and Waybill SHA-256 pins against their published checksum files and the BuildKit index against Docker Hub and Google's public cache. Context7 was unavailable; package and tool metadata came from the official registries and upstream releases.
 
 ## 2026-11-04 Rails Security Refresh
 

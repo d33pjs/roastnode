@@ -5,9 +5,9 @@ Roastnode is a Rails 8.1 app generated in the repository root.
 ## Requirements
 
 - Ruby 4.0.9 through rbenv or another Ruby version manager
-- RubyGems and Bundler 4.0.23
+- RubyGems and Bundler 4.0.24
 - Rails 8.1.4.1 or a newer compatible 8.1 patch (installed by Bundler)
-- Node.js 26.13.0 for the JavaScript controller tests (no npm install required)
+- Node.js 26.13.1 for the JavaScript controller tests (no npm install required)
 - Docker Desktop with Docker Compose
 - PostgreSQL 17.11 is the default Compose image
 - libvips for Active Storage image variants (`brew install vips` on macOS or `apt install libvips` on Debian/Ubuntu)
@@ -67,7 +67,7 @@ Browser passkey APIs require a secure context. `http://localhost:3001` works for
 cp .env.example .env
 rbenv install -s 4.0.9
 rbenv local 4.0.9
-gem update --system 4.0.23 --no-document
+gem update --system 4.0.24 --no-document
 bundle install
 docker compose up -d postgres
 bin/rails db:prepare

@@ -112,7 +112,7 @@ export default class extends Controller {
     this.physicalCheck = Boolean(this.grinderRelevant && (!fresh || !this.history || !this.lastUse?.setting?.trim() ||
       this.normalizedSetting(this.history.setting) !== this.normalizedSetting(this.lastUse.setting) ||
       this.normalizedSetting(inputSetting) !== this.normalizedSetting(this.lastUse.setting)))
-    const matches = Boolean(fresh && this.history && !this.physicalCheck && this.normalizedSetting(inputSetting) === this.normalizedSetting(this.history.setting))
+    const matches = Boolean(fresh && this.history && this.normalizedSetting(inputSetting) === this.normalizedSetting(this.history.setting))
     this.panelTarget.dataset.settingMatch = this.grinderRelevant ? String(matches) : ""
     this.pendingTarget.hidden = !this.grinderRelevant
     this.pendingTarget.textContent = !fresh ? this.staleValue : matches ? this.matchesValue : this.mismatchValue

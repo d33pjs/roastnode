@@ -45,10 +45,11 @@
             data-testid="brew-bean-option-desktop-identity-<%= bean.id %>"
             class="hidden font-extrabold text-rn-ink sm:line-clamp-1"><%= collection_name %></span>
           <span data-testid="brew-bean-option-meta-<%= bean.id %>" class="mt-1 flex min-h-10 flex-col items-start text-sm font-semibold text-rn-muted sm:min-h-0 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-1.5">
-            <span data-testid="brew-bean-option-inventory-<%= bean.id %>" class="inline-flex items-center gap-x-1.5 whitespace-nowrap">
-              <span><%= t("brews.form.remaining", grams: profile_grams(bean.remaining_grams)) %></span>
-              <span aria-hidden="true">·</span>
-              <span><%= t("brews.form.remaining_percent", percent: bean.remaining_percent) %></span>
+            <span data-testid="brew-bean-option-inventory-<%= bean.id %>" class="inline-flex flex-wrap items-center gap-x-1.5 whitespace-nowrap">
+              <span><%= t("brews.form.remaining", grams: profile_grams(bean.remaining_grams)) %> <span aria-hidden="true">·</span> <%= t("brews.form.remaining_percent", percent: bean.remaining_percent) %></span>
+              <% if (estimate = @bean_brew_estimates[bean.id]) %>
+                <span><span aria-hidden="true">·</span> <span data-testid="brew-bean-option-estimate-<%= bean.id %>"><%= t("shared.estimated_coffees", count: estimate) %></span></span>
+              <% end %>
             </span>
             <span data-testid="brew-bean-option-status-<%= bean.id %>" class="block min-h-5 sm:inline-flex sm:min-h-0 sm:items-center sm:gap-x-1.5">
               <% if reminder&.last_bean_id == bean.id %>

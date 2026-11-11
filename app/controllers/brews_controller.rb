@@ -387,6 +387,7 @@ class BrewsController < ApplicationController
 
       @beans = current_workspace.beans.open.includes(:primary_photo_record, photos_attachments: :blob).to_a
       @beans << selected_bean if selected_bean && @beans.exclude?(selected_bean)
+      @bean_brew_estimates = BeanBrewEstimate.for_bags(workspace: current_workspace, beans: @beans)
       sort_beans_for_method!
       @grinders = equipment_options(kind: :grinder, selected_equipment: selected_grinder, allow_archived: allow_archived_equipment)
       @machines = equipment_options(kind: :machine, selected_equipment: selected_machine, allow_archived: allow_archived_equipment)

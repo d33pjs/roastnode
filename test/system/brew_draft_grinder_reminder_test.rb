@@ -1,7 +1,7 @@
 require "application_system_test_case"
 
 class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
-  test "a restored old setting stays red after closing the last used bag and opening another coffee" do
+  test "a restored bean match keeps the physical warning after closing the last used bag" do
     previous = beans(:second_open_household)
     previous.update!(grind_state: "whole_bean")
     brews(:morning_espresso).update!(grind_setting: "1/1,00", occurred_at: 2.days.ago)
@@ -25,7 +25,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal "1/1,00", find('input[name="brew[grind_setting]"]').value
     assert_equal "18", find('input[name="brew[bean_weight_grams]"]').value
     assert_selector "[data-brew-grinder-reminder-target=lastUse]", text: "1/3,00"
-    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=false]", text: "Check grinder setting"
+    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true][data-setting-match=true]", text: "Bean setting matches"
     assert_selector "input[data-physical-check=true]"
     assert_selector "[data-brew-grinder-reminder-target=rows] li", text: "Total time: 32s"
     assert_selector "[data-brew-grinder-reminder-target=rows] li", text: "Beverage: 42,5g"
@@ -153,7 +153,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
 
     fill_in "Grind setting", with: " 1/1,50 "
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
-    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=false]", text: "Check grinder setting"
+    assert_selector "[data-testid=brew-grinder-reminder][data-setting-match=true]", text: "Bean setting matches"
     assert_selector "input[data-physical-check=true]"
 
     fill_in "Grind setting", with: "manual 9"
@@ -163,7 +163,7 @@ class BrewDraftGrinderReminderTest < ApplicationSystemTestCase
     assert_equal "1/1,50", grind_input.value
     assert_no_selector "[data-testid=brew-grind-setting-apply]:not([hidden])"
     assert_equal grinder_id, find('input[name="brew[grinder_id]"]:checked').value
-    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true][data-setting-match=false]", text: "Check grinder setting"
+    assert_selector "[data-testid=brew-grinder-reminder][data-adjustment-needed=true][data-setting-match=true]", text: "Bean setting matches"
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 375, height: 1000, deviceScaleFactor: 1, mobile: true)
     execute_script("document.querySelector('input[name=\"brew[grind_setting]\"]').scrollIntoView({block: 'center'})")
     assert_selector "[data-brew-grinder-reminder-target=fieldReminder]:not([hidden])", text: "Double-check grinder"

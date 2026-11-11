@@ -48,7 +48,8 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(primary, variant: :thumbnail)
     assert_select "img[data-testid=bean-card-photo][src=?]", media_attachment_path(first, variant: :thumbnail), count: 0
     assert_select "[data-testid=?]", "bean-card-rating-#{bean.id}", text: /4/
-    assert_select "[data-testid=?]", "bean-card-remaining-#{bean.id}", "150g of 250g"
+    assert_select "[data-testid=?]", "bean-card-remaining-#{bean.id}", text: "150g of 250g (60%, about 8 coffees)"
+    assert_select "[data-testid=?]", "bean-card-remaining-#{beans(:second_open_household).id}", text: "220g of 250g (88%)"
     assert_select "[data-testid=?][data-remaining-state=plenty]", "bean-card-progress-#{bean.id}"
     assert_select "[data-testid^=bean-list-channeling]", count: 0
   end
@@ -1504,6 +1505,7 @@ class BeansControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", I18n.t("beans.show.analytics")
     assert_select "[data-testid=bean-brew-count]", count: 0
     assert_select "[data-testid=bean-consumed]", "37g"
+    assert_select "[data-testid=bean-estimated-coffees]", text: "about 7 coffees"
     assert_select "[data-testid=bean-channeling-rate]", "50%"
     assert_select "[data-testid=bean-channeling-count]", text: /1 of 2 espresso brews/
     assert_select(
