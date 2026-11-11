@@ -17,7 +17,7 @@ the RubySec advisory database.
 
 - Updated CBOR 0.6.2.2, COSE 1.4.0, IRB 1.19.0, Minitest 6.1.0, net-ssh 7.3.10, Prism 2.1.0, RuboCop AST 1.51.0, Tailwind CSS 4.3.4 and WebAuthn 3.5.1 in the lockfile. The new WebAuthn and COSE releases admit CBOR 0.6; the full resolution also picked up the compatible Prism update.
 - Updated RubyGems/Bundler to 4.0.24 and Node LTS to 26.13.1. Ruby 4.0.9, PostgreSQL 17.11, the vendored JavaScript and Cosign 3.1.4 remain current on their configured lines.
-- Updated the pinned setup-ruby, Docker Login and Cosign Installer actions, plus cdxgen 13.7.0, Waybill 0.14.1, Syft 1.57.1, Buildx 0.39.0 and BuildKit 0.35.0. Verified the cdxgen and Waybill SHA-256 pins against their published checksum files and the BuildKit index against Docker Hub and Google's public cache. Context7 was unavailable; package and tool metadata came from the official registries and upstream releases.
+- Updated the pinned setup-ruby, Docker Login and Cosign Installer actions, plus cdxgen 13.7.0, Waybill 0.14.1, Syft 1.57.1 and BuildKit 0.35.0. Buildx stays on 0.38.2 until [Docker's setup action release index](https://github.com/docker/actions-toolkit/blob/main/.github/buildx-releases.json) includes the published 0.39.0 release; the tag build failed before bootstrapping the builder. Verified the cdxgen and Waybill SHA-256 pins against their published checksum files and the BuildKit index against Docker Hub and Google's public cache. Context7 was unavailable; package and tool metadata came from the official registries and upstream releases.
 
 ## 2026-11-04 Rails Security Refresh
 
