@@ -1,6 +1,6 @@
 # Roastnode Dependency Audit
 
-Verified locally on 2026-11-19 for Ruby2Shell remediation and compatible dependency refresh.
+Verified on 2026-11-19 for Ruby2Shell remediation, compatible dependency refresh and production deployment.
 
 ## Result
 
@@ -27,10 +27,20 @@ Verified locally on 2026-11-19 for Ruby2Shell remediation and compatible depende
 - Ruby 4.0.10 / RubyGems and Bundler 4.1.0: bundle installation and strict currentness pass. All 177 platform-specific locked specs have SHA-256 coverage; all 10 lockfile platforms are retained. Bundler additionally selected generic Nokogiri and its mini_portile2 dependency.
 - Rails: 1,579 tests / 15,596 assertions, no failures/errors/skips. JavaScript: 54 tests pass on Node 26.13.1. Release configuration: 6 tests / 79 assertions pass. The new runtime floor check first failed against 4.0.9 before the pin was raised.
 - Browser suite: 16 tests / 216 assertions pass using `SE_BROWSER_VERSION=157`. The installed Chrome 158 rejects Capybara 3.40.0's wildcard-origin session-reset call; [upstream issue #2865](https://github.com/teamcapybara/capybara/issues/2865) and [pending fix #2868](https://github.com/teamcapybara/capybara/pull/2868) describe the same failure. No application monkey patch or gem downgrade was introduced.
-- RuboCop: 433 files, no offenses. Brakeman: no errors/warnings. Fresh RubySec and importmap audits are clear; importmap reports no outdated packages. Production assets compile and both Compose configurations validate.
+- RuboCop: 433 files, no offenses. Brakeman: no errors/warnings. Fresh RubySec and importmap audits are clear; importmap reports no outdated packages. Seed replant and production asset compilation pass; both Compose configurations validate.
 - Independent review found no correctness/security findings and verified changed gem checksums, retained platforms, scanner digests, the immutable setup-ruby action commit and Buildx release-index availability.
 - Gitea's first run stalled before checkout because the runner could not connect to Ubuntu's HTTP archive endpoint. The equivalent HTTPS request succeeded; CI now normalizes Ubuntu archive/security sources to HTTPS before installing packages. No APT signature verification was disabled. Unused host build cache older than a week was reclaimed to leave space for the new image; containers, volumes and backups were preserved.
+- Gitea CI run 64 passed for release source `79a03a736ace083e2a72a95db7a25bbb9a66931e`, including Rails tests and every source SBOM generation/upload. The runner recovered after a restart; the tag build had been started using the full local verification while remote reporting was stalled. Remote CI was green before deployment.
 - Before release, production still reported vulnerable Ruby 4.0.9; a fresh full archive and its SHA-256 checksum validated. Remediation requires the release/deployment checks recorded in the status ledger after rollout.
+
+### Release And Production Verification — 2026-11-19
+
+- Released v0.9.38 from `79a03a736ace083e2a72a95db7a25bbb9a66931e`; annotated tag object `0f6d3cfcf8850606772fc18242020cef7e45aeec` matches on Gitea and GitHub. Gitea CI run 64 and GitHub release run 44481612436 passed.
+- Verified the public changelog and all three release asset hashes. Both architecture manifests identify the intended source, application version and Ruby 4.0.10. Cosign keyless signature, GitHub provenance bound to the exact source/ref/workflow, and the exact published CycloneDX SBOM attestation verify for `sha256:ce7d2f978afd139575754759da93e5028914a4bc915e5ef9264684fe8bfce6d2`.
+- Santiago's final application play passed `ok=110 changed=25 unreachable=0 failed=0 rescued=0`, using the existing coherent-backup/post-check policy. Both running services use the verified image and report Ruby 4.0.10, Rails 8.1.4.1, Puma 8.1.2, Thruster 0.1.28 and the refreshed WebSocket libraries. PostgreSQL reports 17.12; its running amd64 digest belongs to the approved multi-platform index.
+- Migrations are current; all four current-container queue processes have fresh heartbeats. Public health is 200, private bean/brew routes redirect to authentication, restart counts are zero and startup logs have no error markers. The updater is running; proxy and application maintenance ownership is clear.
+- Predeployment and postdeployment full archives and SHA-256 checksums validate (completed at 07:26:23 UTC and 08:18:12 UTC). Private backup metadata and deployment evidence are retained outside Git on the controller.
+- The first application play stopped before changing Roastnode because delegated proxy checks could not use the shared root-owned temporary directory. The documented interrupted-maintenance recovery passed with zero failed/unreachable/rescued counts. The final play used dedicated local and remote Ansible temp paths and passed every gate; no ownership token or gate check was bypassed.
 
 ## 2026-11-11 Dependency Refresh
 
