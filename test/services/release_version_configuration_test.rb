@@ -6,6 +6,13 @@ require "yaml"
 class ReleaseVersionConfigurationTest < Minitest::Test
   ROOT = Pathname.new(File.expand_path("../..", __dir__))
 
+  def test_runtime_excludes_ruby2shell_vulnerable_releases
+    selected_version = Gem::Version.new(ROOT.join(".ruby-version").read.strip)
+
+    assert_operator selected_version, :>=, Gem::Version.new("4.0.10"),
+      "GHSA-34m4-m9fh-gqp5 requires Ruby 4.0.10 or later on the selected runtime line"
+  end
+
   def test_release_builder_uses_public_cache_before_pulling_qemu_and_for_buildkit
     workflow = YAML.load_file(ROOT.join(".github/workflows/release-container.yml"), aliases: true)
     steps = workflow.fetch("jobs").fetch("publish").fetch("steps")
@@ -62,7 +69,7 @@ class ReleaseVersionConfigurationTest < Minitest::Test
   end
 
   def test_postgresql_image_patch_is_consistent_across_runtime_and_ci_defaults
-    selected_image = "postgres:17.11"
+    selected_image = "postgres:17.12"
 
     development_compose = YAML.load_file(ROOT.join("compose.yaml"), aliases: true)
     production_compose = YAML.load_file(ROOT.join("deploy/compose.production.yml"), aliases: true)

@@ -4,19 +4,21 @@ Roastnode is a Rails 8.1 app generated in the repository root.
 
 ## Requirements
 
-- Ruby 4.0.9 through rbenv or another Ruby version manager
-- RubyGems and Bundler 4.0.24
+- Ruby 4.0.10 through rbenv or another Ruby version manager
+- RubyGems and Bundler 4.1.0
 - Rails 8.1.4.1 or a newer compatible 8.1 patch (installed by Bundler)
 - Node.js 26.13.1 for the JavaScript controller tests (no npm install required)
 - Docker Desktop with Docker Compose
-- PostgreSQL 17.11 is the default Compose image
+- PostgreSQL 17.12 is the default Compose image
 - libvips for Active Storage image variants (`brew install vips` on macOS or `apt install libvips` on Debian/Ubuntu)
 - PostgreSQL client tools are useful but not required if you use Compose
 
-Ruby 4.0.9 is the security baseline: it includes the regular-expression engine
-fixes underlying GitLab's CVE-2026-97229 and related issues. Existing production
-images running Ruby 4.0.7 must be rebuilt and redeployed; changing `.ruby-version`
-alone does not update a running container. See the [Ruby advisory](https://www.ruby-lang.org/en/news/2026/10/23/regexp-fixes-for-gitlab-cves/).
+Ruby 4.0.10 is the security baseline. It fixes Ruby2Shell
+([GHSA-34m4-m9fh-gqp5](https://github.com/ruby/ruby/security/advisories/GHSA-34m4-m9fh-gqp5)),
+a critical heap overflow in string case conversion that can be reached by Rails
+requests without authentication. It also retains the October regular-expression
+engine fixes. Rebuild and redeploy both web and jobs containers: changing
+`.ruby-version` alone does not patch an existing image.
 
 ## Local Ports
 
@@ -65,9 +67,9 @@ Browser passkey APIs require a secure context. `http://localhost:3001` works for
 
 ```bash
 cp .env.example .env
-rbenv install -s 4.0.9
-rbenv local 4.0.9
-gem update --system 4.0.24 --no-document
+rbenv install -s 4.0.10
+rbenv local 4.0.10
+gem update --system 4.1.0 --no-document
 bundle install
 docker compose up -d postgres
 bin/rails db:prepare
@@ -157,7 +159,7 @@ If building Ruby on macOS 26 with the macOS 27 SDK crashes in `miniruby`, use an
 updated ruby-build or the [upstream configure workaround](https://bugs.ruby-lang.org/issues/22311):
 
 ```bash
-ac_cv_func_dup3=no ac_cv_func_pipe2=no rbenv install 4.0.9
+ac_cv_func_dup3=no ac_cv_func_pipe2=no rbenv install 4.0.10
 ```
 
 If Bundler warns that your home directory is not writable inside a sandboxed tool, it can still complete by using a temporary home directory. On a normal shell, Bundler should use your regular user gem paths.

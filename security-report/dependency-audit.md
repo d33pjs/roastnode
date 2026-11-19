@@ -1,17 +1,35 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-11-11 after upgrading application/runtime/tool dependencies and refreshing
-the RubySec advisory database.
+Verified locally on 2026-11-19 for Ruby2Shell remediation and compatible dependency refresh.
 
 ## Result
 
-- Status: Rails and all 12 framework companion gems remain patched to 8.1.4.1. Fresh RubySec and importmap audits report zero matches.
+- Status: Ruby is pinned to the fixed latest stable 4.0.10. Rails and all 12 framework companion gems remain patched to 8.1.4.1. Fresh RubySec and importmap audits report zero matches.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
-- Ruby packages: 134 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 107 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `4d71b123428e33f694e805ce15351ee3d8d62ef7`, containing 1,359 advisories, including the November Rails advisories; 0 vulnerabilities matched.
+- Ruby packages: 135 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 108 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
+- RubySec evidence: database commit `49bb1fbb35476f27f8cfbfcb943790633836dc1c`, containing 1,379 advisories, refreshed 2026-11-19; 0 gem vulnerabilities matched. Ruby2Shell affects the interpreter and is verified separately against the upstream advisory and runtime pin.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
 - JavaScript: importmap reported no vulnerable or outdated packages. Integrated Brakeman 8.1.0 scanned Rails 8.1.4.1 with 0 errors and 0 warnings.
 - Currentness: `bundle outdated --strict` reported `Bundle up to date!`; newer releases of BinData (3.0.1), Marcel (2.1.0), and net-ssh (8.1.2) remain constrained by their parent gems. Chart.js's bundled color helper remains at its upstream-distributed version, as documented below.
+
+## 2026-11-19 Ruby2Shell Security Refresh
+
+- **Critical, confirmed affected runtime:** Ruby 4.0.9 matches [GHSA-34m4-m9fh-gqp5](https://github.com/ruby/ruby/security/advisories/GHSA-34m4-m9fh-gqp5). The one-byte heap overflow in single-byte string case conversion can allow remote code execution through unauthenticated Rails requests; UTF-8-only assumptions are not a mitigation. Ruby 4.0.10 is both the fixed and latest stable release. See the [researcher advisory](https://verialabs.com/ruby2shell/) and [official downloads](https://www.ruby-lang.org/en/downloads/).
+- Updated `.ruby-version`, the production image and setup guidance to Ruby 4.0.10. A release regression gate rejects the old 4.0.9 pin. Both production web and jobs must be replaced with the rebuilt image before remediation is complete.
+- Refreshed all compatible gems: connection_pool 3.0.3, net-scp 4.2.2, parser 3.3.14.0, Puma 8.1.2, regexp_parser 2.13.4, RuboCop 1.92.3, RuboCop AST 1.53.0, Selenium 4.53.0, Thruster 0.1.28, websocket-driver 0.9.0 and websocket-extensions 0.2.0. Rails 8.1.4.1 remains the newest stable framework release.
+- Updated RubyGems/Bundler to 4.1.0 and PostgreSQL defaults/CI to the current 17.12 security patch. PostgreSQL remains on major 17, with no data-volume migration. Production already reported 17.12 during the predeployment inspection.
+- Updated ruby/setup-ruby to 1.342.0 at its verified immutable commit, Syft to 1.57.2, cdxgen to 13.8.0 and Waybill to 0.17.0. Scanner SHA-256 pins match both GitHub release metadata and published checksum files. Buildx 0.39.0 is now present in Docker's official setup-action release index, so its previous temporary 0.38.2 pin is advanced.
+- Checked all other configured actions and tool releases against upstream metadata. Node 26.13.1 LTS, Chart.js 4.6.1, Cosign 3.1.4 and BuildKit 0.35.0 remain current stable versions. Context7 was unavailable; official advisories, registries and upstream release metadata supplied current information.
+- Parent-constrained gem majors and Chart.js's upstream-bundled helper remain documented limitations; no compatibility overrides or advisory exclusions were added.
+
+### Local Verification — 2026-11-19
+
+- Ruby 4.0.10 / RubyGems and Bundler 4.1.0: bundle installation and strict currentness pass. All 177 platform-specific locked specs have SHA-256 coverage; all 10 lockfile platforms are retained. Bundler additionally selected generic Nokogiri and its mini_portile2 dependency.
+- Rails: 1,579 tests / 15,596 assertions, no failures/errors/skips. JavaScript: 54 tests pass on Node 26.13.1. Release configuration: 6 tests / 79 assertions pass. The new runtime floor check first failed against 4.0.9 before the pin was raised.
+- Browser suite: 16 tests / 216 assertions pass using `SE_BROWSER_VERSION=157`. The installed Chrome 158 rejects Capybara 3.40.0's wildcard-origin session-reset call; [upstream issue #2865](https://github.com/teamcapybara/capybara/issues/2865) and [pending fix #2868](https://github.com/teamcapybara/capybara/pull/2868) describe the same failure. No application monkey patch or gem downgrade was introduced.
+- RuboCop: 433 files, no offenses. Brakeman: no errors/warnings. Fresh RubySec and importmap audits are clear; importmap reports no outdated packages. Production assets compile and both Compose configurations validate.
+- Independent review found no correctness/security findings and verified changed gem checksums, retained platforms, scanner digests, the immutable setup-ruby action commit and Buildx release-index availability.
+- Before release, production still reported vulnerable Ruby 4.0.9; a fresh full archive and its SHA-256 checksum validated. Remediation requires the release/deployment checks recorded in the status ledger after rollout.
 
 ## 2026-11-11 Dependency Refresh
 
@@ -322,7 +340,7 @@ Severity before remediation: Medium.
 - Bundler was updated from 4.0.9 to 4.0.17.
 - Compatible direct and transitive gems were updated, including Kamal, Selenium, Solid Cable, Solid Queue, Tailwind CSS, Thruster, RuboCop, Nokogiri, JSON, and Rails HTML Sanitizer.
 
-That historical refresh used Rails 8.1.3.1; the current refresh uses 8.1.4.
+That historical refresh used Rails 8.1.3.1; the current refresh uses 8.1.4.1.
 
 ### DEP-003 — Image processing major upgrade
 
@@ -362,7 +380,7 @@ All third-party workflow actions are pinned to reviewed full commit SHAs, with t
 
 ### `bindata` 3.x
 
-`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.1, but WebAuthn 3.5.0 and TPM Key Attestation 0.14.2 both require `bindata ~> 2.4`. Version 2.5.1 has no matching RubySec advisory, so this is accepted until both parents widen their constraints.
+`bundle outdated` without strict compatibility filtering reports `bindata` 3.0.1, but WebAuthn 3.5.1 and TPM Key Attestation 0.14.2 both require `bindata ~> 2.4`. Version 2.5.1 has no matching RubySec advisory, so this is accepted until both parents widen their constraints.
 
 ### JSON 3.x — resolved on 2026-10-03
 
@@ -372,9 +390,9 @@ Rails 8.1.4 fixes JSON 3 decoding. The temporary JSON constraint was removed. Th
 
 Marcel 2.1.0 is available, but Active Storage 8.1.4.1 requires `marcel ~> 1.0`. The lockfile retains the latest compatible 1.2.1, which has no matching advisory in the refreshed RubySec database.
 
-### net-ssh 8.x and Prism 2.x
+### net-ssh 8.x; Prism 2.x resolved
 
-Kamal 2.12.0 requires net-ssh `~> 7.3`, so the refresh uses patched 7.3.8 rather than 8.1.0. Minitest 6.0.6 requires Prism `~> 1.5` and RuboCop AST 1.50.0 requires `~> 1.7`, so Prism remains 1.9.0 rather than 2.1.0. These versions have no matching advisory in the fresh RubySec audit.
+Kamal 2.12.0 requires net-ssh `~> 7.3`, so the current refresh uses 7.3.10 rather than 8.1.2. Prism 2.1.0 is now admitted by the current Minitest and RuboCop AST versions and is present in the lockfile. The constrained net-ssh version has no matching advisory in the fresh RubySec audit.
 
 ### Chart.js's bundled color helper
 
@@ -387,7 +405,7 @@ npm advisory check of the embedded 0.3.2 return no known vulnerabilities.
 
 ### Ruby 4 — resolved on 2026-10-20; PostgreSQL 18 deferred
 
-Ruby 4.0.9 is now installed and verified with the full Rails/browser suites, native extensions and production asset compilation. The runtime requirement, Docker and CI agree. PostgreSQL remains on the current supported 17.11 patch; moving the existing cluster to PostgreSQL 18.6 requires a separate explicit data-volume migration.
+Ruby 4.0.10 is now installed and verified with the full Rails/browser suites, native extensions and production asset compilation. The runtime requirement, Docker and CI agree. PostgreSQL remains on the current supported 17.12 patch; moving the existing cluster to PostgreSQL 18.7 requires a separate explicit data-volume migration.
 
 ## Supply-Chain and License Review
 

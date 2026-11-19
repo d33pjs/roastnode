@@ -8,7 +8,7 @@
 # For a containerized dev environment, see Dev Containers: https://guides.rubyonrails.org/getting_started_with_devcontainer.html
 
 # Make sure RUBY_VERSION matches the Ruby version in .ruby-version
-ARG RUBY_VERSION=4.0.9
+ARG RUBY_VERSION=4.0.10
 ARG ROASTNODE_VERSION=development
 FROM docker.io/library/ruby:$RUBY_VERSION-slim AS base
 ARG ROASTNODE_VERSION
@@ -24,7 +24,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Keep the package manager and default Bundler current with Gemfile.lock.
-RUN gem update --system 4.0.24 --no-document
+RUN gem update --system 4.1.0 --no-document
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \
