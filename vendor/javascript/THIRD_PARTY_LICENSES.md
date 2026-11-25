@@ -1,8 +1,8 @@
 # Third-party JavaScript licenses
 
-## Chart.js 4.6.1
+## Chart.js 4.6.2
 
-Source: https://github.com/chartjs/Chart.js/tree/v4.6.1
+Source: https://github.com/chartjs/Chart.js/tree/v4.6.2
 
 The MIT License (MIT)
 
@@ -26,11 +26,11 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-## @kurkle/color 0.3.2
+## @kurkle/color 0.6.6
 
 This library is bundled into the locally vendored Chart.js UMD distribution.
 
-Source: https://github.com/kurkle/color/tree/v0.3.2
+Source: https://github.com/kurkle/color/tree/v0.6.6
 
 The MIT License (MIT)
 

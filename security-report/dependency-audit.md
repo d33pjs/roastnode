@@ -1,16 +1,23 @@
 # Roastnode Dependency Audit
 
-Verified on 2026-11-19 for Ruby2Shell remediation, compatible dependency refresh and production deployment.
+Reviewed on 2026-11-25 for the Dependabot dependency refresh.
 
 ## Result
 
 - Status: Ruby is pinned to the fixed latest stable 4.0.10. Rails and all 12 framework companion gems remain patched to 8.1.4.1. Fresh RubySec and importmap audits report zero matches.
 - Ecosystems reviewed: Ruby/RubyGems, importmap-vendored JavaScript, GitHub Actions, Gitea Actions, Docker/runtime images, and downloaded CI security tools.
 - Ruby packages: 135 unique locked specs: 28 Gemfile declarations, 27 locked direct specs, and 108 transitive specs. `tzinfo-data` is declared but not locked for the selected platforms.
-- RubySec evidence: database commit `49bb1fbb35476f27f8cfbfcb943790633836dc1c`, containing 1,379 advisories, refreshed 2026-11-19; 0 gem vulnerabilities matched. Ruby2Shell affects the interpreter and is verified separately against the upstream advisory and runtime pin.
+- RubySec database commit `c87703e7f2c64f8745ce032711308a17d10cda55` contained 1,411 advisories when refreshed on 2026-11-25. No locked gems matched. Ruby2Shell affects the interpreter and is verified separately against the upstream advisory and runtime pin.
 - Advisory policy: `config/bundler-audit.yml` has no ignored advisories.
-- JavaScript: importmap reported no vulnerable or outdated packages. Integrated Brakeman 8.1.0 scanned Rails 8.1.4.1 with 0 errors and 0 warnings.
-- Currentness: `bundle outdated --strict` reported `Bundle up to date!`; newer releases of BinData (3.0.1), Marcel (2.1.0), and net-ssh (8.1.2) remain constrained by their parent gems. Chart.js's bundled color helper remains at its upstream-distributed version, as documented below.
+- Importmap reported no vulnerable or outdated packages. Brakeman 8.1.1 scanned Rails 8.1.4.1 with zero errors or warnings.
+- `bundle outdated --strict` reported `Bundle up to date!`. BinData 3.0.1, Marcel 2.1.0 and net-ssh 8.1.2 exceed the versions their parent gems accept.
+
+## 2026-11-25 Dependabot Dependency Refresh
+
+- Updated Rack to 3.2.9 and image_processing to 2.2.2, including upstream security fixes. Also updated Addressable, Bootsnap, Brakeman, JSON, JWT, net-sftp, Puma, RuboCop, RuboCop AST and Selenium WebDriver. [Rack 3.2.9](https://github.com/rack/rack/tree/v3.2.9), [image_processing 2.2.2 changelog](https://github.com/janko/image_processing/blob/v2.2.2/CHANGELOG.md)
+- Updated RubyGems and Bundler to 4.1.1 and vendored Chart.js 4.6.2 from the official npm distribution. Its browser bundle includes `@kurkle/color` 0.6.6. [RubyGems releases](https://github.com/rubygems/rubygems/releases), [Chart.js 4.6.2](https://github.com/chartjs/Chart.js/releases/tag/v4.6.2)
+- Refreshed ruby/setup-ruby to 1.344.0, Anchore's SBOM action to 0.24.4, Cosign Installer to 4.1.4, Cosign to 3.1.5, Buildx to 0.39.1, BuildKit to 0.35.1 and Waybill to 0.18.0. The external actions are pinned by commit, the BuildKit index by digest and the Waybill download by SHA-256.
+- Ruby 4.0.10 and Rails 8.1.4.1 are the latest stable releases. PostgreSQL 17.12 is the latest patch for the installed major and needs no data-volume migration.
 
 ## 2026-11-19 Ruby2Shell Security Refresh
 
@@ -407,12 +414,9 @@ Kamal 2.12.0 requires net-ssh `~> 7.3`, so the current refresh uses 7.3.10 rathe
 
 ### Chart.js's bundled color helper
 
-The newest official Chart.js 4.6.1 browser distribution still embeds
-`@kurkle/color` 0.3.2. Color 0.6.5 is newer than Chart.js's declared `^0.3.0`
-range; 0.3.4 is the newest release within that range, but is not in Chart.js's
-published browser bundle. Retain the verified upstream distribution instead of
-modifying or rebuilding its internals. Both the importmap audit and an explicit
-npm advisory check of the embedded 0.3.2 return no known vulnerabilities.
+The official Chart.js 4.6.2 browser distribution embeds `@kurkle/color` 0.6.6, as
+recorded in its upstream source map. The vendored browser file matches the
+SHA-512-verified npm distribution.
 
 ### Ruby 4 — resolved on 2026-10-20; PostgreSQL 18 deferred
 
@@ -424,7 +428,7 @@ Ruby 4.0.10 is now installed and verified with the full Rails/browser suites, na
 - The lockfile contains checksums for all locked gems.
 - No likely typo-squatted or dependency-confusion package names were identified.
 - All reviewed Ruby packages declare a license. Brakeman's custom public-use license is retained as an informational note; no new license conflict was introduced.
-- Chart.js 4.6.1 is the newest official browser distribution; its embedded `@kurkle/color` 0.3.2 remains as upstream shipped it, with the version limitation documented above.
+- Chart.js 4.6.2 includes `@kurkle/color` 0.6.6, with both MIT license notices in the vendored JavaScript directory.
 - Elms Sans remains pinned to the selected upstream source revision.
 
 ## Historical Verification — 2026-08-20

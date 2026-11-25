@@ -24,7 +24,7 @@ RUN apt-get update -qq && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
 # Keep the package manager and default Bundler current with Gemfile.lock.
-RUN gem update --system 4.1.0 --no-document
+RUN gem update --system 4.1.1 --no-document
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \
