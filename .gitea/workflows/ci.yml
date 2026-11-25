@@ -10,7 +10,8 @@ on:
 jobs:
   ci:
     name: Rails checks
-    runs-on: ubuntu-latest
+    # Use the Ubuntu runner image supported by ruby/setup-ruby.
+    runs-on: ubuntu-22.04
 
     services:
       postgres:
