@@ -10,8 +10,13 @@ on:
 jobs:
   ci:
     name: Rails checks
-    # Use the Ubuntu runner image supported by ruby/setup-ruby.
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
+    container:
+      # Keep ruby/setup-ruby and Active Storage's libvips requirement independent of runner labels.
+      image: docker.io/gitea/runner-images:ubuntu-24.04@sha256:ad6cef290707552be4a2eefb9240b5f470353d906e529f6b28d7626ab8a6bee3
+    defaults:
+      run:
+        shell: bash
 
     services:
       postgres:
